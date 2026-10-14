@@ -118,7 +118,7 @@ class ReleaseMonitor:
             if due:self.check(force=True)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None):
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -174,6 +174,10 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json({"success":True,"data":sources.radio_config(source_id)})
                 elif path == "/api/update/latest":
                     self._json(updates.status() if updates else latest_release())
+                elif path == "/api/update/progress":
+                    self._json(updater.status() if updater else {"success":False,"error":"Atualizador indisponível"})
+                elif path == "/api/update/notice":
+                    self._json(updater.notice() if updater else {"success":True,"notice":None})
                 elif path == "/api/system/settings":
                     self._json({"success":True,"settings":db.system_settings()})
                 elif path == "/api/retention":self._json({"success":True,"data":db.retention()})
@@ -246,6 +250,16 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json({"success":True,"settings":data})
                 elif path == "/api/update/check":
                     self._json(updates.check(force=True) if updates else latest_release(force=True))
+                elif path == "/api/update/prepare":
+                    if not updater:raise ValueError("Atualização interna indisponível")
+                    self._json(updater.start(str(payload.get("version") or "")))
+                elif path == "/api/update/install":
+                    if not updater or not shutdown:raise ValueError("Atualização interna indisponível")
+                    self._json(updater.launch())
+                    # The external updater only proceeds once every handle closes.
+                    threading.Timer(0.8,shutdown).start()
+                elif path == "/api/update/ack":
+                    self._json(updater.dismiss() if updater else {"success":True})
                 elif path == "/api/device/apply":
                     result=sources.update_device(payload.get("source_id"),
                             payload.get("revision"),payload.get("changes"))
@@ -273,6 +287,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     db=Database(database or (data/"mesh-analyzer.sqlite3"))
     drivers=SourceManager(db)
     updates=ReleaseMonitor(db)
+    from .updater import UpdateManager
+    updater=UpdateManager(data,updates)
     server=None
     done=threading.Event()
     try:
@@ -293,7 +309,20 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         replay.start()
         csrf=secrets.token_urlsafe(32)
         doc=Path(__file__).with_name("ui.html").read_text(encoding="utf-8")
-        server=ThreadingHTTPServer((host,int(port)),build_handler(db,drivers,csrf,doc,updates))
+        def request_shutdown():
+            if desktop:
+                try:
+                    import webview
+                    if webview.windows:
+                        webview.windows[0].destroy()
+                        return
+                except Exception:
+                    LOG.exception("Falha ao fechar janela para atualização")
+            if server:
+                # shutdown() must never run on HTTP request thread.
+                threading.Thread(target=server.shutdown,daemon=True).start()
+        server=ThreadingHTTPServer((host,int(port)),
+                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown))
         server.daemon_threads=True
         address="http://127.0.0.1:"+str(server.server_address[1])
         LOG.info("PT2VHF Mesh Analyzer v%s — %s",__version__,address)

@@ -1,0 +1,285 @@
+"""Verified, opt-in Windows update staging and detached replacement.
+
+No updater ever replaces an executable while its Python/Windows process is alive.
+Only the application's fixed GitHub release assets are accepted.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import threading
+import time
+import urllib.request
+import zipfile
+
+OWNER = "alexpmr/PT2VHF-Mesh-Analyzer"
+RELEASE_BASE = "https://github.com/" + OWNER + "/releases/download/"
+VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+CHECKSUM_RE = re.compile(r"^([A-Fa-f0-9]{64})\s+\*?([A-Za-z0-9_.-]+)$")
+MAX_SIZE = 100 * 1024 * 1024
+
+# This runner executes *after the desktop and all sources have exited*. It
+# has no ability to kill processes or elevate privilege.
+RUNNER_PS = r"""
+param([Parameter(Mandatory=$true)][string]$Plan)
+$ErrorActionPreference = 'Stop'
+$p = Get-Content -LiteralPath $Plan -Raw -Encoding UTF8 | ConvertFrom-Json
+$log = [string]$p.log
+function WriteLog([string]$line) {
+    Add-Content -LiteralPath $log -Value ((Get-Date -Format 'o') + ' ' + $line) -Encoding UTF8
+}
+try {
+    WriteLog 'Awaiting original application exit'
+    $timeout = [DateTime]::UtcNow.AddSeconds(90)
+    while ([DateTime]::UtcNow -lt $timeout) {
+        $running = Get-Process -Id ([int]$p.parent_pid) -ErrorAction SilentlyContinue
+        if ($null -eq $running) { break }
+        try {
+            if ($running.Path -and ([IO.Path]::GetFullPath($running.Path) -ne
+                 [IO.Path]::GetFullPath([string]$p.executable))) { break }
+        } catch {}
+        Start-Sleep -Milliseconds 450
+    }
+    $running = Get-Process -Id ([int]$p.parent_pid) -ErrorAction SilentlyContinue
+    if ($running) {
+        $same = $false
+        try {
+            $same = ([IO.Path]::GetFullPath($running.Path) -eq
+                     [IO.Path]::GetFullPath([string]$p.executable))
+        } catch { $same = $true }
+        if ($same) { throw 'Original application still running after 90 seconds' }
+    }
+    if ([string]$p.mode -eq 'setup') {
+        WriteLog 'Installing verified Windows Setup'
+        $args = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-')
+        $proc = Start-Process -FilePath ([string]$p.package) -ArgumentList $args -Wait -PassThru
+        if ($proc.ExitCode -ne 0) { throw ('Setup failed: exit code ' + $proc.ExitCode) }
+    } elseif ([string]$p.mode -eq 'portable') {
+        WriteLog 'Replacing portable executable'
+        $target = [string]$p.executable
+        $previous = [string]$p.previous
+        $candidate = [string]$p.candidate
+        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw 'No extracted portable executable' }
+        Copy-Item -LiteralPath $target -Destination $previous -Force
+        try {
+            Copy-Item -LiteralPath $candidate -Destination ($target + '.new') -Force
+            Move-Item -LiteralPath ($target + '.new') -Destination $target -Force
+        } catch {
+            Copy-Item -LiteralPath $previous -Destination $target -Force
+            throw
+        }
+    } else { throw 'Invalid update mode' }
+    WriteLog 'Update completed'
+    $done = @{ version = [string]$p.version; notes = [string]$p.notes;
+               status = 'installed'; updated_at = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() } |
+            ConvertTo-Json -Compress
+    [IO.File]::WriteAllText([string]$p.notice, $done, [Text.Encoding]::UTF8)
+    WriteLog 'Restarting application'
+    Start-Process -FilePath ([string]$p.executable) | Out-Null
+    exit 0
+} catch {
+    WriteLog ('FAILED: ' + $_.Exception.Message)
+    exit 1
+}
+"""
+
+
+def release_assets(tag):
+    if not VERSION_RE.fullmatch(str(tag)):
+        raise ValueError("Versão remota inválida")
+    stem = "PT2VHF-Mesh-Analyzer-v" + tag
+    return {
+        "setup": f"{stem}-Setup-Win11-x64.exe",
+        "portable": f"{stem}-Portable-Win11-x64.zip",
+    }
+
+
+def parse_checksums(document, filename):
+    lines = document.splitlines()
+    for line in lines:
+        found = CHECKSUM_RE.fullmatch(line.strip())
+        if found and found.group(2) == filename:
+            return found.group(1).lower()
+    raise ValueError("SHA256 do pacote não consta do arquivo oficial")
+
+
+def deployment_mode(executable=None):
+    exe = Path(executable or sys.executable).resolve()
+    if not getattr(sys, "frozen", False) and executable is None:
+        raise RuntimeError("Atualização interna disponível somente no aplicativo Windows empacotado")
+    if os.name != "nt" and executable is None:
+        raise RuntimeError("Atualização direta disponível apenas no Windows")
+    standard = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / \
+        "Programs" / "PT2VHF Mesh Analyzer" / "PT2VHF-Mesh-Analyzer.exe"
+    return "setup" if exe == standard.resolve() else "portable"
+
+
+def approved_asset_url(url, version, name):
+    expected = RELEASE_BASE + "v" + version + "/" + name
+    if url != expected:
+        raise ValueError("Endereço do pacote não corresponde à release oficial")
+    return url
+
+
+def stream_verified(url, dest, expected_sha, max_size=MAX_SIZE, report=None):
+    if not isinstance(expected_sha,str) or not re.fullmatch(r"[a-f0-9]{64}",expected_sha):
+        raise ValueError("SHA256 esperado inválido")
+    partial = Path(str(dest) + ".part")
+    h = hashlib.sha256()
+    count = 0
+    try:
+        req = urllib.request.Request(url,headers={"User-Agent":"PT2VHF-Mesh-Analyzer-updater"})
+        with urllib.request.urlopen(req,timeout=22) as resp, partial.open("wb") as out:
+            total = int(resp.headers.get("Content-Length",0))
+            if total > max_size:raise ValueError("Pacote excede o tamanho seguro")
+            while True:
+                chunk = resp.read(131072)
+                if not chunk:break
+                count += len(chunk)
+                if count > max_size:raise ValueError("Pacote excede o tamanho seguro")
+                h.update(chunk)
+                out.write(chunk)
+                if report:report(count,total)
+        if h.hexdigest() != expected_sha:
+            raise ValueError("SHA256 divergente: atualização cancelada")
+        os.replace(partial,dest)
+        return count
+    finally:
+        partial.unlink(missing_ok=True)
+
+
+class UpdateManager:
+    """Single download and explicit install confirmation, shared between clients."""
+    def __init__(self,profile,monitor,executable=None):
+        self.profile=Path(profile)
+        self.monitor=monitor
+        self.executable=Path(executable or sys.executable).resolve()
+        self._lock=threading.RLock()
+        self._phase="idle"
+        self._error=None
+        self._size=0
+        self._received=0
+        self._version=None
+        self._mode=None
+        self._plan=None
+        self._busy=None
+
+    def status(self):
+        with self._lock:
+            return {"success":True,"phase":self._phase,"error":self._error,
+                    "received":self._received,"total":self._size,
+                    "version":self._version,"mode":self._mode}
+
+    def notice(self):
+        path=self.profile/"update_complete.json"
+        try:
+            obj=json.loads(path.read_text(encoding="utf-8-sig"))
+            if obj.get("version") == self.monitor.status()["current"] and obj.get("status") == "installed":
+                return {"success":True,"notice":obj}
+        except (OSError,TypeError,ValueError):pass
+        return {"success":True,"notice":None}
+
+    def dismiss(self):
+        path=self.profile/"update_complete.json"
+        try:
+            obj=json.loads(path.read_text(encoding="utf-8-sig"))
+            if obj.get("version") == self.monitor.status()["current"]:
+                path.unlink(missing_ok=True)
+        except (OSError,TypeError,ValueError):pass
+        return {"success":True}
+
+    def start(self,version):
+        status=self.monitor.status()
+        if status.get("error") or not status.get("available") or status.get("latest")!=version:
+            raise ValueError("Verifique novamente a atualização disponível")
+        mode=deployment_mode()
+        names=release_assets(version)
+        filename=names[mode]
+        assets=self.monitor._result.get("assets",[]) if self.monitor._result else []
+        matches=[a for a in assets if a.get("name")==filename]
+        if len(matches)!=1:raise ValueError("Pacote adequado ausente da release")
+        approved_asset_url(matches[0].get("url"),version,filename)
+        with self._lock:
+            if self._phase in ("downloading","verified","installing"):
+                raise ValueError("Já existe uma atualização em andamento")
+            self._phase="downloading"
+            self._error=None
+            self._version=version
+            self._mode=mode
+            self._size=0
+            self._received=0
+        self._busy=threading.Thread(target=self._download,
+                                    args=(version,mode,filename),daemon=True,
+                                    name="verified-update-download")
+        self._busy.start()
+        return self.status()
+
+    def _download(self,version,mode,filename):
+        try:
+            folder=self.profile/"updates"/("v"+version)
+            folder.mkdir(parents=True,exist_ok=True)
+            doc_url=RELEASE_BASE+"v"+version+"/SHA256SUMS.txt"
+            req=urllib.request.Request(doc_url,headers={"User-Agent":"PT2VHF-Mesh-Analyzer-updater"})
+            with urllib.request.urlopen(req,timeout=12) as resp:
+                sums=resp.read(60000).decode("ascii")
+            expected=parse_checksums(sums,filename)
+            package=folder/filename
+            def report(n,total):
+                with self._lock:self._received=n;self._size=total
+            stream_verified(RELEASE_BASE+"v"+version+"/"+filename,package,expected,report=report)
+            candidate=None
+            if mode=="portable":
+                candidate=folder/"candidate.exe"
+                with zipfile.ZipFile(package) as z:
+                    names=z.namelist()
+                    if names != ["PT2VHF-Mesh-Analyzer.exe"]:
+                        raise ValueError("Portable ZIP tem conteúdo inesperado")
+                    info=z.getinfo(names[0])
+                    if info.file_size>MAX_SIZE:raise ValueError("EXE extraído excede limite")
+                    with z.open(names[0]) as src, candidate.open("wb") as dst:
+                        copied=0
+                        while True:
+                            block=src.read(131072)
+                            if not block:break
+                            copied+=len(block)
+                            if copied>MAX_SIZE:raise ValueError("EXE extraído excede limite")
+                            dst.write(block)
+            plan={"parent_pid":os.getpid(),"executable":str(self.executable),
+                  "package":str(package),"candidate":str(candidate or ""),
+                  "previous":str(folder/"previous.exe"),"mode":mode,
+                  "version":version,"notes":(self.monitor._result or {}).get("notes","")[:3000],
+                  "notice":str(self.profile/"update_complete.json"),
+                  "log":str(self.profile/"update.log")}
+            planfile=folder/"plan.json"
+            planfile.write_text(json.dumps(plan,ensure_ascii=False),encoding="utf-8")
+            script=folder/"apply_update.ps1"
+            script.write_text(RUNNER_PS,encoding="utf-8")
+            with self._lock:
+                self._plan=(str(script),str(planfile))
+                self._phase="verified"
+        except Exception as exc:
+            with self._lock:
+                self._phase="error"
+                self._error=str(exc)[:240]
+
+    def launch(self):
+        with self._lock:
+            if self._phase!="verified" or self._plan is None:
+                raise ValueError("Download não foi verificado ou não está pronto")
+            script,plan=self._plan
+            if os.name!="nt":raise RuntimeError("Instalação interna requer Windows")
+            creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0)|getattr(subprocess,"DETACHED_PROCESS",0)
+            subprocess.Popen(
+                ["powershell.exe","-NoProfile","-NonInteractive",
+                 "-ExecutionPolicy","Bypass","-WindowStyle","Hidden",
+                 "-File",script,"-Plan",plan],
+                cwd=str(self.profile),stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+                creationflags=creationflags,close_fds=True)
+            self._phase="installing"
+            return self.status()

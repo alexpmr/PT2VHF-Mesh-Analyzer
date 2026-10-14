@@ -89,6 +89,14 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
 
 - [**#10 — Remover Acessos de Estatísticas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10): retirar a subaba `Acessos`, mantendo somente 10 subabas, sem remover dados de auditoria técnica armazenados. Garantir navegação e URLs antigas sem tela em branco. **A v0.4.0 ainda exibe essa subaba; pendente de implementação.**
 
+## v0.5.0 — implementado no código (validação de campo pendente)
+
+- **#2 / #15 Atualização direta:** botão de nova versão abre popup, download oficial Setup/Portable com SHA256 e progresso, fechamento controlado da UI, substituição por worker externo e reinício; popup de novidades uma única vez. Testar em Windows 11 instalado e Portable em uso antes de concluir as issues. Atualizações 0.4→0.5 ainda manuais.
+- **#16 Configurações → Mapa:** janela, observações mínimas, mapa-base, brilho, relevo, estilos de enlaces RF/MQTT, nós/linhas/nomes/heatmap, Auto Zoom, sons sintetizados, realce de atividade com controles de velocidade e duração. Algumas formas de realce de retransmissor/ACK dependem de dados não coletados; não inventar.
+- **Barra principal do mapa:** removidos controles inoperantes de Reprodução e Velocidade; mapa-base e velocidade migrados para a aba Configurações → Mapa.
+- **#10 Estatísticas:** retirado Acessos, 10 subabas; 8 KPIs e resumo no padrão legado v1.62.1; dados adicionais nas outras 9, mantendo paridade integral como pendência. Nunca copiar números da captura nem inferir RF direto / TX não instrumentado.
+- **#3:** interface web LAN permanece desativada até autenticação e segurança.
+
 ## v0.4.0 — Correções de topologia e interface (aguardando CI/validação de bancada)
 
 - **#22**: corrigidos portnums de traceroute/telemetria, parser protobuf RouteDiscovery e NeighborInfo, armazenamento e reprocessamento histórico com idempotência, diagnóstico de links sem posição. Traceroute/neighbor ainda não são prova de enlace RF direto; validação com rádio real pendente.
