@@ -27,10 +27,10 @@ _UPDATE_CACHE = {"at": 0.0, "data": None}
 _UPDATE_LOCK = threading.Lock()
 
 
-def latest_release():
+def latest_release(force=False):
     """Bounded, cached request to the project's public GitHub Releases endpoint."""
     with _UPDATE_LOCK:
-        if _UPDATE_CACHE["data"] is not None and time.monotonic()-_UPDATE_CACHE["at"] < 300:
+        if not force and _UPDATE_CACHE["data"] is not None and time.monotonic()-_UPDATE_CACHE["at"] < 300:
             return _UPDATE_CACHE["data"]
         request = urllib.request.Request(
             "https://api.github.com/repos/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest",
@@ -55,7 +55,70 @@ def latest_release():
 
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
+class ReleaseMonitor:
+    """Exactly one update timer per running application, not per browser tab."""
+    def __init__(self, db):
+        self.db=db
+        self._lock=threading.Lock()
+        self._wake=threading.Event()
+        self._stop=threading.Event()
+        self._at=0.0
+        self._result=None
+        self._error=None
+        self._thread=None
+
+    def start(self):
+        if self._thread is not None:return
+        self._thread=threading.Thread(target=self._loop,name="release-checker",daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._stop.set()
+        self._wake.set()
+        if self._thread and self._thread is not threading.current_thread():
+            self._thread.join(timeout=2)
+
+    def changed(self):
+        self._wake.set()
+
+    def check(self, force=False):
+        if not self._lock.acquire(blocking=False):
+            return self.status()
+        try:
+            try:
+                result=latest_release(force=force)
+                self._result=result
+                self._error=None
+            except Exception as exc:
+                self._error=str(exc)[:200]
+            self._at=time.time()
+            return self.status()
+        finally:
+            self._lock.release()
+
+    def status(self):
+        minutes=self.db.system_settings()["update_minutes"]
+        return {"success":True,"current":__version__,
+                "latest":self._result.get("latest") if self._result else None,
+                "available":self._result.get("available") if self._result else None,
+                "release_url":self._result.get("release_url") if self._result else
+                    "https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest",
+                "notes":self._result.get("notes","") if self._result else "",
+                "checked_at":self._at or None,
+                "next_check":self._at+minutes*60 if self._at else None,
+                "interval_minutes":minutes,"error":self._error}
+
+    def _loop(self):
+        while not self._stop.is_set():
+            delay=max(0,(self._at+self.db.system_settings()["update_minutes"]*60)-time.time()) if self._at else 1
+            self._wake.wait(delay)
+            self._wake.clear()
+            if self._stop.is_set():break
+            due=not self._at or time.time()-self._at>=self.db.system_settings()["update_minutes"]*60
+            if due:self.check(force=True)
+
+
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -76,7 +139,12 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
         def _error(self,exc,status=400):
             return self._json({"success":False,"error":str(exc)[:240]},status)
 
+        def _local_host(self):
+            host=self.headers.get("Host","").split(":")[0].strip("[]").lower()
+            return host in ("127.0.0.1","localhost","::1")
+
         def do_GET(self):
+            if not self._local_host():return self._error("Host não autorizado",403)
             path=urllib.parse.urlsplit(self.path).path
             try:
                 if path in ("/","/mapa","/nos","/trafego","/mensagens","/estatisticas","/automacoes","/configuracoes","/ajuda") or path.startswith("/estatisticas/"):
@@ -87,7 +155,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
                     self.send_header("Cache-Control","no-cache")
                     self.send_header("Content-Length",str(len(content)));self.end_headers();self.wfile.write(content)
                 elif path == "/health":self._json({"success":True,"version":__version__,"database":"ok"})
-                elif path == "/api/state":self._json({"success":True,"version":__version__,"sources":db.sources(),"connections":sources.snapshot(),"counts":db.stats(),"retention":db.retention()})
+                elif path == "/api/state":self._json({"success":True,"version":__version__,"sources":db.sources(),"connections":sources.snapshot(),"counts":db.stats(),"retention":db.retention(),"system":db.system_settings()})
                 elif path == "/api/nodes":self._json({"success":True,"data":db.node_rows()})
                 elif path == "/api/packets":self._json({"success":True,"data":db.packet_rows()})
                 elif path == "/api/messages":self._json({"success":True,"data":db.message_rows()})
@@ -99,7 +167,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
                     source_id=int(query.get("source_id",[0])[0])
                     self._json({"success":True,"data":sources.radio_config(source_id)})
                 elif path == "/api/update/latest":
-                    self._json(latest_release())
+                    self._json(updates.status() if updates else latest_release())
+                elif path == "/api/system/settings":
+                    self._json({"success":True,"settings":db.system_settings()})
                 elif path == "/api/retention":self._json({"success":True,"data":db.retention()})
                 elif path == "/api/stats":self._json({"success":True,"counts":db.stats(),"connections":sources.snapshot()})
                 elif path == "/api/analytics":
@@ -112,6 +182,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
                 self._error(exc,500)
 
         def do_POST(self):
+            if not self._local_host():return self._error("Host não autorizado",403)
             path=urllib.parse.urlsplit(self.path).path
             try:
                 if self.headers.get("X-PT2VHF-CSRF","") != csrf:
@@ -163,6 +234,16 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
                     self._json({"success":True,"retention":result})
                 elif path == "/api/retention/cleanup":
                     self._json({"success":True,"removed":db.cleanup()})
+                elif path == "/api/system/settings":
+                    data=db.set_system_settings(payload)
+                    if updates:updates.changed()
+                    self._json({"success":True,"settings":data})
+                elif path == "/api/update/check":
+                    self._json(updates.check(force=True) if updates else latest_release(force=True))
+                elif path == "/api/device/apply":
+                    result=sources.update_device(payload.get("source_id"),
+                            payload.get("revision"),payload.get("changes"))
+                    self._json(result)
                 elif path == "/api/device/lora":
                     result=sources.update_lora(payload.get("source_id"),payload.get("revision"),
                                                payload.get("changes"))
@@ -179,51 +260,88 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
     return Handler
 
 
-def run(host="127.0.0.1",port=8789,launch_browser=True,database=None):
+def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
+        desktop=True):
+    """A private loopback backend serves the desktop WebView2 window."""
     data=profile_dir()
     db=Database(database or (data/"mesh-analyzer.sqlite3"))
     drivers=SourceManager(db)
+    updates=ReleaseMonitor(db)
+    server=None
+    done=threading.Event()
     try:
         drivers.start()
         csrf=secrets.token_urlsafe(32)
-        resource=Path(__file__).with_name("ui.html")
-        doc=resource.read_text(encoding="utf-8")
-        server=ThreadingHTTPServer((host,int(port)),build_handler(db,drivers,csrf,doc))
+        doc=Path(__file__).with_name("ui.html").read_text(encoding="utf-8")
+        server=ThreadingHTTPServer((host,int(port)),build_handler(db,drivers,csrf,doc,updates))
         server.daemon_threads=True
-        server.allow_reuse_address=True
         address="http://127.0.0.1:"+str(server.server_address[1])
-        print("PT2VHF Mesh Analyzer v"+__version__+" — "+address,flush=True)
+        LOG.info("PT2VHF Mesh Analyzer v%s — %s",__version__,address)
         db.log("Aplicação iniciada v"+__version__)
         def janitor():
             while not done.wait(3600):
                 try:db.cleanup()
                 except Exception:LOG.exception("Falha no job de retenção")
-        done=threading.Event()
-        worker=threading.Thread(target=janitor,name="retention-cleaner",daemon=True)
-        worker.start()
-        if launch_browser:
-            threading.Timer(0.7,lambda:webbrowser.open(address)).start()
-        try:server.serve_forever(poll_interval=.5)
-        except KeyboardInterrupt:pass
-        finally:
-            done.set();server.server_close()
+        threading.Thread(target=janitor,name="retention-cleaner",daemon=True).start()
+        updates.start()
+        server_thread=threading.Thread(target=server.serve_forever,
+             kwargs={"poll_interval":0.3},name="mesh-http",daemon=True)
+        server_thread.start()
+        open_browser=(db.system_settings()["open_browser_on_start"]
+                     if launch_browser is None else launch_browser)
+        if open_browser:
+            webbrowser.open(address)
+        if desktop:
+            try:
+                from .desktop import open_desktop_window
+                open_desktop_window(address, data)
+            except Exception as exc:
+                LOG.exception("Não foi possível iniciar a janela desktop")
+                # Windowed PyInstaller EXEs have no console. Show a visible
+                # diagnosis rather than silently redirecting to a browser.
+                if sys.platform == "win32":
+                    try:
+                        import ctypes
+                        ctypes.windll.user32.MessageBoxW(
+                            None, str(exc)[:600],
+                            "PT2VHF Mesh Analyzer — Falha na interface", 0x10)
+                    except Exception:pass
+                raise
+        else:
+            try:
+                while server_thread.is_alive():
+                    server_thread.join(timeout=0.5)
+            except KeyboardInterrupt:
+                pass
         return 0
     finally:
+        done.set()
+        updates.stop()
+        if server:
+            server.shutdown()
+            server.server_close()
         drivers.close()
         db.close()
 
 
 def main(argv=None):
     parser=argparse.ArgumentParser(description="PT2VHF Mesh Analyzer v"+__version__)
-    parser.add_argument("--host",default="127.0.0.1",help="Interface de escuta (padrão: apenas localhost)")
+    parser.add_argument("--host",default="127.0.0.1",
+                        help="Interface local; escuta externa não disponível")
     parser.add_argument("--port",type=int,default=8789)
-    parser.add_argument("--no-browser",action="store_true")
+    parser.add_argument("--browser",action="store_true",help="Abrir navegador externo adicional")
+    parser.add_argument("--no-browser",action="store_true",help="Não abrir navegador externo")
+    parser.add_argument("--headless",action="store_true",
+                        help="Executar sem janela desktop (automação/testes)")
     parser.add_argument("--data-dir",default=None)
     opts=parser.parse_args(argv)
     if opts.host not in ("127.0.0.1","localhost","::1"):
-        parser.error("Por segurança, esta versão aceita apenas localhost; publicação LAN virá com autenticação própria.")
+        parser.error("Acesso LAN permanece bloqueado até existir autenticação.")
+    if opts.browser and opts.no_browser:
+        parser.error("Escolha apenas --browser ou --no-browser")
     if opts.data_dir:os.environ["PT2VHF_MESH_DATA"]=opts.data_dir
     logging.basicConfig(level=logging.WARNING,format="%(levelname)s: %(message)s")
-    return run(opts.host,opts.port,not opts.no_browser)
+    opening=True if opts.browser else False if opts.no_browser else None
+    return run(opts.host,opts.port,opening,desktop=not opts.headless)
 
 if __name__=="__main__":raise SystemExit(main())

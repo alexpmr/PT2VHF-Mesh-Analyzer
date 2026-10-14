@@ -374,6 +374,45 @@ class SourceManager:
                 "note": "Comando enviado à interface; confirmação de persistência "
                         "no rádio ainda depende de reconexão e leitura posterior."}
 
+    def update_device(self, source_id, revision, changes):
+        """Apply validated groups sequentially: multiple radio writes, not atomic."""
+        from .device_config import prepare_all
+        source_id=int(source_id)
+        src=self.db.source(source_id)
+        if not src or src["kind"]=="mqtt":
+            raise ValueError("Conecte um rádio Serial/USB, BLE ou Wi-Fi/TCP")
+        with self._config_lock:
+            with self._lock:
+                iface=self._interfaces.get(source_id)
+                if iface is None:raise ValueError("Fonte não conectada")
+                node=getattr(iface,"localNode",None)
+                if node is None or getattr(node,"localConfig",None) is None:
+                    raise ValueError("Configuração não disponível; sincronize antes")
+                original, changed=prepare_all(node,revision,changes)
+                result=[]
+                for i,section in enumerate(changed):
+                    group=section["group"]
+                    try:
+                        node.writeConfig(group)
+                        result.append({"group":group,"fields":section["fields"],
+                                       "state":"write_requested"})
+                    except Exception as exc:
+                        # Restore groups not yet sent only; a previously sent write
+                        # may already have been accepted and must not be hidden.
+                        for pending in changed[i:]:
+                            name=pending["group"]
+                            getattr(node.localConfig,name).CopyFrom(getattr(original,name))
+                        result.append({"group":group,"fields":section["fields"],
+                                       "state":"error","error":type(exc).__name__})
+                        self.db.log("Falha ao gravar grupo "+group+" em fonte "+str(source_id),
+                                    "error",source_id)
+                        return {"success":False,"state":"partial_or_failed","steps":result,
+                                "note":"Verifique manualmente os grupos aplicados. Releia o rádio."}
+            self.db.log("Solicitada gravação dos grupos: "+",".join(x["group"] for x in changed),
+                        source_id=source_id)
+            return {"success":True,"state":"write_requested","steps":result,
+                    "note":"Todos os comandos foram solicitados; não comprova ACK ou gravação persistente. Reconecte e releia."}
+
     def send_text(self,id,to_node,text,channel=0):
         id=int(id)
         src=self.db.source(id)

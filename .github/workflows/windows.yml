@@ -37,7 +37,7 @@ jobs:
       - name: Compilar EXE Windows 11 x64
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name PT2VHF-Mesh-Analyzer --add-data 'mesh_analyzer/ui.html;mesh_analyzer' --collect-submodules meshtastic --collect-submodules bleak --collect-submodules paho --collect-submodules pubsub --hidden-import serial.tools.list_ports launch.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name PT2VHF-Mesh-Analyzer --add-data 'mesh_analyzer/ui.html;mesh_analyzer' --collect-submodules meshtastic --collect-submodules bleak --collect-submodules paho --collect-submodules pubsub --collect-all webview --hidden-import serial.tools.list_ports launch.py
           if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer.exe')) { throw 'EXE ausente' }
       - name: Criar ZIP portable e hash
         shell: pwsh

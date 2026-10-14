@@ -1,5 +1,16 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.3.0 — 14/10/2026 — Janela desktop, Sistema e Dispositivo
+
+- Execução padrão em **janela própria do aplicativo**, usando WebView2 no Windows 11. O HTTP continua restrito a 127.0.0.1; navegadores externos não são abertos automaticamente.
+- Nova aba **Configurações → Sistema**: escolha independente de abrir também o navegador ao iniciar (não por padrão), intervalo de atualização no SQLite (15 minutos padrão, 5–1.440 ajustável) e status da checagem. **Acesso LAN permanece bloqueado**, pois autenticação ainda não foi implementada.
+- Um monitor de atualizações por processo consulta o GitHub Releases e compartilha estado entre interface desktop e navegador local. Indicador superior verde/laranja/neutro clicável; nova versão abre release para download manual.
+- **Configurações → Dispositivo**: seleção de rádios conectados USB/Serial, BLE e Wi-Fi/TCP/IP; leitura do cache sincronizado pelo driver Meshtastic; campos escalares não sensíveis disponibilizados por grupo conforme protobuf; revisão e um botão "Salvar todas as alterações", enviando grupos de forma sequencial, com aviso sobre falhas parciais. Canais, módulos e campos sensíveis são somente leitura, e não há transação atômica nem ACK garantido.
+- Instalador Inno Setup informa/processa aplicativos que mantêm arquivos em uso pelo Restart Manager. O encerramento do WebView agora fecha o serviço local, fontes e SQLite. **O fechamento automático do instalador ainda requer testes reais com processo PyInstaller ativo**.
+- Adicionados testes de preferências persistentes, bloqueio de LAN, validação de dados, revision stale e tratamento de falha de gravação.
+
+**Limitações:** atualização automática com download/instalação verificados ainda não implementada; opção LAN desabilitada até autenticação; módulo/channels/secret backup ainda não editáveis; WebView2 Runtime precisa estar disponível; testes de campo com rádio e de instalação/atualização ainda necessários.
+
 ## v0.2.0 — 14/10/2026 — núcleo analítico independente e relatório técnico
 
 - Estatísticas com 11 subabas: Visão Geral, Rede, RF, Ranking, Routing, Tráfego, Consultas, Chat, Energia, Pontos de atenção e Acessos, com consultas SQLite filtráveis.

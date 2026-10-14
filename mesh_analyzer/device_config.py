@@ -79,6 +79,8 @@ def read_device(local_node, metadata=None):
     sections["channels"] = [redact(_to_dict(c)) for c in channels]
     return {
         "revision": hashlib.sha256(raw).hexdigest(),
+        "full_revision": hashlib.sha256(config.SerializeToString()).hexdigest(),
+        "editable_sections": editable_fields(config),
         "fields": lora_descriptor_fields(lora),
         "sections": sections,
         "firmware": str(getattr(metadata, "firmware_version", "") or "")[:64],
@@ -133,3 +135,94 @@ def prepare_lora(local_node, expected_revision, changes):
     except Exception:
         lora.CopyFrom(original)
         raise
+
+# Non-sensitive scalar fields on firmware-provided localConfig groups are editable.
+# Channels, security and moduleConfig remain visible in sanitized, read-only form.
+READ_ONLY_GROUPS = {"security"}
+
+
+def editable_fields(config):
+    groups = {}
+    for section in config.DESCRIPTOR.fields:
+        if section.type != section.TYPE_MESSAGE or section.name in READ_ONLY_GROUPS:
+            continue
+        sub = getattr(config, section.name)
+        fields = []
+        for field in sub.DESCRIPTOR.fields:
+            name=field.name
+            if any(word in name.lower() for word in SENSITIVE):
+                continue
+            if getattr(field,"is_repeated",False) or field.type in (field.TYPE_MESSAGE,field.TYPE_BYTES):
+                continue
+            value=getattr(sub,name)
+            desc={"name":name,"label":name.replace("_"," ").title()}
+            if field.type == field.TYPE_ENUM:
+                desc.update(type="enum",options=[v.name for v in field.enum_type.values],
+                            value=field.enum_type.values_by_number[int(value)].name)
+            elif field.type == field.TYPE_BOOL:
+                desc.update(type="bool",value=bool(value))
+            elif field.type in (field.TYPE_INT32,field.TYPE_UINT32,field.TYPE_INT64,field.TYPE_UINT64):
+                desc.update(type="int",value=int(value))
+                if section.name=="lora" and name in LORA_FIELDS and LORA_FIELDS[name]:
+                    desc["min"],desc["max"]=LORA_FIELDS[name]
+            elif field.type in (field.TYPE_FLOAT,field.TYPE_DOUBLE):
+                desc.update(type="float",value=float(value))
+            elif field.type == field.TYPE_STRING:
+                desc.update(type="string",value=str(value),max=128)
+            else:continue
+            fields.append(desc)
+        if fields:groups[section.name]=fields
+    return groups
+
+
+def prepare_all(local_node, expected_revision, edits):
+    """Validate a multi-group edit before writing any command to the device."""
+    config=local_node.localConfig
+    if hashlib.sha256(config.SerializeToString()).hexdigest()!=expected_revision:
+        raise ValueError("Configuração mudou; releia o rádio antes de gravar")
+    if not isinstance(edits,dict) or not edits or len(edits)>18:
+        raise ValueError("Nenhuma alteração de dispositivo enviada")
+    supported=editable_fields(config)
+    original=config.__class__();original.CopyFrom(config)
+    changed=[]
+    try:
+        for group,fields in edits.items():
+            if group not in supported or not isinstance(fields,dict) or len(fields)>150:
+                raise ValueError("Grupo não suportado para alteração: "+str(group))
+            known={f["name"]:f for f in supported[group]}
+            proto_fields={f.name:f for f in getattr(config,group).DESCRIPTOR.fields}
+            group_changes=[]
+            for key,value in fields.items():
+                if key not in known:raise ValueError("Campo indisponível: "+str(group)+"."+str(key))
+                row=known[key];field=proto_fields[key]
+                if row["type"]=="bool":
+                    if type(value) is not bool:raise ValueError("Booleano inválido em "+key)
+                elif row["type"]=="enum":
+                    if not isinstance(value,str) or value not in field.enum_type.values_by_name:
+                        raise ValueError("Enum inválido em "+key)
+                    value=field.enum_type.values_by_name[value].number
+                elif row["type"]=="int":
+                    if type(value) is not int:raise ValueError("Inteiro inválido em "+key)
+                    mn=0 if field.type in (field.TYPE_UINT32,field.TYPE_UINT64) else -(2**31 if field.type==field.TYPE_INT32 else 2**63)
+                    mx=(2**32-1 if field.type==field.TYPE_UINT32 else
+                        2**64-1 if field.type==field.TYPE_UINT64 else
+                        2**31-1 if field.type==field.TYPE_INT32 else 2**63-1)
+                    if "min" in row:mn=max(mn,row["min"])
+                    if "max" in row:mx=min(mx,row["max"])
+                    if not mn<=value<=mx:raise ValueError("Valor fora dos limites: "+key)
+                elif row["type"]=="float":
+                    if type(value) not in (int,float) or not -1e8<float(value)<1e8:
+                        raise ValueError("Número inválido: "+key)
+                elif row["type"]=="string":
+                    if not isinstance(value,str) or len(value.encode("utf-8"))>128:
+                        raise ValueError("Texto inválido: "+key)
+                if getattr(getattr(config,group),key)!=value:
+                    setattr(getattr(config,group),key,value)
+                    group_changes.append(key)
+            if group_changes:changed.append({"group":group,"fields":group_changes})
+        if not changed:raise ValueError("Nenhuma alteração detectada")
+        return original,changed
+    except Exception:
+        config.CopyFrom(original)
+        raise
+

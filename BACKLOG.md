@@ -16,6 +16,16 @@ Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.
 - Menu Geral: checar releases a cada 15 minutos (ajuste local entre 5 e 1440 min); baixar/instalar diretamente pelo aplicativo **ainda pendente**.
 - README: atalhos com nomes estáveis em releases/latest/download; publicação via GitHub Actions e versão extraída de VERSION. Links só ficam ativos quando assets da release v0.1.1 estiverem publicados.
 
+## v0.3.0 — implementado no código (validação de CI e bancada pendentes)
+
+- **#17**: Janela desktop WebView2 por padrão; navegador externo apenas por preferência do Sistema ou opção CLI explícita.
+- **#18 / #2**: Aba Sistema, navegador ao iniciar desligado por padrão, intervalo compartilhado de atualizações (15 min padrão) persistido no SQLite, monitor único por processo e botão superior de consulta à release. LAN continua bloqueada até implementação de autenticação; atualização instalável interna pendente.
+- **#6**: Aba Dispositivo com seleção Serial/BLE/TCP conectado, leitura por grupo, editor seguro de campos escalares protobuf, revisão e aplicação em sequência com resultado por grupo. Canais, configurações de módulos, segredos, readback de persistência e backup/restauração completa ainda pendentes.
+- **#15**: Encerrar a janela termina backend/SQLite/fontes; o Inno Restart Manager detecta aplicativos que ocupem executável. Encerramento gracioso pelo Setup e atualização em execução continuam **pendentes de validação/aperfeiçoamento**.
+- **#16**: Paridade integral das opções de configuração do Mapa e sonificação ainda pendente.
+
+A existência de código e o êxito da compilação não comprovam comportamento em rádio conectado ou instalador aberto.
+
 ## v0.2.0 — implementado no código (aguarda publicação e validação em campo)
 
 - **#8 Nós (parcial):** tabela compacta, 11 colunas, pesquisa/ordenação, seleção de colunas e referência de distância. Hops por nó aparecem indisponíveis quando não há evidência; faltam detalhes históricos completos.

@@ -1,5 +1,5 @@
 #define AppName "PT2VHF Mesh Analyzer"
-#define AppVersion "0.2.0"
+#define AppVersion "0.3.0"
 [Setup]
 AppId={{8AB1D4E5-9A9C-46DC-8C24-5D89A6D98701}
 AppName={#AppName}
@@ -15,6 +15,9 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 UninstallDisplayIcon={app}\PT2VHF-Mesh-Analyzer.exe
 WizardStyle=modern
+CloseApplications=yes
+RestartApplications=no
+
 [Files]
 Source: "..\dist\PT2VHF-Mesh-Analyzer.exe"; DestDir: "{app}"; Flags: ignoreversion
 [Icons]
