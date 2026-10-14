@@ -120,6 +120,18 @@ class Database:
                 destination INTEGER,
                 route_json TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS node_sources (
+                source_id INTEGER NOT NULL,
+                node_num INTEGER NOT NULL,
+                first_seen_ms INTEGER NOT NULL DEFAULT 0,
+                last_seen_ms INTEGER NOT NULL DEFAULT 0,
+                observed INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(source_id,node_num)
+            );
+            CREATE INDEX IF NOT EXISTS idx_node_sources_node ON node_sources(node_num);
+            CREATE TABLE IF NOT EXISTS topology_processed (
+                source_packet_key TEXT PRIMARY KEY
+            );
             CREATE TABLE IF NOT EXISTS links (
                 source_id INTEGER NOT NULL,
                 a INTEGER NOT NULL,
@@ -160,6 +172,17 @@ class Database:
             if "voltage" not in columns:
                 self._db.execute("ALTER TABLE nodes ADD COLUMN voltage REAL")
             self._db.execute("INSERT OR IGNORE INTO settings(key,value) VALUES('retention',?)", (json.dumps(DEFAULT_RETENTION),))
+            # Existing installations retain source provenance where available.
+            self._db.execute("""INSERT OR IGNORE INTO node_sources(source_id,node_num,first_seen_ms,last_seen_ms,observed)
+              SELECT last_source_id,node_num,first_seen_ms,last_seen_ms,0
+              FROM nodes WHERE last_source_id IS NOT NULL""")
+            self._db.execute("""INSERT INTO node_sources(source_id,node_num,first_seen_ms,last_seen_ms,observed)
+              SELECT source_id,from_node,MIN(timestamp_ms),MAX(timestamp_ms),1 FROM packets
+              WHERE from_node IS NOT NULL AND from_node>0 AND from_node<4294967295 GROUP BY source_id,from_node
+              ON CONFLICT(source_id,node_num) DO UPDATE SET
+                first_seen_ms=MIN(first_seen_ms,excluded.first_seen_ms),
+                last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
+                observed=MAX(observed,excluded.observed)""")
 
     def close(self):
         with self._lock:
@@ -354,7 +377,7 @@ class Database:
                     removed[table] = cur.rowcount
         return removed
 
-    def upsert_node(self, num, source_id, timestamp_ms=None, **kwargs):
+    def upsert_node(self, num, source_id, timestamp_ms=None, observed=False, **kwargs):
         try:
             num = int(num)
             if num <= 0 or num >= 0xffffffff: return
@@ -388,11 +411,84 @@ class Database:
             cols=list(fields)
             args=list(fields.values())+[num]
             self._db.execute("UPDATE nodes SET "+",".join(k+"=?" for k in cols)+" WHERE node_num=?",args)
+            self._db.execute("""INSERT INTO node_sources(source_id,node_num,first_seen_ms,last_seen_ms,observed)
+                VALUES(?,?,?,?,?) ON CONFLICT(source_id,node_num) DO UPDATE SET
+                first_seen_ms=MIN(first_seen_ms,excluded.first_seen_ms),
+                last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
+                observed=MAX(observed,excluded.observed)""",
+                (int(source_id),num,ts,ts,int(bool(observed))))
 
     def node_rows(self, limit=5000):
         rows=self._rows("SELECT * FROM nodes ORDER BY last_seen_ms DESC LIMIT ?",(min(int(limit),15000),))
         for r in rows: r["aliases"]=json.loads(r["aliases"] or "[]")
         return rows
+
+    def node_source_rows(self):
+        return self._rows("SELECT * FROM node_sources ORDER BY source_id,node_num")
+
+    def topology_processed(self, key):
+        with self._lock:
+            return self._db.execute("SELECT 1 FROM topology_processed WHERE source_packet_key=?",(key,)).fetchone() is not None
+
+    def record_topology(self, key, source_id, timestamp_ms, edges, trace=None, historical=False):
+        """Atomically store once per original packet; never invent direct RF status."""
+        with self._lock,self._db:
+            found=self._db.execute("SELECT 1 FROM topology_processed WHERE source_packet_key=?",(str(key),)).fetchone()
+            if found:return False
+            if trace:
+                self._db.execute("INSERT INTO traces(source_id,timestamp_ms,origin,destination,route_json) VALUES(?,?,?,?,?)",
+                    (source_id,timestamp_ms,trace["from"],trace["to"],json.dumps(trace)))
+            for a,b,quality in list(dict.fromkeys(edges)):
+                if not 0<a<b<0xffffffff:continue
+                if historical:
+                    # Earlier versions already stored some decoded edges; avoid
+                    # inflating their observation count when backfilling packets.
+                    present=self._db.execute("SELECT 1 FROM links WHERE source_id=? AND a=? AND b=? AND quality=?",
+                                        (source_id,a,b,quality)).fetchone()
+                    if present:continue
+                self._db.execute("""INSERT INTO links(source_id,a,b,quality,first_seen_ms,last_seen_ms,observations)
+                    VALUES(?,?,?,?,?,?,1) ON CONFLICT(source_id,a,b,quality) DO UPDATE SET
+                    last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
+                    first_seen_ms=MIN(first_seen_ms,excluded.first_seen_ms),
+                    observations=links.observations+1""",
+                    (source_id,a,b,quality,timestamp_ms,timestamp_ms))
+            self._db.execute("INSERT INTO topology_processed(source_packet_key) VALUES(?)",(str(key),))
+        return True
+
+    def reprocess_archived_topology(self, parser, limit=10000):
+        """One-time migration for packets recorded before topology parsing existed."""
+        rows=self._rows("""SELECT source_packet_key,source_id,timestamp_ms,raw_json,from_node,to_node,port
+          FROM packets WHERE port IN ('TRACEROUTE_APP','NEIGHBORINFO_APP','70','71','67')
+          AND source_packet_key NOT IN (SELECT source_packet_key FROM topology_processed)
+          ORDER BY timestamp_ms DESC LIMIT ?""",(int(limit),))
+        processed=0;linked=0
+        for p in rows:
+            try:
+                packet=json.loads(p["raw_json"] or "{}")
+                if not isinstance(packet,dict):continue
+                # Correct old mislabeled numeric port 67 only when packet metadata
+                # explicitly says traceroute; it is TELEMETRY in the protocol.
+                kind,edges=parser(packet)
+                if kind is None:continue
+                self.record_topology(p["source_packet_key"],p["source_id"],
+                            p["timestamp_ms"],edges or [],historical=True)
+                processed+=1;linked+=len(edges or [])
+            except (ValueError,TypeError,sqlite3.Error):continue
+        return {"processed":processed,"candidate_edges":linked}
+
+    def topology_diagnostics(self,source_id=None):
+        args=() if source_id is None else (int(source_id),)
+        where="" if source_id is None else " WHERE source_id=?"
+        edges=self._rows("SELECT * FROM links"+where+" ORDER BY last_seen_ms DESC LIMIT 20000",args)
+        coords={n["node_num"]:n for n in self._rows("SELECT node_num,latitude,longitude,position_ms FROM nodes")}
+        visible=missing=0
+        for edge in edges:
+            a=coords.get(edge["a"]);b=coords.get(edge["b"])
+            if a and b and all(n["latitude"] is not None and n["longitude"] is not None for n in (a,b)):
+                visible+=1
+            else:missing+=1
+        return {"stored":len(edges),"drawable":visible,"missing_positions":missing,
+                "note":"Relações de rota/neighbor não são prova de RF direto."}
 
     def add_packet(self, item:dict):
         fields=["source_id","packet_id","source_packet_key","timestamp_ms","from_node","to_node", "port","channel","rx_snr","rx_rssi","hop_start","hop_limit","via_mqtt","encrypted","text_preview","raw_json"]
