@@ -1,16 +1,16 @@
-# PT2VHF Mesh Analyzer — v0.5.0
+# PT2VHF Mesh Analyzer — v0.6.0
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 11 x64 com banco próprio SQLite, fontes Meshtastic e análises locais. A arquitetura também permite evolução para Linux/macOS.
 
 ## Downloads — Windows 11 x64
 
-**Versão publicada e verificada: [v0.5.0](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.5.0)**
+**Versão candidata — aguardando confirmação dos instaladores: [v0.6.0](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.0)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
-| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.5.0-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.5.0/PT2VHF-Mesh-Analyzer-v0.5.0-Setup-Win11-x64.exe)** |
-| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.5.0/PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win11-x64.zip)** |
-| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.5.0/SHA256SUMS.txt) |
+| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.0-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.0/PT2VHF-Mesh-Analyzer-v0.6.0-Setup-Win11-x64.exe)** |
+| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.0-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.0/PT2VHF-Mesh-Analyzer-v0.6.0-Portable-Win11-x64.zip)** |
+| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.0/SHA256SUMS.txt) |
 
 **Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
 [Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
@@ -20,21 +20,21 @@
 
 **Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable pode ser extraído e executado sem instalação. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
 
-### Novidades da v0.5.0
+### Novidades da v0.6.0
 
-- **Atualização direta dentro do Mesh Analyzer (Windows 11):** a partir da v0.5.0, clique no indicador de nova versão, veja changelog, confirme e acompanhe download e SHA256. O aplicativo fecha fontes/SQLite e um processo externo instala e reinicia, apresentando as novidades uma vez. **A atualização real com Setup e Portable ainda requer teste de bancada.** Para vir da v0.4.0 é necessário baixar esta versão uma vez.
+- **Atualização direta dentro do Mesh Analyzer (Windows 11):** a partir da v0.6.0, clique no indicador de nova versão, veja changelog, confirme e acompanhe download e SHA256. O aplicativo fecha fontes/SQLite e um processo externo instala e reinicia, apresentando as novidades uma vez. **A atualização real com Setup e Portable ainda requer teste de bancada.** Para vir da v0.4.0 é necessário baixar esta versão uma vez.
 - **Configurações → Mapa:** filtros de janela e número de observações, mapa-base, brilho, cores e espessuras de RF/MQTT, mostrar linhas/nós, mapa de calor de pacotes observados, nomes, relevo, Auto Zoom em novos traceroutes, temas sonoros e animação com velocidade/duração. A barra do Mapa deixou de mostrar controles históricos inoperantes e seleção de velocidade/mapa-base.
 - **Estatísticas:** apenas 10 subabas; *Acessos* removida. Visão Geral redesenhada em 8 cartões com resumo automático em faixa amarela. Outras subabas ampliadas, mantendo precisão das observações e sem inventar TX/CRC ou RF direto.
 - **Integridade:** base de dados preservada no perfil do usuário. Em caso de falha, o atualizador grava `update.log` e permite instalação manual.
 
 **Pendente:** paridade total com todos os painéis e métricas do Traffic Analyzer v1.62.1; validação do atualizador, WebView2 e dispositivos físicos em Windows 11.
 
-### Recursos acumulados até a v0.5.0
+### Recursos acumulados até a v0.6.0
 
 - **Estatísticas (10 subabas)**: Visão Geral, Rede, RF, Ranking, Routing, Tráfego, Consultas, Chat, Energia, Pontos de atenção. Dados do SQLite próprio, filtros por período, fonte e nó, evolução horária, tabelas e médias RF quando medidas.
 - **Relatório técnico PDF nativo e offline**: capítulos com inventário, fontes, tráfego, RX/RSSI/SNR, telemetria LocalStats quando disponível, relações observadas, diagnóstico de possíveis interferências/colisões, hipóteses e ações técnicas. Não necessita Home Assistant nem MeshMonitor.
 - **Dados RF auditáveis**: `num_packets_rx_bad` de LocalStats indica RX inválido, **não** contador CRC específico. Outro LoRa na faixa, piso de ruído e colisões não são comprovados sem instrumentação adicional; o relatório marca explicitamente o que não pode medir.
-- **Nós**: 11 colunas iniciais, busca, ordenação, ocultação de colunas, idade da última observação/posição e referência de distância selecionável. Hops sem evidência não são exibidos como zero.
+- **Nós**: 11 colunas iniciais, busca, ordenação, ocultação de colunas, idade da última observação/posição e referência de distância automática no rádio local conectado. Hops sem evidência não são exibidos como zero.
 - **Tráfego**: filtro por fonte/tipo, detalhes dos pacotes, pausa da tabela e CSV visível.
 - **Mensagens**: autocomplete incremental de nós ao digitar `@`, inserindo nome/identificador como texto comum interoperável; **não é um DM nativo nem garante alerta remoto**.
 - **Mapa**: base OSM, topográfico, satélite, claro e escuro; radar meteorológico, hillshade e relevo com corte (DEM), slider e opacidades. Pulsos animados em nós observados, sem desenhar uma rota RF não comprovada.
@@ -42,7 +42,7 @@
 
 **Não confundir “11 subabas existentes” com paridade integral de indicadores do legado:** vários painéis avançados exibem indisponibilidade quando não há evidência suficiente, como rankings RF diretos, taxa de CRC de hardware, espectro, confirmação de entrega e sessões web autenticadas.
 
-### O que muda na v0.5.0
+### O que muda na v0.6.0
 
 - **Interface desktop WebView2** abre no Windows 11 sem navegador externo por padrão.
 - **Configurações → Sistema**: escolher abertura de navegador adicional e frequência de verificações (15 min padrão); acesso Web LAN continua desabilitado enquanto não houver autenticação.
@@ -50,9 +50,9 @@
 - **Configurações → Dispositivo**: seleção de rádio conectado Serial/USB, BLE ou Wi-Fi/TCP/IP, leitura dos grupos do cache Meshtastic, alteração de parâmetros escalares não sensíveis e botão único para enviar alterações de vários grupos. Não há confirmação universal de gravação persistente.
 - **Instalação**: WebView encerra backend e conexões quando a janela fecha; Inno Setup solicita encerramento de aplicações em uso. Validação do atualizador automático completo ainda pendente.
 
-**Requisito:** Windows 11 x64 com Microsoft Edge WebView2 Runtime; sem runtime a interface não abre automaticamente em navegador. A v0.5.0 não implementa LAN autenticada, alteração de canais/PSKs ou atualização instalável automática.
+**Requisito:** Windows 11 x64 com Microsoft Edge WebView2 Runtime; sem runtime a interface não abre automaticamente em navegador. A v0.6.0 não implementa LAN autenticada, alteração de canais/PSKs ou atualização instalável automática.
 
-### Novidades da v0.5.0
+### Novidades da v0.6.0
 
 - **Correção dos enlaces**: identificadores oficiais de pacotes Meshtastic, interpretação de traceroutes/NeighborInfo recebidos, evidência por fonte e reprocessamento de histórico salvo. Contadores distinguem relações gravadas, visíveis e sem posição. Rotas observadas **não são automaticamente enlaces RF diretos**.
 - **Mapa → Fonte**: Todas as fontes (padrão) ou filtro específico USB/Serial, BLE, Wi-Fi/TCP ou MQTT. A seleção não modifica o rádio de transmissão.
@@ -108,16 +108,16 @@ O GitHub Actions de `.github/workflows/windows.yml` compila o EXE, o ZIP portát
 - Windows: `%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3`.
 - Linux/macOS (para desenvolvimento): `$XDG_DATA_HOME/PT2VHF-Mesh-Analyzer` ou `~/.local/share/PT2VHF-Mesh-Analyzer`.
 - Variável opcional de teste: `PT2VHF_MESH_DATA`.
-- Nunca coloque o SQLite, arquivo `.env` ou credenciais no repositório. Senhas MQTT são gravadas localmente no SQLite; **não há criptografia de credenciais em repouso na v0.5.0**. Evite computadores compartilhados e restrinja as permissões ao usuário do sistema.
+- Nunca coloque o SQLite, arquivo `.env` ou credenciais no repositório. Senhas MQTT são gravadas localmente no SQLite; **não há criptografia de credenciais em repouso na v0.6.0**. Evite computadores compartilhados e restrinja as permissões ao usuário do sistema.
 
-## Limites honestos da v0.5.0
+## Limites honestos da v0.6.0
 
-- O **visual e as abas** foram recriados a partir do padrão Traffic Analyzer; a v0.5.0 **não é uma cópia funcional completa** da v1.62.1. Funcionalidades de dashboard avançado ainda não implementadas em paridade, bots PING/CLIMA, integrações geográficas/APRS, rankings RF diretos comprovados, consulta ativa NodeInfo e cobertura especializada permanecem pendentes.
+- O **visual e as abas** foram recriados a partir do padrão Traffic Analyzer; a v0.6.0 **não é uma cópia funcional completa** da v1.62.1. Funcionalidades de dashboard avançado ainda não implementadas em paridade, bots PING/CLIMA, integrações geográficas/APRS, rankings RF diretos comprovados, consulta ativa NodeInfo e cobertura especializada permanecem pendentes.
 - **Hardware físico ainda não foi testado.** USB e TCP utilizam interfaces oficiais Meshtastic Python. BLE requer identificador apropriado e suporte da plataforma/firmware; conectar diversos BLE simultâneos pode depender do hardware e do SO. MQTT armazena envelopes Meshtastic; payloads criptografados sem chaves conhecidas não são decodificados, e MQTT **não transmite** RF.
 - O radio Meshtastic deve usar firmware compatível e **a mesma porta não deve ser ocupada por outro cliente**. Fontes múltiplas podem escutar rádios distintos; transmissões acontecem somente na fonte escolhida.
-- Para ser confiável, um enlace direto RF necessita evidência por hop, não apenas um registro de traceroute. Na v0.5.0, o mapa diferencia rotas observadas de RF confirmado.
+- Para ser confiável, um enlace direto RF necessita evidência por hop, não apenas um registro de traceroute. Na v0.6.0, o mapa diferencia rotas observadas de RF confirmado.
 - A interface usa Leaflet e mapas-base online; **recepção e banco independem da internet**, mas a cartografia requer acesso à internet e pode ficar vazia offline.
-- A interface HTTP da v0.5.0 é apenas localhost. Acesso remoto exigirá autenticação/TLS antes de permitir publicação na rede.
+- A interface HTTP da v0.6.0 é apenas localhost. Acesso remoto exigirá autenticação/TLS antes de permitir publicação na rede.
 - O gerenciamento LoRa confirma apenas que o comando foi aceito pela API local, não o readback persistente do rádio. Campos de segurança e PSK não são editáveis nesta tela.
 - O tratamento de ACK/retransmissões e estados detalhados de entrega será ampliado. Estado inicial `accepted_by_radio` **não significa entregue nem lido**.
 
