@@ -19,6 +19,7 @@ from pathlib import Path
 
 from . import __version__
 from .database import Database, profile_dir
+from .analytics import calculate, parse_filters
 from .transports import SourceManager, available_serial_ports
 
 LOG = logging.getLogger("pt2vhf.mesh")
@@ -78,7 +79,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
         def do_GET(self):
             path=urllib.parse.urlsplit(self.path).path
             try:
-                if path in ("/","/mapa","/nos","/trafego","/mensagens","/estatisticas","/automacoes","/configuracoes","/ajuda"):
+                if path in ("/","/mapa","/nos","/trafego","/mensagens","/estatisticas","/automacoes","/configuracoes","/ajuda") or path.startswith("/estatisticas/"):
                     content=doc.replace("__CSRF_TOKEN__",html.escape(csrf,quote=True)).encode("utf-8")
                     self.send_response(200);self.send_header("Content-Type","text/html; charset=utf-8")
                     self.send_header("X-Frame-Options","DENY")
@@ -101,6 +102,10 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
                     self._json(latest_release())
                 elif path == "/api/retention":self._json({"success":True,"data":db.retention()})
                 elif path == "/api/stats":self._json({"success":True,"counts":db.stats(),"connections":sources.snapshot()})
+                elif path == "/api/analytics":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    filters={k:v[0] for k,v in query.items()}
+                    self._json(calculate(db,filters,sources.snapshot()))
                 else:self._error("Rota não encontrada",404)
             except Exception as exc:
                 LOG.exception("Erro GET %s",path)
@@ -121,7 +126,18 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
                 if not 1<=size<=20000:return self._error("Corpo inválido",413)
                 payload=json.loads(self.rfile.read(size).decode("utf-8"))
                 if not isinstance(payload,dict):return self._error("JSON inválido")
-                if path == "/api/sources/save":
+                if path == "/api/report/pdf":
+                    from .reporting import generate
+                    body=generate(db,payload,sources.snapshot())
+                    self.send_response(200)
+                    self.send_header("Content-Type","application/pdf")
+                    self.send_header("Content-Disposition","attachment; filename=PT2VHF-Mesh-Analyzer-Relatorio.pdf")
+                    self.send_header("X-Content-Type-Options","nosniff")
+                    self.send_header("Cache-Control","no-store")
+                    self.send_header("Content-Length",str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                elif path == "/api/sources/save":
                     existing_id=int(payload.get("id") or 0)
                     existing=db.source(existing_id) if existing_id else None
                     obj=db.upsert_source(payload)
