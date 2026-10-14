@@ -4,3 +4,5 @@ pyserial>=3.5,<4
 bleak>=0.22,<2
 paho-mqtt>=2,<3
 PyPubSub>=4,<5
+# Offline technical PDF generation
+reportlab>=4.2,<5
