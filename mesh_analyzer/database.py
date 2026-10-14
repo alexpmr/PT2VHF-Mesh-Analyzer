@@ -440,6 +440,20 @@ class Database:
                     (source_id,timestamp_ms,trace["from"],trace["to"],json.dumps(trace)))
             for a,b,quality in list(dict.fromkeys(edges)):
                 if not 0<a<b<0xffffffff:continue
+                # A traceroute/neighbor reference is a source-specific mention;
+                # it is NOT a reception by this node or evidence of being online.
+                for num in (a,b):
+                    self._db.execute("""INSERT OR IGNORE INTO nodes(node_num,node_id,
+                          first_seen_ms,last_seen_ms,last_source_id)
+                          VALUES(?,?,?,?,?)""",
+                          (num,f"!{num:08x}",0,0,source_id))
+                    self._db.execute("""INSERT INTO node_sources(
+                          source_id,node_num,first_seen_ms,last_seen_ms,observed)
+                          VALUES(?,?,?,?,1)
+                          ON CONFLICT(source_id,node_num) DO UPDATE SET
+                          last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
+                          observed=MAX(observed,excluded.observed)""",
+                          (source_id,num,timestamp_ms,timestamp_ms))
                 if historical:
                     # Earlier versions already stored some decoded edges; avoid
                     # inflating their observation count when backfilling packets.
