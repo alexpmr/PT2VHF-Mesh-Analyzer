@@ -636,11 +636,15 @@ function renderLoraSources(){
    sel.innerHTML=eligible.map(s=>`<option value="${s.id}">${esc(s.name)} · ${esc(s.kind)}</option>`).join('')||'<option value="">Nenhum rádio conectado</option>';
    if(eligible.some(s=>String(s.id)===old))sel.value=old;
    sel.dataset.signature=signature;
+   if(Number(sel.value)&&loraLoadedSource!==Number(sel.value))
+     setTimeout(()=>{if(Number(sel.value)&&!$('loraRead').disabled)$('loraRead').click();},200);
  }
  $('loraRead').disabled=eligible.length===0;
  if(loraLoadedSource!==Number(sel.value)){$('loraSave').disabled=true;$('loraExport').disabled=true;}
 }
-$('loraSource').onchange=()=>{loraData=null;loraLoadedSource=null;$('deviceFields').innerHTML='';$('loraFields').innerHTML='';$('loraOther').textContent='Selecione Ler do rádio';$('loraSave').disabled=true;$('loraExport').disabled=true;};
+$('loraSource').onchange=()=>{loraData=null;loraLoadedSource=null;$('deviceFields').innerHTML='';$('loraFields').innerHTML='';$('loraOther').textContent='Lendo novo rádio...';$('loraSave').disabled=true;$('loraExport').disabled=true;
+ if(Number($('loraSource').value))$('loraRead').click();
+};
 function showLora(){
  const form=$('deviceFields');form.innerHTML='';
  const groupNames={device:'Dispositivo',lora:'LoRa e RF',position:'Posição / GPS',power:'Energia',
