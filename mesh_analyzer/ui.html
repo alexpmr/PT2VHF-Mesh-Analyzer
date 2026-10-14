@@ -1021,6 +1021,12 @@ function renderStats(){
           fmtCount(leader.count)+' pacotes. ':'')+
       'A análise registra '+fmtCount(c.alerts)+' pontos de atenção, sendo '+fmtCount(c.critical)+
       ' críticos. Relações lógicas não equivalem a enlaces RF diretos.</div>';
+   html+='<div class="statsSplit">'+statsHead('Tipos de tráfego',
+       statsTbl(['Tipo','Pacotes','%'],d.packet_types.map(x=>
+        [x.name,fmtCount(x.count),c.observations?
+          (100*x.count/c.observations).toFixed(1).replace('.',',')+'%':'—'])))+
+      statsHead('Nós mais ativos',statsTbl(['Nó','Pacotes'],
+        d.top_originators.slice(0,12).map(x=>[x.name,fmtCount(x.count)])))+'</div>';
    break;
  case 'rede':
    html=statsHead('Inventário conhecido',statsTbl(['Indicador','Quantidade'],[
@@ -1045,27 +1051,72 @@ function renderStats(){
     +'Recomenda-se comparar receptores e, se necessário, utilizar um SDR secundário.');
    break;
  case 'ranking':
-   html=statsHead('Nós que mais originam tráfego',statsTbl(['Nó','Pacotes'],d.top_originators.map(x=>[x.name,x.count])));
-   html+=statsHead('Ranking visual por observações',statBar(d.top_originators.slice(0,10)));
-   html+=statsHead('Enlaces RF diretos mais longos','Ranking indisponível: a base ainda não possui comprovação suficiente de adjacência RF e posições sincronizadas. Relações observadas não são tratadas como RF direto.');
+   html=statsHead('10 enlaces RF diretos mais longos',
+     (d.direct_rf_rank||[]).length?
+       statsTbl(['#','Nó A','Nó B','Distância','Obs. RF','SNR médio','Última RF'],
+       d.direct_rf_rank.map((x,i)=>[i+1,x.name_a+' / !'+x.a.toString(16).padStart(8,'0'),
+         x.name_b+' / !'+x.b.toString(16).padStart(8,'0'),
+         x.distance_km.toFixed(1).replace('.',',')+' km',fmtCount(x.observations),
+         fmtMeasure(x.snr,'dB'),age(x.last_rf_ms)])):
+     '<p class="muted">Nenhum enlace RF direto comprovado com posições temporalmente compatíveis. '+
+     'Traceroute e relações de vizinhança não são provas de um hop RF direto.</p>');
+   html+=statsHead('Diagnóstico de elegibilidade',
+      statsTbl(['Evidência','Relações','Observações','Elegível'],
+        d.link_types.map(x=>[x.quality,fmtCount(x.count),fmtCount(x.observations),
+           x.quality==='confirmed_direct_rf'?
+             'Exige posição válida próxima do horário RF':'Não: evidência RF direta insuficiente'])));
+   html+=statsHead('Nós que mais originam tráfego',
+      statsTbl(['Nó','Pacotes'],d.top_originators.slice(0,15).map(x=>[x.name,fmtCount(x.count)])));
    break;
  case 'routing':
-   html=statsHead('Distribuição por saltos',statsTbl(['Saltos calculáveis','Pacotes'],d.hops.map(x=>[x.hops,x.count])));
-   html+=statsHead('Categorias de relações',statsTbl(['Evidência','Relações','Observações'],d.link_types.map(x=>[x.quality,x.count,x.observations])));
-   html+=statsHead('Limitações de roteamento','Apenas saltos efetivamente recuperados do protocolo são incluídos. Não é possível reconstruir todo percurso de broadcasts multissalto sem observações suficientes.');
+   const countedHops=d.hops.reduce((sum,x)=>sum+Number(x.count),0);
+   html='<div class="statGrid stats-overview">'+[
+       ['Traceroutes observados',c.traceroutes],['Pacotes com hops conhecidos',countedHops],
+       ['Saltos medianos','Não medido'],['Relays confirmados','Não medido']]
+     .map(([label,value])=>'<div class="stat"><b>'+
+          esc(typeof value==='number'?fmtCount(value):value)+
+          '</b><span>'+esc(label)+'</span></div>').join('')+'</div>';
+   html+='<div class="statsSplit">'+
+       statsHead('Distribuição por hops',
+         statsTbl(['Hops','Pacotes','%'],d.hops.map(x=>[x.hops,fmtCount(x.count),
+           countedHops?(x.count*100/countedHops).toFixed(1).replace('.',',')+'%':'—'])))+
+       statsHead('Nós intermediários observados',
+         '<p class="muted">Indisponível: o catálogo não preserva a identificação confiável de todos os relays por resposta de traceroute. Não inferir pelo hopLimit.</p>')+
+     '</div>';
+   html+=statsHead('Evidência de rota observada',
+     statsTbl(['Evidência','Relações','Observações'],d.link_types.map(x=>[
+       x.quality,fmtCount(x.count),fmtCount(x.observations)])));
    break;
  case 'trafego':
-   html=statsHead('Pacotes por tipo',statBar(d.packet_types));
+   html='<div class="statGrid stats-overview">'+[
+    ['Pacotes',fmtCount(c.observations)],['RX observados',fmtCount(c.rx_observations)],
+    ['TX comprovados','Não medido'],['Nós originadores',fmtCount(c.active_originators)]
+   ].map(([label,value])=>'<div class="stat"><b>'+esc(value)+'</b><span>'+esc(label)+'</span></div>').join('')+'</div>';
+   html+=statsHead('Volume por tipo',statsTbl(['Tipo','Pacotes','Participação'],
+     d.packet_types.map(x=>[x.name,fmtCount(x.count),
+       c.observations?(x.count*100/c.observations).toFixed(1).replace('.',',')+'%':'—'])));
    html+=statsHead('Fontes receptoras',statsTbl(['Fonte','Pacotes','SNR médio'],d.source_breakdown.map(x=>[x.name,x.count,fmtMeasure(x.mean_snr,'dB')])));
    html+=statsHead('Séries horárias',statsTbl(['Hora UTC','Observações','MQTT'],d.hourly.map(x=>[new Date(x.timestamp_ms).toLocaleString('pt-BR'),x.count,x.mqtt])));
    break;
  case 'consultas':
-   html=statsHead('Tipos relacionados a consultas',statsTbl(['Portnum/tipo','Observações'],
-     d.packet_types.filter(x=>/TRACEROUTE|NODEINFO|ADMIN|ROUTING|POSITION|TELEMETRY/.test(x.name)).map(x=>[x.name,x.count])));
+   html='<div class="statGrid stats-overview">'+[
+    ['Consultas TX','Não medido'],['Respostas RX','Não correlacionadas'],
+    ['Traceroutes observados',fmtCount(c.traceroutes)],['Telemetrias observadas',fmtCount(c.telemetry)]
+   ].map(([label,value])=>'<div class="stat"><b>'+esc(value)+'</b><span>'+esc(label)+'</span></div>').join('')+'</div>';
+   html+=statsHead('Atividade de consultas observada',
+     statsTbl(['Tipo','TX','RX observados','Total observado'],
+      d.packet_types.filter(x=>/TRACEROUTE|NODEINFO|ADMIN|ROUTING|POSITION|TELEMETRY/.test(x.name))
+        .map(x=>[x.name,'—',fmtCount(x.count),fmtCount(x.count)])));
    html+=statsHead('Status de consultas','Taxas de resposta, ACK e timeout dependem de registros TX/RX correlacionados; indisponíveis onde ainda não houver evidência.');
    break;
  case 'chat':
-   html=statsHead('Mensagens',statsTbl(['Indicador','Quantidade'],[['Mensagens observadas',c.messages]]));
+   html='<div class="statGrid stats-overview">'+[
+      ['Mensagens no período',fmtCount(c.messages)],
+      ['Nós com mensagens',fmtCount((d.message_originators||[]).length)]
+    ].map(([label,value])=>'<div class="stat"><b>'+esc(value)+'</b><span>'+esc(label)+'</span></div>').join('')+'</div>';
+   html+=statsHead('Nós com mais interações no canal primário',
+      statsTbl(['Nó','Interações observadas'],(d.message_originators||[]).map(
+       x=>[x.name,fmtCount(x.count)])));
    html+=statsHead('Direção informada no registro de mensagens',statsTbl(['Direção','Mensagens'],
       (d.message_by_direction||[]).map(x=>[x.direction,x.count])));
    html+=statsHead('Canais observados',statsTbl(['Canal','Mensagens'],
@@ -1073,7 +1124,15 @@ function renderStats(){
    html+=statsHead('Privacidade','Conteúdo de mensagens privadas nunca integra relatório técnico por padrão.');
    break;
  case 'energia':
-   html=statsHead('Resumo de bateria',statsTbl(['Condição','Nós'],
+   const batteries=d.nodes.filter(x=>x.battery!=null&&x.battery>=0&&x.battery<=100);
+   const average=batteries.length?Math.round(batteries.reduce((acc,x)=>acc+x.battery,0)/batteries.length):null;
+   html='<div class="statGrid stats-overview">'+[
+    ['Nós com energia',fmtCount(batteries.length)],
+    ['Bateria < 20%',fmtCount(batteries.filter(x=>x.battery<20).length)],
+    ['Bateria < 10%',fmtCount(batteries.filter(x=>x.battery<10).length)],
+    ['Bateria média',average==null?'Sem dados':average+'%']
+   ].map(([label,value])=>'<div class="stat"><b>'+esc(value)+'</b><span>'+esc(label)+'</span></div>').join('')+'</div>';
+   html+=statsHead('Resumo de bateria',statsTbl(['Condição','Nós'],
     [['Bateria inferior a 10%',d.nodes.filter(x=>x.battery!=null&&x.battery>=0&&x.battery<10).length],
      ['Bateria entre 10 e 19%',d.nodes.filter(x=>x.battery!=null&&x.battery>=10&&x.battery<20).length],
      ['Alimentação externa indicada (101)',d.nodes.filter(x=>x.battery===101).length]]));
@@ -1082,7 +1141,17 @@ function renderStats(){
      x.battery===101?'EXT':x.battery==null?'Não medido':x.battery+'%',fmtMeasure(x.voltage,'V'),age(x.last_seen_ms)])));
    break;
  case 'anomalias':
-   html=statsHead('Pontos de atenção',statsTbl(['Severidade','Nó','Ocorrência'],d.alerts.map(x=>[x.severity,x.node,x.description])));
+   const sev={critical:'crítico',warning:'atenção',info:'informativo'};
+   const crit=d.alerts.filter(x=>x.severity==='crítico').length;
+   const warn=d.alerts.filter(x=>x.severity==='atenção').length;
+   const info=d.alerts.filter(x=>!['crítico','atenção'].includes(x.severity)).length;
+   html='<div class="statGrid stats-overview">'+[
+    ['Pontos de atenção',fmtCount(d.alerts.length)],['Críticos',fmtCount(crit)],
+    ['Atenção',fmtCount(warn)],['Informativos',fmtCount(info)]
+   ].map(([label,value])=>'<div class="stat"><b>'+esc(value)+'</b><span>'+esc(label)+'</span></div>').join('')+'</div>';
+   html+=statsHead('Pontos identificados',
+      statsTbl(['Severidade','Nó','Ocorrência'],d.alerts.map(x=>[x.severity,x.node,x.description])));
+   html+=statsHead('Como interpretar','Heurísticas indicam situações para investigação. Sem dados não representa zero falhas nem prova de problema.');
    break;
  }
  $('statsContents').innerHTML=html+'<p class="muted">'+esc(d.scope)+' | Atualizado '+new Date(d.generated_ms).toLocaleString('pt-BR')+'</p>';
