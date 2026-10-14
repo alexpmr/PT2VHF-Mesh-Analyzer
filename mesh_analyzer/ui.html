@@ -640,54 +640,94 @@ function renderLoraSources(){
  $('loraRead').disabled=eligible.length===0;
  if(loraLoadedSource!==Number(sel.value)){$('loraSave').disabled=true;$('loraExport').disabled=true;}
 }
-$('loraSource').onchange=()=>{loraData=null;loraLoadedSource=null;$('loraFields').innerHTML='';$('loraOther').textContent='Selecione Ler do rádio';$('loraSave').disabled=true;$('loraExport').disabled=true;};
+$('loraSource').onchange=()=>{loraData=null;loraLoadedSource=null;$('deviceFields').innerHTML='';$('loraFields').innerHTML='';$('loraOther').textContent='Selecione Ler do rádio';$('loraSave').disabled=true;$('loraExport').disabled=true;};
 function showLora(){
- const form=$('loraFields');form.innerHTML='';
- for(const row of loraData.fields){
+ const form=$('deviceFields');form.innerHTML='';
+ const groupNames={device:'Dispositivo',lora:'LoRa e RF',position:'Posição / GPS',power:'Energia',
+    bluetooth:'Bluetooth',network:'Rede Wi-Fi/TCP',display:'Display',security:'Segurança'};
+ const entries=Object.entries(loraData.editable_sections||{});
+ for(const [group,fields] of entries){
+  const section=document.createElement('details');section.className='deviceSection';section.open=['device','lora'].includes(group);
+  const summary=document.createElement('summary');summary.textContent=groupNames[group]||group;section.append(summary);
+  const grid=document.createElement('div');grid.className='formGrid';
+  for(const row of fields){
    const div=document.createElement('div');div.className='field';
    const label=document.createElement('label');label.textContent=row.label;div.append(label);
-   const el=document.createElement(row.type==='enum'||row.type==='bool'?'select':'input');
-   el.dataset.setting=row.name;
-   if(row.type==='enum')for(const v of row.options){const opt=document.createElement('option');opt.value=v;opt.textContent=v;el.append(opt);}
-   if(row.type==='bool')for(const v of ['true','false']){const opt=document.createElement('option');opt.value=v;opt.textContent=v==='true'?'Sim':'Não';el.append(opt);}
-   if(row.type==='int'){el.type='number';el.step='1';if(row.min!==undefined)el.min=row.min;if(row.max!==undefined)el.max=row.max;}
-   el.value=row.type==='bool'?String(row.value):String(row.value);
-   div.append(el);form.append(div);
+   const el=document.createElement(['enum','bool'].includes(row.type)?'select':'input');
+   el.dataset.deviceGroup=group;el.dataset.deviceField=row.name;el.dataset.deviceType=row.type;
+   if(row.type==='enum')for(const v of row.options){const o=document.createElement('option');o.value=v;o.textContent=v;el.add(o);}
+   if(row.type==='bool')for(const v of ['true','false']){const o=document.createElement('option');o.value=v;o.textContent=v==='true'?'Sim':'Não';el.add(o);}
+   if(row.type==='int'){
+    el.type='number';el.step='1';
+    if(row.min!==undefined)el.min=row.min;
+    if(row.max!==undefined)el.max=row.max;
+    if(!Number.isSafeInteger(row.value)){el.disabled=true;label.textContent+=' (não editável neste navegador)';}
+   }
+   if(row.type==='float'){el.type='number';el.step='any';}
+   if(row.type==='string')el.maxLength=128;
+   el.value=String(row.value);
+   div.append(el);grid.append(div);
+  }
+  section.append(grid);form.append(section);
  }
  $('loraOther').textContent=JSON.stringify(loraData.sections,null,2);
- $('loraSave').disabled=false;$('loraExport').disabled=false;
+ $('loraSave').disabled=entries.length===0;$('loraExport').disabled=false;
 }
 $('loraRead').onclick=async()=>{
+ const id=Number($('loraSource').value);
+ if(!id){notify('Selecione uma fonte Serial, BLE ou Wi-Fi conectada.',true);return;}
  try{
-   const id=Number($('loraSource').value);if(!id)throw Error('Escolha um rádio conectado');
-   $('loraStatus').textContent='Lendo configuração da fonte '+id+'...';
-   const result=await api('/api/device/config?source_id='+id);
-   loraLoadedSource=id;loraData=result.data;showLora();
-   $('loraStatus').textContent='Configuração carregada. Firmware: '+(loraData.firmware||'não informado')+'. Revise as alterações antes de aplicá-las.';
- }catch(e){loraData=null;$('loraSave').disabled=true;$('loraExport').disabled=true;$('loraStatus').textContent=e.message;notify(e.message,true);}
+  $('loraRead').disabled=true;$('loraStatus').textContent='Lendo grupos do rádio #'+id+'...';
+  const result=await api('/api/device/config?source_id='+id);
+  if(Number($('loraSource').value)!==id)return;
+  loraData=result.data;loraLoadedSource=id;showLora();
+  $('loraStatus').textContent='Sincronizado do cache Meshtastic da interface conectada. Firmware: '+
+  (loraData.firmware||'não informado')+'. Grupos editáveis: '+Object.keys(loraData.editable_sections||{}).length+
+  '. Releia após gravar para confirmar no rádio.';
+ }catch(e){loraData=null;$('loraSave').disabled=true;$('loraExport').disabled=true;
+  $('loraStatus').textContent=e.message;notify(e.message,true);
+ }finally{$('loraRead').disabled=false;}
 };
 $('loraSave').onclick=async()=>{
  try{
-   if(!loraData||loraLoadedSource!==Number($('loraSource').value))throw Error('Releia o dispositivo selecionado');
-   const changes={};for(const field of loraData.fields){
-     const el=document.querySelector('[data-setting="'+field.name+'"]');
-     if(!el||!el.checkValidity())throw Error('Valor inválido: '+field.label);
-     const value=field.type==='bool'?el.value==='true':field.type==='int'?Number(el.value):el.value;
-     if(field.type==='int'&&(!Number.isInteger(value)||el.value===''))throw Error('Inteiro inválido: '+field.label);
-     if(value!==field.value)changes[field.name]=value;
+  const id=Number($('loraSource').value);
+  if(!loraData||!id||loraLoadedSource!==id)throw Error('Releia o rádio selecionado antes de aplicar');
+  const changes={},diff=[];
+  for(const [group,rows] of Object.entries(loraData.editable_sections||{})){
+   for(const row of rows){
+    const el=[...document.querySelectorAll('[data-device-group]')].find(x=>x.dataset.deviceGroup===group&&x.dataset.deviceField===row.name);
+    if(!el||el.disabled)continue;
+    if(!el.checkValidity())throw Error('Valor fora dos limites: '+group+'.'+row.name);
+    let value;
+    if(row.type==='bool')value=el.value==='true';
+    else if(row.type==='int')value=Number(el.value);
+    else if(row.type==='float')value=Number(el.value);
+    else value=el.value;
+    if((row.type==='int'&&!Number.isSafeInteger(value))||
+       (row.type==='float'&&!Number.isFinite(value))||(row.type==='int'&&el.value===''))
+       throw Error('Valor numérico inválido: '+row.name);
+    if(value!==row.value){
+      if(!changes[group])changes[group]={};
+      changes[group][row.name]=value;
+      diff.push(group+'.'+row.name+': '+row.value+' → '+value);
+    }
    }
-   if(!Object.keys(changes).length){notify('Nenhuma alteração detectada.');return;}
-   const summary=Object.entries(changes).map(([k,v])=>k+': '+loraData.fields.find(f=>f.name===k).value+' → '+v).join('\n');
-   if(!confirm('Confirma enviar ao rádio? Pode ocorrer reinicialização/perda de conexão.\n\n'+summary))return;
-   const res=await api('/api/device/lora',{source_id:loraLoadedSource,revision:loraData.revision,changes});
-   $('loraStatus').textContent='Solicitação enviada: '+res.changed.join(', ')+'. Aguarde reconexão e releia para verificar persistência.';
-   loraData=null;$('loraSave').disabled=true;$('loraExport').disabled=true;
-   notify('Comando enviado; confirmação de gravação pendente.');
- }catch(e){notify(e.message,true);}
+  }
+  if(!diff.length){notify('Nenhuma alteração pendente.');return;}
+  if(!confirm('Aplicar '+diff.length+' alteração(ões) ao rádio '+id+'?\n'+
+       'Os grupos serão gravados em sequência; pode haver falhas parciais e desconexão.\n\n'+
+       diff.slice(0,45).join('\n')+(diff.length>45?'\n... outras alterações':'')+'\n\nConfirmar?'))return;
+  $('loraSave').disabled=true;$('loraStatus').textContent='Enviando '+Object.keys(changes).length+' grupo(s)...';
+  const response=await api('/api/device/apply',{source_id:id,revision:loraData.full_revision,changes});
+  const detail=(response.steps||[]).map(x=>x.group+': '+x.state).join('; ');
+  $('loraStatus').textContent=detail+'. '+(response.note||'');
+  loraData=null;$('loraExport').disabled=true;
+  notify(response.success?'Comandos enviados; releia o rádio para validar.':'Falha parcial: releia o rádio.',!response.success);
+ }catch(e){notify(e.message,true);$('loraStatus').textContent='Falha: '+e.message;}
 };
 $('loraExport').onclick=()=>{
  if(!loraData)return;
- const json=JSON.stringify({app:'PT2VHF Mesh Analyzer',version:'0.1.1',firmware:loraData.firmware,sections:loraData.sections},null,2);
+ const json=JSON.stringify({app:'PT2VHF Mesh Analyzer',version:'0.3.0',firmware:loraData.firmware,sections:loraData.sections},null,2);
  const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));
  const link=document.createElement('a');link.href=url;link.download='PT2VHF-Mesh-Config-Redacted.json';link.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
