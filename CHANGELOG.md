@@ -1,5 +1,16 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.6.0 — 14/10/2026 — Estabilidade e evolução parcial do backlog
+
+- **#15/#2 (correção em código):** desligamento ordenado de monitor, servidor HTTP, fontes/radios, workers e banco SQLite, seguido de saída explícita do próprio processo para liberar Setup/Portable externo. Mantida validação SHA256 e reinício. **Ainda requer teste real com Win11 físico; não encerrar issue com CI.**
+- **#8:** aba Nós ordenada inicialmente por distância Haversine crescente, preservando ordenações manuais persistidas; nós sem referência/GPS válidos por último.
+- **#25 (parcial):** botão "Salvar configurações", com alterações pendentes, persistência no SQLite das preferências do Mapa, Sistema e Retenções. Fonte e Aplicar no Rádio seguem fluxos separados; validação ampla/transactional e múltiplas janelas ainda pendentes.
+- **#26:** aba Automações informa recurso em breve, sem sugerir bots ativos.
+- **#27 (parcial):** modal de nó arrastável/redimensionável, disponível com/sem GPS, com dados locais e metadados; consultas RF apresentam indisponibilidade até haver backend e ACK/readback correlacionados.
+- **#10 (parcial):** Visão Geral com tabelas de tráfego/nós, ranking RF conservador e diagnóstico, Routing com percentuais de hops, tabelas em Tráfego, Consultas, Chat, Energia e alertas, usando SQLite sem inventar RF direto, taxa ACK ou TX.
+
+**Escopo pendente:** não foi concluído todo o backlog — especialmente LAN autenticada, i18n completo, edição/restauração abrangente do rádio, execução de consultas, links RF sem coordenadas ou evidência, PDF/relatórios equivalentes ao legado e várias regras analíticas. **Compilação/testes CI não comprovam utilização em dispositivos físicos.**
+
 ## v0.5.0 — 14/10/2026 — Atualização interna, Mapa e Estatísticas
 
 - **Atualização pelo aplicativo (primeira implementação):** indicador superior abre janela de novidades e opção para baixar nova versão sem navegador; seleção automática de Setup/Portable, comparação SHA256, barra de progresso, instalador externo que aguarda encerramento do Mesh Analyzer antes de substituir arquivos e reiniciar; popup de novidades exibido uma única vez. Log em `%LOCALAPPDATA%\\PT2VHF-Mesh-Analyzer\\update.log`. Necessita teste em Windows 11 instalado e portátil antes de encerrar issues #2 e #15.
