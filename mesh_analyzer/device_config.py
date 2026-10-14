@@ -40,7 +40,7 @@ def lora_descriptor_fields(config):
         name = field.name
         if name not in LORA_FIELDS:
             continue
-        if field.type == field.TYPE_MESSAGE or field.label == field.LABEL_REPEATED:
+        if field.type == field.TYPE_MESSAGE or getattr(field, 'is_repeated', False):
             continue
         current = getattr(config, name)
         row = {"name": name, "label": name.replace("_", " ").title()}
