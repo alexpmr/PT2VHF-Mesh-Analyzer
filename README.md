@@ -33,6 +33,16 @@
 
 **Não confundir “11 subabas existentes” com paridade integral de indicadores do legado:** vários painéis avançados exibem indisponibilidade quando não há evidência suficiente, como rankings RF diretos, taxa de CRC de hardware, espectro, confirmação de entrega e sessões web autenticadas.
 
+### O que muda na v0.3.0
+
+- **Interface desktop WebView2** abre no Windows 11 sem navegador externo por padrão.
+- **Configurações → Sistema**: escolher abertura de navegador adicional e frequência de verificações (15 min padrão); acesso Web LAN continua desabilitado enquanto não houver autenticação.
+- **Indicador de versão no topo**, com verificação automática e clique para nova consulta ou visualização da release disponível.
+- **Configurações → Dispositivo**: seleção de rádio conectado Serial/USB, BLE ou Wi-Fi/TCP/IP, leitura dos grupos do cache Meshtastic, alteração de parâmetros escalares não sensíveis e botão único para enviar alterações de vários grupos. Não há confirmação universal de gravação persistente.
+- **Instalação**: WebView encerra backend e conexões quando a janela fecha; Inno Setup solicita encerramento de aplicações em uso. Validação do atualizador automático completo ainda pendente.
+
+**Requisito:** Windows 11 x64 com Microsoft Edge WebView2 Runtime; sem runtime a interface não abre automaticamente em navegador. A v0.3.0 não implementa LAN autenticada, alteração de canais/PSKs ou atualização instalável automática.
+
 ## O que esta versão entrega
 
 - Interface no estilo do **PT2VHF Traffic Analyzer**, com abas **Mapa, Nós, Tráfego, Mensagens, Estatísticas, Automações, Configurações e Ajuda**. O cabeçalho, a barra compacta e a pesquisa incremental são inspirados na v1.62.1.
