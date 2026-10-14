@@ -62,7 +62,8 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
-          if ($version -notmatch '^\\d+\\.\\d+\\.\\d+
+          if ($version -notmatch '^\\d+\\.\\d+\\.\\d+$') { throw 'VERSION invalido' }
+          $tag = "v$version"
           $repository = $env:GITHUB_REPOSITORY
           $assets = @(
             'dist/PT2VHF-Mesh-Analyzer.exe',
@@ -79,21 +80,4 @@ jobs:
           } else {
             gh release create $tag @assets --repo $repository --target $env:GITHUB_SHA --title "PT2VHF Mesh Analyzer v$version" --notes-file CHANGELOG.md
             if ($LASTEXITCODE -ne 0) { throw 'Falha na publicação da release' }
-          }
-) { throw 'VERSION invalido' }
-          $tag = "v$version"
-          $repository = $env:GITHUB_REPOSITORY
-          $assets = @(
-            'dist/PT2VHF-Mesh-Analyzer.exe',
-            'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip',
-            'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe',
-            'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Codigo-Fonte.zip',
-            'dist/SHA256SUMS.txt'
-          )
-          $release = gh release view $tag --repo $repository --json tagName 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "Release $tag já existe; nenhuma alteração retroativa."
-          } else {
-            gh release create $tag @assets --repo $repository --target $env:GITHUB_SHA --title 'PT2VHF Mesh Analyzer v0.1.0' --notes 'Primeira versão independente Windows 11: SQLite próprio, múltiplas fontes USB/TCP/BLE/MQTT, retenções independentes, mapa, nós, tráfego e mensagens RF. Funcionalidades avançadas serão migradas gradualmente. Hardware físico requer validação de campo.'
-            if ($LASTEXITCODE -ne 0) { throw 'Falha na publicação da release v0.1.0' }
           }
