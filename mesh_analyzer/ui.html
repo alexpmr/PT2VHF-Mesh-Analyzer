@@ -120,7 +120,12 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <label>Fonte: <select id="statsSource"><option value="">Todas</option></select></label>
 <button id="statsReload">Atualizar tudo</button><small id="statsUpdated" class="muted"></small><button id="statsPDF">Relatório / PDF</button><button id="statsCSV">Exportar CSV</button></div>
 <div class="subtabs" id="statsTabs"></div><div class="reportBody" id="statsContents"><div id="statsGrid" class="statGrid"></div></div></section>
-<section class="view" id="viewAutomations"><div class="toolbar"><h2>Automações</h2></div><div class="panels"><div class="card"><h3>Arquitetura preparada para bots</h3><p>O motor independente já recebe mensagens e salva os dados no SQLite. Bots PING/CLIMA, consultas agendadas e regras RF da aplicação anterior serão migrados em etapas. <strong>Não há bot automático transmitindo RF nesta versão.</strong></p></div></div></section>
+<section class="view" id="viewAutomations"><div class="toolbar"><h2>Automações</h2></div>
+<div class="panels"><div class="card" role="status" style="max-width:850px;margin:auto">
+<h3>Automações — Em breve</h3><p><strong>Este recurso será implementado em breve.</strong></p>
+<p>Em versões futuras, será possível configurar bots, consultas agendadas e regras de eventos da rede Meshtastic.</p>
+<p class="muted">Nenhuma automação está ativa nesta versão. Nenhum envio RF é iniciado por esta aba.</p>
+</div></div></section>
 <section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Fontes</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="general">Geral</button></div>
 <section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Fontes de dados e rádios</h3><p class="muted">Cadastre várias fontes independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.5.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
 <div class="card"><h3 id="sourceFormTitle">Adicionar fonte</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da fonte</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
@@ -619,9 +624,11 @@ $('messageText').addEventListener('keydown',e=>{
 },true);
 
 const nodeCols=[['long_name','Nome longo'],['short_name','Nome curto'],['role','Role'],['hw_model','Hardware'],['hops','Saltos'],['battery','Bateria'],['voltage','Tensão'],['distance','Distância'],['snr','SNR'],['last_seen_ms','Última interação'],['position_ms','Última posição'],['node_id','Node ID']];
-let selectedNodeCols=new Set(nodeCols.slice(0,11).map(x=>x[0])),nodeSort='last_seen_ms',nodeSortAsc=false;
+let selectedNodeCols=new Set(nodeCols.slice(0,11).map(x=>x[0])),nodeSort='distance',nodeSortAsc=true;
 try{const c=JSON.parse(localStorage.getItem('mesh.nodes.columns')||'null');if(Array.isArray(c)&&c.length)selectedNodeCols=new Set(c);}catch(e){}
-try{const d=JSON.parse(localStorage.getItem('mesh.nodes.sort')||'null');if(d){nodeSort=d.col;nodeSortAsc=d.asc;}}catch(e){}
+try{const d=JSON.parse(localStorage.getItem('mesh.nodes.sort')||'null');
+ if(d&&nodeCols.some(col=>col[0]===d.col)&&typeof d.asc==='boolean'){nodeSort=d.col;nodeSortAsc=d.asc;}
+}catch(e){}
 const km=(a,b)=>{if(!validPos(a)||!validPos(b))return null;const rad=x=>Number(x)*Math.PI/180;
  const d1=rad(Number(b.latitude)-Number(a.latitude)),d2=rad(Number(b.longitude)-Number(a.longitude));
  const x=Math.sin(d1/2)**2+Math.cos(rad(a.latitude))*Math.cos(rad(b.latitude))*Math.sin(d2/2)**2;
@@ -671,7 +678,7 @@ function renderNodes(){
  $('nodesRows').innerHTML=list.map(n=>'<tr data-node="'+n.node_num+'">'+visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>').join('')||'<tr><td>Nenhum nó conhecido.</td></tr>';
  $('nodesRows').querySelectorAll('[data-node]').forEach(el=>el.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(el.dataset.node));if(n){setView('map');showNode(n);}});
 }
-$('nodesHeader').onclick=e=>{const th=e.target.closest('[data-nodesort]');if(!th)return;const key=th.dataset.nodesort;nodeSortAsc=nodeSort===key?!nodeSortAsc:key==='long_name';nodeSort=key;localStorage.setItem('mesh.nodes.sort',JSON.stringify({col:nodeSort,asc:nodeSortAsc}));renderNodes();};
+$('nodesHeader').onclick=e=>{const th=e.target.closest('[data-nodesort]');if(!th)return;const key=th.dataset.nodesort;nodeSortAsc=nodeSort===key?!nodeSortAsc:(key==='distance'||key==='long_name');nodeSort=key;localStorage.setItem('mesh.nodes.sort',JSON.stringify({col:nodeSort,asc:nodeSortAsc}));renderNodes();};
 $('nodesHeader').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-nodesort]')){e.preventDefault();e.target.click();}};
 
 $('nodesColumns').onclick=()=>{const p=$('nodeColumnPanel');if(p.style.display==='block'){p.style.display='none';return;}
