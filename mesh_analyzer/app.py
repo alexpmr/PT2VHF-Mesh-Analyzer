@@ -329,7 +329,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 drivers.close()
                 for t in list(drivers._threads.values()):
                     if t.is_alive() and t is not threading.current_thread():t.join(timeout=2)
-                if 'replay' in locals():replay.join(timeout=4)
+                replay.join(timeout=4)
                 db.close()
                 shutdown_complete.set()
         def update_shutdown_coordinator():
