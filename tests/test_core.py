@@ -132,7 +132,7 @@ class APITests(unittest.TestCase):
         url=f"http://127.0.0.1:{server.server_address[1]}"
         try:
             with urllib.request.urlopen(url+"/health") as resp:
-                self.assertEqual(json.loads(resp.read())["version"],"0.3.0")
+                self.assertEqual(json.loads(resp.read())["version"],"0.4.0")
             with urllib.request.urlopen(url+"/") as resp:
                 self.assertIn(b"id=\"settingsRetention\"",resp.read())
             body=json.dumps({"name":"USB bench","kind":"serial","config":{"port":"COM5"},"enabled":False}).encode()
