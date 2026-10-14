@@ -137,11 +137,28 @@ class Database:
                 level TEXT NOT NULL,
                 description TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS rf_samples (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_id INTEGER NOT NULL,
+                node_num INTEGER NOT NULL,
+                timestamp_ms INTEGER NOT NULL,
+                rx_good INTEGER,
+                rx_bad INTEGER,
+                channel_util REAL,
+                air_util REAL,
+                voltage REAL,
+                battery INTEGER
+            );
+            CREATE INDEX IF NOT EXISTS idx_rf_samples_time
+              ON rf_samples(source_id,node_num,timestamp_ms);
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             );
             """)
+            columns = {row[1] for row in self._db.execute("PRAGMA table_info(nodes)")}
+            if "voltage" not in columns:
+                self._db.execute("ALTER TABLE nodes ADD COLUMN voltage REAL")
             self._db.execute("INSERT OR IGNORE INTO settings(key,value) VALUES('retention',?)", (json.dumps(DEFAULT_RETENTION),))
 
     def close(self):
@@ -239,6 +256,19 @@ class Database:
                                              (name,kind,json.dumps(config),int(enabled),now,now)).lastrowid
         return self.source(source_id,public=True)
 
+    def add_rf_sample(self, source_id, node_num, timestamp_ms, **fields):
+        if node_num is None:
+            return
+        allowed = ("rx_good", "rx_bad", "channel_util", "air_util", "voltage", "battery")
+        values = [fields.get(key) for key in allowed]
+        if all(v is None for v in values):
+            return
+        with self._lock, self._db:
+            self._db.execute(
+                "INSERT INTO rf_samples(source_id,node_num,timestamp_ms," +
+                ",".join(allowed) + ") VALUES(" + ",".join("?" for _ in range(3+len(allowed))) + ")",
+                [int(source_id), int(node_num), int(timestamp_ms)] + values)
+
     def delete_source(self, source_id):
         # Maintain historical packet source_id for auditability; no ON DELETE CASCADE.
         with self._lock,self._db:
@@ -269,13 +299,14 @@ class Database:
         removed = {}
         days = self.retention()
         columns = {"nodes":"last_seen_ms", "packets":"timestamp_ms", "messages":"timestamp_ms",
-                   "positions":"timestamp_ms", "traces":"timestamp_ms", "links":"last_seen_ms", "events":"timestamp_ms"}
+                   "positions":"timestamp_ms", "traces":"timestamp_ms", "links":"last_seen_ms", "events":"timestamp_ms",
+                   "rf_samples":"timestamp_ms"}
         with self._lock,self._db:
             for table,col in columns.items():
-                if days[table] == 0:
+                if days["packets" if table == "rf_samples" else table] == 0:
                     removed[table] = 0
                 else:
-                    cutoff = now_ms() - days[table] * 86400000
+                    cutoff = now_ms() - days["packets" if table == "rf_samples" else table] * 86400000
                     cur = self._db.execute(f"DELETE FROM {table} WHERE {col} < ?",(cutoff,))
                     removed[table] = cur.rowcount
         return removed
@@ -294,7 +325,7 @@ class Database:
                 self._db.execute("INSERT INTO nodes(node_num,node_id,first_seen_ms,last_seen_ms,last_source_id) VALUES(?,?,?,?,?)",
                                  (num,node_id,ts,ts,source_id))
                 old = self._db.execute("SELECT * FROM nodes WHERE node_num=?",(num,)).fetchone()
-            fields = {k: v for k,v in kwargs.items() if k in {"long_name","short_name","latitude","longitude","altitude","hw_model","role","battery","snr"} and v is not None and v != ""}
+            fields = {k: v for k,v in kwargs.items() if k in {"long_name","short_name","latitude","longitude","altitude","hw_model","role","battery","snr","voltage"} and v is not None and v != ""}
             aliases = json.loads(old["aliases"] or "[]")
             for name in (old["long_name"],old["short_name"],fields.get("long_name"),fields.get("short_name")):
                 if isinstance(name,str) and name.strip() and name not in aliases and not name.startswith("!"):
