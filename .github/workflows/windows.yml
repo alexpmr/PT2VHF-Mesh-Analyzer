@@ -1,0 +1,57 @@
+name: Build PT2VHF Mesh Analyzer Windows 11
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package-win11:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Instalar bibliotecas e gerador EXE
+        shell: pwsh
+        run: python -m pip install -r requirements-build.txt
+      - name: Validar SQLite, fontes, RF simulado e API local
+        shell: pwsh
+        run: python -m unittest discover -s tests -v
+      - name: Compilar EXE Windows 11 x64
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name PT2VHF-Mesh-Analyzer --add-data 'mesh_analyzer/ui.html;mesh_analyzer' --collect-submodules meshtastic --collect-submodules bleak --collect-submodules paho --collect-submodules pubsub --hidden-import serial.tools.list_ports launch.py
+          if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer.exe')) { throw 'EXE ausente' }
+      - name: Criar ZIP portable e hash
+        shell: pwsh
+        run: |
+          Compress-Archive -Path 'dist/PT2VHF-Mesh-Analyzer.exe' -DestinationPath 'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip' -Force
+          Get-FileHash 'dist/PT2VHF-Mesh-Analyzer.exe' -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  PT2VHF-Mesh-Analyzer.exe" } | Out-File 'dist/SHA256SUMS.txt' -Encoding ascii
+      - name: Instalar Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+      - name: Compilar instalador
+        shell: pwsh
+        run: |
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' 'windows\installer.iss'
+          if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe')) { throw 'Setup ausente' }
+          Get-ChildItem dist -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash)  $($_.Name)" } | Set-Content dist/SHA256SUMS.txt -Encoding ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-Mesh-Analyzer-v0.1.0-Windows11
+          path: |
+            dist/PT2VHF-Mesh-Analyzer.exe
+            dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip
+            dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe
+            dist/SHA256SUMS.txt
+      - name: Publicar GitHub Release em tag v0.1.0
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: gh release create "${{ github.ref_name }}" dist/PT2VHF-Mesh-Analyzer.exe dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe dist/SHA256SUMS.txt --title "PT2VHF Mesh Analyzer v0.1.0" --notes "Primeira versão independente Windows 11: SQLite próprio, múltiplas fontes USB/TCP/BLE/MQTT, retenções independentes, mapa, nós, tráfego, mensagens RF. Os módulos avançados serão migrados em versões posteriores. Hardware físico ainda requer teste de campo."

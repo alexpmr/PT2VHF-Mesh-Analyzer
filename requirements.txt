@@ -1,0 +1,6 @@
+# Meshtastic client and transport integrations. Python 3.11+/Windows 11.
+meshtastic>=2.5,<3
+pyserial>=3.5,<4
+bleak>=0.22,<2
+paho-mqtt>=2,<3
+PyPubSub>=4,<5
