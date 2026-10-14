@@ -2,20 +2,25 @@
 
 **Novo projeto independente de MeshMonitor, por Alex, PT2VHF.** Primeira versão funcional projetada para Windows 11 x64; a arquitetura do código também permite evolução para Linux/macOS.
 
-## ⬇ Downloads — última versão estável para Windows 11 x64
+## Downloads — Windows 11 x64
 
-Os links abaixo apontam sempre para a **última release publicada**, sem necessidade de localizar arquivos no histórico.
+**Versão estável publicada e conferida: [v0.1.1](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.1.1)**
 
-| Pacote | Download direto |
-|---|---|
-| **Instalador Windows 11 (x64)** | [Baixar Setup EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) |
-| **Portátil Windows 11 (x64)** | [Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip) |
-| **Executável isolado** | [Baixar EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer.exe) |
-| **SHA256 e versões anteriores** | [Releases e hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest) |
+| Download | Arquivo disponível | Link direto |
+|---|---|---|
+| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.1.1-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.1.1/PT2VHF-Mesh-Analyzer-v0.1.1-Setup-Win11-x64.exe)** |
+| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.1.1-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.1.1/PT2VHF-Mesh-Analyzer-v0.1.1-Portable-Win11-x64.zip)** |
+| **Executável avulso** | `PT2VHF-Mesh-Analyzer.exe` | [Baixar EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.1.1/PT2VHF-Mesh-Analyzer.exe) |
+| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.1.1/SHA256SUMS.txt) |
+| **Código-fonte da release** | `PT2VHF-Mesh-Analyzer-v0.1.1-Codigo-Fonte.zip` | [Baixar código-fonte ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.1.1/PT2VHF-Mesh-Analyzer-v0.1.1-Codigo-Fonte.zip) |
 
-**Requisitos:** Windows 11 64 bits. Os binários são compilados automaticamente no GitHub Actions; para validar a integridade compare o SHA256 com `SHA256SUMS.txt` da mesma release. O Windows pode mostrar SmartScreen para binários sem assinatura de código.
+**Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
+[Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
+[Portable mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip) ·
+[SHA256 mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt) ·
+[Todas as releases](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases)
 
-> **Atenção:** esses URLs fixos funcionarão após a publicação da primeira release que inclua os arquivos com nomes estáveis (v0.1.1). Caso a publicação esteja em andamento, use [a página de releases](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases) para consultar os arquivos já disponíveis.
+**Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable pode ser extraído e executado sem instalação. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
 
 ## O que esta versão entrega
 
@@ -54,7 +59,7 @@ Este pacote inclui os projetos de build para **gerar EXE Windows 11 e Setup (Inn
 powershell -ExecutionPolicy Bypass -File .\build_windows.ps1
 ```
 
-O GitHub Actions de `.github/workflows/windows.yml` compila o EXE, o ZIP portátil, o Setup e hashes SHA256 em **Windows Server 2022** após o projeto ser enviado para o repositório e a integração liberar o acesso. Ao incorporar a nova versão na branch `main`, o fluxo publica binários e hashes em uma nova GitHub Release `v0.1.1`, mantendo nomes fixos de download e arquivos versionados.
+O GitHub Actions de `.github/workflows/windows.yml` compila o EXE, o ZIP portátil, o Setup e hashes SHA256 em **Windows Server 2022** e publica os artefatos ao incorporar uma nova versão na branch `main`. As releases incluem tanto os arquivos versionados quanto os nomes estáveis usados pelos atalhos da última versão.
 
 **Atenção:** um ZIP de código-fonte não é um EXE compilado. O teste de CI não equivale a validação em rádio físico.
 
@@ -73,7 +78,8 @@ O GitHub Actions de `.github/workflows/windows.yml` compila o EXE, o ZIP portát
 - Para ser confiável, um enlace direto RF necessita evidência por hop, não apenas um registro de traceroute. Na v0.1.1, o mapa diferencia rotas observadas de RF confirmado.
 - A interface usa Leaflet e mapas-base online; **recepção e banco independem da internet**, mas a cartografia requer acesso à internet e pode ficar vazia offline.
 - A interface HTTP da v0.1.1 é apenas localhost. Acesso remoto exigirá autenticação/TLS antes de permitir publicação na rede.
-- O gerenciamento LoRa confirma apenas que o comando foi aceito pela API local, não o readback persistente do rádio. Campos de segurança e PSK não são editáveis nesta tela.\n- O tratamento de ACK/retransmissões e estados detalhados de entrega será ampliado. Estado inicial `accepted_by_radio` **não significa entregue nem lido**.
+- O gerenciamento LoRa confirma apenas que o comando foi aceito pela API local, não o readback persistente do rádio. Campos de segurança e PSK não são editáveis nesta tela.
+- O tratamento de ACK/retransmissões e estados detalhados de entrega será ampliado. Estado inicial `accepted_by_radio` **não significa entregue nem lido**.
 
 ## Verificação offline
 
