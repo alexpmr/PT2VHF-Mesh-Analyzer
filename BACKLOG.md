@@ -86,6 +86,19 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
 
 **Situação:** itens #5, #8–#13 parcialmente implementados na v0.2.0; pendências e validações continuam nas issues.
 
+## Referências do legado: oito telas de Estatísticas e popup de nó (14/10/2026)
+
+- [**#10 — Estatísticas, oito referências visuais detalhadas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10): capturas da v1.62.1 para **Visão Geral, Ranking, Routing, Tráfego, Consultas, Chat, Energia, Pontos de atenção**; as outras duas subabas **Rede e RF** permanecem abrangidas pela especificação anterior. A issue detalha **estrutura, cálculos, interações, estados vazios, filtros e evidências**. O legado serve somente de referência, **sem dependência do MeshMonitor**. **Não reintroduzir Acessos** (total de 10 subabas).
+- **Visão Geral:** grade compacta 4×2 de oito KPIs e faixa amarela de resumo narrativo sincronizado; seções inferiores `Tipos de tráfego` e `Nós mais ativos`.
+- **Ranking:** `10 enlaces RF diretos mais longos`: **# | Nó A | Nó B | Distância | Obs. RF | SNR médio | Última RF**, nome/Node ID em duas linhas, clique para destacar ligação no Mapa e tooltip com evidências. Exigir hop **RF direto comprovado**, não somente traceroute/NeighborInfo/MQTT. Manter `Diagnóstico de elegibilidade` com justificativa para exclusões e ausência de posições.
+- **Routing:** cartões de métricas, **Distribuição por hops** e **Nós intermediários observados** lado a lado, abrindo detalhes de rota/nó mediante clique e diferenciando evidência real de hipótese.
+- **Tráfego:** KPIs e `Volume por tipo` com **Tipo | Pacotes | Participação**, porcentagens corretas, TX e RX somente quando capturados.
+- **Consultas:** KPIs e `Atividade de consultas observada` com **Tipo | TX | RX | Total observado**; estados correlacionados de ACK/REJ, resposta, timeout e erro, sem simular taxa de sucesso.
+- **Chat:** KPIs e `Nós com mais interações no canal primário`, tabela **Nó | Interações acumuladas**, dados de mensagens reais e tratamento de privacidade.
+- **Energia:** KPIs e `Bateria e energia dos nós`, tabela **Nó | Bateria | Tensão | Última interação**; distinguir bateria 0–100%, alimentação externa e telemetria ausente/antiga.
+- **Pontos de atenção:** cabeçalho, **Severidade (Todas/Crítica/Atenção/Informativa)**, `Reanalisar`, indicadores de severidade, `Pontos identificados` e `Como interpretar`. Heurísticas documentadas não são comprovação de defeito.
+- [**#27 — Mapa: popup completo de informações do nó**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/27): ao clicar no nó abrir janela móvel, redimensionável e expansível, replicando seções **Resumo | Informações do nó | Consultas ao nó | Últimos metadados recebidos** da v1.62.1. Botões **NodeInfo, Posição, Energia, Traceroute, Dispositivo, Ambiente, Qualidade do ar, Vizinhos, Tudo** com progresso/status independente, respostas assíncronas, proveniência e consultas apenas em rádios capazes. Compartilhar popup com aba Nós, Mensagens, Tráfego e rankings; **sem GPS, ainda abrir detalhes**. Não usar MeshMonitor e não inventar retorno de consulta. **Pendente em v0.5.0.**
+
 ## Estatísticas — paridade visual e funcional com Traffic Analyzer v1.62.1 (14/10/2026)
 
 - [**#10 — Clonar Visão Geral e as demais 9 subabas de Estatísticas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10): usar como referência fiel as telas e os componentes da v1.62.1 legada; preservar estilo, organização compacta, cálculos, filtros, gráficos, tabelas, rankings, consultas, drill-down, PDFs e CSV, mas **adaptar tudo ao SQLite e às fontes nativas Serial/BLE/TCP/MQTT**. A aba **Acessos foi explicitamente removida do escopo**; ficam **10 subabas**.
