@@ -295,9 +295,17 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
             try:
                 from .desktop import open_desktop_window
                 open_desktop_window(address, data)
-            except Exception:
+            except Exception as exc:
                 LOG.exception("Não foi possível iniciar a janela desktop")
-                # Fail visibly; never silently fall back to an external browser.
+                # Windowed PyInstaller EXEs have no console. Show a visible
+                # diagnosis rather than silently redirecting to a browser.
+                if sys.platform == "win32":
+                    try:
+                        import ctypes
+                        ctypes.windll.user32.MessageBoxW(
+                            None, str(exc)[:600],
+                            "PT2VHF Mesh Analyzer — Falha na interface", 0x10)
+                    except Exception:pass
                 raise
         else:
             try:
