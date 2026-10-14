@@ -107,7 +107,7 @@ class PacketIngestor:
           "timestamp_ms":ts,"from_node":from_num,"to_node":to_num,"port":port,
           "channel":number(packet.get("channel")),"rx_snr":packet.get("rxSnr",packet.get("rx_snr")),
           "rx_rssi":packet.get("rxRssi",packet.get("rx_rssi")),"hop_start":packet.get("hopStart",packet.get("hop_start")),
-          "hop_limit":packet.get("hopLimit",packet.get("hop_limit")),"via_mqtt":int(bool(via_mqtt)),
+          "hop_limit":packet.get("hopLimit",packet.get("hop_limit")),"via_mqtt":int(bool(via_mqtt) or packet.get("viaMqtt") is True or packet.get("via_mqtt") is True),
           "encrypted":int(bool(packet.get("encrypted")) and not decoded),"text_preview":text[:180] if text else "", "raw_json":raw_json})
         if not accepted:return False
         if from_num is not None:
@@ -124,6 +124,28 @@ class PacketIngestor:
                 lat,lon,alt=loc
                 self.db.upsert_node(from_num,source_id,timestamp_ms=ts,latitude=lat,longitude=lon,altitude=alt)
                 self.db.add_position(from_num,source_id,ts,lat,lon,alt)
+        if port in ("TELEMETRY_APP","67","65") and from_num is not None:
+            # Payload shape varies by firmware/transport. Persist only telemetry
+            # fields explicitly present in decoded data; never infer CRC from rx_bad.
+            tele=decoded.get("telemetry") if isinstance(decoded.get("telemetry"),dict) else decoded
+            dev=tele.get("deviceMetrics") or tele.get("device_metrics") or {}
+            loc=tele.get("localStats") or tele.get("local_stats") or {}
+            def metric(obj, *keys):
+                if not isinstance(obj,dict):return None
+                for key in keys:
+                    if key in obj and obj[key] is not None:return obj[key]
+                return None
+            voltage=metric(dev,"voltage","batteryVoltage","battery_voltage")
+            battery=metric(dev,"batteryLevel","battery_level")
+            if battery is not None or voltage is not None:
+                self.db.upsert_node(from_num,source_id,timestamp_ms=ts,battery=battery,voltage=voltage)
+            self.db.add_rf_sample(
+                source_id,from_num,ts,
+                battery=battery, voltage=voltage,
+                channel_util=metric(dev,"channelUtilization","channel_utilization"),
+                air_util=metric(dev,"airUtilTx","air_util_tx"),
+                rx_good=metric(loc,"numPacketsRx","num_packets_rx"),
+                rx_bad=metric(loc,"numPacketsRxBad","num_packets_rx_bad"))
         if port in ("TEXT_MESSAGE_APP","1") and text:
             self.db.add_message({"source_id":source_id,"packet_key":unique,"packet_id":str(packet_id),"timestamp_ms":ts,
                                  "from_node":from_num,"to_node":to_num,"channel":int(packet.get("channel") or 0),

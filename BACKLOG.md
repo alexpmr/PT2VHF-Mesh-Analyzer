@@ -16,6 +16,19 @@ Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.
 - Menu Geral: checar releases a cada 15 minutos (ajuste local entre 5 e 1440 min); baixar/instalar diretamente pelo aplicativo **ainda pendente**.
 - README: atalhos com nomes estáveis em releases/latest/download; publicação via GitHub Actions e versão extraída de VERSION. Links só ficam ativos quando assets da release v0.1.1 estiverem publicados.
 
+## v0.2.0 — implementado no código (aguarda publicação e validação em campo)
+
+- **#8 Nós (parcial):** tabela compacta, 11 colunas, pesquisa/ordenação, seleção de colunas e referência de distância. Hops por nó aparecem indisponíveis quando não há evidência; faltam detalhes históricos completos.
+- **#9 Tráfego (parcial):** filtro de fonte/tipo, painel de detalhe, pausa e CSV. RX observado; contabilidade TX integral e dump raw auditável ainda não incorporados.
+- **#10 Estatísticas (parcial):** 11 subabas com consultas próprias filtráveis, KPIs, médias SNR/RSSI, tendências horárias, dados de energia/LocalStats e pontos de atenção. Sem paridade integral de indicadores/rankings avançados do legado.
+- **#13 PDF (parcial):** relatório técnico offline nativo, com diversas seções de topologia/tráfego/diagnóstico RF, hipótese de colisão/interferência e proteção de privacidade. Não identifica LoRa externo, ruído real ou CRC específico sem instrumento/firmware compatível.
+- **#11 Mapa (parcial):** cor de enlaces amarelo, pulsos por pacote no nó emissor conhecido, sem inventar caminho entre nós; controle completo de animação de tráfego ainda pendente.
+- **#12 Mapa (parcial):** bases claro/escuro/OSM/topo/satélite, radar meteorológico e overlays de relevo/hillshade/corte DEM com slider; exige teste de provedores/CORS e de dispositivos reais.
+- **#5 Menções (parcial):** autocomplete de nomes/Node IDs ao digitar @ no chat e inserção textual, sem qualquer garantia de menção/notificação remota.
+- **Não implementados/sem conclusão:** idiomas integrais (#1), instalação automática segura de atualização (#2), LAN autenticada (#3), experiência de chat integral (#4), configuração completa/backup restaurável LoRa (#6), análises espectrais reais/medição CRC sem hardware adicional.
+
+**Não fechar issues de backlog somente por existência de telas; exigem evidência e critérios de aceite completos.** Todos os dados permanecem no banco próprio e nenhuma instalação mexe no Traffic Analyzer legado.
+
 ## Solicitações de backlog ainda não encerradas
 
 As melhorias abaixo são **itens de backlog**, não funcionalidades já entregues. O detalhamento e os testes de aceite estão nas respectivas issues:
@@ -52,7 +65,7 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
   - **Nova seção de engenharia RF — diagnóstico de coexistência/interferência (#13):** inventariar frequência efetiva, banda/BW, SF, CR, preset, hardware/firmware e receptores; séries de utilização de canal, TX airtime, RSSI/SNR, noise floor **quando medido**, telemetria `LocalStats`, RX válidos/inválidos, erros CRC **somente se o firmware/driver fornecer métricas específicas**, queda de pacotes, retransmissão e horários de pico. Atribuir hipóteses com nível de confiança: enlace marginal, colisões, tráfego LoRa de redes externas na mesma frequência/BW, ruído não-LoRa, antena/coaxial, alimentação/EMI, desajuste de configuração. **`rx_bad` não equivale automaticamente a erro CRC; SNR negativo não prova degradação; CAD isolado não identifica outra rede.** Comparar diferentes receptores e permitir sensor SDR secundário opcional; não varrer a banda com o rádio Meshtastic principal sem autorização. Gráficos de correlação, baseline, evidência e recomendações não invasivas no PDF, com os mesmos dados em Estatísticas → RF e Pontos de atenção. Ausência de capacidade de medir = `indisponível`, nunca `zero` ou `sem interferência`.
   - Vinculada à [**#10 — Estatísticas completas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10). O relatório é uma funcionalidade **pendente**, não uma nova release.
 
-**Situação:** issues de Nós, Tráfego, Estatísticas e Mapa registradas; pendentes de implementação na aplicação.
+**Situação:** itens #5, #8–#13 parcialmente implementados na v0.2.0; pendências e validações continuam nas issues.
 
 ## Próximos passos (não implementados ou ainda não validados)
 

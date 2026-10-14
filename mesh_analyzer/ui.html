@@ -31,11 +31,26 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #toast{position:fixed;bottom:18px;right:16px;background:#223d50;color:#fff;border:1px solid #679ab8;border-radius:10px;padding:12px 15px;z-index:9900;display:none;max-width:min(460px,90vw);box-shadow:0 12px 30px #0008}
 .badge{display:inline-block;background:#263d50;border:1px solid var(--line);padding:2px 7px;border-radius:14px;font-size:10px;font-weight:700}.danger{background:#4c282d;border-color:#87515a}.actions{display:flex;gap:8px;flex-wrap:wrap}
 @media(max-width:750px){header{padding:8px;gap:8px}.navbtn{padding:5px}.version{margin-left:0}#messageLayout{grid-template-columns:118px 1fr}.composer{flex-wrap:wrap}.composer select{max-width:100%}.formGrid{grid-template-columns:1fr}.span2{grid-column:1}}
+.subtabs{display:flex;align-items:center;gap:5px;padding:8px 10px;background:#152433;border-bottom:1px solid var(--line);overflow-x:auto;flex:0 0 auto}
+.subtab{white-space:nowrap;font-weight:700;font-size:11px}.subtab.active{background:var(--accent);color:#13191d}
+.reportBody{min-height:0;overflow:auto;padding:12px}.reportTable{width:100%;border-collapse:collapse;font-size:12px}.reportTable td,.reportTable th{border-bottom:1px solid var(--line);padding:8px;text-align:left}
+.statsCard{border:1px solid var(--line);border-radius:9px;padding:12px;background:#1b2b38;margin-bottom:11px}
+.statsCard h3{color:#e5c751}.statsToolbar{gap:6px}.statsToolbar select{max-width:165px}.statsToolbar button{white-space:nowrap}
+#nodeColumnPanel{position:absolute;top:44px;right:12px;background:#1b2b38;border:1px solid var(--line);border-radius:8px;padding:12px;z-index:15;display:none;max-height:65vh;overflow:auto;min-width:175px}
+#nodeColumnPanel label{display:block;padding:4px}
+#nodesToolbar{position:relative}#nodesRows td{padding:6px 8px}.dataTable tr.selected td{background:#274051}
+#trafficDetails{min-width:260px;max-width:430px;overflow:auto;padding:12px;border-left:1px solid var(--line);background:#13222f;display:none}#trafficDetails.active{display:block}
+#viewTraffic .trafficLayout{display:flex;min-height:0;flex:1}#viewTraffic .tableWrap{min-width:0;flex:1}
+#terrainSlider{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#192936e8;border:1px solid var(--line);padding:10px;z-index:600;border-radius:9px;text-align:center}
+#terrainSlider input[type=range]{writing-mode:vertical-lr;direction:rtl;appearance:slider-vertical;width:30px;height:min(42vh,380px)}
+#radarStatus{font-size:11px;color:var(--muted)}
+.mentions{position:absolute;bottom:60px;left:22px;max-height:240px;overflow:auto;background:#1c3040;border:1px solid #5a7787;border-radius:7px;min-width:240px;z-index:1000}.mentions[hidden]{display:none}.mentions button{display:block;width:100%;text-align:left;border:0;border-radius:0;border-bottom:1px solid var(--line)}
+@media(max-width:850px){#trafficDetails.active{max-width:36vw;min-width:200px}.statsToolbar{overflow-x:auto;flex-wrap:nowrap}.reportBody{padding:6px}}
 </style>
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><span class="logo">◉</span><div><h1>PT2VHF Mesh Analyzer <small>v0.1.1</small></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small></div></div>
+<header><div class="brand"><span class="logo">◉</span><div><h1>PT2VHF Mesh Analyzer <small>v0.2.0</small></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><span class="version" id="connectedStatus">Carregando fontes...</span></header>
@@ -45,19 +60,41 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <label>Reprodução: <select id="playMode"><option value="live">Ao vivo</option><option value="history" disabled>Histórico (futuro)</option></select></label><button disabled title="Reprodução histórica futura">⏮</button><button disabled title="Reprodução histórica futura">⏸</button><button disabled title="Reprodução histórica futura">⏭</button>
 <label>Velocidade: <select disabled><option>1x</option></select></label><span id="mapSourceState">Ao vivo</span>
 <div class="mapActions"><div class="mapSearchBox"><label for="mapSearchInput">⌕</label><input id="mapSearchInput" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nó no mapa por nome curto, longo ou ID" autocomplete="off"><button id="mapSearchClear" title="Limpar pesquisa" aria-label="Limpar pesquisa">×</button><span class="mapSearchCount" id="mapSearchCount">Todos</span><div id="mapSearchMatches" class="mapSearchMatches" hidden></div></div>
-<label>Mapa: <select id="mapType"><option value="osm">OSM / Ruas</option><option value="topo">Topográfico</option><option value="satellite">Satélite</option></select></label><button id="layersBtn" aria-controls="mapLayersPanel">Camadas</button><button id="mapFit">Enquadrar</button><button id="mapRefresh">Atualizar</button></div>
+<label>Mapa: <select id="mapType"><option value="osm">OSM / Ruas</option><option value="topo">Topográfico</option><option value="satellite">Satélite</option><option value="light">Claro</option><option value="dark">Escuro</option></select></label><button id="layersBtn" aria-controls="mapLayersPanel">Camadas</button><button id="mapFit">Enquadrar</button><button id="mapRefresh">Atualizar</button></div>
 </div>
 <div id="map"><div style="padding:40px;color:#9bb1c3">Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.</div></div>
+<div id="terrainSlider" hidden><label>Corte: <strong id="terrainValue">0 m</strong></label><div><input id="terrainCut" type="range" min="0" max="3000" step="50" value="0"></div><label>Máx. (m) <input type="number" id="terrainMax" min="100" max="9000" value="3000" style="width:86px"></label><label>Opacidade <input type="range" id="terrainOpacity" min="20" max="100" value="65"></label></div>
 <div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>⋯ <span class="warn">Rota observada, enlace RF não comprovado</span></div><div>Dados preservados no SQLite</div></div>
-<div id="mapLayersPanel" hidden><label><input id="showMapNodes" type="checkbox" checked> Mostrar nós</label><label><input id="showMapLinks" type="checkbox" checked> Mostrar enlaces</label><label><input id="showNames" type="checkbox"> Mostrar nomes curtos</label><button id="closeLayers">Fechar</button></div>
+<div id="mapLayersPanel" hidden><label><input id="showMapNodes" type="checkbox" checked> Mostrar nós</label><label><input id="showMapLinks" type="checkbox" checked> Mostrar enlaces</label><label><input id="showNames" type="checkbox"> Mostrar nomes curtos</label><label><input id="mapRadar" type="checkbox" checked> Radar meteorológico</label><label>Radar opacidade <input id="mapRadarOpacity" type="range" min="10" max="100" value="65"></label><div id="radarStatus">Aguardando radar...</div><label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label><label><input id="mapTerrain" type="checkbox"> Relevo com corte</label><button id="closeLayers">Fechar</button></div>
 </section>
-<section class="view" id="viewNodes"><div class="toolbar"><h2>Nós Meshtastic</h2><input id="nodesFilter" placeholder="Filtrar por nome curto, longo, ID..." aria-label="Pesquisar nós"><span id="nodesCounter" class="muted"></span><div class="spacer"></div><button id="nodesReload">Atualizar</button></div><div class="tableWrap"><table class="dataTable"><thead><tr><th>Nome longo</th><th>Nome curto</th><th>Node ID</th><th>Última comunicação</th><th>Posição</th><th>Fonte</th><th>Ação</th></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
-<section class="view" id="viewTraffic"><div class="toolbar"><h2>Tráfego</h2><input id="trafficFilter" placeholder="Pesquisar pacote, nó ou conteúdo"><span id="trafficCounter" class="muted"></span><div class="spacer"></div><button id="trafficReload">Atualizar</button></div><div class="tableWrap"><table class="dataTable"><thead><tr><th>Data/hora</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>Canal</th><th>SNR</th><th>RSSI</th><th>Via</th><th>Conteúdo</th></tr></thead><tbody id="packetRows"></tbody></table></div></section>
-<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Fonte TX: <select id="messageSource"></select></label><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div class="composer"><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend">➤ Enviar</button></div></div></div></section>
-<section class="view" id="viewStats"><div class="toolbar"><h2>Estatísticas</h2><button id="statsReload">Atualizar</button></div><div class="panels"><div class="statGrid" id="statsGrid"></div><div class="card"><h3>Classificação de enlaces</h3><p>Rotas capturadas sem evidência de qualidade por hop <strong>não são rotuladas como RF confirmado</strong>. O ranking RF avançado e a análise de propagação serão migrados em versões futuras.</p></div></div></section>
+<section class="view" id="viewNodes"><div class="toolbar" id="nodesToolbar">
+<h2>Nós</h2><span id="nodesCounter" class="muted"></span><div class="spacer"></div>
+<label>Distância: <select id="nodeDistanceRef"><option value="">Sem referência</option></select></label>
+<input id="nodesFilter" placeholder="nome, ID, hardware..." aria-label="Pesquisar nós" style="width:200px">
+<button id="nodesClear" title="Limpar pesquisa">×</button><button id="nodesColumns">Colunas</button><button id="nodesReload">Atualizar</button>
+<div id="nodeColumnPanel"></div></div>
+<div class="tableWrap"><table class="dataTable"><thead><tr id="nodesHeader"></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
+<section class="view" id="viewTraffic">
+<div class="toolbar"><h2>Tráfego ao vivo</h2><span class="ok">● AO VIVO</span>
+<label>Fonte: <select id="trafficSource"><option value="">Todas</option></select></label>
+<label>Tipo: <select id="trafficType"><option value="">Todos</option></select></label>
+<input id="trafficFilter" placeholder="nó, ID, tipo..." aria-label="Pesquisar tráfego">
+<button id="trafficPause">Pausar</button><button id="trafficReload">Atualizar</button><button id="trafficExport">Baixar CSV (visível)</button><span id="trafficCounter" class="muted"></span></div>
+<div class="trafficLayout"><div class="tableWrap"><table class="dataTable">
+<thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
+<aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></aside>
+</div></section>
+<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Fonte TX: <select id="messageSource"></select></label><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend">➤ Enviar</button></div></div></div></section>
+<section class="view" id="viewStats">
+<div class="toolbar statsToolbar"><h2>Estatísticas</h2><div class="spacer"></div>
+<label>Período: <select id="statsPeriod"><option value="1h">1 h</option><option value="6h">6 h</option><option value="24h" selected>24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all">Todo</option></select></label>
+<label>Nó: <select id="statsNode"><option value="">Todos</option></select></label>
+<label>Fonte: <select id="statsSource"><option value="">Todas</option></select></label>
+<button id="statsReload">Atualizar tudo</button><small id="statsUpdated" class="muted"></small><button id="statsPDF">Relatório / PDF</button><button id="statsCSV">Exportar CSV</button></div>
+<div class="subtabs" id="statsTabs"></div><div class="reportBody" id="statsContents"><div id="statsGrid" class="statGrid"></div></div></section>
 <section class="view" id="viewAutomations"><div class="toolbar"><h2>Automações</h2></div><div class="panels"><div class="card"><h3>Arquitetura preparada para bots</h3><p>O motor independente já recebe mensagens e salva os dados no SQLite. Bots PING/CLIMA, consultas agendadas e regras RF da aplicação anterior serão migrados em etapas. <strong>Não há bot automático transmitindo RF nesta versão.</strong></p></div></div></section>
 <section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Fontes</button><button class="settingsTab" data-panel="lora">LoRa</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="general">Geral</button></div>
-<section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Fontes de dados e rádios</h3><p class="muted">Cadastre várias fontes independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.1.1. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
+<section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Fontes de dados e rádios</h3><p class="muted">Cadastre várias fontes independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.2.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
 <div class="card"><h3 id="sourceFormTitle">Adicionar fonte</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da fonte</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
 <div class="field src serial"><label for="sourcePort">Porta serial / COM</label><input id="sourcePort" placeholder="COM3" list="serialOptions"><datalist id="serialOptions"></datalist></div>
 <div class="field src tcp mqtt"><label for="sourceHost">Host / Endereço IP</label><input id="sourceHost" placeholder="192.168.1.100"></div><div class="field src tcp mqtt"><label for="sourceTcpPort">Porta TCP</label><input id="sourceTcpPort" type="number" min="1" max="65535" value="4403"></div>
@@ -80,11 +117,11 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
   </div>
 </section>
 <section class="settingsPanel" id="settingsRetention"><div class="card"><h3>Retenção individual dos dados</h3><p class="muted">Configuração persistente do banco SQLite. <b>"Nunca" é o padrão</b>: nada é apagado automaticamente. Um prazo remove registros anteriores à idade definida; a limpeza executa a cada hora ou pelo botão abaixo.</p><form id="retentionForm"><div class="formGrid" id="retentionFields"></div><div class="actions" style="margin-top:15px"><button type="submit">Salvar retenções</button><button type="button" class="danger" id="retentionCleanup">Executar limpeza agora</button></div></form></div></section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.1.1</b> — versão inicial Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div><div class="card"><h3>Atualizações do aplicativo</h3>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.2.0</b> — versão inicial Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div><div class="card"><h3>Atualizações do aplicativo</h3>
   <div class="actions"><label for="updateInterval">Verificar a cada (minutos):</label><input type="number" id="updateInterval" min="5" max="1440" step="1" style="width:100px" value="15"><button id="updateCheck">Verificar agora</button><a id="updateLink" href="https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest" target="_blank" rel="noopener noreferrer">Abrir último lançamento</a></div>
   <p id="updateStatus" class="muted">A verificação depende de acesso ao GitHub. A instalação é manual, para não interromper a recepção RF sem consentimento.</p>
 </div></section></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Fontes</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a fonte. Quando conectada, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.1.1.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Fontes</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a fonte. Quando conectada, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.2.0.</p></div></div></section>
 </div>
 <div id="toast" role="status"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
@@ -99,15 +136,166 @@ const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000
 let state={sources:[],connections:{},counts:{}},nodes=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
 function notify(txt,isError=false){const t=$('toast');t.textContent=txt;t.style.display='block';t.style.borderColor=isError?'#f48c8c':'#679ab8';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.style.display='none',5600);}
 async function api(path,body){const o=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(body)};const r=await fetch(path,o);const d=await r.json();if(!r.ok||d.success===false)throw Error(d.error||d.message||'HTTP '+r.status);return d;}
-function setView(next,updateUrl=true){view=next;document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));document.querySelectorAll('.navbtn').forEach(n=>n.classList.toggle('active',n.dataset.view===next));if(updateUrl)history.replaceState({},'',({map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes',help:'/ajuda'}[next]||'/mapa'));if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}if(next==='settings')renderSources();if(next==='messages')renderChat();}
+function setView(next,updateUrl=true){view=next;document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));document.querySelectorAll('.navbtn').forEach(n=>n.classList.toggle('active',n.dataset.view===next));if(updateUrl)history.replaceState({},'',({map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes',help:'/ajuda'}[next]||'/mapa'));if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}if(next==='stats'){syncStatFilters();fetchStats(false);}if(next==='settings')renderSources();if(next==='messages')renderChat();}
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
-const initialView=Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map';
+const initialView=location.pathname.startsWith('/estatisticas/')?'stats':Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map';
 function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
 function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite(Number(n.longitude))&&n.latitude!==null&&n.longitude!==null&&!(Math.abs(Number(n.latitude))<.01&&Math.abs(Number(n.longitude))<.01);}
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
 function initMap(){if(map||!window.L)return;map=L.map('map',{zoomControl:true}).setView([-15.793,-47.882],9);nodeLayer=L.layerGroup().addTo(map);linkLayer=L.layerGroup().addTo(map);setTiles();}
 let currentTiles=null;
-function setTiles(){if(!map)return;if(currentTiles)map.removeLayer(currentTiles);const kind=$('mapType').value;const sources={osm:['https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png','© OpenStreetMap contributors'],topo:['https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png','© OpenTopoMap contributors'],satellite:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','Tiles © Esri']};const [url,attr]=sources[kind];currentTiles=L.tileLayer(url,{maxZoom:18,attribution:attr}).addTo(map);}
+
+let radarLayer=null,shadeLayer=null,terrainLayer=null,lastRadarPath='',radarTimer=null;
+function setTiles(){
+ if(!map)return;
+ if(currentTiles)map.removeLayer(currentTiles);
+ const kind=$('mapType').value;
+ const sources={
+ osm:['https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png','© OpenStreetMap contributors'],
+ topo:['https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png','© OpenTopoMap contributors'],
+ satellite:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','Tiles © Esri'],
+ light:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}','Tiles © Esri'],
+ dark:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}','© OpenStreetMap contributors © CARTO']
+ };
+ const [url,attr]=sources[kind]||sources.osm;
+ currentTiles=L.tileLayer(url,{maxZoom:18,attribution:attr}).addTo(map);
+ try{localStorage.setItem('mesh.map.base',kind);}catch(e){}
+}
+function readMapSettings(){
+ try{
+ const base=localStorage.getItem('mesh.map.base');if([...$('mapType').options].some(o=>o.value===base))$('mapType').value=base;
+ const obj=JSON.parse(localStorage.getItem('mesh.map.layers')||'{}');
+ for(const [id,val] of Object.entries(obj)){
+  const el=$(id);if(!el)continue;if(el.type==='checkbox')el.checked=Boolean(val);else el.value=String(val);
+ }
+ }catch(e){}
+ $('terrainSlider').hidden=!$('mapTerrain').checked;
+ $('terrainValue').textContent=$('terrainCut').value+' m';
+}
+function saveMapSettings(){
+ const ids=['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity'];
+ const value={};for(const id of ids){const el=$(id);value[id]=el.type==='checkbox'?el.checked:el.value;}
+ try{localStorage.setItem('mesh.map.layers',JSON.stringify(value));}catch(e){}
+}
+async function updateRadar(){
+ if(!map||!$('mapRadar').checked){if(radarLayer){map?.removeLayer(radarLayer);radarLayer=null;}return;}
+ $('radarStatus').textContent='Radar: consultando imagens...';
+ try{
+ const ctrl=new AbortController();const timeout=setTimeout(()=>ctrl.abort(),6500);
+ let response;try{response=await fetch('https://api.rainviewer.com/public/weather-maps.json',{signal:ctrl.signal,cache:'no-cache'});}finally{clearTimeout(timeout);}
+ if(!response.ok)throw Error('HTTP '+response.status);
+ const info=await response.json();const frames=info.radar?.past||[];const frame=frames.at(-1)||info.radar?.nowcast?.[0];
+ if(!frame?.path||!info.host)throw Error('Quadro de radar indisponível');
+ const url=info.host+frame.path+'/256/{z}/{x}/{y}/2/1_1.png';
+ if(frame.path!==lastRadarPath){
+  if(radarLayer)map.removeLayer(radarLayer);
+  radarLayer=L.tileLayer(url,{minZoom:0,maxNativeZoom:7,maxZoom:18,opacity:Number($('mapRadarOpacity').value)/100,attribution:'Radar © RainViewer'}).addTo(map);
+  lastRadarPath=frame.path;
+ }else if(radarLayer)radarLayer.setOpacity(Number($('mapRadarOpacity').value)/100);
+ const clock=new Date(Number(frame.time)*1000);
+ $('radarStatus').textContent='Radar: '+clock.toLocaleTimeString('pt-BR');
+ }catch(e){$('radarStatus').textContent='Radar indisponível: '+e.message;
+  if(radarLayer){map.removeLayer(radarLayer);radarLayer=null;}
+ }
+}
+function updateHillshade(){
+ if(!map)return;
+ if($('mapHillshade').checked){
+  if(!shadeLayer)shadeLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
+    {maxNativeZoom:13,maxZoom:18,opacity:.45,attribution:'Hillshade © Esri'}).addTo(map);
+ }else if(shadeLayer){map.removeLayer(shadeLayer);shadeLayer=null;}
+}
+function getTerrainClass(){
+ if(!window.L)return null;
+ return L.GridLayer.extend({
+  createTile:function(coords,done){
+   const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
+   const ctx=canvas.getContext('2d',{willReadFrequently:true});
+   const img=new Image();img.crossOrigin='anonymous';
+   img.onload=()=>{
+    try{
+     ctx.drawImage(img,0,0,256,256);
+     const dat=ctx.getImageData(0,0,256,256),rgba=dat.data;
+     const cutoff=Number($('terrainCut').value);
+     for(let i=0;i<rgba.length;i+=4){
+      const alt=rgba[i]*256+rgba[i+1]+rgba[i+2]/256-32768;
+      if(alt<cutoff){rgba[i+3]=0;continue;}
+      const height=Math.min(1,(alt-cutoff)/1800);
+      rgba[i]=65+Math.round(height*110);
+      rgba[i+1]=144+Math.round(height*44);
+      rgba[i+2]=91-Math.round(height*36);
+      rgba[i+3]=210;
+     }
+     ctx.putImageData(dat,0,0);done(null,canvas);
+    }catch(e){ctx.clearRect(0,0,256,256);done(null,canvas);}
+   };
+   img.onerror=()=>done(null,canvas);
+   const zz=Math.min(coords.z,12);
+   const factor=Math.pow(2,coords.z-zz);
+   const x=Math.floor(coords.x/factor),y=Math.floor(coords.y/factor);
+   img.src='https://s3.amazonaws.com/elevation-tiles-prod/terrarium/'+zz+'/'+x+'/'+y+'.png';
+   return canvas;
+  }
+ });
+}
+function updateTerrain(){
+ if(!map)return;
+ $('terrainSlider').hidden=!$('mapTerrain').checked;
+ if($('mapTerrain').checked){
+  if(terrainLayer){map.removeLayer(terrainLayer);terrainLayer=null;}
+  const Terrain=getTerrainClass();
+  terrainLayer=new Terrain({tileSize:256,opacity:Number($('terrainOpacity').value)/100,maxZoom:18,updateWhenIdle:true});
+  terrainLayer.addTo(map);
+ }else if(terrainLayer){map.removeLayer(terrainLayer);terrainLayer=null;}
+}
+readMapSettings();
+$('terrainCut').max=$('terrainMax').value;
+let terrainRefresh=null;
+for(const id of ['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity']){
+ $(id).addEventListener('change',()=>{
+  if(id==='terrainMax'){
+    const n=Number($('terrainMax').value);
+    if(!Number.isInteger(n)||n<100||n>9000){notify('O limite deve estar entre 100 e 9000 m',true);return;}
+    $('terrainCut').max=n;if(Number($('terrainCut').value)>n)$('terrainCut').value=n;
+  }
+  $('terrainValue').textContent=$('terrainCut').value+' m';saveMapSettings();
+  if(id.startsWith('mapRadar'))updateRadar();
+  else if(id==='mapHillshade')updateHillshade();
+  else {clearTimeout(terrainRefresh);terrainRefresh=setTimeout(updateTerrain,150);}
+ });
+}
+$('terrainCut').oninput=()=>{$('terrainValue').textContent=$('terrainCut').value+' m';clearTimeout(terrainRefresh);terrainRefresh=setTimeout(()=>{saveMapSettings();updateTerrain();},240);};
+const oldInit=initMap;
+initMap=function(){
+ if(map||!window.L)return;oldInit();
+ updateRadar();updateHillshade();updateTerrain();
+ if(!radarTimer)radarTimer=setInterval(updateRadar,300000);
+};
+let lastAnimatedTs=null,activePulses=0;
+function pulseNewPackets(current){
+ if(!map||view!=='map'||!Array.isArray(current))return;
+ const newest=Math.max(0,...current.map(p=>Number(p.timestamp_ms)||0));
+ if(lastAnimatedTs===null){lastAnimatedTs=newest;return;}
+ if(newest<=lastAnimatedTs)return;
+ const fresh=current.filter(p=>p.timestamp_ms>lastAnimatedTs).slice(-12);
+ lastAnimatedTs=newest;
+ for(const p of fresh){
+  if(activePulses>=20)break;
+  if(p.via_mqtt)continue; // MQTT transport cannot prove a radio-hop path.
+  const n=nodes.find(x=>x.node_num===p.from_node);
+  if(!n||!validPos(n))continue;
+  // Pulse at observed transmitting node only; no fabricated direct path.
+  activePulses++;
+  const marker=L.circleMarker([n.latitude,n.longitude],{radius:5,color:'#ffd438',weight:2,opacity:1,fillOpacity:.6}).addTo(map);
+  marker.bindTooltip('Pacote observado: '+String(p.port||'')+'. Caminho RF não confirmado.');
+  let step=0;
+  const animation=setInterval(()=>{
+   if(!map||++step>=16){clearInterval(animation);if(map&&map.hasLayer(marker))map.removeLayer(marker);activePulses--;return;}
+   marker.setRadius(5+step*1.4);marker.setStyle({opacity:1-step/16,fillOpacity:.6*(1-step/16)});
+  },70);
+ }
+}
+
 function renderMap(){if(!map){initMap();if(!map)return;}nodeLayer.clearLayers();linkLayer.clearLayers();const query=$('mapSearchInput').value;const allowed=new Set(nodes.filter(n=>matches(n,query)).map(n=>n.node_num));$('mapSearchCount').textContent=query?`${allowed.size} de ${nodes.length}`:`${nodes.length} nós`;
  if($('showMapLinks').checked){for(const edge of links){if(!allowed.has(edge.a)||!allowed.has(edge.b))continue;const a=nodes.find(n=>n.node_num===edge.a),b=nodes.find(n=>n.node_num===edge.b);if(!a||!b||!validPos(a)||!validPos(b))continue;let line=L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],{color:'#ffbd50',weight:2,dashArray:'6 8',opacity:.8});line.bindTooltip(`${esc(idName(edge.a))} ↔ ${esc(idName(edge.b))}: rota observada, RF direto não confirmado`);line.addTo(linkLayer);}}
  if($('showMapNodes').checked){const coords=[];for(const n of nodes){if(!allowed.has(n.node_num)||!validPos(n))continue;const point=[n.latitude,n.longitude],marker=L.circleMarker(point,{radius:7,color:'#ffffff',fillColor:Date.now()-n.last_seen_ms<7200000?'#2ecc71':'#e9a94d',fillOpacity:.95,weight:1});marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id),{permanent:$('showNames').checked,direction:'top'});marker.on('click',()=>showNode(n));marker.addTo(nodeLayer);coords.push(point);}lastMapBounds=coords.length?L.latLngBounds(coords):null;}}
@@ -118,15 +306,282 @@ function suggest(){const q=$('mapSearchInput').value;const pop=$('mapSearchMatch
 $('mapSearchInput').addEventListener('input',()=>{renderMap();suggest();});$('mapSearchInput').addEventListener('keydown',ev=>{if(ev.key==='Escape'){$('mapSearchInput').value='';renderMap();suggest();}if(ev.key==='Enter'){const rows=nodes.filter(n=>matches(n,$('mapSearchInput').value));if(rows.length===1){showNode(rows[0]);$('mapSearchMatches').hidden=true;}}});$('mapSearchClear').onclick=()=>{$('mapSearchInput').value='';renderMap();suggest();$('mapSearchInput').focus();};
 $('mapType').onchange=setTiles;$('showMapNodes').onchange=renderMap;$('showMapLinks').onchange=renderMap;$('showNames').onchange=renderMap;$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
 $('layersBtn').onclick=()=>{const panel=$('mapLayersPanel');panel.hidden=!panel.hidden;if(!panel.hidden){const r=$('layersBtn').getBoundingClientRect();panel.style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';panel.style.top=r.bottom+6+'px';}};$('closeLayers').onclick=()=>{$('mapLayersPanel').hidden=true;};window.addEventListener('resize',()=>{positionSuggestions();if(!$('mapLayersPanel').hidden){const r=$('layersBtn').getBoundingClientRect();$('mapLayersPanel').style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';$('mapLayersPanel').style.top=r.bottom+6+'px';}});$('playback').addEventListener('scroll',positionSuggestions,{passive:true});
-function renderNodes(){const filter=$('nodesFilter').value;const list=nodes.filter(n=>matches(n,filter));$('nodesCounter').textContent=`${list.length} de ${nodes.length}`;$('nodesRows').innerHTML=list.map(n=>`<tr data-node="${n.node_num}"><td>${esc(n.long_name||'—')}</td><td>${esc(n.short_name||'—')}</td><td>${esc(n.node_id)}</td><td>${esc(fmtDate(n.last_seen_ms))}</td><td>${validPos(n)?esc(Number(n.latitude).toFixed(4)+', '+Number(n.longitude).toFixed(4)):'—'}</td><td>${esc(n.last_source_id)}</td><td><button class="dmLink">Mensagem privada</button></td></tr>`).join('')||'<tr><td colspan="7">Nenhum nó conhecido.</td></tr>';$('nodesRows').querySelectorAll('tr[data-node]').forEach(row=>{const id=Number(row.dataset.node);row.onclick=e=>{if(e.target.closest('.dmLink'))openDm(id);else{setView('map');showNode(nodes.find(n=>n.node_num===id));}};});}
+
+
+let mentionOptions=[],mentionIndex=0,mentionStart=0,mentionEnd=0;
+function updateMentions(){
+ const el=$('messageText'),left=el.value.slice(0,el.selectionStart||0);
+ const match=left.match(/(^|\s)@([^\s@]{0,32})$/);
+ const popup=$('messageMentions');
+ if(!match){popup.hidden=true;return;}
+ const query=norm(match[2]);
+ mentionEnd=el.selectionStart;
+ mentionStart=left.length-match[2].length-1;
+ mentionOptions=nodes.filter(n=>[n.long_name,n.short_name,n.node_id,...(n.aliases||[])].some(x=>norm(x).includes(query))).slice(0,15);
+ if(!mentionOptions.length){popup.hidden=true;return;}
+ mentionIndex=0;
+ popup.innerHTML=mentionOptions.map((n,i)=>'<button type="button" data-mention="'+i+'">'+esc(n.short_name||n.long_name||n.node_id)+' · '+esc(n.node_id)+'</button>').join('');
+ popup.hidden=false;
+ popup.querySelectorAll('[data-mention]').forEach(b=>b.onclick=()=>insertMention(Number(b.dataset.mention)));
+}
+function insertMention(index){
+ const n=mentionOptions[index];if(!n)return;
+ const el=$('messageText'),value='@'+String(n.short_name||n.long_name||n.node_id).replace(/\s+/g,'_')+' ';
+ el.value=el.value.slice(0,mentionStart)+value+el.value.slice(mentionEnd);
+ const pos=mentionStart+value.length;el.focus();el.setSelectionRange(pos,pos);
+ $('messageMentions').hidden=true;
+}
+$('messageText').addEventListener('input',updateMentions);
+$('messageText').addEventListener('keydown',e=>{
+ const pop=$('messageMentions');if(pop.hidden)return;
+ if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();pop.hidden=true;return;}
+ if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+  e.preventDefault();e.stopImmediatePropagation();
+  mentionIndex=(mentionIndex+(e.key==='ArrowDown'?1:-1)+mentionOptions.length)%mentionOptions.length;
+  pop.querySelectorAll('[data-mention]').forEach((b,i)=>b.style.background=i===mentionIndex?'#3c5d70':'');
+ }
+ if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();e.stopImmediatePropagation();insertMention(mentionIndex);}
+},true);
+
+const nodeCols=[['long_name','Nome longo'],['short_name','Nome curto'],['role','Role'],['hw_model','Hardware'],['hops','Saltos'],['battery','Bateria'],['voltage','Tensão'],['distance','Distância'],['snr','SNR'],['last_seen_ms','Última interação'],['position_ms','Última posição'],['node_id','Node ID']];
+let selectedNodeCols=new Set(nodeCols.slice(0,11).map(x=>x[0])),nodeSort='last_seen_ms',nodeSortAsc=false,oldRefs='';
+try{const c=JSON.parse(localStorage.getItem('mesh.nodes.columns')||'null');if(Array.isArray(c)&&c.length)selectedNodeCols=new Set(c);}catch(e){}
+try{const d=JSON.parse(localStorage.getItem('mesh.nodes.sort')||'null');if(d){nodeSort=d.col;nodeSortAsc=d.asc;}}catch(e){}
+const km=(a,b)=>{if(!validPos(a)||!validPos(b))return null;const rad=x=>Number(x)*Math.PI/180;
+ const d1=rad(Number(b.latitude)-Number(a.latitude)),d2=rad(Number(b.longitude)-Number(a.longitude));
+ const x=Math.sin(d1/2)**2+Math.cos(rad(a.latitude))*Math.cos(rad(b.latitude))*Math.sin(d2/2)**2;
+ return 12742*Math.atan2(Math.sqrt(x),Math.sqrt(Math.max(0,1-x)));};
+function nodeValue(n,key){
+ if(key==='distance'){const ref=nodes.find(x=>String(x.node_num)===$('nodeDistanceRef').value);return ref?km(ref,n):null;}
+ if(key==='hops')return null; // No durable, source-verified hops per node in current schema.
+ if(key==='last_seen_ms'||key==='position_ms')return n[key]||null;
+ return n[key]??null;
+}
+function nodeDisplay(n,key){
+ const v=nodeValue(n,key);
+ if(v===null||v===undefined||v==='')return '—';
+ if(key==='distance')return Number(v).toFixed(1)+' km';
+ if(key==='battery')return Number(v)===101?'EXT':v+'%';
+ if(key==='voltage')return Number(v).toFixed(2)+' V';
+ if(key==='snr')return Number(v).toFixed(1)+' dB';
+ if(key==='last_seen_ms'||key==='position_ms')return age(v);
+ return String(v);
+}
+function renderNodes(){
+ const refSel=$('nodeDistanceRef'),sig=nodes.filter(validPos).map(n=>n.node_num+':'+(n.short_name||n.node_id)).join('|');
+ if(sig!==oldRefs){const saved=refSel.value||localStorage.getItem('mesh.nodes.distance')||'';refSel.innerHTML='<option value="">Sem referência</option>'+nodes.filter(validPos).map(n=>'<option value="'+n.node_num+'">'+esc(n.short_name||n.long_name||n.node_id)+'</option>').join('');if(nodes.some(n=>String(n.node_num)===saved&&validPos(n)))refSel.value=saved;oldRefs=sig;}
+ const q=norm($('nodesFilter').value);
+ const list=nodes.filter(n=>matches(n,q)||[n.hw_model,n.role].some(x=>norm(x).includes(q)));
+ $('nodesCounter').textContent=list.length+' de '+nodes.length+' nós';
+ const visible=nodeCols.filter(x=>selectedNodeCols.has(x[0]));
+ $('nodesHeader').innerHTML=visible.map(([k,label])=>'<th data-nodesort="'+k+'" role="button" tabindex="0">'+esc(label)+(k===nodeSort?(nodeSortAsc?' ▲':' ▼'):'')+'</th>').join('');
+ list.sort((a,b)=>{const av=nodeValue(a,nodeSort),bv=nodeValue(b,nodeSort);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;
+  const cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'pt-BR',{numeric:true});return nodeSortAsc?cmp:-cmp;});
+ $('nodesRows').innerHTML=list.map(n=>'<tr data-node="'+n.node_num+'">'+visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>').join('')||'<tr><td>Nenhum nó conhecido.</td></tr>';
+ $('nodesRows').querySelectorAll('[data-node]').forEach(el=>el.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(el.dataset.node));if(n){setView('map');showNode(n);}});
+}
+$('nodesHeader').onclick=e=>{const th=e.target.closest('[data-nodesort]');if(!th)return;const key=th.dataset.nodesort;nodeSortAsc=nodeSort===key?!nodeSortAsc:key==='long_name';nodeSort=key;localStorage.setItem('mesh.nodes.sort',JSON.stringify({col:nodeSort,asc:nodeSortAsc}));renderNodes();};
+$('nodesHeader').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-nodesort]')){e.preventDefault();e.target.click();}};
+$('nodeDistanceRef').onchange=()=>{localStorage.setItem('mesh.nodes.distance',$('nodeDistanceRef').value);renderNodes();};
+$('nodesColumns').onclick=()=>{const p=$('nodeColumnPanel');if(p.style.display==='block'){p.style.display='none';return;}
+ p.innerHTML=nodeCols.map(([key,label])=>'<label><input type="checkbox" data-col="'+key+'" '+(selectedNodeCols.has(key)?'checked':'')+'> '+esc(label)+'</label>').join('');
+ p.style.display='block';p.querySelectorAll('[data-col]').forEach(el=>el.onchange=()=>{if(el.checked)selectedNodeCols.add(el.dataset.col);else if(selectedNodeCols.size>1)selectedNodeCols.delete(el.dataset.col);else {el.checked=true;return;}localStorage.setItem('mesh.nodes.columns',JSON.stringify([...selectedNodeCols]));renderNodes();});
+};
+$('nodesClear').onclick=()=>{$('nodesFilter').value='';renderNodes();$('nodesFilter').focus();};
 $('nodesFilter').oninput=renderNodes;$('nodesReload').onclick=refreshAll;
-function renderPackets(){const filter=norm($('trafficFilter').value);const selected=packets.filter(p=>norm([p.port,idName(p.from_node),idName(p.to_node),p.text_preview,p.packet_id].join(' ')).includes(filter));$('trafficCounter').textContent=selected.length+' registros';$('packetRows').innerHTML=selected.map(p=>`<tr><td>${esc(fmtDate(p.timestamp_ms))}</td><td>${esc(idName(p.from_node))}</td><td>${esc(idName(p.to_node))}</td><td>${esc(p.port)}</td><td>${esc(p.channel??'—')}</td><td>${esc(p.rx_snr??'—')}</td><td>${esc(p.rx_rssi??'—')}</td><td>${p.via_mqtt?'MQTT':'Rádio'}</td><td>${esc(p.text_preview|| (p.encrypted?'Criptografado':'—'))}</td></tr>`).join('')||'<tr><td colspan="9">Aguardando tráfego.</td></tr>';}
+
+$('nodesFilter').oninput=renderNodes;$('nodesReload').onclick=refreshAll;
+
+let pausedTraffic=false, selectedPacketId=null,trafficFilterSignature='';
+function filteredTraffic(){
+ const query=norm($('trafficFilter').value),src=$('trafficSource').value,typ=$('trafficType').value;
+ return packets.filter(p=>(!src||String(p.source_id)===src)&&(!typ||p.port===typ)&&
+ norm([p.port,idName(p.from_node),idName(p.to_node),p.packet_id,p.text_preview].join(' ')).includes(query));
+}
+function renderPackets(){
+ if(pausedTraffic)return;
+ const signature=state.sources.map(x=>x.id+':'+x.name).join('|');
+ if(signature!==trafficFilterSignature){const old=$('trafficSource').value;
+  $('trafficSource').innerHTML='<option value="">Todas</option>'+state.sources.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
+  $('trafficSource').value=old;trafficFilterSignature=signature;}
+ const oldType=$('trafficType').value,types=[...new Set(packets.map(p=>p.port).filter(Boolean))].sort();
+ const newOptions='<option value="">Todos</option>'+types.map(t=>'<option>'+esc(t)+'</option>').join('');
+ if($('trafficType').innerHTML!==newOptions){$('trafficType').innerHTML=newOptions;$('trafficType').value=oldType;}
+ const list=filteredTraffic();
+ $('trafficCounter').textContent=list.length+' exibidos · '+(state.counts?.packets||0)+' no banco';
+ $('packetRows').innerHTML=list.map(p=>{
+ const hops=p.hop_start!=null&&p.hop_limit!=null&&Number(p.hop_start)>=Number(p.hop_limit)?p.hop_start-p.hop_limit:'—';
+ return '<tr data-pid="'+p.id+'"><td>'+esc(new Date(p.timestamp_ms).toLocaleTimeString('pt-BR'))+'</td><td><span class="badge">RX</span></td><td>'+esc(idName(p.from_node))+'</td><td>'+esc(idName(p.to_node))+'</td><td><span class="badge">'+esc(p.port||'UNKNOWN')+'</span></td><td>'+esc(p.rx_snr??'—')+'</td><td>'+esc(p.rx_rssi??'—')+'</td><td>'+esc(hops)+'</td><td>'+esc(p.via_mqtt?'MQTT':'Rádio RX')+'</td></tr>';
+ }).join('')||'<tr><td colspan="9">Nenhum pacote encontrado.</td></tr>';
+ $('packetRows').querySelectorAll('[data-pid]').forEach(row=>row.onclick=()=>{
+  const p=packets.find(x=>String(x.id)===row.dataset.pid);if(!p)return;
+  selectedPacketId=p.id;$('trafficDetails').classList.add('active');
+  $('trafficTitle').textContent=(p.port||'Pacote')+' #'+p.id;
+  const fields={Hora:fmtDate(p.timestamp_ms),Fonte:p.source_id,Origem:idName(p.from_node),
+     Destino:idName(p.to_node),Canal:p.channel??'—',SNR:p.rx_snr??'—',RSSI:p.rx_rssi??'—',
+     HopStart:p.hop_start??'—',HopLimit:p.hop_limit??'—',
+     Transporte:p.via_mqtt?'MQTT':'Rádio local RX',PacketID:p.packet_id,
+     Criptografia:p.encrypted?'Payload não decodificado':'Não indicada',
+     Conteúdo:p.encrypted?'[conteúdo indisponível]':(p.text_preview||'—')};
+  $('trafficInfo').textContent=Object.entries(fields).map(([k,v])=>k+': '+v).join('\n');
+ });
+}
+$('trafficSource').onchange=renderPackets;$('trafficType').onchange=renderPackets;
+$('trafficFilter').oninput=renderPackets;$('trafficReload').onclick=()=>{pausedTraffic=false;$('trafficPause').textContent='Pausar';refreshAll();};
+$('trafficPause').onclick=()=>{pausedTraffic=!pausedTraffic;$('trafficPause').textContent=pausedTraffic?'Continuar':'Pausar';if(!pausedTraffic)renderPackets();};
+$('trafficClose').onclick=()=>{$('trafficDetails').classList.remove('active');selectedPacketId=null;};
+$('trafficExport').onclick=()=>{
+ const rows=[['Data/hora','Origem','Destino','Tipo','Canal','SNR','RSSI','Via','Packet ID']];
+ for(const p of filteredTraffic())rows.push([fmtDate(p.timestamp_ms),idName(p.from_node),idName(p.to_node),p.port,p.channel,p.rx_snr,p.rx_rssi,p.via_mqtt?'MQTT':'Rádio',p.packet_id]);
+ const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(';')).join('\r\n');
+ const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='PT2VHF-Trafego-Visivel.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
 $('trafficFilter').oninput=renderPackets;$('trafficReload').onclick=refreshAll;
 function chatKey(m){if((m.to_node===null||m.to_node===0xffffffff)&&Number(m.channel||0)===0)return 'channel:0';if(m.to_node===null||m.to_node===0xffffffff)return 'channel:'+m.channel;const a=m.direction==='tx'?m.to_node:m.from_node;return a!=null?'node:'+a:'channel:'+m.channel;}
 function openDm(id){currentChat='node:'+id;setView('messages');renderChat();}
 function renderChat(){const chats=new Set(['channel:0']);for(const m of messages)chats.add(chatKey(m));for(const n of nodes)chats.add('node:'+n.node_num);const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:a.localeCompare(b));$('contacts').innerHTML=list.map(key=>`<button class="contact ${key===currentChat?'selected':''}" data-chat="${esc(key)}">${esc(key.startsWith('node:')?idName(Number(key.slice(5))):key==='channel:0'?'📡 Canal primário':'Canal '+key.slice(8))}</button>`).join('');$('contacts').querySelectorAll('[data-chat]').forEach(el=>el.onclick=()=>{currentChat=el.dataset.chat;renderChat();});$('chatHeader').textContent=currentChat.startsWith('node:')?'Privado: '+idName(Number(currentChat.slice(5))):currentChat==='channel:0'?'Canal primário':'Canal '+currentChat.slice(8);const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);$('bubbles').innerHTML=filtered.map(m=>`<div class="bubble ${m.direction==='tx'?'tx':''}"><div>${esc(m.text)}</div><small>${esc(idName(m.from_node))} · ${esc(fmtDate(m.timestamp_ms))} ${m.state==='accepted_by_radio'?'· TX aceito pelo rádio':''}</small></div>`).join('')||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';$('bubbles').scrollTop=$('bubbles').scrollHeight;const enabled=state.sources.filter(s=>s.enabled&&s.kind!=='mqtt'&&state.connections[String(s.id)]?.status==='connected');const old=$('messageSource').value;$('messageSource').innerHTML=enabled.map(s=>`<option value="${s.id}">${esc(s.name)} (${esc(s.kind)})</option>`).join('')||'<option value="">Nenhum rádio conectado</option>';if(enabled.some(x=>String(x.id)===old))$('messageSource').value=old;$('messageSend').disabled=enabled.length===0;}
 $('messageSend').onclick=async()=>{try{const text=$('messageText').value.trim();if(!text)throw Error('Digite a mensagem');const source_id=Number($('messageSource').value);if(!source_id)throw Error('Conecte uma fonte bidirecional');const to_node=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';const channel=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);const result=await api('/api/messages/send',{text,source_id,to_node,channel});$('messageText').value='';notify('Mensagem aceita pelo rádio. Entrega não confirmada.');await refreshAll();}catch(e){notify(e.message,true);}};$('messageText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('messageSend').click();}};
-function renderStats(){const values=state.counts||{};const labels={nodes:'Nós registrados',packets:'Pacotes',messages:'Mensagens',positions:'Posições históricas',traces:'Traceroutes',links:'Enlaces observados',sources:'Fontes cadastradas',events:'Eventos operacionais'};$('statsGrid').innerHTML=Object.entries(labels).map(([k,v])=>`<div class="stat"><b>${Number(values[k]||0).toLocaleString('pt-BR')}</b><span>${esc(v)}</span></div>`).join('');}$('statsReload').onclick=refreshAll;
+
+const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
+ ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
+ ['energia','Energia'],['anomalias','Pontos de atenção'],['acessos','Acessos']];
+let currentStatTab='geral',statData=null,lastStatsFetch=0,statsLoading=false;
+const fmtCount=v=>v==null?'Sem dados':Number(v).toLocaleString('pt-BR');
+const fmtMeasure=(v,u)=>v==null?'Não medido':Number(v).toFixed(1).replace('.',',')+' '+u;
+const statsHead=(title,body)=>'<div class="statsCard"><h3>'+esc(title)+'</h3>'+body+'</div>';
+const statsTbl=(labels,rows)=>'<div style="overflow-x:auto"><table class="reportTable"><thead><tr>'+
+ labels.map(v=>'<th>'+esc(v)+'</th>').join('')+'</tr></thead><tbody>'+
+ (rows.length?rows.map(row=>'<tr>'+row.map(v=>'<td>'+esc(v??'—')+'</td>').join('')+'</tr>').join(''):
+ '<tr><td colspan="'+labels.length+'">Sem dados para os filtros selecionados.</td></tr>')+
+ '</tbody></table></div>';
+const statBar=(rows)=>'<div style="display:grid;gap:6px">'+rows.slice(0,12).map(p=>{
+  const max=Math.max(1,...rows.map(x=>Number(x.count)||0));const w=Math.max(1,Math.round(100*(Number(p.count)||0)/max));
+  return '<div style="display:grid;grid-template-columns:155px minmax(0,1fr) 60px;gap:10px;align-items:center"><span>'+esc(p.name)+'</span><div style="background:#293b49;border-radius:3px"><div style="height:13px;width:'+w+'%;background:#48a3bc;border-radius:3px"></div></div><b>'+fmtCount(p.count)+'</b></div>';
+ }).join('')+'</div>';
+function renderStats(){
+ $('statsTabs').innerHTML=statTabs.map(([key,label])=>'<button class="subtab '+(key===currentStatTab?'active':'')+'" data-tab="'+key+'">'+esc(label)+'</button>').join('');
+ $('statsTabs').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>selectStatTab(b.dataset.tab));
+ const d=statData,c=d?.counts;
+ if(!d){$('statsContents').innerHTML='<div class="statsCard">Aguardando dados analíticos do SQLite.</div>';return;}
+ const kpis=[
+  ['Nós originadores no período',c.active_originators,'Conhecidos: '+c.nodes_known],
+  ['Pacotes observados',c.observations,'MQTT: '+c.mqtt+' · Rádio: '+c.receiver],
+  ['Mensagens',c.messages,'Registros na base própria'],
+  ['Traceroutes',c.traceroutes,'Pacotes observados'],
+  ['Relações observadas',c.relations_observed,'Não equivale a RF direto'],
+  ['SNR médio',fmtMeasure(c.mean_snr,'dB'),'Apenas rádio com métrica'],
+  ['RSSI médio',fmtMeasure(c.mean_rssi,'dBm'),'Apenas rádio com métrica'],
+  ['Pontos de atenção',c.alerts,'Críticos: '+c.critical]
+ ];
+ let html='';
+ switch(currentStatTab){
+ case 'geral':
+   html='<div class="statGrid">'+kpis.map(([label,v,sub])=>'<div class="stat"><b>'+esc(typeof v==='number'?fmtCount(v):v)+'</b><span>'+esc(label)+'</span><div class="muted" style="font-size:11px;margin-top:6px">'+esc(sub)+'</div></div>').join('')+'</div>';
+   html+=statsHead('Resumo do período',fmtCount(c.active_originators)+' nós originaram '+fmtCount(c.observations)+' observações de pacotes ('+
+       fmtCount(c.receiver)+' de rádios e '+fmtCount(c.mqtt)+' via MQTT), incluindo '+fmtCount(c.messages)+' mensagens, '+fmtCount(c.traceroutes)+
+       ' traceroutes e '+fmtCount(c.telemetry)+' telemetrias. Há '+fmtCount(c.alerts)+' pontos de atenção. Origem e destino não representam enlace direto.');
+   break;
+ case 'rede':
+   html=statsHead('Inventário conhecido',statsTbl(['Indicador','Quantidade'],[
+    ['Nós conhecidos',c.nodes_known],['Originadores no período',c.active_originators],
+    ['Fontes com observações',c.sources_observed],['Nós com comunicação recente no catálogo',c.nodes_recent_catalog]]));
+   html+=statsHead('Fontes',statsTbl(['Fonte','Tipo','Conexão','Pacotes'],
+       d.source_breakdown.map(x=>[x.name,x.kind,x.connection,x.count])));
+   break;
+ case 'rf':
+   html=statsHead('Métricas observadas',
+     statsTbl(['Indicador','Valor'],[['SNR médio',fmtMeasure(c.mean_snr,'dB')],['RSSI médio',fmtMeasure(c.mean_rssi,'dBm')],
+        ['Ruído de fundo','Não medido'],['CRC','Sem contador de CRC específico']]));
+   html+=statsHead('Receptores e métricas LocalStats',
+     statsTbl(['Receptor/Nó','Amostras','Canal','Air TX','RX inválido','CRC'],
+       d.rf_samples.map(x=>[x.node,x.samples,fmtMeasure(x.channel_util,'%'),fmtMeasure(x.air_util,'%'),
+           fmtMeasure(x.rx_invalid_percent,'%'),'Não medido'])));
+   html+=statsHead('Coexistência LoRa e interferências','Não há identificação de outras redes LoRa pela recepção Meshtastic convencional. '
+    +'Uma taxa alta de RX inválido pode sugerir enlace no limite, colisões ou interferências, mas não comprova a causa. '
+    +'Recomenda-se comparar receptores e, se necessário, utilizar um SDR secundário.');
+   break;
+ case 'ranking':
+   html=statsHead('Nós que mais originam tráfego',statsTbl(['Nó','Pacotes'],d.top_originators.map(x=>[x.name,x.count])));
+   html+=statsHead('Enlaces RF diretos mais longos','Ranking indisponível: a base ainda não possui comprovação suficiente de adjacência RF e posições sincronizadas. Relações observadas não são tratadas como RF direto.');
+   break;
+ case 'routing':
+   html=statsHead('Distribuição por saltos',statsTbl(['Saltos calculáveis','Pacotes'],d.hops.map(x=>[x.hops,x.count])));
+   html+=statsHead('Categorias de relações',statsTbl(['Evidência','Relações','Observações'],d.link_types.map(x=>[x.quality,x.count,x.observations])));
+   break;
+ case 'trafego':
+   html=statsHead('Pacotes por tipo',statBar(d.packet_types));
+   html+=statsHead('Fontes receptoras',statsTbl(['Fonte','Pacotes','SNR médio'],d.source_breakdown.map(x=>[x.name,x.count,fmtMeasure(x.mean_snr,'dB')])));
+   html+=statsHead('Séries horárias',statsTbl(['Hora UTC','Observações','MQTT'],d.hourly.map(x=>[new Date(x.timestamp_ms).toLocaleString('pt-BR'),x.count,x.mqtt])));
+   break;
+ case 'consultas':
+   html=statsHead('Consultas Meshtastic','Tráfego de consultas está incluído nas contagens por tipo. Taxas de resposta e timeout precisam de correlação TX/ACK/RX confiável; sem isso não serão estimadas.');
+   break;
+ case 'chat':
+   html=statsHead('Mensagens',statsTbl(['Indicador','Quantidade'],[['Mensagens observadas',c.messages]]));
+   html+=statsHead('Privacidade','Conteúdo de mensagens privadas nunca integra relatório técnico por padrão.');
+   break;
+ case 'energia':
+   html=statsHead('Telemetria de energia',statsTbl(['Nó','Bateria','Tensão','Último contato'],
+    d.nodes.filter(x=>x.battery!=null||x.voltage!=null).slice(0,100).map(x=>[x.long_name||x.node_id,
+     x.battery===101?'EXT':x.battery==null?'Não medido':x.battery+'%',fmtMeasure(x.voltage,'V'),age(x.last_seen_ms)])));
+   break;
+ case 'anomalias':
+   html=statsHead('Pontos de atenção',statsTbl(['Severidade','Nó','Ocorrência'],d.alerts.map(x=>[x.severity,x.node,x.description])));
+   break;
+ case 'acessos':
+   html=statsHead('Auditoria de acessos','A interface permanece limitada a localhost por segurança. Não há telemetria de sessões autenticadas; nenhum acesso externo foi inferido.');
+   break;
+ }
+ $('statsContents').innerHTML=html+'<p class="muted">'+esc(d.scope)+' | Atualizado '+new Date(d.generated_ms).toLocaleString('pt-BR')+'</p>';
+}
+function selectStatTab(next,historyUpdate=true){
+ if(!statTabs.some(x=>x[0]===next))return;
+ currentStatTab=next;if(historyUpdate)history.replaceState({},'','/estatisticas/'+next);
+ renderStats();
+}
+function statsFilters(){return {period:$('statsPeriod').value,node:$('statsNode').value||'all',source:$('statsSource').value||'all'};}
+async function fetchStats(force=false){
+ if(statsLoading||(!force&&Date.now()-lastStatsFetch<15000))return;
+ statsLoading=true;$('statsUpdated').textContent='Consultando SQLite...';
+ try{
+ const filter=new URLSearchParams(statsFilters());
+ const result=await api('/api/analytics?'+filter.toString());statData=result;lastStatsFetch=Date.now();
+ $('statsUpdated').textContent='Atualizado '+new Date(result.generated_ms).toLocaleTimeString('pt-BR');
+ renderStats();
+ }catch(e){$('statsUpdated').textContent='Falha: '+e.message;notify('Estatísticas: '+e.message,true);}
+ finally{statsLoading=false;}
+}
+$('statsPeriod').onchange=()=>fetchStats(true);$('statsNode').onchange=()=>fetchStats(true);$('statsSource').onchange=()=>fetchStats(true);
+$('statsReload').onclick=()=>fetchStats(true);
+function syncStatFilters(){
+ const n=$('statsNode'),old=n.value;const nodesig=nodes.map(x=>x.node_num+':'+x.long_name).join('|');
+ if(n.dataset.sig!==nodesig){n.innerHTML='<option value="">Todos</option>'+nodes.map(x=>'<option value="'+x.node_num+'">'+esc(x.short_name||x.long_name||x.node_id)+'</option>').join('');n.value=old;n.dataset.sig=nodesig;}
+ const src=$('statsSource'),v=src.value,sig=state.sources.map(x=>x.id+':'+x.name).join('|');
+ if(src.dataset.sig!==sig){src.innerHTML='<option value="">Todas</option>'+state.sources.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');src.value=v;src.dataset.sig=sig;}
+}
+$('statsPDF').onclick=async()=>{
+ try{
+ $('statsPDF').disabled=true;notify('Gerando PDF técnico a partir do SQLite...');
+ const res=await fetch('/api/report/pdf',{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(statsFilters())});
+ if(!res.ok){let err=await res.json();throw Error(err.error||'Falha PDF');}
+ const blob=await res.blob();if(blob.type!=='application/pdf')throw Error('Resposta não é PDF');
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;
+ a.download='PT2VHF_Mesh_Analyzer_Relatorio_'+new Date().toISOString().slice(0,16).replaceAll(':','-')+'.pdf';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),5000);notify('Relatório PDF gerado.');
+ }catch(e){notify('PDF: '+e.message,true);}finally{$('statsPDF').disabled=false;}
+};
+$('statsCSV').onclick=()=>{
+ if(!statData){notify('Atualize Estatísticas primeiro.',true);return;}
+ const rows=[['Categoria','Item','Contagem']];
+ for(const p of statData.packet_types)rows.push(['Tipo',p.name,p.count]);
+ for(const p of statData.top_originators)rows.push(['Origem',p.name,p.count]);
+ for(const p of statData.source_breakdown)rows.push(['Fonte',p.name,p.count]);
+ const csv='\ufeff'+rows.map(row=>row.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(';')).join('\r\n');
+ const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
+ a.href=url;a.download='PT2VHF_Estatisticas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
 function showSettings(panel){document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));if(panel==='sources')renderSources();if(panel==='retention')renderRetention();if(panel==='lora')renderLoraSources();}
 document.querySelectorAll('.settingsTab').forEach(b=>b.onclick=()=>showSettings(b.dataset.panel));
 const kindTitles={serial:'USB/Serial',tcp:'Wi-Fi/TCP',ble:'Bluetooth LE',mqtt:'MQTT (RX)'};
@@ -237,7 +692,8 @@ $('updateCheck').onclick=()=>checkUpdates(true);
 scheduleUpdateCheck();
 setTimeout(()=>checkUpdates(false),3000);
 
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();renderNodes();renderPackets();renderStats();if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
-resetSourceForm();setView(initialView,false);refreshAll();setInterval(refreshAll,4000);
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){const slug=location.pathname.split('/').pop();if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;}
+setView(initialView,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
 </script>
 </body></html>
