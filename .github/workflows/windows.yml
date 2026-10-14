@@ -54,4 +54,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
-        run: gh release create "${{ github.ref_name }}" dist/PT2VHF-Mesh-Analyzer.exe dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe dist/SHA256SUMS.txt --title "PT2VHF Mesh Analyzer v0.1.0" --notes "Primeira versão independente Windows 11: SQLite próprio, múltiplas fontes USB/TCP/BLE/MQTT, retenções independentes, mapa, nós, tráfego, mensagens RF. Os módulos avançados serão migrados em versões posteriores. Hardware físico ainda requer teste de campo."
+        run: |
+          gh release create "${{ github.ref_name }}" dist/PT2VHF-Mesh-Analyzer.exe dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe dist/SHA256SUMS.txt --title "PT2VHF Mesh Analyzer v0.1.0" --notes "Primeira versão independente Windows 11: SQLite próprio, múltiplas fontes USB/TCP/BLE/MQTT, retenções independentes, mapa, nós, tráfego, mensagens RF. Os módulos avançados serão migrados em versões posteriores. Hardware físico ainda requer teste de campo."
