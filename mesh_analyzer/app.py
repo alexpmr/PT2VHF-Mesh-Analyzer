@@ -309,18 +309,44 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         replay.start()
         csrf=secrets.token_urlsafe(32)
         doc=Path(__file__).with_name("ui.html").read_text(encoding="utf-8")
+        shutdown_requested=threading.Event()
+        shutdown_started=threading.Event()
+        shutdown_complete=threading.Event()
+        shutdown_mutex=threading.Lock()
         def request_shutdown():
-            if desktop:
-                try:
-                    import webview
-                    if webview.windows:
-                        webview.windows[0].destroy()
-                        return
-                except Exception:
-                    LOG.exception("Falha ao fechar janela para atualização")
-            if server:
-                # shutdown() must never run on HTTP request thread.
-                threading.Thread(target=server.shutdown,daemon=True).start()
+            # Calling webview.destroy() from a Timer thread did not reliably
+            # terminate the desktop loop. The coordinator below shuts down
+            # every resource before ending this *specific* process.
+            shutdown_requested.set()
+        def clean_up_once():
+            with shutdown_mutex:
+                if shutdown_complete.is_set():return
+                done.set()
+                updates.stop()
+                if server:
+                    server.shutdown()
+                    server.server_close()
+                drivers.close()
+                for t in list(drivers._threads.values()):
+                    if t.is_alive() and t is not threading.current_thread():t.join(timeout=2)
+                if 'replay' in locals():replay.join(timeout=4)
+                db.close()
+                shutdown_complete.set()
+        def update_shutdown_coordinator():
+            shutdown_requested.wait()
+            shutdown_started.set()
+            try:
+                # Stop accepting new requests, close radio/SQLite *before*
+                # the updater sees our PID exit. The windowed main thread can
+                # remain in webview.start(), hence an explicit local self-exit
+                # is required once all managed resources are closed.
+                clean_up_once()
+                LOG.warning("Update shutdown complete, exiting only Mesh Analyzer PID=%s",os.getpid())
+                os._exit(0)
+            except Exception:
+                LOG.exception("Update shutdown incomplete; keeping current version running")
+        threading.Thread(target=update_shutdown_coordinator,
+                         name="update-clean-shutdown",daemon=True).start()
         server=ThreadingHTTPServer((host,int(port)),
                                   build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown))
         server.daemon_threads=True
@@ -364,14 +390,18 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 pass
         return 0
     finally:
-        done.set()
-        updates.stop()
-        if server:
-            server.shutdown()
-            server.server_close()
-        drivers.close()
-        if 'replay' in locals():replay.join(timeout=4)
-        db.close()
+        # Normal close and update close share the same teardown. The
+        # coordinator may already have completed it.
+        if 'clean_up_once' in locals():
+            clean_up_once()
+        else:
+            done.set()
+            updates.stop()
+            if server:
+                server.shutdown()
+                server.server_close()
+            drivers.close()
+            db.close()
 
 
 def main(argv=None):
