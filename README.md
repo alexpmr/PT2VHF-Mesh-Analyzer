@@ -26,7 +26,7 @@
 - **Conexões:** aba, campos, filtros e mensagens da interface usam o novo nome, mantendo a compatibilidade do banco e APIs internas `sources`.
 - **Identidade visual:** logotipo e bloco PT2VHF maiores, número da versão tão destacado quanto o título e retirada da contagem de conexões da primeira linha (a contagem permanece nos KPIs).
 - **Menu:** Mapa | Mensagens | Nós | Tráfego | Estatísticas | Automações | Configurações | Ajuda.
-- **Endereços dedicados:** cada subaba de Configurações tem URL própria, começando por [Conexões](/configuracoes/conexoes) na interface local; o caminho pode ser usado em favoritos e preservado após atualizar a página.
+- **Endereços dedicados:** cada subaba de Configurações tem URL própria, começando por `/configuracoes/conexoes` na interface local; o caminho pode ser usado em favoritos e preservado após atualizar a página.
 - **Validação:** suíte Python e sintaxe JS pelo pipeline, com publicação automática dos executáveis Win11 x64. A execução e compatibilidade física de rádio/atualizador ainda precisam de teste em Windows 11.
 
 ### Identidade visual — v0.6.1
