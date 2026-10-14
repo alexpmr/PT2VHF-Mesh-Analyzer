@@ -243,7 +243,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/device/apply":
                     result=sources.update_device(payload.get("source_id"),
                             payload.get("revision"),payload.get("changes"))
-                    self._json(result,200 if result["success"] else 409)
+                    self._json(result)
                 elif path == "/api/device/lora":
                     result=sources.update_lora(payload.get("source_id"),payload.get("revision"),
                                                payload.get("changes"))
