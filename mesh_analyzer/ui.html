@@ -682,8 +682,137 @@ function renderMap(){
     (state.connections?.[source]?.status||'offline'):
    'Todas as fontes · '+(state.sources||[]).length;
 }
-function showNode(n){const title=`${n.long_name||n.node_id} (${n.short_name||'—'})`;const position=validPos(n)?`${Number(n.latitude).toFixed(5)}, ${Number(n.longitude).toFixed(5)}`:'Sem coordenadas';if(map&&validPos(n))map.setView([n.latitude,n.longitude],Math.max(map.getZoom(),13));const html=`<b>${esc(title)}</b><div>${esc(n.node_id)}</div><div>Última comunicação: ${esc(age(n.last_seen_ms))}</div><div>Posição: ${esc(position)}</div><button type="button" id="popupDmBtn">Mensagem privada</button>`;
- if(map&&validPos(n)){const pop=L.popup().setLatLng([n.latitude,n.longitude]).setContent(html).openOn(map);setTimeout(()=>{const btn=$('popupDmBtn');if(btn)btn.onclick=()=>openDm(n.node_num);},30);}else notify(title+' — sem coordenadas; não foi possível centralizar.');}
+
+let nodeDetailSelected=null,nodeDetailRestore=null;
+function nodeInfoLine(label,value,formatted=null){
+ const known=value!==null&&value!==undefined&&value!==''&&
+             !(typeof value==='number'&&!Number.isFinite(value));
+ const displayed=known?(formatted===null?String(value):String(formatted)):'sem informação';
+ return '<div class="nodeField"><span class="'+(known?'ok':'muted')+'">'+
+   (known?'✓ ':'□ ')+esc(label)+'</span><span class="value '+(known?'':'warn')+'">'+
+   esc(displayed)+'</span></div>';
+}
+function nodeRadioStatus(n){
+ if(!n?.last_seen_ms)return 'Sem recepção registrada';
+ const delta=Date.now()-Number(n.last_seen_ms);
+ return delta<3600000?'Observado na última hora':delta<86400000?'Último tráfego há '+age(n.last_seen_ms):
+    'Sem tráfego recente · '+age(n.last_seen_ms);
+}
+const NODE_QUERY_LABELS=['Informações do nó','Posição','Energia','Traceroute',
+ 'Dispositivo','Ambiente','Qualidade do ar','Vizinhos'];
+function nodePopupHtml(n){
+ const nearby=packets.filter(p=>p.from_node===n.node_num).slice(0,80);
+ const recent=nearby.length?nearby[0]:null;
+ const lastSNR=recent?.rx_snr??n.snr??null;
+ const lastRSSI=recent?.rx_rssi??null;
+ const hops=(recent&&recent.hop_start!=null&&recent.hop_limit!=null)?
+     Number(recent.hop_start)-Number(recent.hop_limit):null;
+ const coord=validPos(n)?Number(n.latitude).toFixed(6)+', '+Number(n.longitude).toFixed(6):null;
+ const source=state.sources.find(s=>s.id===n.last_source_id);
+ const fields=[
+  ['Node ID',n.node_id],['Nome longo',n.long_name],['Nome curto',n.short_name],
+  ['Hardware',n.hw_model],['Role',n.role],['Firmware',null],
+  ['Status',nodeRadioStatus(n)],['Fonte da última comunicação',source?.name||null],
+  ['Coordenadas',coord],['Latitude',validPos(n)?n.latitude:null],
+  ['Longitude',validPos(n)?n.longitude:null],
+  ['Altitude',n.altitude,n.altitude!=null?n.altitude+' m':null],
+  ['Última posição',n.position_ms,fmtDate(n.position_ms)],
+  ['Precisão da posição',null],['Precisão GPS / HDOP',null],
+  ['Fonte da posição',null],['Hops da última mensagem',hops,hops===null?null:String(hops)],
+  ['SNR recebido',lastSNR,lastSNR!=null?Number(lastSNR).toFixed(1)+' dB':null],
+  ['RSSI recebido',lastRSSI,lastRSSI!=null?Math.round(lastRSSI)+' dBm':null],
+  ['Canal do último pacote',recent?.channel],
+  ['Última comunicação',n.last_seen_ms,fmtDate(n.last_seen_ms)],
+  ['Bateria',n.battery,n.battery!=null?(Number(n.battery)===101?'Alimentação externa':n.battery+'%'):null],
+  ['Tensão',n.voltage,n.voltage!=null?Number(n.voltage).toFixed(2)+' V':null],
+  ['Utilização do canal',null],['Air util TX',null],['Uptime',null],
+  ['Reboots',null],['Store & Forward',null],['PKC',null],['Chave pública disponível',null]
+ ];
+ const summary=[
+  ['Nome longo',n.long_name],['Nome curto',n.short_name],
+  ['Estado',nodeRadioStatus(n)],['Coordenadas',coord],
+  ['Altitude',n.altitude,n.altitude!=null?n.altitude+' m':null],
+  ['Último tráfego',n.last_seen_ms,fmtDate(n.last_seen_ms)]];
+ const queries=NODE_QUERY_LABELS.map(label=>'<div class="nodeQueryRow">'+
+    '<b>'+esc(label)+'</b><div class="muted" style="margin:6px 0">'+
+    'Não consultado — consulta ativa ainda indisponível nesta versão</div>'+
+    '<progress value="0" max="100"></progress></div>').join('');
+ const metadata=nearby.slice(0,14).map(p=>'<div class="nodeField">'+
+   '<span>'+esc(p.port||'Pacote')+'</span><span class="value">'+esc(fmtDate(p.timestamp_ms))+
+   ' · '+esc(source?.name||'fonte '+p.source_id)+'</span></div>').join('')||
+    '<p class="muted">Nenhum pacote detalhado na janela de tráfego carregada.</p>';
+ return '<div class="nodeSection"><h3>Resumo</h3><div class="nodeDetailGrid">'+
+   summary.map(x=>nodeInfoLine(...x)).join('')+'</div></div>'+
+   '<div class="nodeSection"><h3>Informações do nó</h3><div class="nodeDetailGrid">'+
+   fields.map(x=>nodeInfoLine(...x)).join('')+'</div></div>'+
+   '<div class="nodeSection"><h3>Consultas ao nó</h3>'+
+   '<p class="muted">O editor de consultas remotas ainda não está implementado; as ações abaixo não fazem TX. '+
+   'Abrir este painel nunca envia comandos ao rádio.</p><div class="actions">'+
+   NODE_QUERY_LABELS.map(l=>'<button type="button" disabled title="Consulta ativa ainda não suportada">'+esc(l)+'</button>').join('')+
+   '<button type="button" disabled title="Consulta ativa ainda não suportada">Tudo</button></div>'+
+   '<div class="nodeQueryGrid">'+queries+'</div></div>'+
+   '<div class="nodeSection"><h3>Últimos metadados recebidos</h3>'+
+   '<p class="muted">Histórico recente disponível localmente. Nem todas as métricas podem ser obtidas dos pacotes.</p>'+
+   '<div class="nodeDetailGrid">'+metadata+'</div></div>'+
+   '<div class="nodeSection"><button id="nodeDetailDM" type="button">Mensagem privada</button>'+
+   '<button id="nodeDetailLocate" type="button" '+(!validPos(n)?'disabled':'')+'>Centralizar no mapa</button></div>';
+}
+function closeNodeDetails(){
+ $('nodeDetailOverlay').classList.remove('open');nodeDetailSelected=null;
+}
+function showNode(n){
+ if(!n)return;
+ nodeDetailSelected=n.node_num;
+ $('nodeDetailTitle').textContent=(n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
+ $('nodeDetailBody').innerHTML=nodePopupHtml(n);
+ $('nodeDetailOverlay').classList.add('open');
+ $('nodeDetailDM').onclick=()=>{closeNodeDetails();openDm(n.node_num);};
+ $('nodeDetailLocate').onclick=()=>{
+  if(!validPos(n))return;
+  closeNodeDetails();setView('map');
+  if(map)map.setView([n.latitude,n.longitude],Math.max(map.getZoom(),13));
+ };
+}
+$('nodeDetailClose').onclick=closeNodeDetails;
+$('nodeDetailOverlay').addEventListener('click',e=>{
+ if(e.target===$('nodeDetailOverlay'))closeNodeDetails();
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&$('nodeDetailOverlay').classList.contains('open'))closeNodeDetails();
+});
+$('nodeDetailExpand').onclick=()=>{
+ const panel=$('nodeDetailWindow');
+ if(!nodeDetailRestore){
+  nodeDetailRestore={width:panel.style.width,height:panel.style.height,left:panel.style.left,top:panel.style.top};
+  Object.assign(panel.style,{width:'97vw',height:'90vh',left:'',top:''});
+  $('nodeDetailExpand').textContent='Restaurar';
+ }else{
+  Object.assign(panel.style,nodeDetailRestore);nodeDetailRestore=null;
+  $('nodeDetailExpand').textContent='Expandir';
+ }
+};
+$('nodeDetailReset').onclick=()=>{
+ const panel=$('nodeDetailWindow');
+ Object.assign(panel.style,{left:'',top:'',width:'',height:''});
+ nodeDetailRestore=null;$('nodeDetailExpand').textContent='Expandir';
+};
+let detailDrag=null;
+$('nodeDetailHeader').addEventListener('pointerdown',e=>{
+ if(e.target.closest('button'))return;
+ const panel=$('nodeDetailWindow'),r=panel.getBoundingClientRect();
+ detailDrag={x:e.clientX,y:e.clientY,left:r.left,top:r.top};
+ panel.style.position='fixed';panel.style.left=r.left+'px';panel.style.top=r.top+'px';
+ e.currentTarget.setPointerCapture(e.pointerId);
+});
+$('nodeDetailHeader').addEventListener('pointermove',e=>{
+ if(!detailDrag)return;
+ const panel=$('nodeDetailWindow');
+ panel.style.left=Math.max(0,Math.min(window.innerWidth-120,
+      detailDrag.left+e.clientX-detailDrag.x))+'px';
+ panel.style.top=Math.max(0,Math.min(window.innerHeight-45,
+      detailDrag.top+e.clientY-detailDrag.y))+'px';
+});
+$('nodeDetailHeader').addEventListener('pointerup',()=>{detailDrag=null;});
 function positionSuggestions(){const pop=$('mapSearchMatches'),el=$('mapSearchInput');if(pop.hidden)return;const r=el.getBoundingClientRect(),w=pop.getBoundingClientRect().width;pop.style.left=Math.max(5,Math.min(r.left,window.innerWidth-w-6))+'px';pop.style.top=(r.bottom+5)+'px';}
 function suggest(){const q=$('mapSearchInput').value;const pop=$('mapSearchMatches');if(!q.trim()){pop.hidden=true;pop.innerHTML='';return;}const rows=sourceMapNodes().filter(n=>matches(n,q)).slice(0,15);pop.innerHTML=rows.map(n=>`<button data-num="${n.node_num}"><b>${esc(n.long_name||n.node_id)}</b><br><small>${esc(n.short_name)} · ${esc(n.node_id)} · ${validPos(n)?'Com posição':'Sem localização'}</small></button>`).join('')||'<div style="padding:12px">Nenhum nó encontrado</div>';pop.hidden=false;positionSuggestions();pop.querySelectorAll('button[data-num]').forEach(b=>b.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(b.dataset.num));pop.hidden=true;showNode(n);});}
 $('mapSearchInput').addEventListener('input',()=>{renderMap();suggest();});$('mapSearchInput').addEventListener('keydown',ev=>{if(ev.key==='Escape'){$('mapSearchInput').value='';renderMap();suggest();}if(ev.key==='Enter'){const rows=sourceMapNodes().filter(n=>matches(n,$('mapSearchInput').value));if(rows.length===1){showNode(rows[0]);$('mapSearchMatches').hidden=true;}}});$('mapSearchClear').onclick=()=>{$('mapSearchInput').value='';renderMap();suggest();$('mapSearchInput').focus();};
