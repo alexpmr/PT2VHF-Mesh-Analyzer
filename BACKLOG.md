@@ -77,6 +77,15 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
 
 **Situação:** itens #5, #8–#13 parcialmente implementados na v0.2.0; pendências e validações continuam nas issues.
 
+## v0.4.0 — Correções de topologia e interface (aguardando CI/validação de bancada)
+
+- **#22**: corrigidos portnums de traceroute/telemetria, parser protobuf RouteDiscovery e NeighborInfo, armazenamento e reprocessamento histórico com idempotência, diagnóstico de links sem posição. Traceroute/neighbor ainda não são prova de enlace RF direto; validação com rádio real pendente.
+- **#20**: mapa filtra fontes e seus nós observados, enlaces, animações, busca e enquadramento; Todas por padrão. Proveniência source_id/node_num persistida; antigas fontes removidas poderão exigir recuperação de histórico.
+- **#8**: remoção do seletor manual Distância; referência de identidade local de rádio conectado via Serial/BLE/TCP, quando única e com posição válida. Mais de um rádio exige escolha explícita de fonte no Mapa, sem adivinhação.
+- **#21**: menu de navegação logo abaixo do título. Validar em diferentes resoluções.
+- **#16**: paridade integral da aba de Configurações → Mapa (temas sonoros, brilho etc.) continua pendente, assim como métricas RF impossíveis sem evidência.
+- Problemas não devem ser marcados resolvidos somente pela passagem do CI. Testar com dados reais antes de encerrar as issues.
+
 ## Defeito prioritário — enlaces ausentes no Mesh Analyzer v0.3.0 (14/10/2026)
 
 - [**#22 — Enlaces não processados ou exibidos no Mapa**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/22): investigar o fluxo recepção → decodificação/roteamento → SQLite `links` → API → mapa. Código atual só registra segmentos de traceroute quando `TRACEROUTE_APP` tem rota decodificada; outros pacotes não geram evidência de enlace, e a UI omite linhas quando qualquer ponta não tem coordenadas. Incluir proveniência e classificação rigorosa de RF direto comprovado, traceroute/rota, MQTT e desconhecido; sem fabricar enlaces por SNR/hops/origem-destino. Mostrar contadores distintos **enlaces observados / armazenados / desenhados / sem posição**, motivos de descarte, dados de vários receptores, timestamps compatíveis de nós móveis e reprocessamento confiável de histórico. Não excluir relações antigas nem confundir ausência de linhas com rede sem enlaces. **Prioridade alta, ainda não corrigido.** Relacionado a #10, #11, #16 e #20.
