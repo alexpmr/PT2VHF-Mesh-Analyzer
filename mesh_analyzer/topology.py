@@ -61,8 +61,8 @@ def traceroute_segments(packet, decoded):
     """
     found=decoded_traceroute(decoded)
     if found is None:return None
-    start=number(packet.get("to"))
-    end=number(packet.get("from"))
+    start=number(packet.get("to",packet.get("toId")))
+    end=number(packet.get("from",packet.get("fromId")))
     out=[]
     for label,route in (("route",found["route"]),("route_back",found["route_back"])):
         nodes=[number(x) for x in route]
@@ -92,7 +92,7 @@ def neighbor_segments(packet,decoded):
                 data=[{"nodeId":n.node_id} for n in msg.neighbors]
             except Exception:return []
     if not isinstance(data,(list,tuple)):return []
-    sender=number(packet.get("from"))
+    sender=number(packet.get("from",packet.get("fromId")))
     if sender is None:return []
     edges=[]
     for info in data[:150]:
