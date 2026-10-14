@@ -242,7 +242,7 @@ function setTiles(){
  };
  const [url,attr]=sources[kind]||sources.osm;
  currentTiles=L.tileLayer(url,{maxZoom:18,attribution:attr}).addTo(map);applyMapBrightness();
- try{localStorage.setItem('mesh.map.base',kind);}catch(e){}
+ if(window._preferencesLoaded)markSettingsDirty('map');
 }
 
 const MAP_IDS=['mapWindow','mapMinObservations','mapBrightness','mapTerrainMaxSetting','mapRfColor',
@@ -258,8 +258,94 @@ function applyMapBrightness(){
 function storeMapControls(){
  const values={};
  for(const id of MAP_IDS){const el=$(id);if(el)values[id]=el.type==='checkbox'?el.checked:el.value;}
- try{localStorage.setItem('mesh.map.controls',JSON.stringify(values));}catch(e){}
+ markSettingsDirty('map');
 }
+
+const settingsPending=new Set();let settingsSaving=false;
+function markSettingsDirty(group){
+ if(settingsSaving||!window._preferencesLoaded)return;
+ settingsPending.add(group);$('saveAllSettings').disabled=false;
+ $('settingsSaveStatus').textContent='Alterações não salvas: '+[...settingsPending].join(', ');
+}
+function savedSettingsGroup(group){
+ settingsPending.delete(group);$('saveAllSettings').disabled=settingsPending.size===0;
+ $('settingsSaveStatus').textContent=settingsPending.size?
+  'Alterações não salvas: '+[...settingsPending].join(', '):
+  'Configurações salvas às '+new Date().toLocaleTimeString('pt-BR');
+}
+function mapPreferenceSnapshot(){
+ const keys=[...MAP_IDS,'mapType','mapRadar','mapRadarOpacity','mapHillshade',
+             'mapTerrain','terrainCut','terrainMax','terrainOpacity'];
+ const data={};
+ for(const id of keys){const el=$(id);if(el)data[id]=el.type==='checkbox'?el.checked:el.value;}
+ return data;
+}
+async function loadSavedMapPreferences(){
+ try{
+  const result=await api('/api/preferences/map'),prefs=result.settings||{};
+  // Existing v0.5.0 preferences in localStorage are used as a migration
+  // fallback when no profile preferences have been persisted yet.
+  if(Object.keys(prefs).length){
+   for(const [id,value] of Object.entries(prefs)){
+    const el=$(id);if(!el)continue;
+    if(el.type==='checkbox')el.checked=Boolean(value);else el.value=String(value);
+   }
+   $('showMapLinks').checked=$('mapShowLinksSetting').checked;
+   $('showMapNodes').checked=$('mapShowNodesSetting').checked;
+   $('showNames').checked=$('mapShowNamesSetting').checked;
+   $('terrainCut').max=$('terrainMax').value;
+  }
+  if(map){setTiles();renderMap();}
+ }catch(e){notify('Preferências não carregadas: '+e.message,true);}
+ finally{window._preferencesLoaded=true;}
+}
+$('saveAllSettings').onclick=async()=>{
+ if(settingsSaving||!settingsPending.size)return;
+ settingsSaving=true;$('saveAllSettings').disabled=true;
+ $('settingsSaveStatus').textContent='Salvando...';
+ const completed=[],failed=[];
+ try{
+  for(const group of [...settingsPending]){
+   try{
+    if(group==='map')await api('/api/preferences/map',mapPreferenceSnapshot());
+    else if(group==='system'){
+     const minutes=Number($('updateInterval').value);
+     if(!Number.isInteger(minutes)||minutes<5||minutes>1440)
+      throw Error('Intervalo: 5–1440 minutos');
+     const result=await api('/api/system/settings',{
+       open_browser_on_start:$('systemOpenBrowser').checked,
+       update_minutes:minutes,allow_lan_access:false});
+     state.system=result.settings;
+    }else if(group==='retention'){
+     const data={};document.querySelectorAll('[data-retention]').forEach(
+       el=>data[el.dataset.retention]=Number(el.value));
+     const result=await api('/api/retention',data);state.retention=result.retention;
+    }
+    completed.push(group);
+   }catch(e){failed.push(group+': '+e.message);}
+  }
+  completed.forEach(savedSettingsGroup);
+  if(failed.length)notify('Falha parcial: '+failed.join('; '),true);
+  else notify('Configurações salvas no SQLite.');
+ }finally{
+  settingsSaving=false;$('saveAllSettings').disabled=settingsPending.size===0;
+  if(failed.length)$('settingsSaveStatus').textContent='Falha: '+failed.join('; ');
+ }
+};
+window.addEventListener('beforeunload',e=>{
+ if(settingsPending.size){e.preventDefault();e.returnValue='';}
+});
+$('viewSettings').addEventListener('input',e=>{
+ if(e.target.closest('#settingsMap'))markSettingsDirty('map');
+ if(e.target.closest('#settingsSystem')&&!['updateCheck','systemOpenNow'].includes(e.target.id))markSettingsDirty('system');
+ if(e.target.closest('#settingsRetention'))markSettingsDirty('retention');
+});
+$('viewSettings').addEventListener('change',e=>{
+ if(e.target.closest('#settingsMap'))markSettingsDirty('map');
+ if(e.target.closest('#settingsSystem'))markSettingsDirty('system');
+ if(e.target.closest('#settingsRetention'))markSettingsDirty('retention');
+});
+
 function loadMapControls(){
  try{
   const values=JSON.parse(localStorage.getItem('mesh.map.controls')||'{}');
@@ -350,7 +436,7 @@ function readMapSettings(){
 function saveMapSettings(){
  const ids=['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity'];
  const value={};for(const id of ids){const el=$(id);value[id]=el.type==='checkbox'?el.checked:el.value;}
- try{localStorage.setItem('mesh.map.layers',JSON.stringify(value));}catch(e){}
+ markSettingsDirty('map');
 }
 async function updateRadar(){
  if(!map||!$('mapRadar').checked){if(radarLayer){map?.removeLayer(radarLayer);radarLayer=null;}return;}
@@ -423,7 +509,7 @@ function updateTerrain(){
   terrainLayer.addTo(map);
  }else if(terrainLayer){map.removeLayer(terrainLayer);terrainLayer=null;}
 }
-readMapSettings();loadMapControls();initMapControls();
+readMapSettings();loadMapControls();initMapControls();loadSavedMapPreferences();
 $('terrainCut').max=$('terrainMax').value;
 let terrainRefresh=null;
 for(const id of ['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity']){
@@ -919,7 +1005,7 @@ $('statsCSV').onclick=()=>{
  a.href=url;a.download='PT2VHF_Estatisticas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 
-function showSettings(panel){document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));if(panel==='sources')renderSources();if(panel==='retention')renderRetention();if(panel==='lora')renderLoraSources();if(panel==='system')renderSystem();}
+function showSettings(panel){document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));if(panel==='sources')renderSources();if(panel==='retention'&&!settingsPending.has('retention'))renderRetention();if(panel==='lora')renderLoraSources();if(panel==='system')renderSystem();}
 document.querySelectorAll('.settingsTab').forEach(b=>b.onclick=()=>showSettings(b.dataset.panel));
 const kindTitles={serial:'USB/Serial',tcp:'Wi-Fi/TCP',ble:'Bluetooth LE',mqtt:'MQTT (RX)'};
 function renderSources(){const sources=state.sources;const status=state.connections;$('sourceCards').innerHTML=sources.map(s=>{const conn=status[String(s.id)]||{};const label=conn.status||(s.enabled?'Aguardando':'Desativada');const color=label==='connected'?'ok':label==='error'?'bad':label==='connecting'?'warn':'';return `<div class="sourceCard"><b>${esc(s.name)} <small class="badge">${esc(kindTitles[s.kind]||s.kind)}</small></b><p>ID ${s.id} · <span class="${color}">${esc(label)}</span> · ${Number(conn.packets||0)} pacotes nesta sessão</p>${conn.error?`<p class="bad">${esc(conn.error)}</p>`:''}<div class="sourceActions"><button data-action="edit" data-id="${s.id}">Editar</button><button data-action="enable" data-id="${s.id}" data-value="${s.enabled?'0':'1'}">${s.enabled?'Desativar':'Conectar'}</button><button data-action="delete" data-id="${s.id}" class="danger">Excluir</button></div></div>`;}).join('')||'<p class="muted">Nenhuma fonte cadastrada. Use o formulário abaixo para começar.</p>';$('sourceCards').querySelectorAll('button[data-action]').forEach(btn=>btn.onclick=async()=>{const id=Number(btn.dataset.id),action=btn.dataset.action;if(action==='edit')return editSource(id);try{if(action==='delete'){if(!confirm('Excluir esta fonte? O histórico coletado será preservado.'))return;await api('/api/sources/delete',{id});}else await api('/api/sources/enable',{id,enabled:btn.dataset.value==='1'});await refreshAll();notify('Fonte atualizada.');}catch(e){notify(e.message,true);}});}
@@ -933,7 +1019,7 @@ $('refreshPorts').onclick=async()=>{try{const res=await api('/api/ports');$('ser
 const retentionLabels={nodes:'Nós e identificação',packets:'Pacotes e tráfego',messages:'Mensagens e conversas',positions:'Histórico de posições',traces:'Traceroutes',links:'Enlaces consolidados',events:'Logs e eventos'};
 const retentionOptions=[0,1,7,30,90,180,365,730,1825].map(d=>`<option value="${d}">${d===0?'Nunca apagar':d===1?'1 dia':d+' dias'}</option>`).join('');
 function renderRetention(){const data=state.retention||{};$('retentionFields').innerHTML=Object.entries(retentionLabels).map(([key,title])=>`<div class="field"><label for="ret-${key}">${esc(title)}</label><select id="ret-${key}" data-retention="${key}">${retentionOptions}</select></div>`).join('');document.querySelectorAll('[data-retention]').forEach(sel=>{sel.value=String(data[sel.dataset.retention]||0);});}
-$('retentionForm').onsubmit=async e=>{e.preventDefault();const payload={};document.querySelectorAll('[data-retention]').forEach(el=>payload[el.dataset.retention]=Number(el.value));try{await api('/api/retention',payload);notify('Retenções salvas no banco próprio.');await refreshAll();}catch(err){notify(err.message,true);}};
+$('retentionForm').onsubmit=async e=>{e.preventDefault();const payload={};document.querySelectorAll('[data-retention]').forEach(el=>payload[el.dataset.retention]=Number(el.value));try{await api('/api/retention',payload);savedSettingsGroup('retention');notify('Retenções salvas no banco próprio.');await refreshAll();}catch(err){notify(err.message,true);}};
 $('retentionCleanup').onclick=async()=>{if(!confirm('Aplicar os prazos agora e apagar definitivamente registros vencidos?'))return;try{const data=await api('/api/retention/cleanup',{});notify('Limpeza concluída: '+Object.entries(data.removed).map(([k,v])=>k+' '+v).join(' · '));await refreshAll();}catch(e){notify(e.message,true);}};
 
 let loraData=null, loraLoadedSource=null;
@@ -1060,7 +1146,7 @@ $('systemSave').onclick=async()=>{
     open_browser_on_start:$('systemOpenBrowser').checked,
     update_minutes:minutes,allow_lan_access:false
   });
-  state.system=result.settings;sysLoaded=false;renderSystem();
+  state.system=result.settings;sysLoaded=false;renderSystem();savedSettingsGroup('system');
   notify('Configurações salvas no SQLite. Checagem a cada '+minutes+' minutos.');
  }catch(e){notify('Sistema: '+e.message,true);}
 };
@@ -1178,7 +1264,7 @@ setTimeout(async()=>{
 setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
 
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources')]);state=results[0];nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources')]);state=results[0];nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
  const slug=location.pathname.split('/').pop();
  if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;
