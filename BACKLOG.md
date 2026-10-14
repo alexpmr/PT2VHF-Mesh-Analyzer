@@ -47,6 +47,10 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
   - **Relevo com corte** baseado em DEM real (legado: Terrain Tiles/Terrarium), com máscara de terrenos >= cota definida, slider vertical direito, limite superior inicial de 3.000 m ajustável entre 100 e 9.000 m, opacidade e preferências persistentes.
   - **Relevo sombreado** permanece overlay independente; camadas meteorológicas/topográficas não ocultam nós, enlaces nem animações. Sem dados externos, mapa e banco continuam funcionais.
 
+- [**#13 — Relatório PDF técnico completo nativo do Mesh Analyzer**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/13): relatório com perfis Executivo, Técnico completo e Diagnóstico detalhado, inspirado e ampliado em relação ao código usado no Home Assistant. Gerar **offline** via SQLite próprio (sem dependências HA/MM), com capa, sumário, KPIs, inventário, pico de nós ativos com comprovação histórica, topologia/relays, mapas, RF, tráfego, energia, anomalias, recomendações de role justificadas, histórico e metodologia. PDF e dados estruturados em JSON/CSV opcionais com filtros por período/fonte/nó/canal/meio, relatório paginado com proveniência, privacidade por padrão e métricas coerentes com as 11 subabas.
+  - Correções obrigatórias do código original: ausência de flag MQTT **não comprova RF**; nome VHF3 não é critério de RF; relacionamento lógico/traceroute não é automaticamente enlace físico; cache não comprova pico online; Packet ID isolado não basta para deduplicação entre emissores; direção de pacote desconhecida não implica RX; não truncar a análise em 10.000 eventos sem informar; delimitações DF, raio 100 km e fonte única deixam de ser hardcoded. APRS/waypoints somente quando integrações estiverem implementadas e habilitadas.
+  - Vinculada à [**#10 — Estatísticas completas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10). O relatório é uma funcionalidade **pendente**, não uma nova release.
+
 **Situação:** issues de Nós, Tráfego, Estatísticas e Mapa registradas; pendentes de implementação na aplicação.
 
 ## Próximos passos (não implementados ou ainda não validados)
