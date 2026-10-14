@@ -4,7 +4,7 @@
 
 ## Downloads — Windows 11 x64
 
-**Versão candidata (aguardando confirmação dos instaladores): [v0.4.0](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.4.0)**
+**Versão estável publicada e conferida: [v0.4.0](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.4.0)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
@@ -20,7 +20,7 @@
 
 **Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable pode ser extraído e executado sem instalação. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
 
-### Destaques da v0.4.0
+### Recursos acumulados até a v0.4.0
 
 - **Estatísticas (11 subabas)**: Visão Geral, Rede, RF, Ranking, Routing, Tráfego, Consultas, Chat, Energia, Pontos de atenção e Acessos. Dados do SQLite próprio, filtros por período, fonte e nó, evolução horária, tabelas e médias RF quando medidas.
 - **Relatório técnico PDF nativo e offline**: capítulos com inventário, fontes, tráfego, RX/RSSI/SNR, telemetria LocalStats quando disponível, relações observadas, diagnóstico de possíveis interferências/colisões, hipóteses e ações técnicas. Não necessita Home Assistant nem MeshMonitor.
