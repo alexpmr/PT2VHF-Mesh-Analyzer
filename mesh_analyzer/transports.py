@@ -107,7 +107,7 @@ class PacketIngestor:
           "timestamp_ms":ts,"from_node":from_num,"to_node":to_num,"port":port,
           "channel":number(packet.get("channel")),"rx_snr":packet.get("rxSnr",packet.get("rx_snr")),
           "rx_rssi":packet.get("rxRssi",packet.get("rx_rssi")),"hop_start":packet.get("hopStart",packet.get("hop_start")),
-          "hop_limit":packet.get("hopLimit",packet.get("hop_limit")),"via_mqtt":int(bool(via_mqtt)),
+          "hop_limit":packet.get("hopLimit",packet.get("hop_limit")),"via_mqtt":int(bool(via_mqtt) or packet.get("viaMqtt") is True or packet.get("via_mqtt") is True),
           "encrypted":int(bool(packet.get("encrypted")) and not decoded),"text_preview":text[:180] if text else "", "raw_json":raw_json})
         if not accepted:return False
         if from_num is not None:
