@@ -1,5 +1,5 @@
 #define AppName "PT2VHF Mesh Analyzer"
-#define AppVersion "0.1.0"
+#define AppVersion "0.1.1"
 [Setup]
 AppId={{8AB1D4E5-9A9C-46DC-8C24-5D89A6D98701}
 AppName={#AppName}
@@ -8,7 +8,7 @@ AppPublisher=Alex, PT2VHF
 DefaultDirName={localappdata}\Programs\PT2VHF Mesh Analyzer
 DefaultGroupName=PT2VHF Mesh Analyzer
 OutputDir=..\dist
-OutputBaseFilename=PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64
+OutputBaseFilename=PT2VHF-Mesh-Analyzer-Setup-Win11-x64
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
