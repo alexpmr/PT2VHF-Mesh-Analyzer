@@ -2,6 +2,14 @@
 
 Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.x.
 
+## v0.6.2 — Implementações para testar no Windows 11 (14/10/2026)
+
+- **#37 (código):** popup inicial condicionado a `/api/state.sources.length === 0`; botões Ir para conexões e Agora não. Clique direciona para Configurações → Conexões e foca o formulário, sem reexibir em polling de 4 s. Fontes cadastradas porém desconectadas não ativam o aviso.
+- **#36 (interface):** rótulos e documentos renomeados para Conexões preservando identificadores `sources`/SQLite/API. Conferir se há textos residuais e futuras traduções não cobertas.
+- **#21 (UI):** versão e título com tamanho equivalente, marca ampliada, estado de conexões removido da linha de marca, contador mantido nos indicadores, menu Mensagens depois de Mapa.
+- **URLs de Configurações:** `/configuracoes/conexoes`, `/dispositivo`, `/retencoes`, `/mapa`, `/sistema`, `/geral` com renderização após F5.
+- **Qualidade:** testes offline e rotas HTTP adicionados. **Issues só devem ser encerradas após validação real de Setup/Portable, teclado/sem conexão e diferentes resoluções.** Nenhum compromisso de concluir integralmente as demais issues do projeto nesta release.
+
 ## v0.6.1 — Identidade visual instalada no projeto (revisão Windows pendente)
 
 - Logo exclusivo **PT2VHF Mesh Analyzer** (antena + ondas LoRa + relevo + nós mesh), arquivo matriz PNG base64 SHA256 em `branding/`; ícone multirresolução gerado como `.ico`/PNG por `branding/build_icons.py`.
