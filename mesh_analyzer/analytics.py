@@ -124,7 +124,7 @@ def calculate(db, params=None, connection_status=None):
         p["name"] = node_names.get(p["id"], f"!{p['id']:08x}" if p["id"] is not None else "—")
     for s in sources:
         meta = db.source(s["id"], public=True)
-        s["name"] = meta["name"] if meta else f"Fonte histórica #{s['id']}"
+        s["name"] = meta["name"] if meta else f"Conexão histórica #{s['id']}"
         s["kind"] = meta["kind"] if meta else "unknown"
         s["connection"] = (connection_status or {}).get(str(s["id"]), {}).get("status", "não informado")
     message_by_channel=db._rows(
@@ -214,7 +214,7 @@ def calculate(db, params=None, connection_status=None):
                            "crc_note": "Contador específico de CRC não disponível; RX inválido ≠ erro de CRC."})
     return {
         "success": True, "generated_ms": int(time.time()*1000), "filters":filters,
-        "scope": "Observações recebidas por fontes cadastradas; não representa todo o tráfego no ar.",
+        "scope": "Observações recebidas por conexões cadastradas; não representa todo o tráfego no ar.",
         "counts": {"nodes_known": total_nodes,"nodes_recent_catalog": recent_nodes,
                    "active_originators": active, "observations":int(count.get("observations") or 0),
                    "mqtt":int(count.get("mqtt") or 0),"receiver":int(count.get("receiver") or 0),
