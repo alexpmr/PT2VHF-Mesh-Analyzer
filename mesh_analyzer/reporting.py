@@ -127,10 +127,10 @@ def generate(db, params=None, connection_status=None):
     paragraph("Topologia | inventário | observações RF | tráfego | saúde | diagnóstico de interferências")
     paragraph("por Alex, PT2VHF")
     paragraph("Gerado: "+datetime.fromtimestamp(a["generated_ms"]/1000,timezone.utc).strftime("%d/%m/%Y %H:%M UTC"))
-    paragraph("Período: "+a["filters"]["period"]+" | Fonte: "+str(a["filters"]["source"] or "Todas")+
+    paragraph("Período: "+a["filters"]["period"]+" | Conexão: "+str(a["filters"]["source"] or "Todas")+
               " | Nó: "+str(a["filters"]["node"] or "Todos")+" | Canal: "+
               str(a["filters"]["channel"] if a["filters"]["channel"] is not None else "Todos"))
-    paragraph("Este documento descreve apenas recepções e transmissões registradas nas fontes "
+    paragraph("Este documento descreve apenas recepções e transmissões registradas nas conexões "
               "conectadas, durante o intervalo selecionado. Não constitui levantamento espectral "
               "ou prova de cobertura RF total.")
     story.append(PageBreak())
@@ -149,8 +149,8 @@ def generate(db, params=None, connection_status=None):
               "contagem de pacotes = observações armazenadas (não volume total no ar). SNR/RSSI "
               "consideram somente amostras presentes e não-MQTT. Nenhuma relação origem-destino "
               "é classificada automaticamente como enlace direto.")
-    heading("2. Fontes receptoras e escopo de observação")
-    table([["Fonte","Tecnologia","Pacotes","Conexão atual"]]+
+    heading("2. Conexões receptoras e escopo de observação")
+    table([["Conexão","Tecnologia","Pacotes","Estado atual"]]+
           [[s["name"],s["kind"],s["count"],s["connection"]] for s in a["source_breakdown"]],
           [usable*.32,usable*.20,usable*.18,usable*.30])
     heading("3. Inventário e nós sem atividade recente")
@@ -161,7 +161,7 @@ def generate(db, params=None, connection_status=None):
             datetime.fromtimestamp(n["last_seen_ms"]/1000,timezone.utc).strftime("%d/%m/%Y %H:%M UTC")]
            for n in silent[:25]], [usable*.28,usable*.16,usable*.15,usable*.22,usable*.19])
     paragraph(f"Nós sem atividade no catálogo há mais de duas horas: {len(silent)}. "
-              "O catálogo pode conter registros importados e não substitui confirmação de atividade pela fonte.")
+              "O catálogo pode conter registros importados e não substitui confirmação de atividade pela conexão.")
     heading("4. Tráfego e composição por tipo")
     story.append(_bar_chart([(r["name"],r["count"]) for r in a["packet_types"]],width=usable*.95))
     table([["Tipo/Portnum","Observações"]]+[[x["name"],x["count"]] for x in a["packet_types"]],

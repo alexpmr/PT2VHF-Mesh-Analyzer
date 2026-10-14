@@ -10,9 +10,9 @@
 :root{color-scheme:dark;--bg:#0e1621;--nav:#17212b;--panel:#14202b;--card:#1c2b38;--line:#304353;--ink:#edf3f8;--muted:#a3b7c6;--accent:#e4b800;--blue:#7fcaf0}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:var(--bg);color:var(--ink);font:13px system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 #app{height:100%;display:flex;flex-direction:column;min-height:0}header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--nav);border-bottom:1px solid var(--line);flex-wrap:wrap;flex:0 0 auto}
-.brand{display:flex;align-items:center;gap:8px;white-space:nowrap}.brand h1{margin:0;font-size:17px}.brand small{font-size:11px;color:#a6bdc9}.logo{width:46px;height:46px;object-fit:contain;display:block;flex-shrink:0;filter:drop-shadow(0 0 7px #52ed7930)}
-.brand-vhf{color:#59e97e}.brand-tagline{display:block;color:#81d49b;font-size:9px;letter-spacing:1.6px;text-transform:uppercase;white-space:nowrap}
-#nav{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;width:100%;order:4;padding:2px 0}#topUpdate{margin-left:auto}#connectedStatus{margin-left:0}button,select,input,textarea{background:#233443;color:var(--ink);border:1px solid #405668;border-radius:6px;padding:6px 8px;font:inherit}
+.brand{display:flex;align-items:center;gap:8px;white-space:nowrap}.brand h1{margin:0;font-size:22px;line-height:1.14}.brand small{font-size:12px;color:#a6bdc9}.brand-version{font:inherit;color:var(--ink)}.logo{width:58px;height:58px;object-fit:contain;display:block;flex-shrink:0;filter:drop-shadow(0 0 7px #52ed7930)}
+.brand-vhf{color:#59e97e}.brand-tagline{display:block;color:#81d49b;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;white-space:nowrap}
+#nav{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;width:100%;order:4;padding:2px 0}#topUpdate{margin-left:auto}button,select,input,textarea{background:#233443;color:var(--ink);border:1px solid #405668;border-radius:6px;padding:6px 8px;font:inherit}
 button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover:not(:disabled){border-color:#91b0bf;background:#2e4557}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .navbtn{font-weight:700;padding:6px 10px}.navbtn.active{background:var(--accent);color:#15191c;border-color:#ffe34d}.version{font-size:11px;color:#98b4bd;margin-left:auto}.statusPill{padding:5px 9px;border:1px solid var(--line);border-radius:14px;font-size:11px}
 #summary{display:flex;gap:8px;flex-wrap:wrap;padding:8px 12px;background:#111c27;border-bottom:1px solid #293744;flex:0 0 auto}.metric{background:#1d2b38;border:1px solid var(--line);border-radius:7px;padding:5px 9px;color:var(--muted)}.metric b{color:var(--ink);font-size:15px;margin-right:4px}
@@ -32,7 +32,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .statGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.stat{background:#1c2b38;border:1px solid var(--line);border-radius:8px;padding:13px}.stat b{display:block;font-size:23px;margin-bottom:5px}.stat span{color:var(--muted)}
 #toast{position:fixed;bottom:18px;right:16px;background:#223d50;color:#fff;border:1px solid #679ab8;border-radius:10px;padding:12px 15px;z-index:9900;display:none;max-width:min(460px,90vw);box-shadow:0 12px 30px #0008}
 .badge{display:inline-block;background:#263d50;border:1px solid var(--line);padding:2px 7px;border-radius:14px;font-size:10px;font-weight:700}.danger{background:#4c282d;border-color:#87515a}.actions{display:flex;gap:8px;flex-wrap:wrap}
-@media(max-width:750px){header{padding:8px;gap:8px}.navbtn{padding:5px}.version{margin-left:0}#messageLayout{grid-template-columns:118px 1fr}.composer{flex-wrap:wrap}.composer select{max-width:100%}.formGrid{grid-template-columns:1fr}.span2{grid-column:1}}
+@media(max-width:750px){.brand h1{font-size:18px}.brand small{font-size:11px}.brand-tagline{font-size:10px}.logo{width:48px;height:48px}header{padding:8px;gap:8px}.navbtn{padding:5px}.version{margin-left:0}#messageLayout{grid-template-columns:118px 1fr}.composer{flex-wrap:wrap}.composer select{max-width:100%}.formGrid{grid-template-columns:1fr}.span2{grid-column:1}}
 .subtabs{display:flex;align-items:center;gap:5px;padding:8px 10px;background:#152433;border-bottom:1px solid var(--line);overflow-x:auto;flex:0 0 auto}
 .subtab{white-space:nowrap;font-weight:700;font-size:11px}.subtab.active{background:var(--accent);color:#13191d}
 .reportBody{min-height:0;overflow:auto;padding:12px}.reportTable{width:100%;border-collapse:collapse;font-size:12px}.reportTable td,.reportTable th{border-bottom:1px solid var(--line);padding:8px;text-align:left}
@@ -93,18 +93,25 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .nodeQueryGrid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:7px}
 .nodeQueryRow{padding:9px;background:#1d303e;border:1px solid #3d5566;border-radius:5px}.nodeQueryRow progress{width:100%;height:5px}
 @media(max-width:700px){.nodeDetailGrid,.nodeQueryGrid{grid-template-columns:1fr}}
+#firstRunDialog{position:fixed;inset:0;z-index:9905;display:none;align-items:center;justify-content:center;padding:16px;background:#040a11d6}
+#firstRunDialog.open{display:flex}
+#firstRunDialog .firstRunBox{width:min(510px,100%);background:#192c37;border:1px solid #708a99;border-radius:12px;box-shadow:0 20px 60px #000b;padding:23px}
+#firstRunDialog h2{margin:0 0 12px;font-size:20px;color:#eff6f9}
+#firstRunDialog p{line-height:1.65;margin:0 0 16px;color:#c5d7df}
+#firstRunDialog .primary{font-weight:750;border-color:#3ebd72;background:#225a3f;color:#efffed}
+#firstRunDialog .actions{justify-content:flex-end}
 </style>
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="46" height="46"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <small>v0.6.1</small></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.2</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
-<button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
-</nav><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.0 · verificando...</button><span class="version" id="connectedStatus">Carregando fontes...</span></header>
-<section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> fontes conectadas</div><div class="metric"><b id="summaryLinks">0</b> enlaces observados</div></section>
+<button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
+</nav><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.2 · verificando...</button></header>
+<section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> enlaces observados</div></section>
 <section class="view active" id="viewMap">
 <div id="playback">
-<label>Fonte: <select id="mapSource"><option value="">Todas as fontes</option></select></label><span id="mapSourceState">Ao vivo</span>
+<label>Conexão: <select id="mapSource"><option value="">Todas as conexões</option></select></label><span id="mapSourceState">Ao vivo</span>
 <div class="mapActions"><div class="mapSearchBox"><label for="mapSearchInput">⌕</label><input id="mapSearchInput" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nó no mapa por nome curto, longo ou ID" autocomplete="off"><button id="mapSearchClear" title="Limpar pesquisa" aria-label="Limpar pesquisa">×</button><span class="mapSearchCount" id="mapSearchCount">Todos</span><div id="mapSearchMatches" class="mapSearchMatches" hidden></div></div>
 <button id="layersBtn" aria-controls="mapLayersPanel">Camadas</button><button id="mapFit">Enquadrar</button><button id="mapRefresh">Atualizar</button></div>
 </div>
@@ -122,7 +129,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <div class="tableWrap"><table class="dataTable"><thead><tr id="nodesHeader"></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
 <section class="view" id="viewTraffic">
 <div class="toolbar"><h2>Tráfego ao vivo</h2><span class="ok">● AO VIVO</span>
-<label>Fonte: <select id="trafficSource"><option value="">Todas</option></select></label>
+<label>Conexão: <select id="trafficSource"><option value="">Todas</option></select></label>
 <label>Tipo: <select id="trafficType"><option value="">Todos</option></select></label>
 <input id="trafficFilter" placeholder="nó, ID, tipo..." aria-label="Pesquisar tráfego">
 <button id="trafficPause">Pausar</button><button id="trafficReload">Atualizar</button><button id="trafficExport">Baixar CSV (visível)</button><span id="trafficCounter" class="muted"></span></div>
@@ -130,12 +137,12 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
 <aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></aside>
 </div></section>
-<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Fonte TX: <select id="messageSource"></select></label><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend">➤ Enviar</button></div></div></div></section>
+<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Conexão TX: <select id="messageSource"></select></label><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend">➤ Enviar</button></div></div></div></section>
 <section class="view" id="viewStats">
 <div class="toolbar statsToolbar"><h2>Estatísticas</h2><div class="spacer"></div>
 <label>Período: <select id="statsPeriod"><option value="1h">1 h</option><option value="6h">6 h</option><option value="24h" selected>24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all">Todo</option></select></label>
 <label>Nó: <select id="statsNode"><option value="">Todos</option></select></label>
-<label>Fonte: <select id="statsSource"><option value="">Todas</option></select></label>
+<label>Conexão: <select id="statsSource"><option value="">Todas</option></select></label>
 <button id="statsReload">Atualizar tudo</button><small id="statsUpdated" class="muted"></small><button id="statsPDF">Relatório / PDF</button><button id="statsCSV">Exportar CSV</button></div>
 <div class="subtabs" id="statsTabs"></div><div class="reportBody" id="statsContents"><div id="statsGrid" class="statGrid"></div></div></section>
 <section class="view" id="viewAutomations"><div class="toolbar"><h2>Automações</h2></div>
@@ -144,17 +151,17 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <p>Em versões futuras, será possível configurar bots, consultas agendadas e regras de eventos da rede Meshtastic.</p>
 <p class="muted">Nenhuma automação está ativa nesta versão. Nenhum envio RF é iniciado por esta aba.</p>
 </div></div></section>
-<section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Fontes</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="general">Geral</button></div>
-<section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Fontes de dados e rádios</h3><p class="muted">Cadastre várias fontes independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
-<div class="card"><h3 id="sourceFormTitle">Adicionar fonte</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da fonte</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
+<section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Conexões</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="general">Geral</button></div>
+<section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Conexões com rádios e serviços</h3><p class="muted">Cadastre várias conexões independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
+<div class="card"><h3 id="sourceFormTitle">Adicionar conexão</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da conexão</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
 <div class="field src serial"><label for="sourcePort">Porta serial / COM</label><input id="sourcePort" placeholder="COM3" list="serialOptions"><datalist id="serialOptions"></datalist></div>
 <div class="field src tcp mqtt"><label for="sourceHost">Host / Endereço IP</label><input id="sourceHost" placeholder="192.168.1.100"></div><div class="field src tcp mqtt"><label for="sourceTcpPort">Porta TCP</label><input id="sourceTcpPort" type="number" min="1" max="65535" value="4403"></div>
 <div class="field src ble"><label for="sourceAddress">Identificador Bluetooth / endereço BLE</label><input id="sourceAddress" placeholder="Endereço ou UUID do rádio"></div>
 <div class="field src mqtt"><label for="mqttTopic">Tópico MQTT</label><input id="mqttTopic" value="msh/+/2/e/#"></div><div class="field src mqtt"><label for="mqttUsername">Usuário MQTT</label><input id="mqttUsername" autocomplete="off"></div><div class="field src mqtt"><label for="mqttPassword">Senha MQTT</label><input id="mqttPassword" type="password" autocomplete="new-password" placeholder="Em edição: deixe vazio para manter"></div><div class="field src mqtt"><label><input id="mqttTls" type="checkbox"> TLS</label></div>
-<div class="field span2"><label><input id="sourceEnabled" type="checkbox" checked> Conectar automaticamente ao iniciar</label></div></div><div class="actions" style="margin-top:13px"><button type="submit">Salvar fonte</button><button type="button" id="sourceCancel">Nova fonte / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form></div></section>
+<div class="field span2"><label><input id="sourceEnabled" type="checkbox" checked> Conectar automaticamente ao iniciar</label></div></div><div class="actions" style="margin-top:13px"><button type="submit">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form></div></section>
 <section class="settingsPanel" id="settingsLora">
   <div class="card"><h3>Configuração do rádio Meshtastic</h3>
-    <p class="muted">Leia os parâmetros reais do dispositivo conectado por USB/Serial, TCP/IP ou BLE. MQTT é apenas fonte de dados e não pode configurar rádios. A gravação pode reiniciar o nó e interromper a conexão.</p>
+    <p class="muted">Leia os parâmetros reais do dispositivo conectado por USB/Serial, TCP/IP ou BLE. MQTT é apenas uma conexão de dados e não pode configurar rádios. A gravação pode reiniciar o nó e interromper a conexão.</p>
     <div class="actions"><label for="loraSource">Dispositivo:</label><select id="loraSource"></select><button id="loraRead">Ler do rádio</button></div>
     <p class="muted" id="loraStatus">Selecione um rádio conectado para consultar a configuração.</p>
   </div>
@@ -195,12 +202,18 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 </div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.0</b> — versão inicial Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.2</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
-<small class="muted">Aplicar no rádio e Salvar fonte continuam ações separadas.</small></div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Fontes</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a fonte. Quando conectada, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.0.</p></div></div></section>
+<small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.2.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
+<div id="firstRunDialog" role="dialog" aria-modal="true" aria-labelledby="firstRunTitle" aria-describedby="firstRunMessage">
+<div class="firstRunBox">
+<h2 id="firstRunTitle">Configure sua primeira conexão</h2>
+<p id="firstRunMessage">Nenhuma conexão foi cadastrada. Para começar a receber informações da rede Meshtastic, configure uma conexão USB/Serial, Bluetooth LE, Wi-Fi/TCP ou MQTT (somente recepção).</p>
+<div class="actions"><button type="button" id="firstRunLater">Agora não</button><button type="button" class="primary" id="firstRunConnections">Ir para conexões</button></div>
+</div></div>
 <div id="updateDialog" role="dialog" aria-modal="true" aria-labelledby="updateTitle"><div class="updateBox">
 <h3 id="updateTitle">Atualização do Mesh Analyzer</h3><p id="updateSummary"></p>
 <div id="updateNotes"></div><p id="updateProgressText" class="muted"></p><progress id="updateProgress" max="100" value="0" hidden></progress>
@@ -217,11 +230,44 @@ const fmtDate=x=>x?new Date(Number(x)).toLocaleString('pt-BR'):'—';
 const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000);return m<60?Math.round(m)+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d';};
 let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
 try{mapSourceFilter=localStorage.getItem('mesh.map.selected_source')||'';}catch(e){}
+let firstRunDialogChecked=false;
+function dismissFirstRunDialog(){$('firstRunDialog').classList.remove('open');}
+function showFirstRunDialogOnce(){
+ if(firstRunDialogChecked||!Array.isArray(state.sources))return;
+ firstRunDialogChecked=true;
+ if(state.sources.length===0){
+  $('firstRunDialog').classList.add('open');
+  $('firstRunConnections').focus();
+ }
+}
+$('firstRunLater').onclick=()=>{dismissFirstRunDialog();};
+$('firstRunConnections').onclick=()=>{
+ dismissFirstRunDialog();
+ setView('settings');
+ showSettings('sources');
+ $('sourceName').focus();
+};
+$('firstRunDialog').addEventListener('keydown',event=>{
+ if(event.key==='Escape'){event.preventDefault();dismissFirstRunDialog();}
+});
 function notify(txt,isError=false){const t=$('toast');t.textContent=txt;t.style.display='block';t.style.borderColor=isError?'#f48c8c':'#679ab8';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.style.display='none',5600);}
 async function api(path,body){const o=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(body)};const r=await fetch(path,o);const d=await r.json();if(!r.ok||d.success===false)throw Error(d.error||d.message||'HTTP '+r.status);return d;}
-function setView(next,updateUrl=true){view=next;document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));document.querySelectorAll('.navbtn').forEach(n=>n.classList.toggle('active',n.dataset.view===next));if(updateUrl)history.replaceState({},'',({map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes',help:'/ajuda'}[next]||'/mapa'));if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}if(next==='stats'){syncStatFilters();fetchStats(false);}if(next==='settings')renderSources();if(next==='messages')renderChat();}
+const viewPaths={map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes/conexoes',help:'/ajuda'};
+function setView(next,updateUrl=true){
+ view=next;
+ document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));
+ document.querySelectorAll('.navbtn').forEach(n=>n.classList.toggle('active',n.dataset.view===next));
+ if(next==='settings')showSettings('sources',false);
+ if(updateUrl)history.replaceState({},'',viewPaths[next]||'/mapa');
+ if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}
+ if(next==='stats'){syncStatFilters();fetchStats(false);}
+ if(next==='messages')renderChat();
+}
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
-const initialView=location.pathname.startsWith('/estatisticas/')?'stats':Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map';
+const initialView=location.pathname.startsWith('/configuracoes')?'settings':
+ (location.pathname.startsWith('/estatisticas/')?'stats':
+ Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map');
+const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
 function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
 function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite(Number(n.longitude))&&n.latitude!==null&&n.longitude!==null&&!(Math.abs(Number(n.latitude))<.01&&Math.abs(Number(n.longitude))<.01);}
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
@@ -592,7 +638,7 @@ function zoomToNewestTraceroute(){
 function refreshMapSourceOptions(){
  const el=$('mapSource'),signature=(state.sources||[]).map(src=>src.id+':'+src.name+':'+(state.connections?.[String(src.id)]?.status||'offline')).join('|');
  if(el.dataset.sources===signature)return;
- const saved=mapSourceFilter;el.innerHTML='<option value="">Todas as fontes</option>'+
+ const saved=mapSourceFilter;el.innerHTML='<option value="">Todas as conexões</option>'+
   (state.sources||[]).map(src=>'<option value="'+src.id+'">'+esc(src.name)+' ('+
      esc(src.kind==='tcp'?'Wi-Fi/TCP':src.kind.toUpperCase())+' · '+
      esc(state.connections?.[String(src.id)]?.status||'desconectada')+')</option>').join('');
@@ -676,13 +722,13 @@ function renderMap(){
  const estimatedMissing=activeLinks.filter(e=>
      !nodes.some(n=>n.node_num===e.a&&validPos(n))||
      !nodes.some(n=>n.node_num===e.b&&validPos(n))).length;
- $('mapTopologyStats').textContent='Enlaces da fonte: '+activeLinks.length+
+ $('mapTopologyStats').textContent='Enlaces da conexão: '+activeLinks.length+
     ' · desenhados: '+visible+' · sem posição: '+estimatedMissing+
     ' · ocultos por filtros: '+Math.max(0,activeLinks.length-visible-estimatedMissing);
  $('mapSourceState').textContent=source?
-   ((state.sources||[]).find(x=>String(x.id)===source)?.name||'Fonte histórica')+' · '+
+   ((state.sources||[]).find(x=>String(x.id)===source)?.name||'Conexão histórica')+' · '+
     (state.connections?.[source]?.status||'offline'):
-   'Todas as fontes · '+(state.sources||[]).length;
+   'Todas as conexões · '+(state.sources||[]).length;
 }
 
 let nodeDetailSelected=null,nodeDetailRestore=null;
@@ -714,13 +760,13 @@ function nodePopupHtml(n){
  const fields=[
   ['Node ID',n.node_id],['Nome longo',n.long_name],['Nome curto',n.short_name],
   ['Hardware',n.hw_model],['Role',n.role],['Firmware',null],
-  ['Status',nodeRadioStatus(n)],['Fonte da última comunicação',source?.name||null],
+  ['Status',nodeRadioStatus(n)],['Conexão da última comunicação',source?.name||null],
   ['Coordenadas',coord],['Latitude',validPos(n)?n.latitude:null],
   ['Longitude',validPos(n)?n.longitude:null],
   ['Altitude',n.altitude,n.altitude!=null?n.altitude+' m':null],
   ['Última posição',n.position_ms,fmtDate(n.position_ms)],
   ['Precisão da posição',null],['Precisão GPS / HDOP',null],
-  ['Fonte da posição',null],['Hops da última mensagem',hops,hops===null?null:String(hops)],
+  ['Conexão da posição',null],['Hops da última mensagem',hops,hops===null?null:String(hops)],
   ['SNR recebido',lastSNR,lastSNR!=null?Number(lastSNR).toFixed(1)+' dB':null],
   ['RSSI recebido',lastRSSI,lastRSSI!=null?Math.round(lastRSSI)+' dBm':null],
   ['Canal do último pacote',recent?.channel],
@@ -741,7 +787,7 @@ function nodePopupHtml(n){
     '<progress value="0" max="100"></progress></div>').join('');
  const metadata=nearby.slice(0,14).map(p=>'<div class="nodeField">'+
    '<span>'+esc(p.port||'Pacote')+'</span><span class="value">'+esc(fmtDate(p.timestamp_ms))+
-   ' · '+esc(source?.name||'fonte '+p.source_id)+'</span></div>').join('')||
+   ' · '+esc(source?.name||'conexão '+p.source_id)+'</span></div>').join('')||
     '<p class="muted">Nenhum pacote detalhado na janela de tráfego carregada.</p>';
  return '<div class="nodeSection"><h3>Resumo</h3><div class="nodeDetailGrid">'+
    summary.map(x=>nodeInfoLine(...x)).join('')+'</div></div>'+
@@ -902,7 +948,7 @@ function renderNodes(){
  const radioCount=(state.sources||[]).filter(src=>src.kind!=='mqtt'&&state.connections?.[String(src.id)]?.status==='connected').length;
  $('nodeDistanceStatus').textContent=ref?'Distâncias desde: '+(ref.short_name||ref.long_name||ref.node_id)+
    ' · posição '+age(ref.position_ms):radioCount>1?
-    'Múltiplos rádios: selecione a fonte na aba Mapa':
+    'Múltiplos rádios: selecione a conexão na aba Mapa':
     'Distância indisponível: rádio local sem posição/identidade válida';
  const q=norm($('nodesFilter').value);
  const list=nodes.filter(n=>matches(n,q)||[n.hw_model,n.role].some(x=>norm(x).includes(q)));
@@ -951,7 +997,7 @@ function renderPackets(){
   const p=packets.find(x=>String(x.id)===row.dataset.pid);if(!p)return;
   selectedPacketId=p.id;$('trafficDetails').classList.add('active');
   $('trafficTitle').textContent=(p.port||'Pacote')+' #'+p.id;
-  const fields={Hora:fmtDate(p.timestamp_ms),Fonte:p.source_id,Origem:idName(p.from_node),
+  const fields={Hora:fmtDate(p.timestamp_ms),Conexão:p.source_id,Origem:idName(p.from_node),
      Destino:idName(p.to_node),Canal:p.channel??'—',SNR:p.rx_snr??'—',RSSI:p.rx_rssi??'—',
      HopStart:p.hop_start??'—',HopLimit:p.hop_limit??'—',
      Transporte:p.via_mqtt?'MQTT':'Rádio local RX',PacketID:p.packet_id,
@@ -975,7 +1021,7 @@ $('trafficFilter').oninput=renderPackets;$('trafficReload').onclick=refreshAll;
 function chatKey(m){if((m.to_node===null||m.to_node===0xffffffff)&&Number(m.channel||0)===0)return 'channel:0';if(m.to_node===null||m.to_node===0xffffffff)return 'channel:'+m.channel;const a=m.direction==='tx'?m.to_node:m.from_node;return a!=null?'node:'+a:'channel:'+m.channel;}
 function openDm(id){currentChat='node:'+id;setView('messages');renderChat();}
 function renderChat(){const chats=new Set(['channel:0']);for(const m of messages)chats.add(chatKey(m));for(const n of nodes)chats.add('node:'+n.node_num);const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:a.localeCompare(b));$('contacts').innerHTML=list.map(key=>`<button class="contact ${key===currentChat?'selected':''}" data-chat="${esc(key)}">${esc(key.startsWith('node:')?idName(Number(key.slice(5))):key==='channel:0'?'📡 Canal primário':'Canal '+key.slice(8))}</button>`).join('');$('contacts').querySelectorAll('[data-chat]').forEach(el=>el.onclick=()=>{currentChat=el.dataset.chat;renderChat();});$('chatHeader').textContent=currentChat.startsWith('node:')?'Privado: '+idName(Number(currentChat.slice(5))):currentChat==='channel:0'?'Canal primário':'Canal '+currentChat.slice(8);const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);$('bubbles').innerHTML=filtered.map(m=>`<div class="bubble ${m.direction==='tx'?'tx':''}"><div>${esc(m.text)}</div><small>${esc(idName(m.from_node))} · ${esc(fmtDate(m.timestamp_ms))} ${m.state==='accepted_by_radio'?'· TX aceito pelo rádio':''}</small></div>`).join('')||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';$('bubbles').scrollTop=$('bubbles').scrollHeight;const enabled=state.sources.filter(s=>s.enabled&&s.kind!=='mqtt'&&state.connections[String(s.id)]?.status==='connected');const old=$('messageSource').value;$('messageSource').innerHTML=enabled.map(s=>`<option value="${s.id}">${esc(s.name)} (${esc(s.kind)})</option>`).join('')||'<option value="">Nenhum rádio conectado</option>';if(enabled.some(x=>String(x.id)===old))$('messageSource').value=old;$('messageSend').disabled=enabled.length===0;}
-$('messageSend').onclick=async()=>{try{const text=$('messageText').value.trim();if(!text)throw Error('Digite a mensagem');const source_id=Number($('messageSource').value);if(!source_id)throw Error('Conecte uma fonte bidirecional');const to_node=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';const channel=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);const result=await api('/api/messages/send',{text,source_id,to_node,channel});$('messageText').value='';notify('Mensagem aceita pelo rádio. Entrega não confirmada.');await refreshAll();}catch(e){notify(e.message,true);}};$('messageText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('messageSend').click();}};
+$('messageSend').onclick=async()=>{try{const text=$('messageText').value.trim();if(!text)throw Error('Digite a mensagem');const source_id=Number($('messageSource').value);if(!source_id)throw Error('Conecte um rádio bidirecional');const to_node=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';const channel=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);const result=await api('/api/messages/send',{text,source_id,to_node,channel});$('messageText').value='';notify('Mensagem aceita pelo rádio. Entrega não confirmada.');await refreshAll();}catch(e){notify(e.message,true);}};$('messageText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('messageSend').click();}};
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
@@ -1033,8 +1079,8 @@ function renderStats(){
  case 'rede':
    html=statsHead('Inventário conhecido',statsTbl(['Indicador','Quantidade'],[
     ['Nós conhecidos',c.nodes_known],['Originadores no período',c.active_originators],
-    ['Fontes com observações',c.sources_observed],['Nós com comunicação recente no catálogo',c.nodes_recent_catalog]]));
-   html+=statsHead('Fontes',statsTbl(['Fonte','Tipo','Conexão','Pacotes'],
+    ['Conexões com observações',c.sources_observed],['Nós com comunicação recente no catálogo',c.nodes_recent_catalog]]));
+   html+=statsHead('Conexões',statsTbl(['Conexão','Tipo','Conexão','Pacotes'],
        d.source_breakdown.map(x=>[x.name,x.kind,x.connection,x.count])));
    html+=statsHead('Nós com observação recente',statsTbl(['Nó','Última recepção','Role','Hardware'],
      d.nodes.filter(x=>x.last_seen_ms>0).slice(0,35).map(x=>[
@@ -1097,7 +1143,7 @@ function renderStats(){
    html+=statsHead('Volume por tipo',statsTbl(['Tipo','Pacotes','Participação'],
      d.packet_types.map(x=>[x.name,fmtCount(x.count),
        c.observations?(x.count*100/c.observations).toFixed(1).replace('.',',')+'%':'—'])));
-   html+=statsHead('Fontes receptoras',statsTbl(['Fonte','Pacotes','SNR médio'],d.source_breakdown.map(x=>[x.name,x.count,fmtMeasure(x.mean_snr,'dB')])));
+   html+=statsHead('Conexões receptoras',statsTbl(['Conexão','Pacotes','SNR médio'],d.source_breakdown.map(x=>[x.name,x.count,fmtMeasure(x.mean_snr,'dB')])));
    html+=statsHead('Séries horárias',statsTbl(['Hora UTC','Observações','MQTT'],d.hourly.map(x=>[new Date(x.timestamp_ms).toLocaleString('pt-BR'),x.count,x.mqtt])));
    break;
  case 'consultas':
@@ -1199,22 +1245,31 @@ $('statsCSV').onclick=()=>{
  const rows=[['Categoria','Item','Contagem']];
  for(const p of statData.packet_types)rows.push(['Tipo',p.name,p.count]);
  for(const p of statData.top_originators)rows.push(['Origem',p.name,p.count]);
- for(const p of statData.source_breakdown)rows.push(['Fonte',p.name,p.count]);
+ for(const p of statData.source_breakdown)rows.push(['Conexão',p.name,p.count]);
  const csv='\ufeff'+rows.map(row=>row.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(';')).join('\r\n');
  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
  a.href=url;a.download='PT2VHF_Estatisticas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 
-function showSettings(panel){document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));if(panel==='sources')renderSources();if(panel==='retention'&&!settingsPending.has('retention'))renderRetention();if(panel==='lora')renderLoraSources();if(panel==='system')renderSystem();}
+const settingsPaths={sources:'conexoes',lora:'dispositivo',retention:'retencoes',map:'mapa',system:'sistema',general:'geral'};
+function showSettings(panel,updateUrl=true){
+ document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));
+ document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));
+ if(updateUrl&&view==='settings')history.replaceState({},'','/configuracoes/'+(settingsPaths[panel]||'conexoes'));
+ if(panel==='sources')renderSources();
+ if(panel==='retention'&&!settingsPending.has('retention'))renderRetention();
+ if(panel==='lora')renderLoraSources();
+ if(panel==='system')renderSystem();
+}
 document.querySelectorAll('.settingsTab').forEach(b=>b.onclick=()=>showSettings(b.dataset.panel));
 const kindTitles={serial:'USB/Serial',tcp:'Wi-Fi/TCP',ble:'Bluetooth LE',mqtt:'MQTT (RX)'};
-function renderSources(){const sources=state.sources;const status=state.connections;$('sourceCards').innerHTML=sources.map(s=>{const conn=status[String(s.id)]||{};const label=conn.status||(s.enabled?'Aguardando':'Desativada');const color=label==='connected'?'ok':label==='error'?'bad':label==='connecting'?'warn':'';return `<div class="sourceCard"><b>${esc(s.name)} <small class="badge">${esc(kindTitles[s.kind]||s.kind)}</small></b><p>ID ${s.id} · <span class="${color}">${esc(label)}</span> · ${Number(conn.packets||0)} pacotes nesta sessão</p>${conn.error?`<p class="bad">${esc(conn.error)}</p>`:''}<div class="sourceActions"><button data-action="edit" data-id="${s.id}">Editar</button><button data-action="enable" data-id="${s.id}" data-value="${s.enabled?'0':'1'}">${s.enabled?'Desativar':'Conectar'}</button><button data-action="delete" data-id="${s.id}" class="danger">Excluir</button></div></div>`;}).join('')||'<p class="muted">Nenhuma fonte cadastrada. Use o formulário abaixo para começar.</p>';$('sourceCards').querySelectorAll('button[data-action]').forEach(btn=>btn.onclick=async()=>{const id=Number(btn.dataset.id),action=btn.dataset.action;if(action==='edit')return editSource(id);try{if(action==='delete'){if(!confirm('Excluir esta fonte? O histórico coletado será preservado.'))return;await api('/api/sources/delete',{id});}else await api('/api/sources/enable',{id,enabled:btn.dataset.value==='1'});await refreshAll();notify('Fonte atualizada.');}catch(e){notify(e.message,true);}});}
-function resetSourceForm(){$('sourceForm').reset();$('sourceId').value='';$('sourceName').value='';$('sourceKind').value='serial';$('sourceEnabled').checked=true;$('sourceTcpPort').value='4403';$('mqttTopic').value='msh/+/2/e/#';$('sourceFormTitle').textContent='Adicionar fonte';showSourceFields();}
+function renderSources(){const sources=state.sources;const status=state.connections;$('sourceCards').innerHTML=sources.map(s=>{const conn=status[String(s.id)]||{};const label=conn.status||(s.enabled?'Aguardando':'Desativada');const color=label==='connected'?'ok':label==='error'?'bad':label==='connecting'?'warn':'';return `<div class="sourceCard"><b>${esc(s.name)} <small class="badge">${esc(kindTitles[s.kind]||s.kind)}</small></b><p>ID ${s.id} · <span class="${color}">${esc(label)}</span> · ${Number(conn.packets||0)} pacotes nesta sessão</p>${conn.error?`<p class="bad">${esc(conn.error)}</p>`:''}<div class="sourceActions"><button data-action="edit" data-id="${s.id}">Editar</button><button data-action="enable" data-id="${s.id}" data-value="${s.enabled?'0':'1'}">${s.enabled?'Desativar':'Conectar'}</button><button data-action="delete" data-id="${s.id}" class="danger">Excluir</button></div></div>`;}).join('')||'<p class="muted">Nenhuma conexão cadastrada. Use o formulário abaixo para começar.</p>';$('sourceCards').querySelectorAll('button[data-action]').forEach(btn=>btn.onclick=async()=>{const id=Number(btn.dataset.id),action=btn.dataset.action;if(action==='edit')return editSource(id);try{if(action==='delete'){if(!confirm('Excluir esta fonte? O histórico coletado será preservado.'))return;await api('/api/sources/delete',{id});}else await api('/api/sources/enable',{id,enabled:btn.dataset.value==='1'});await refreshAll();notify('Conexão atualizada.');}catch(e){notify(e.message,true);}});}
+function resetSourceForm(){$('sourceForm').reset();$('sourceId').value='';$('sourceName').value='';$('sourceKind').value='serial';$('sourceEnabled').checked=true;$('sourceTcpPort').value='4403';$('mqttTopic').value='msh/+/2/e/#';$('sourceFormTitle').textContent='Adicionar conexão';showSourceFields();}
 function showSourceFields(){const kind=$('sourceKind').value;document.querySelectorAll('.src').forEach(el=>{el.style.display=el.classList.contains(kind)?'flex':'none';});$('sourceTcpPort').value=$('sourceTcpPort').value||(kind==='tcp'?'4403':'1883');}
 $('sourceKind').onchange=()=>{$('sourceTcpPort').value=$('sourceKind').value==='tcp'?4403:1883;showSourceFields();};$('sourceCancel').onclick=resetSourceForm;
-function editSource(id){const s=state.sources.find(x=>x.id===id);if(!s)return;sourceEditing=id;$('sourceId').value=id;$('sourceName').value=s.name;$('sourceKind').value=s.kind;showSourceFields();const c=s.config||{};$('sourcePort').value=c.port||'';$('sourceHost').value=c.host||'';$('sourceTcpPort').value=(s.kind==='tcp'?c.port: c.port)|| (s.kind==='tcp'?4403:1883);$('sourceAddress').value=c.address||'';$('mqttTopic').value=c.topic||'msh/+/2/e/#';$('mqttUsername').value=c.username||'';$('mqttPassword').value='';$('mqttTls').checked=Boolean(c.tls);$('sourceEnabled').checked=s.enabled;$('sourceFormTitle').textContent='Editar fonte: '+s.name;$('sourceForm').scrollIntoView({behavior:'smooth',block:'start'});}
+function editSource(id){const s=state.sources.find(x=>x.id===id);if(!s)return;sourceEditing=id;$('sourceId').value=id;$('sourceName').value=s.name;$('sourceKind').value=s.kind;showSourceFields();const c=s.config||{};$('sourcePort').value=c.port||'';$('sourceHost').value=c.host||'';$('sourceTcpPort').value=(s.kind==='tcp'?c.port: c.port)|| (s.kind==='tcp'?4403:1883);$('sourceAddress').value=c.address||'';$('mqttTopic').value=c.topic||'msh/+/2/e/#';$('mqttUsername').value=c.username||'';$('mqttPassword').value='';$('mqttTls').checked=Boolean(c.tls);$('sourceEnabled').checked=s.enabled;$('sourceFormTitle').textContent='Editar conexão: '+s.name;$('sourceForm').scrollIntoView({behavior:'smooth',block:'start'});}
 $('sourceForm').onsubmit=async e=>{e.preventDefault();const kind=$('sourceKind').value;const c=kind==='serial'?{port:$('sourcePort').value.trim()}:kind==='tcp'?{host:$('sourceHost').value.trim(),port:Number($('sourceTcpPort').value||4403)}:kind==='ble'?{address:$('sourceAddress').value.trim()}:{host:$('sourceHost').value.trim(),port:Number($('sourceTcpPort').value||1883),topic:$('mqttTopic').value.trim(),username:$('mqttUsername').value.trim(),tls:$('mqttTls').checked};if(kind==='mqtt'&&$('mqttPassword').value)c.password=$('mqttPassword').value;
-const payload={id:Number($('sourceId').value)||0,name:$('sourceName').value.trim(),kind,config:c,enabled:$('sourceEnabled').checked};try{await api('/api/sources/save',payload);notify('Fonte salva. Verifique o status da conexão.');resetSourceForm();await refreshAll();}catch(err){notify(err.message,true);}};
+const payload={id:Number($('sourceId').value)||0,name:$('sourceName').value.trim(),kind,config:c,enabled:$('sourceEnabled').checked};try{await api('/api/sources/save',payload);notify('Conexão salva. Verifique o status.');resetSourceForm();await refreshAll();}catch(err){notify(err.message,true);}};
 $('refreshPorts').onclick=async()=>{try{const res=await api('/api/ports');$('serialOptions').innerHTML=res.data.map(p=>`<option value="${esc(p.device)}" label="${esc(p.description)}"></option>`).join('');notify(res.data.length+' porta(s) detectada(s).');}catch(e){notify(e.message,true);}};
 const retentionLabels={nodes:'Nós e identificação',packets:'Pacotes e tráfego',messages:'Mensagens e conversas',positions:'Histórico de posições',traces:'Traceroutes',links:'Enlaces consolidados',events:'Logs e eventos'};
 const retentionOptions=[0,1,7,30,90,180,365,730,1825].map(d=>`<option value="${d}">${d===0?'Nunca apagar':d===1?'1 dia':d+' dias'}</option>`).join('');
@@ -1274,7 +1329,7 @@ function showLora(){
 }
 $('loraRead').onclick=async()=>{
  const id=Number($('loraSource').value);
- if(!id){notify('Selecione uma fonte Serial, BLE ou Wi-Fi conectada.',true);return;}
+ if(!id){notify('Selecione uma conexão Serial, BLE ou Wi-Fi ativa.',true);return;}
  try{
   $('loraRead').disabled=true;$('loraStatus').textContent='Lendo grupos do rádio #'+id+'...';
   const result=await api('/api/device/config?source_id='+id);
@@ -1431,7 +1486,7 @@ $('topUpdate').onclick=()=>{
 $('updateApply').onclick=async()=>{
  if(!monitorState?.available||!monitorState.latest||updateInstalling)return;
  if(!confirm('Baixar a versão v'+monitorState.latest+' do GitHub, verificar o SHA256, '+
-    'fechar o Mesh Analyzer e atualizar? As fontes de rádio serão desconectadas temporariamente.'))return;
+    'fechar o Mesh Analyzer e atualizar? As conexões de rádio serão desconectadas temporariamente.'))return;
  updateInstalling=true;
  $('updateApply').disabled=true;$('updateLater').disabled=true;
  $('updateProgress').hidden=false;$('updateProgress').value=0;
@@ -1464,12 +1519,12 @@ setTimeout(async()=>{
 setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
 
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources')]);state=results[0];nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources')]);state=results[0];showFirstRunDialogOnce();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
  const slug=location.pathname.split('/').pop();
  if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;
  else if(slug==='acessos')history.replaceState({},'','/estatisticas/geral');
 }
-setView(initialView,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
+setView(initialView,false);if(initialView==='settings')showSettings(initialSettingsPanel,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
 </script>
 </body></html>

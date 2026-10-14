@@ -1,5 +1,15 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.6.2 — 14/10/2026 — Conexões, primeira inicialização e cabeçalho
+
+- **#37 — Primeira configuração:** quando `/api/state` retorna lista `sources` vazia, o aplicativo abre um diálogo central informando que é necessário cadastrar uma conexão Meshtastic. Os botões **Ir para conexões** e **Agora não** permitem respectivamente abrir `Configurações → Conexões` com foco no nome da nova conexão ou continuar sem cadastro. O aviso só aparece uma vez por carregamento, nunca apenas porque conexões cadastradas estão desconectadas; resposta inválida/falha de consulta não aciona o aviso.
+- **#36 — Terminologia:** seção antes chamada Fontes passa a **Conexões**; campos, ajuda, filtros, CSV/relatório, indicadores e notificações exibem nomenclatura coerente, mantendo APIs, nomes de tabelas e IDs internos `source_id` compatíveis.
+- **#21 — Cabeçalho:** marca aumentada (logo 58 px; título 22 px), versão com a mesma tipografia do título e subtítulos maiores; remoção do estado “N fonte(s) conectada(s)” da linha superior, preservando a contagem na faixa de indicadores. Menu reordenado: Mapa, Mensagens, Nós, Tráfego, Estatísticas, Automações, Configurações, Ajuda.
+- **Navegação profunda:** URLs específicas `/configuracoes/conexoes`, `/configuracoes/dispositivo`, `/configuracoes/retencoes`, `/configuracoes/mapa`, `/configuracoes/sistema` e `/configuracoes/geral` permitem F5/favoritos. A API HTTP local serve corretamente essas rotas.
+- **Teste adicional:** nova suíte de regressão verifica estado inicial sem conexões, fonte cadastrada porém desativada, rotas HTTP locais e contrato da interface; CI Windows valida Python, sintaxe JS, empacotamento e publicação.
+
+**Limites de validação:** testes automatizados não equivalem à validação do fluxo de foco/teclado no WebView2 real; instalação Setup/Portable, conexão com rádio físico, atualização interna e itens antigos do backlog continuam sujeitos a ensaios no Windows 11. A v0.6.2 não declara resolvido todo o backlog.
+
 ## v0.6.1 — 14/10/2026 — Identidade visual PT2VHF Mesh Analyzer
 
 - **Marca própria:** logotipo circular verde sobre fundo escuro, com antena rádio, ondas de comunicação, montanhas e nós conectados, criado especificamente para o Mesh Analyzer.
