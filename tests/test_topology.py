@@ -1,0 +1,96 @@
+"""Regression tests for correct Meshtastic protobuf ports and source-scoped map."""
+import base64
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from mesh_analyzer.database import Database,now_ms
+from mesh_analyzer.transports import PacketIngestor,port_name
+from mesh_analyzer.topology import extract_topology
+
+
+class TopologyTests(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory()
+        self.db=Database(Path(self.temp.name)/"topology.db")
+        self.ing=PacketIngestor(self.db)
+
+    def tearDown(self):
+        self.db.close();self.temp.cleanup()
+
+    def test_actual_official_meshtastic_portnums(self):
+        self.assertEqual(port_name(67),"TELEMETRY_APP")
+        self.assertEqual(port_name(70),"TRACEROUTE_APP")
+        self.assertEqual(port_name(71),"NEIGHBORINFO_APP")
+        self.assertEqual(port_name(65),"STORE_FORWARD_APP")
+
+    def test_protobuf_route_forward_and_back(self):
+        from meshtastic.protobuf import mesh_pb2
+        msg=mesh_pb2.RouteDiscovery()
+        msg.route.extend([200])
+        msg.route_back.extend([400])
+        packet={"from":300,"to":100,"id":882,"rxTime":int(now_ms()/1000),
+                "decoded":{"portnum":70,"payload":msg.SerializeToString()}}
+        self.assertTrue(self.ing.handle(1,packet))
+        link=self.db.link_rows()
+        self.assertEqual({(e["a"],e["b"]) for e in link},
+                         {(100,200),(200,300),(100,400),(300,400)})
+        self.assertTrue(all(e["quality"]=="observed_route_unverified_rf" for e in link))
+        self.assertEqual(self.db.stats()["traces"],1)
+        self.assertFalse(self.ing.handle(1,packet))  # unique reception
+        self.assertEqual(self.db.stats()["links"],4)
+        self.assertEqual(self.db.stats()["traces"],1)
+
+    def test_telemetry_is_not_traceroute(self):
+        self.ing.handle(1,{"from":100,"to":200,"id":10,
+             "decoded":{"portnum":67,"route":[150],"telemetry":{"deviceMetrics":{"batteryLevel":67}}}})
+        self.assertEqual(self.db.stats()["links"],0)
+        self.assertEqual(self.db.stats()["traces"],0)
+
+    def test_empty_route_does_not_make_direct_link(self):
+        self.ing.handle(1,{"from":300,"to":100,"id":1,
+            "decoded":{"portnum":"TRACEROUTE_APP","route":[]}})
+        self.assertEqual(self.db.stats()["links"],0)
+
+    def test_neighbor_reported_not_directly_confirmed(self):
+        pkt={"from":100,"to":0xffffffff,"id":78,
+             "decoded":{"portnum":71,"neighborinfo":{"neighbors":[{"nodeId":200},{"nodeId":300}]}}}
+        self.ing.handle(1,pkt)
+        self.assertEqual(self.db.stats()["links"],2)
+        self.assertEqual({x["quality"] for x in self.db.link_rows()},
+                         {"neighbor_reported_unverified_rf"})
+
+    def test_source_scoped_nodes_and_no_coordinates_diagnostic(self):
+        self.ing.handle(1,{"from":100,"to":0xffffffff,"id":21,
+            "decoded":{"portnum":1,"text":"hi"}})
+        self.ing.handle(2,{"from":200,"to":0xffffffff,"id":22,
+            "decoded":{"portnum":1,"text":"hi"}})
+        seen={(s["source_id"],s["node_num"]) for s in self.db.node_source_rows() if s["observed"]}
+        self.assertIn((1,100),seen);self.assertIn((2,200),seen)
+        self.assertNotIn((1,200),seen)
+        self.ing.handle(1,{"from":100,"to":300,"id":23,
+            "decoded":{"portnum":70,"route":[200]}})
+        d=self.db.topology_diagnostics(1)
+        self.assertEqual(d["stored"],2)
+        self.assertEqual(d["drawable"],0)
+        self.assertEqual(d["missing_positions"],2)
+
+    def test_old_archived_traceroute_replay_is_idempotent(self):
+        from meshtastic.protobuf import mesh_pb2
+        m=mesh_pb2.RouteDiscovery();m.route.extend([200])
+        pkt={"from":300,"to":100,"id":34,
+            "decoded":{"portnum":70,"payload":{"base64":base64.b64encode(m.SerializeToString()).decode()}}}
+        payload={"source_id":1,"source_packet_key":"old-trace","packet_id":"34",
+                 "timestamp_ms":now_ms(),"from_node":300,"to_node":100,
+                 "port":"TRACEROUTE_APP","raw_json":json.dumps(pkt)}
+        self.assertTrue(self.db.add_packet(payload))
+        one=self.db.reprocess_archived_topology(extract_topology)
+        self.assertEqual(one["processed"],1)
+        self.assertEqual(self.db.stats()["links"],2)
+        two=self.db.reprocess_archived_topology(extract_topology)
+        self.assertEqual(two["processed"],0)
+        self.assertEqual(self.db.stats()["links"],2)
+
+
+if __name__=="__main__":unittest.main()

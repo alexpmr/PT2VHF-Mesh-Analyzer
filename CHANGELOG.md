@@ -1,5 +1,16 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.4.0 — 14/10/2026 — Correção de topologia e fontes do mapa
+
+- **Correção prioritária #22:** portas oficiais Meshtastic corrigidas: TELEMETRY_APP 67, TRACEROUTE_APP 70, NEIGHBORINFO_APP 71 e STORE_FORWARD_APP 65. Interpretar RouteDiscovery de payload protobuf, JSON conhecido e bytes codificados, rotas de ida e volta e anúncios de vizinhança quando disponíveis. Evidências de traceroute e vizinhança continuam *não comprovadas como RF direto*.
+- **Histórico:** migração SQLite incremental de proveniência por fonte/nó, marcação de pacotes de topologia processados e reprocessamento em lote de até 10.000 pacotes antigos com dados suficientes. Não apaga banco nem presume RF direto de pacotes de texto.
+- **Mapa:** contagem de relações gravadas, desenhadas, sem posição e ocultas; fonte específica (USB/Serial, BLE, Wi-Fi/TCP, MQTT) ou Todas, filtro persistente. Relacionamentos e animações respeitam fonte selecionada, inclusive histórico quando a fonte está offline.
+- **Nós:** coluna Distância passa a usar automaticamente o Node ID local reportado por rádio Serial/BLE/TCP conectado e com posição válida, sem controle de referência manual. Havendo vários rádios conectados sem uma fonte ativa inequívoca, distância indisponível em vez de referenciar outro nó arbitrariamente.
+- **Cabeçalho:** menu Mapa/Nós/Tráfego/etc. movido para linha própria abaixo do título e do indicador de versão, com rolagem horizontal em telas estreitas.
+- **Testes:** portas protobuf oficiais, resposta traceroute `route`/`route_back`, vizinhos, MQTT/telemetria, fonte de nó, ausência de coordenadas e replay idempotente.
+
+**Limitações:** desenhos exigem posições válidas dos nós; certas rotas históricas criptografadas não podem ser recuperadas sem dados decodificados; nem todos os relays RF podem ser reconstruídos de broadcasts multissalto. O reprocessamento inicial limita a análise a 10.000 registros candidatos por execução; nenhum resultado de RF direto pode ser afirmado por inferência. Compatibilidade real das fontes e instâncias WebView2 precisa de validação em rádio e Windows.
+
 ## v0.3.0 — 14/10/2026 — Janela desktop, Sistema e Dispositivo
 
 - Execução padrão em **janela própria do aplicativo**, usando WebView2 no Windows 11. O HTTP continua restrito a 127.0.0.1; navegadores externos não são abertos automaticamente.

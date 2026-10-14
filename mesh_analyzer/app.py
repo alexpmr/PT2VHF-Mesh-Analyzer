@@ -157,6 +157,12 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/health":self._json({"success":True,"version":__version__,"database":"ok"})
                 elif path == "/api/state":self._json({"success":True,"version":__version__,"sources":db.sources(),"connections":sources.snapshot(),"counts":db.stats(),"retention":db.retention(),"system":db.system_settings()})
                 elif path == "/api/nodes":self._json({"success":True,"data":db.node_rows()})
+                elif path == "/api/nodes/sources":
+                    self._json({"success":True,"data":db.node_source_rows()})
+                elif path == "/api/topology/diagnostics":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    source=query.get("source_id",[None])[0]
+                    self._json({"success":True,"data":db.topology_diagnostics(source)})
                 elif path == "/api/packets":self._json({"success":True,"data":db.packet_rows()})
                 elif path == "/api/messages":self._json({"success":True,"data":db.message_rows()})
                 elif path == "/api/links":self._json({"success":True,"data":db.link_rows()})
@@ -271,6 +277,20 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     done=threading.Event()
     try:
         drivers.start()
+        # Replay previously archived protobuf/JSON once in a bounded background
+        # migration. The record key prevents the same packet from replaying twice.
+        from .topology import extract_topology
+        def topology_migration():
+            try:
+                info=db.reprocess_archived_topology(extract_topology)
+                db.log("Reprocessamento histórico de topologia: "+
+                       str(info["processed"])+" pacotes, "+
+                       str(info["candidate_edges"])+" relações analisadas")
+            except Exception:
+                LOG.exception("Falha ao reprocessar topologia histórica")
+        replay=threading.Thread(target=topology_migration,
+                                name="topology-backfill",daemon=True)
+        replay.start()
         csrf=secrets.token_urlsafe(32)
         doc=Path(__file__).with_name("ui.html").read_text(encoding="utf-8")
         server=ThreadingHTTPServer((host,int(port)),build_handler(db,drivers,csrf,doc,updates))
@@ -321,6 +341,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
             server.shutdown()
             server.server_close()
         drivers.close()
+        if 'replay' in locals():replay.join(timeout=4)
         db.close()
 
 

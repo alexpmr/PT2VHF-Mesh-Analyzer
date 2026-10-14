@@ -10,7 +10,7 @@
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:var(--bg);color:var(--ink);font:13px system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 #app{height:100%;display:flex;flex-direction:column;min-height:0}header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--nav);border-bottom:1px solid var(--line);flex-wrap:wrap;flex:0 0 auto}
 .brand{display:flex;align-items:center;gap:8px;white-space:nowrap}.brand h1{margin:0;font-size:17px}.brand small{font-size:11px;color:#a6bdc9}.logo{font-size:23px;color:#dfcb3f}
-#nav{display:flex;align-items:center;gap:5px;flex-wrap:wrap}button,select,input,textarea{background:#233443;color:var(--ink);border:1px solid #405668;border-radius:6px;padding:6px 8px;font:inherit}
+#nav{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;width:100%;order:4;padding:2px 0}#topUpdate{margin-left:auto}#connectedStatus{margin-left:0}button,select,input,textarea{background:#233443;color:var(--ink);border:1px solid #405668;border-radius:6px;padding:6px 8px;font:inherit}
 button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover:not(:disabled){border-color:#91b0bf;background:#2e4557}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .navbtn{font-weight:700;padding:6px 10px}.navbtn.active{background:var(--accent);color:#15191c;border-color:#ffe34d}.version{font-size:11px;color:#98b4bd;margin-left:auto}.statusPill{padding:5px 9px;border:1px solid var(--line);border-radius:14px;font-size:11px}
 #summary{display:flex;gap:8px;flex-wrap:wrap;padding:8px 12px;background:#111c27;border-bottom:1px solid #293744;flex:0 0 auto}.metric{background:#1d2b38;border:1px solid var(--line);border-radius:7px;padding:5px 9px;color:var(--muted)}.metric b{color:var(--ink);font-size:15px;margin-right:4px}
@@ -67,18 +67,18 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <section class="view active" id="viewMap">
 <div id="playback">
 <label>Reprodução: <select id="playMode"><option value="live">Ao vivo</option><option value="history" disabled>Histórico (futuro)</option></select></label><button disabled title="Reprodução histórica futura">⏮</button><button disabled title="Reprodução histórica futura">⏸</button><button disabled title="Reprodução histórica futura">⏭</button>
-<label>Velocidade: <select disabled><option>1x</option></select></label><span id="mapSourceState">Ao vivo</span>
+<label>Velocidade: <select disabled><option>1x</option></select></label><label>Fonte: <select id="mapSource"><option value="">Todas as fontes</option></select></label><span id="mapSourceState">Ao vivo</span>
 <div class="mapActions"><div class="mapSearchBox"><label for="mapSearchInput">⌕</label><input id="mapSearchInput" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nó no mapa por nome curto, longo ou ID" autocomplete="off"><button id="mapSearchClear" title="Limpar pesquisa" aria-label="Limpar pesquisa">×</button><span class="mapSearchCount" id="mapSearchCount">Todos</span><div id="mapSearchMatches" class="mapSearchMatches" hidden></div></div>
 <label>Mapa: <select id="mapType"><option value="osm">OSM / Ruas</option><option value="topo">Topográfico</option><option value="satellite">Satélite</option><option value="light">Claro</option><option value="dark">Escuro</option></select></label><button id="layersBtn" aria-controls="mapLayersPanel">Camadas</button><button id="mapFit">Enquadrar</button><button id="mapRefresh">Atualizar</button></div>
 </div>
 <div id="map"><div style="padding:40px;color:#9bb1c3">Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.</div></div>
 <div id="terrainSlider" hidden><label>Corte: <strong id="terrainValue">0 m</strong></label><div><input id="terrainCut" type="range" min="0" max="3000" step="50" value="0"></div><label>Máx. (m) <input type="number" id="terrainMax" min="100" max="9000" value="3000" style="width:86px"></label><label>Opacidade <input type="range" id="terrainOpacity" min="20" max="100" value="65"></label></div>
-<div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>⋯ <span class="warn">Rota observada, enlace RF não comprovado</span></div><div>Dados preservados no SQLite</div></div>
+<div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>⋯ <span class="warn">Rota observada, enlace RF não comprovado</span></div><div id="mapTopologyStats">Topologia: aguardando...</div><div>Dados preservados no SQLite</div></div>
 <div id="mapLayersPanel" hidden><label><input id="showMapNodes" type="checkbox" checked> Mostrar nós</label><label><input id="showMapLinks" type="checkbox" checked> Mostrar enlaces</label><label><input id="showNames" type="checkbox"> Mostrar nomes curtos</label><label><input id="mapRadar" type="checkbox" checked> Radar meteorológico</label><label>Radar opacidade <input id="mapRadarOpacity" type="range" min="10" max="100" value="65"></label><div id="radarStatus">Aguardando radar...</div><label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label><label><input id="mapTerrain" type="checkbox"> Relevo com corte</label><button id="closeLayers">Fechar</button></div>
 </section>
 <section class="view" id="viewNodes"><div class="toolbar" id="nodesToolbar">
 <h2>Nós</h2><span id="nodesCounter" class="muted"></span><div class="spacer"></div>
-<label>Distância: <select id="nodeDistanceRef"><option value="">Sem referência</option></select></label>
+<span class="muted" id="nodeDistanceStatus" title="Referência automática: rádio conectado, nunca nó escolhido manualmente.">Distância: aguardando rádio local</span>
 <input id="nodesFilter" placeholder="nome, ID, hardware..." aria-label="Pesquisar nós" style="width:200px">
 <button id="nodesClear" title="Limpar pesquisa">×</button><button id="nodesColumns">Colunas</button><button id="nodesReload">Atualizar</button>
 <div id="nodeColumnPanel"></div></div>
@@ -161,7 +161,8 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const norm=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const fmtDate=x=>x?new Date(Number(x)).toLocaleString('pt-BR'):'—';
 const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000);return m<60?Math.round(m)+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d';};
-let state={sources:[],connections:{},counts:{}},nodes=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
+let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
+try{mapSourceFilter=localStorage.getItem('mesh.map.selected_source')||'';}catch(e){}
 function notify(txt,isError=false){const t=$('toast');t.textContent=txt;t.style.display='block';t.style.borderColor=isError?'#f48c8c':'#679ab8';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.style.display='none',5600);}
 async function api(path,body){const o=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(body)};const r=await fetch(path,o);const d=await r.json();if(!r.ok||d.success===false)throw Error(d.error||d.message||'HTTP '+r.status);return d;}
 function setView(next,updateUrl=true){view=next;document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));document.querySelectorAll('.navbtn').forEach(n=>n.classList.toggle('active',n.dataset.view===next));if(updateUrl)history.replaceState({},'',({map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes',help:'/ajuda'}[next]||'/mapa'));if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}if(next==='stats'){syncStatFilters();fetchStats(false);}if(next==='settings')renderSources();if(next==='messages')renderChat();}
@@ -305,7 +306,7 @@ function pulseNewPackets(current){
  const newest=Math.max(0,...current.map(p=>Number(p.timestamp_ms)||0));
  if(lastAnimatedTs===null){lastAnimatedTs=newest;return;}
  if(newest<=lastAnimatedTs)return;
- const fresh=current.filter(p=>p.timestamp_ms>lastAnimatedTs).slice(-12);
+ const fresh=current.filter(p=>p.timestamp_ms>lastAnimatedTs&&(!mapSourceFilter||String(p.source_id)===mapSourceFilter)).slice(-12);
  lastAnimatedTs=newest;
  for(const p of fresh){
   if(activePulses>=20)break;
@@ -324,14 +325,84 @@ function pulseNewPackets(current){
  }
 }
 
-function renderMap(){if(!map){initMap();if(!map)return;}nodeLayer.clearLayers();linkLayer.clearLayers();const query=$('mapSearchInput').value;const allowed=new Set(nodes.filter(n=>matches(n,query)).map(n=>n.node_num));$('mapSearchCount').textContent=query?`${allowed.size} de ${nodes.length}`:`${nodes.length} nós`;
- if($('showMapLinks').checked){for(const edge of links){if(!allowed.has(edge.a)||!allowed.has(edge.b))continue;const a=nodes.find(n=>n.node_num===edge.a),b=nodes.find(n=>n.node_num===edge.b);if(!a||!b||!validPos(a)||!validPos(b))continue;let line=L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],{color:'#ffbd50',weight:2,dashArray:'6 8',opacity:.8});line.bindTooltip(`${esc(idName(edge.a))} ↔ ${esc(idName(edge.b))}: rota observada, RF direto não confirmado`);line.addTo(linkLayer);}}
- if($('showMapNodes').checked){const coords=[];for(const n of nodes){if(!allowed.has(n.node_num)||!validPos(n))continue;const point=[n.latitude,n.longitude],marker=L.circleMarker(point,{radius:7,color:'#ffffff',fillColor:Date.now()-n.last_seen_ms<7200000?'#2ecc71':'#e9a94d',fillOpacity:.95,weight:1});marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id),{permanent:$('showNames').checked,direction:'top'});marker.on('click',()=>showNode(n));marker.addTo(nodeLayer);coords.push(point);}lastMapBounds=coords.length?L.latLngBounds(coords):null;}}
+function sourceMapNodes(){
+ if(!mapSourceFilter)return nodes;
+ const ids=new Set(nodeSources.filter(x=>String(x.source_id)===String(mapSourceFilter) && Number(x.observed)===1).map(x=>Number(x.node_num)));
+ return nodes.filter(n=>ids.has(n.node_num));
+}
+function refreshMapSourceOptions(){
+ const el=$('mapSource'),signature=(state.sources||[]).map(src=>src.id+':'+src.name+':'+(state.connections?.[String(src.id)]?.status||'offline')).join('|');
+ if(el.dataset.sources===signature)return;
+ const saved=mapSourceFilter;el.innerHTML='<option value="">Todas as fontes</option>'+
+  (state.sources||[]).map(src=>'<option value="'+src.id+'">'+esc(src.name)+' ('+
+     esc(src.kind==='tcp'?'Wi-Fi/TCP':src.kind.toUpperCase())+' · '+
+     esc(state.connections?.[String(src.id)]?.status||'desconectada')+')</option>').join('');
+ if(saved&&(state.sources||[]).some(src=>String(src.id)===saved)){el.value=saved;}
+ else {el.value='';mapSourceFilter='';try{localStorage.removeItem('mesh.map.selected_source');}catch(e){}}
+ el.dataset.sources=signature;
+}
+$('mapSource').onchange=()=>{
+ mapSourceFilter=$('mapSource').value;
+ try{localStorage.setItem('mesh.map.selected_source',mapSourceFilter);}catch(e){}
+ renderMap();renderNodes();pulseNewPackets([]);
+};
+function renderMap(){
+ if(!map){initMap();if(!map)return;}
+ nodeLayer.clearLayers();linkLayer.clearLayers();
+ const source=mapSourceFilter;
+ const available=sourceMapNodes(),q=$('mapSearchInput').value;
+ const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>n.node_num));
+ $('mapSearchCount').textContent=q?allowed.size+' de '+available.length:available.length+' nós';
+ const activeLinks=links.filter(e=>!source||String(e.source_id)===source);
+ let visible=0,missing=0,hiddenBySearch=0;
+ if($('showMapLinks').checked){
+  for(const edge of activeLinks){
+   if(!allowed.has(edge.a)||!allowed.has(edge.b)){hiddenBySearch++;continue;}
+   const a=nodes.find(n=>n.node_num===edge.a),b=nodes.find(n=>n.node_num===edge.b);
+   if(!a||!b||!validPos(a)||!validPos(b)){missing++;continue;}
+   const quality=String(edge.quality||'');
+   const confirmed=quality==='confirmed_direct_rf';
+   const mqtt=quality.includes('mqtt')||quality.includes('non_rf');
+   const color=confirmed?'#ffff00':mqtt?'#357ec7':'#ffbd50';
+   const line=L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],{
+      color,weight:confirmed?2:mqtt?3:2,dashArray:confirmed?null:mqtt?'2 7':'6 8',opacity:.9});
+   const descr=confirmed?'RF direto comprovado':mqtt?'Internet/MQTT — não RF':
+      quality.startsWith('neighbor')?'Vizinhança indicada pelo nó, ainda não confirmada por receptor':
+      'Trecho de traceroute observado, RF direto não confirmado';
+   line.bindTooltip(esc(idName(edge.a))+' ↔ '+esc(idName(edge.b))+': '+esc(descr)+
+       ' · '+Number(edge.observations||1)+' observações');
+   line.addTo(linkLayer);visible++;
+  }
+ }
+ if($('showMapNodes').checked){
+  const coords=[];
+  for(const n of available){
+   if(!allowed.has(n.node_num)||!validPos(n))continue;
+   const point=[n.latitude,n.longitude];
+   const marker=L.circleMarker(point,{radius:7,color:'#ffffff',
+     fillColor:Date.now()-n.last_seen_ms<7200000?'#2ecc71':'#e9a94d',fillOpacity:.95,weight:1});
+   marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id),{
+     permanent:$('showNames').checked,direction:'top'});
+   marker.on('click',()=>showNode(n));marker.addTo(nodeLayer);coords.push(point);
+  }
+  lastMapBounds=coords.length?L.latLngBounds(coords):null;
+ }
+ const estimatedMissing=activeLinks.filter(e=>
+     !nodes.some(n=>n.node_num===e.a&&validPos(n))||
+     !nodes.some(n=>n.node_num===e.b&&validPos(n))).length;
+ $('mapTopologyStats').textContent='Enlaces da fonte: '+activeLinks.length+
+    ' · desenhados: '+visible+' · sem posição: '+estimatedMissing+
+    ' · ocultos por filtros: '+Math.max(0,activeLinks.length-visible-estimatedMissing);
+ $('mapSourceState').textContent=source?
+   ((state.sources||[]).find(x=>String(x.id)===source)?.name||'Fonte histórica')+' · '+
+    (state.connections?.[source]?.status||'offline'):
+   'Todas as fontes · '+(state.sources||[]).length;
+}
 function showNode(n){const title=`${n.long_name||n.node_id} (${n.short_name||'—'})`;const position=validPos(n)?`${Number(n.latitude).toFixed(5)}, ${Number(n.longitude).toFixed(5)}`:'Sem coordenadas';if(map&&validPos(n))map.setView([n.latitude,n.longitude],Math.max(map.getZoom(),13));const html=`<b>${esc(title)}</b><div>${esc(n.node_id)}</div><div>Última comunicação: ${esc(age(n.last_seen_ms))}</div><div>Posição: ${esc(position)}</div><button type="button" id="popupDmBtn">Mensagem privada</button>`;
  if(map&&validPos(n)){const pop=L.popup().setLatLng([n.latitude,n.longitude]).setContent(html).openOn(map);setTimeout(()=>{const btn=$('popupDmBtn');if(btn)btn.onclick=()=>openDm(n.node_num);},30);}else notify(title+' — sem coordenadas; não foi possível centralizar.');}
 function positionSuggestions(){const pop=$('mapSearchMatches'),el=$('mapSearchInput');if(pop.hidden)return;const r=el.getBoundingClientRect(),w=pop.getBoundingClientRect().width;pop.style.left=Math.max(5,Math.min(r.left,window.innerWidth-w-6))+'px';pop.style.top=(r.bottom+5)+'px';}
-function suggest(){const q=$('mapSearchInput').value;const pop=$('mapSearchMatches');if(!q.trim()){pop.hidden=true;pop.innerHTML='';return;}const rows=nodes.filter(n=>matches(n,q)).slice(0,15);pop.innerHTML=rows.map(n=>`<button data-num="${n.node_num}"><b>${esc(n.long_name||n.node_id)}</b><br><small>${esc(n.short_name)} · ${esc(n.node_id)} · ${validPos(n)?'Com posição':'Sem localização'}</small></button>`).join('')||'<div style="padding:12px">Nenhum nó encontrado</div>';pop.hidden=false;positionSuggestions();pop.querySelectorAll('button[data-num]').forEach(b=>b.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(b.dataset.num));pop.hidden=true;showNode(n);});}
-$('mapSearchInput').addEventListener('input',()=>{renderMap();suggest();});$('mapSearchInput').addEventListener('keydown',ev=>{if(ev.key==='Escape'){$('mapSearchInput').value='';renderMap();suggest();}if(ev.key==='Enter'){const rows=nodes.filter(n=>matches(n,$('mapSearchInput').value));if(rows.length===1){showNode(rows[0]);$('mapSearchMatches').hidden=true;}}});$('mapSearchClear').onclick=()=>{$('mapSearchInput').value='';renderMap();suggest();$('mapSearchInput').focus();};
+function suggest(){const q=$('mapSearchInput').value;const pop=$('mapSearchMatches');if(!q.trim()){pop.hidden=true;pop.innerHTML='';return;}const rows=sourceMapNodes().filter(n=>matches(n,q)).slice(0,15);pop.innerHTML=rows.map(n=>`<button data-num="${n.node_num}"><b>${esc(n.long_name||n.node_id)}</b><br><small>${esc(n.short_name)} · ${esc(n.node_id)} · ${validPos(n)?'Com posição':'Sem localização'}</small></button>`).join('')||'<div style="padding:12px">Nenhum nó encontrado</div>';pop.hidden=false;positionSuggestions();pop.querySelectorAll('button[data-num]').forEach(b=>b.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(b.dataset.num));pop.hidden=true;showNode(n);});}
+$('mapSearchInput').addEventListener('input',()=>{renderMap();suggest();});$('mapSearchInput').addEventListener('keydown',ev=>{if(ev.key==='Escape'){$('mapSearchInput').value='';renderMap();suggest();}if(ev.key==='Enter'){const rows=sourceMapNodes().filter(n=>matches(n,$('mapSearchInput').value));if(rows.length===1){showNode(rows[0]);$('mapSearchMatches').hidden=true;}}});$('mapSearchClear').onclick=()=>{$('mapSearchInput').value='';renderMap();suggest();$('mapSearchInput').focus();};
 $('mapType').onchange=setTiles;$('showMapNodes').onchange=renderMap;$('showMapLinks').onchange=renderMap;$('showNames').onchange=renderMap;$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
 $('layersBtn').onclick=()=>{const panel=$('mapLayersPanel');panel.hidden=!panel.hidden;if(!panel.hidden){const r=$('layersBtn').getBoundingClientRect();panel.style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';panel.style.top=r.bottom+6+'px';}};$('closeLayers').onclick=()=>{$('mapLayersPanel').hidden=true;};window.addEventListener('resize',()=>{positionSuggestions();if(!$('mapLayersPanel').hidden){const r=$('layersBtn').getBoundingClientRect();$('mapLayersPanel').style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';$('mapLayersPanel').style.top=r.bottom+6+'px';}});$('playback').addEventListener('scroll',positionSuggestions,{passive:true});
 
@@ -372,7 +443,7 @@ $('messageText').addEventListener('keydown',e=>{
 },true);
 
 const nodeCols=[['long_name','Nome longo'],['short_name','Nome curto'],['role','Role'],['hw_model','Hardware'],['hops','Saltos'],['battery','Bateria'],['voltage','Tensão'],['distance','Distância'],['snr','SNR'],['last_seen_ms','Última interação'],['position_ms','Última posição'],['node_id','Node ID']];
-let selectedNodeCols=new Set(nodeCols.slice(0,11).map(x=>x[0])),nodeSort='last_seen_ms',nodeSortAsc=false,oldRefs='';
+let selectedNodeCols=new Set(nodeCols.slice(0,11).map(x=>x[0])),nodeSort='last_seen_ms',nodeSortAsc=false;
 try{const c=JSON.parse(localStorage.getItem('mesh.nodes.columns')||'null');if(Array.isArray(c)&&c.length)selectedNodeCols=new Set(c);}catch(e){}
 try{const d=JSON.parse(localStorage.getItem('mesh.nodes.sort')||'null');if(d){nodeSort=d.col;nodeSortAsc=d.asc;}}catch(e){}
 const km=(a,b)=>{if(!validPos(a)||!validPos(b))return null;const rad=x=>Number(x)*Math.PI/180;
@@ -380,7 +451,7 @@ const km=(a,b)=>{if(!validPos(a)||!validPos(b))return null;const rad=x=>Number(x
  const x=Math.sin(d1/2)**2+Math.cos(rad(a.latitude))*Math.cos(rad(b.latitude))*Math.sin(d2/2)**2;
  return 12742*Math.atan2(Math.sqrt(x),Math.sqrt(Math.max(0,1-x)));};
 function nodeValue(n,key){
- if(key==='distance'){const ref=nodes.find(x=>String(x.node_num)===$('nodeDistanceRef').value);return ref?km(ref,n):null;}
+ if(key==='distance'){const ref=localRadioReference();return ref?km(ref,n):null;}
  if(key==='hops')return null; // No durable, source-verified hops per node in current schema.
  if(key==='last_seen_ms'||key==='position_ms')return n[key]||null;
  return n[key]??null;
@@ -395,9 +466,25 @@ function nodeDisplay(n,key){
  if(key==='last_seen_ms'||key==='position_ms')return age(v);
  return String(v);
 }
+function localRadioReference(){
+ const radios=(state.sources||[]).filter(src=>src.kind!=='mqtt'&&
+     state.connections?.[String(src.id)]?.status==='connected'&&
+     Number.isInteger(Number(state.connections?.[String(src.id)]?.local_node_num)));
+ if(!radios.length)return null;
+ const active=radios.find(x=>String(x.id)===String(mapSourceFilter));
+ const selected=active||(radios.length===1?radios[0]:null);
+ if(!selected)return null;
+ const num=Number(state.connections[String(selected.id)].local_node_num);
+ const node=nodes.find(x=>x.node_num===num);
+ return node&&validPos(node)?node:null;
+}
 function renderNodes(){
- const refSel=$('nodeDistanceRef'),sig=nodes.filter(validPos).map(n=>n.node_num+':'+(n.short_name||n.node_id)).join('|');
- if(sig!==oldRefs){const saved=refSel.value||localStorage.getItem('mesh.nodes.distance')||'';refSel.innerHTML='<option value="">Sem referência</option>'+nodes.filter(validPos).map(n=>'<option value="'+n.node_num+'">'+esc(n.short_name||n.long_name||n.node_id)+'</option>').join('');if(nodes.some(n=>String(n.node_num)===saved&&validPos(n)))refSel.value=saved;oldRefs=sig;}
+ const ref=localRadioReference();
+ const radioCount=(state.sources||[]).filter(src=>src.kind!=='mqtt'&&state.connections?.[String(src.id)]?.status==='connected').length;
+ $('nodeDistanceStatus').textContent=ref?'Distâncias desde: '+(ref.short_name||ref.long_name||ref.node_id)+
+   ' · posição '+age(ref.position_ms):radioCount>1?
+    'Múltiplos rádios: selecione a fonte na aba Mapa':
+    'Distância indisponível: rádio local sem posição/identidade válida';
  const q=norm($('nodesFilter').value);
  const list=nodes.filter(n=>matches(n,q)||[n.hw_model,n.role].some(x=>norm(x).includes(q)));
  $('nodesCounter').textContent=list.length+' de '+nodes.length+' nós';
@@ -410,7 +497,7 @@ function renderNodes(){
 }
 $('nodesHeader').onclick=e=>{const th=e.target.closest('[data-nodesort]');if(!th)return;const key=th.dataset.nodesort;nodeSortAsc=nodeSort===key?!nodeSortAsc:key==='long_name';nodeSort=key;localStorage.setItem('mesh.nodes.sort',JSON.stringify({col:nodeSort,asc:nodeSortAsc}));renderNodes();};
 $('nodesHeader').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-nodesort]')){e.preventDefault();e.target.click();}};
-$('nodeDistanceRef').onchange=()=>{localStorage.setItem('mesh.nodes.distance',$('nodeDistanceRef').value);renderNodes();};
+
 $('nodesColumns').onclick=()=>{const p=$('nodeColumnPanel');if(p.style.display==='block'){p.style.display='none';return;}
  p.innerHTML=nodeCols.map(([key,label])=>'<label><input type="checkbox" data-col="'+key+'" '+(selectedNodeCols.has(key)?'checked':'')+'> '+esc(label)+'</label>').join('');
  p.style.display='block';p.querySelectorAll('[data-col]').forEach(el=>el.onchange=()=>{if(el.checked)selectedNodeCols.add(el.dataset.col);else if(selectedNodeCols.size>1)selectedNodeCols.delete(el.dataset.col);else {el.checked=true;return;}localStorage.setItem('mesh.nodes.columns',JSON.stringify([...selectedNodeCols]));renderNodes();});
@@ -798,7 +885,7 @@ $('topUpdate').onclick=()=>{
 setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
 
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources')]);state=results[0];nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';renderMap();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){const slug=location.pathname.split('/').pop();if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;}
 setView(initialView,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
 </script>
