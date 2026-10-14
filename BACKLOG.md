@@ -77,6 +77,14 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
 
 **Situação:** itens #5, #8–#13 parcialmente implementados na v0.2.0; pendências e validações continuam nas issues.
 
+## Estatísticas — paridade visual e funcional com Traffic Analyzer v1.62.1 (14/10/2026)
+
+- [**#10 — Clonar Visão Geral e as demais 9 subabas de Estatísticas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10): usar como referência fiel as telas e os componentes da v1.62.1 legada; preservar estilo, organização compacta, cálculos, filtros, gráficos, tabelas, rankings, consultas, drill-down, PDFs e CSV, mas **adaptar tudo ao SQLite e às fontes nativas Serial/BLE/TCP/MQTT**. A aba **Acessos foi explicitamente removida do escopo**; ficam **10 subabas**.
+- **Visão Geral (layout obrigatório):** 8 cartões em grade 4×2 com `Nós ativos (conhecidos)`, `Pacotes (RX/TX)`, `Mensagens`, `Traceroutes`, `Relações observadas`, `SNR médio`, `RSSI médio`, `Pontos de atenção (críticos)`, e **faixa textual de resumo automático com borda amarela** cobrindo a largura total. Incluir nós originadores, período, contagens de RX/TX, mensagens, traceroutes, telemetria, nó mais ativo real, anomalias/críticos. Captura do Traffic Analyzer é **somente referência estética e de funcionalidades**; não copiar números/nó-fonte dela.
+- **Demais 9 subabas:** `Rede`, `RF`, `Ranking`, `Routing`, `Tráfego`, `Consultas`, `Chat`, `Energia`, `Pontos de atenção`. Realizar auditoria de paridade **componente a componente** frente à v1.62.1; recriar funcionalidades ausentes, não apenas menus/placeholders. Manter filtro comum Período/Nó/Fonte, botões Atualizar tudo / Relatório PDF / Exportar CSV, indicador de atualização real e URLs dedicadas.
+- **Rigor analítico:** somente apresentar métricas realmente existentes; sem RF direto inferido de traceroute, sem duplicar pacotes multi-receptor como transmissões únicas, sem inventar CRC/ruído, taxas de ACK, energia ou histórico indisponíveis. Reconciliação SQL → API → card → narrativa → exportação com testes automatizados e validação operacional no Windows.
+- **Status:** em backlog, **não implementado integralmente na v0.4.0**. Issue #10 contém matriz detalhada e critérios de aceite por subaba.
+
 ## Alteração posterior à v0.4.0 — Estatísticas sem Acessos (14/10/2026)
 
 - [**#10 — Remover Acessos de Estatísticas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10): retirar a subaba `Acessos`, mantendo somente 10 subabas, sem remover dados de auditoria técnica armazenados. Garantir navegação e URLs antigas sem tela em branco. **A v0.4.0 ainda exibe essa subaba; pendente de implementação.**
