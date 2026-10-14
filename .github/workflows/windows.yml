@@ -31,6 +31,7 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive -Path 'dist/PT2VHF-Mesh-Analyzer.exe' -DestinationPath 'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip' -Force
+          Compress-Archive -Path 'mesh_analyzer','tests','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt' -DestinationPath 'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Codigo-Fonte.zip' -Force
           Get-FileHash 'dist/PT2VHF-Mesh-Analyzer.exe' -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  PT2VHF-Mesh-Analyzer.exe" } | Out-File 'dist/SHA256SUMS.txt' -Encoding ascii
       - name: Instalar Inno Setup
         shell: pwsh
@@ -48,11 +49,27 @@ jobs:
             dist/PT2VHF-Mesh-Analyzer.exe
             dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip
             dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe
+            dist/PT2VHF-Mesh-Analyzer-v0.1.0-Codigo-Fonte.zip
             dist/SHA256SUMS.txt
-      - name: Publicar GitHub Release em tag v0.1.0
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publicar GitHub Release v0.1.0
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          gh release create "${{ github.ref_name }}" dist/PT2VHF-Mesh-Analyzer.exe dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe dist/SHA256SUMS.txt --title "PT2VHF Mesh Analyzer v0.1.0" --notes "Primeira versão independente Windows 11: SQLite próprio, múltiplas fontes USB/TCP/BLE/MQTT, retenções independentes, mapa, nós, tráfego, mensagens RF. Os módulos avançados serão migrados em versões posteriores. Hardware físico ainda requer teste de campo."
+          $tag = 'v0.1.0'
+          $repository = $env:GITHUB_REPOSITORY
+          $assets = @(
+            'dist/PT2VHF-Mesh-Analyzer.exe',
+            'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Portable-Win11-x64.zip',
+            'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Setup-Win11-x64.exe',
+            'dist/PT2VHF-Mesh-Analyzer-v0.1.0-Codigo-Fonte.zip',
+            'dist/SHA256SUMS.txt'
+          )
+          $release = gh release view $tag --repo $repository --json tagName 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $tag já existe; nenhuma alteração retroativa."
+          } else {
+            gh release create $tag @assets --repo $repository --target $env:GITHUB_SHA --title 'PT2VHF Mesh Analyzer v0.1.0' --notes 'Primeira versão independente Windows 11: SQLite próprio, múltiplas fontes USB/TCP/BLE/MQTT, retenções independentes, mapa, nós, tráfego e mensagens RF. Funcionalidades avançadas serão migradas gradualmente. Hardware físico requer validação de campo.'
+            if ($LASTEXITCODE -ne 0) { throw 'Falha na publicação da release v0.1.0' }
+          }
