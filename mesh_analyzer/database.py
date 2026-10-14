@@ -458,7 +458,7 @@ class Database:
     def reprocess_archived_topology(self, parser, limit=10000):
         """One-time migration for packets recorded before topology parsing existed."""
         rows=self._rows("""SELECT source_packet_key,source_id,timestamp_ms,raw_json,from_node,to_node,port
-          FROM packets WHERE port IN ('TRACEROUTE_APP','NEIGHBORINFO_APP','70','71','67')
+          FROM packets WHERE port IN ('TRACEROUTE_APP','NEIGHBORINFO_APP','70','71')
           AND source_packet_key NOT IN (SELECT source_packet_key FROM topology_processed)
           ORDER BY timestamp_ms DESC LIMIT ?""",(int(limit),))
         processed=0;linked=0
