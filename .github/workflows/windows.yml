@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
     tags: ['v*']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: write
@@ -62,7 +64,7 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
-          if ($version -notmatch '^\\d+\\.\\d+\\.\\d+$') { throw 'VERSION invalido' }
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'VERSION invalido' }
           $tag = "v$version"
           $repository = $env:GITHUB_REPOSITORY
           $assets = @(
