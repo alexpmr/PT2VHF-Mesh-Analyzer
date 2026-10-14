@@ -4,7 +4,7 @@
 
 ## Downloads — Windows 11 x64
 
-**Versão candidata — os links serão ativados após a publicação: [v0.3.0](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.3.0)**
+**Versão estável publicada: [v0.3.0](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.3.0)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
