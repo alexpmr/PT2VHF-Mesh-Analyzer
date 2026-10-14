@@ -34,7 +34,7 @@ Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.
 As melhorias abaixo são **itens de backlog**, não funcionalidades já entregues. O detalhamento e os testes de aceite estão nas respectivas issues:
 
 1. [**#1 — Idiomas na barra superior**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/1): PT-BR (padrão), EN, ES, FR, DE e IT; tradução completa de interface, notificações e atualizador, persistência e troca sem reinício.
-2. [**#2 — Atualização interna (parcial)**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/2): verificação de GitHub Releases **a cada 15 minutos por padrão**, período configurável em Configurações, consulta manual, changelog, download verificado por SHA256 e instalação autorizada sem perder o banco.
+2. [**#2 — Indicador superior de versão e atualização interna (parcial)**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/2): exibir **vX.Y.Z · ATUALIZADO** (verde), **NOVA VERSÃO DISPONÍVEL** (laranja com destaque), ou **Verificando/Indisponível** (neutro). Clique quando atualizado força a checagem; clique quando há nova versão abre changelog e confirmação de **Atualizar agora**, baixando Setup/Portable, validando SHA256 e instalando/reiniciando com encerramento seguro da issue #15. Intervalo padrão de 15 minutos, configurável, avisos e novidades uma vez por versão, sem falsamente afirmar que está atualizado em falha de rede. **A consulta simples já existe; barra clicável e instalação interna continuam pendentes.**
 3. [**#3 — Acesso Web pela LAN**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/3): **desligado por padrão**, acesso local via aplicativo; habilitação explícita com autenticação, senha, proteção das APIs/mensagens, endereço IP/porta e opção de desligar sem afetar localhost.
 4. [**#4 — Mensagens com visual de mensageiro**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/4): conversas/canais, balões RX/TX, horários, dias, não lidas, notificações, campo inferior, status de envio/ACK sem alegar leitura remota.
 5. [**#5 — Menções de nós usando `@`**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/5): filtro incremental a cada caractere por nome curto/longo, personalizado, aliases e Node ID; inserir referência legível; teclado/mouse; suporte a vários `@`; mensagem transmitida como texto interoperável (não equivale a DM nem notificação nativa universal).
@@ -66,6 +66,10 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
   - Vinculada à [**#10 — Estatísticas completas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10). O relatório é uma funcionalidade **pendente**, não uma nova release.
 
 **Situação:** itens #5, #8–#13 parcialmente implementados na v0.2.0; pendências e validações continuam nas issues.
+
+## Configurações → Mapa — paridade com o legado (14/10/2026)
+
+- [**#16 — Configurações → Mapa, controles completos**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/16): replicar a subaba Mapa do Traffic Analyzer legado conforme as duas capturas; janela temporal, mínimo de observações, tipo/brilho do mapa, máximo do slider de relevo, estilos independentes RF amarelo contínuo (somente comprovado) e MQTT/não RF tracejado, espessuras e botão restaurar, opções mostrar nós/linhas/nomes/identificados/heatmap, Auto Zoom durante traceroutes com restauração. Incluir **sonificação** (tema Fliperama anos 70, testes, volume, densidade, intervalo, máximo simultâneo, categories e estéreo espacial) e **animações de atividade em tempo real** (origem/resposta/relay observado, duração). Configurações persistentes e sincronizadas com o mapa sem inventar RF/ACK/retransmissores. Relacionada às issues #11 e #12; **pendente**.
 
 ## Instalador — impedimento ao atualizar com aplicação aberta (14/10/2026)
 
