@@ -146,6 +146,7 @@ class SourceManager:
         self.ingest=PacketIngestor(db)
         self._stop=threading.Event()
         self._lock=threading.RLock()
+        self._config_lock=threading.RLock()
         self._states={}
         self._interfaces={}
         self._threads={}
@@ -308,6 +309,48 @@ class SourceManager:
         finally:
             client.loop_stop();client.disconnect()
             with self._lock:self._interfaces.pop(id,None)
+
+
+    def radio_config(self, source_id):
+        """Read local device configuration; MQTT cannot manage radio hardware."""
+        from .device_config import read_device
+        source_id = int(source_id)
+        src = self.db.source(source_id)
+        if not src or src["kind"] == "mqtt":
+            raise ValueError("Escolha uma fonte de rádio Serial, TCP ou BLE")
+        with self._lock:
+            interface = self._interfaces.get(source_id)
+            if interface is None:
+                raise ValueError("Fonte não conectada")
+            return read_device(getattr(interface, "localNode", None),
+                               getattr(interface, "metadata", None))
+
+    def update_lora(self, source_id, revision, changes):
+        """Write one local LoRa block. Does not claim radio ACK/readback."""
+        from .device_config import prepare_lora
+        source_id = int(source_id)
+        src = self.db.source(source_id)
+        if not src or src["kind"] == "mqtt":
+            raise ValueError("MQTT não permite editar a configuração de um rádio")
+        with self._config_lock:
+            with self._lock:
+                interface = self._interfaces.get(source_id)
+                if interface is None:
+                    raise ValueError("Fonte não conectada")
+                node = getattr(interface, "localNode", None)
+                if node is None or getattr(node, "localConfig", None) is None:
+                    raise ValueError("Configuração do dispositivo ainda indisponível")
+                original, changed = prepare_lora(node, revision, changes)
+                try:
+                    node.writeConfig("lora")
+                except Exception:
+                    node.localConfig.lora.CopyFrom(original)
+                    raise
+            self.db.log("Gravação LoRa solicitada: " + ", ".join(changed),
+                        source_id=source_id)
+        return {"success": True, "state": "write_requested", "changed": changed,
+                "note": "Comando enviado à interface; confirmação de persistência "
+                        "no rádio ainda depende de reconexão e leitura posterior."}
 
     def send_text(self,id,to_node,text,channel=0):
         id=int(id)
