@@ -180,6 +180,8 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json(updater.notice() if updater else {"success":True,"notice":None})
                 elif path == "/api/system/settings":
                     self._json({"success":True,"settings":db.system_settings()})
+                elif path == "/api/preferences/map":
+                    self._json({"success":True,"settings":db.ui_preferences()})
                 elif path == "/api/retention":self._json({"success":True,"data":db.retention()})
                 elif path == "/api/stats":self._json({"success":True,"counts":db.stats(),"connections":sources.snapshot()})
                 elif path == "/api/analytics":
@@ -248,6 +250,8 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     data=db.set_system_settings(payload)
                     if updates:updates.changed()
                     self._json({"success":True,"settings":data})
+                elif path == "/api/preferences/map":
+                    self._json({"success":True,"settings":db.save_ui_preferences(payload)})
                 elif path == "/api/update/check":
                     self._json(updates.check(force=True) if updates else latest_release(force=True))
                 elif path == "/api/update/prepare":
