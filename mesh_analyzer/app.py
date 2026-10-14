@@ -313,6 +313,12 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         replay.start()
         csrf=secrets.token_urlsafe(32)
         doc=Path(__file__).with_name("ui.html").read_text(encoding="utf-8")
+        # One image source shared by HTML logo and favicon, with no external
+        # request. PyInstaller bundles the exact same image used to build its
+        # icon resource and the Inno Setup executable/desktop shortcuts.
+        import base64
+        from .branding import brand_image_data_uri
+        doc=doc.replace("__PT2VHF_MESH_LOGO__",brand_image_data_uri())
         shutdown_requested=threading.Event()
         shutdown_started=threading.Event()
         shutdown_complete=threading.Event()

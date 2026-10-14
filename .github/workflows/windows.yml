@@ -21,6 +21,12 @@ jobs:
       - name: Instalar bibliotecas e gerador EXE
         shell: pwsh
         run: python -m pip install -r requirements-build.txt
+      - name: Criar e verificar identidade visual Windows (ICO/PNG)
+        shell: pwsh
+        run: |
+          python branding/build_icons.py
+          if (!(Test-Path 'branding/mesh-analyzer.ico')) { throw 'Ícone Windows ausente' }
+          if (!(Test-Path 'branding/mesh-analyzer.png')) { throw 'PNG da marca ausente' }
       - name: Validar SQLite, fontes, RF simulado e API local
         shell: pwsh
         run: python -m unittest discover -s tests -v
@@ -37,15 +43,16 @@ jobs:
       - name: Compilar EXE Windows 11 x64
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name PT2VHF-Mesh-Analyzer --add-data 'mesh_analyzer/ui.html;mesh_analyzer' --collect-submodules meshtastic --collect-submodules bleak --collect-submodules paho --collect-submodules pubsub --collect-all webview --hidden-import serial.tools.list_ports launch.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name PT2VHF-Mesh-Analyzer --icon branding/mesh-analyzer.ico --add-data 'branding/mesh_analyzer_logo.png.b64;branding' --add-data 'mesh_analyzer/ui.html;mesh_analyzer' --collect-submodules meshtastic --collect-submodules bleak --collect-submodules paho --collect-submodules pubsub --collect-all webview --hidden-import serial.tools.list_ports launch.py
           if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer.exe')) { throw 'EXE ausente' }
+          python -c "import pefile; p=pefile.PE('dist/PT2VHF-Mesh-Analyzer.exe'); ids=[i.id for i in p.DIRECTORY_ENTRY_RESOURCE.entries]; assert 3 in ids and 14 in ids, 'EXE sem ícones Windows'; print('PE ICON e GROUP_ICON encontrados')"
       - name: Criar ZIP portable e hash
         shell: pwsh
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
           Compress-Archive -Path 'dist/PT2VHF-Mesh-Analyzer.exe' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" -Force
           Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip' -Force
-          Compress-Archive -Path 'mesh_analyzer','tests','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip" -Force
+          Compress-Archive -Path 'mesh_analyzer','tests','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt','branding' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip" -Force
           Get-FileHash 'dist/PT2VHF-Mesh-Analyzer.exe' -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  PT2VHF-Mesh-Analyzer.exe" } | Out-File 'dist/SHA256SUMS.txt' -Encoding ascii
       - name: Instalar Inno Setup
         shell: pwsh

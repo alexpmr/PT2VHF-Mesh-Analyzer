@@ -4,12 +4,14 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="pt2vhf-csrf" content="__CSRF_TOKEN__">
 <title>PT2VHF Mesh Analyzer — por Alex, PT2VHF</title>
+<link rel="icon" type="image/png" href="__PT2VHF_MESH_LOGO__">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
 <style>
 :root{color-scheme:dark;--bg:#0e1621;--nav:#17212b;--panel:#14202b;--card:#1c2b38;--line:#304353;--ink:#edf3f8;--muted:#a3b7c6;--accent:#e4b800;--blue:#7fcaf0}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:var(--bg);color:var(--ink);font:13px system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 #app{height:100%;display:flex;flex-direction:column;min-height:0}header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--nav);border-bottom:1px solid var(--line);flex-wrap:wrap;flex:0 0 auto}
-.brand{display:flex;align-items:center;gap:8px;white-space:nowrap}.brand h1{margin:0;font-size:17px}.brand small{font-size:11px;color:#a6bdc9}.logo{font-size:23px;color:#dfcb3f}
+.brand{display:flex;align-items:center;gap:8px;white-space:nowrap}.brand h1{margin:0;font-size:17px}.brand small{font-size:11px;color:#a6bdc9}.logo{width:46px;height:46px;object-fit:contain;display:block;flex-shrink:0;filter:drop-shadow(0 0 7px #52ed7930)}
+.brand-vhf{color:#59e97e}.brand-tagline{display:block;color:#81d49b;font-size:9px;letter-spacing:1.6px;text-transform:uppercase;white-space:nowrap}
 #nav{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;width:100%;order:4;padding:2px 0}#topUpdate{margin-left:auto}#connectedStatus{margin-left:0}button,select,input,textarea{background:#233443;color:var(--ink);border:1px solid #405668;border-radius:6px;padding:6px 8px;font:inherit}
 button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover:not(:disabled){border-color:#91b0bf;background:#2e4557}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .navbtn{font-weight:700;padding:6px 10px}.navbtn.active{background:var(--accent);color:#15191c;border-color:#ffe34d}.version{font-size:11px;color:#98b4bd;margin-left:auto}.statusPill{padding:5px 9px;border:1px solid var(--line);border-radius:14px;font-size:11px}
@@ -95,7 +97,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><span class="logo">◉</span><div><h1>PT2VHF Mesh Analyzer <small>v0.6.0</small></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="46" height="46"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <small>v0.6.1</small></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.0 · verificando...</button><span class="version" id="connectedStatus">Carregando fontes...</span></header>

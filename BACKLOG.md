@@ -2,6 +2,12 @@
 
 Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.x.
 
+## v0.6.1 — Identidade visual instalada no projeto (revisão Windows pendente)
+
+- Logo exclusivo **PT2VHF Mesh Analyzer** (antena + ondas LoRa + relevo + nós mesh), arquivo matriz PNG base64 SHA256 em `branding/`; ícone multirresolução gerado como `.ico`/PNG por `branding/build_icons.py`.
+- A mesma identidade foi integrada no cabeçalho, favicon, build do EXE PyInstaller, instalador Inno Setup, atalhos Iniciar/Área de Trabalho e AppUserModelID estável da janela Windows WebView2 para barra de tarefas. **Verificar em Win11 real, incluindo atalhos já fixados**. Alteração somente visual/empacotamento.
+- As issues abertas de RF/enlaces, atualizador, idiomas, chat, favoritos/sincronização, fontes e outras funcionalidades não são declaradas resolvidas por esta alteração.
+
 ## v0.1.0 (implementado no código)
 
 - Núcleo Python próprio e banco SQLite independente; fontes USB/Serial, TCP/IP, BLE, MQTT RX com reconexão prevista.
@@ -198,6 +204,10 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
 ## Configurações → Mapa — paridade com o legado (14/10/2026)
 
 - [**#16 — Configurações → Mapa, controles completos**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/16): replicar a subaba Mapa do Traffic Analyzer legado conforme as duas capturas; janela temporal, mínimo de observações, tipo/brilho do mapa, máximo do slider de relevo, estilos independentes RF amarelo contínuo (somente comprovado) e MQTT/não RF tracejado, espessuras e botão restaurar, opções mostrar nós/linhas/nomes/identificados/heatmap, Auto Zoom durante traceroutes com restauração. Incluir **sonificação** (tema Fliperama anos 70, testes, volume, densidade, intervalo, máximo simultâneo, categories e estéreo espacial) e **animações de atividade em tempo real** (origem/resposta/relay observado, duração). Configurações persistentes e sincronizadas com o mapa sem inventar RF/ACK/retransmissores. **Reconfirmação pelas capturas:** agrupar seções Mapa e topologia, Temas sonoros e Atividade em tempo real; **mover seletor de mapa-base da barra superior para Configurações → Mapa**, sem duplicidade, aplicando alteração em tempo real.  Relacionada às issues #11 e #12; **pendente**.
+
+## Fontes: autodetectar USB/Serial, Bluetooth LE e rede local (14/10/2026)
+
+- [**#31 — Autodetectar fontes**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/31): em **Configurações → Fontes → Adicionar fonte**, incluir botão **Autodetectar**, varrendo **USB/Serial**, **Bluetooth LE** e **rede local Wi-Fi/TCP** mediante clique explícito. Abrir modal central com resultados, identificação/porta, status Meshtastic confirmado/provável, fonte já cadastrada, checkboxes de seleção individual, Marcar/Desmarcar tudo, Repetir/Cancelar e botão **Adicionar selecionados (N)**. Persistir **somente fontes confirmadas e escolhidas** no SQLite, evitando duplicatas, mantendo opção de conexão sob consentimento; não fazer varredura IP pública/VPN nem TX LoRa. Detalhes e testes em #31; **pendente, não implementado na v0.6.1**.
 
 ## Fontes: botão Configurar dispositivo dentro de Editar Fonte (14/10/2026)
 
