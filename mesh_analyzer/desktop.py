@@ -13,6 +13,17 @@ def open_desktop_window(url: str, profile: Path) -> None:
     except ImportError as exc:
         raise RuntimeError("Componente desktop WebView2 indisponível. Reinstale o aplicativo.") from exc
 
+    # Keep the running WebView2 window grouped with the installed Start-menu
+    # and desktop shortcuts, not with Python/Edge.
+    import os
+    if os.name == "nt":
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                "PT2VHF.MeshAnalyzer")
+        except (AttributeError, OSError):
+            pass  # The branded EXE resource still supplies the taskbar icon.
+
     window = webview.create_window(
         "PT2VHF Mesh Analyzer",
         url=url,
