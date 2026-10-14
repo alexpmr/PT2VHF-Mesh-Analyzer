@@ -1,5 +1,16 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.6.1 — 14/10/2026 — Identidade visual PT2VHF Mesh Analyzer
+
+- **Marca própria:** logotipo circular verde sobre fundo escuro, com antena rádio, ondas de comunicação, montanhas e nós conectados, criado especificamente para o Mesh Analyzer.
+- **Aplicativo:** cabeçalho com logotipo, título PT2**VHF** destacado e assinatura visual `Explore · Analise · Conecte`; favicon local usa a mesma imagem mesmo sem internet.
+- **Windows 11:** ícone ICO real com resoluções de 16 a 256 px incorporado ao EXE PyInstaller; mesmo em Portable. Instalador Inno Setup utiliza a marca e seus atalhos na área de trabalho e Menu Iniciar apontam para o ícone do executável.
+- **Barra de tarefas/janela WebView2:** AppUserModelID estável `PT2VHF.MeshAnalyzer` tanto no processo como nos atalhos do instalador, para agrupamento consistente.
+- **Build auditável:** PNG base64 versionado é a fonte única da marca, com SHA256 e gerador de PNG/ICO; CI verifica recursos de ícone no PE e regressões de logo/favicons.
+- **Sem alteração de funcionalidades Meshtastic ou SQLite:** esta é uma release visual e de empacotamento, permanecendo as demais issues do backlog em aberto.
+
+**Validação pendente em campo:** cache de ícones e agrupamento no Windows 11, especialmente em atalhos fixados anteriormente na barra de tarefas, devem ser conferidos no computador real.
+
 ## v0.6.0 — 14/10/2026 — Estabilidade e evolução parcial do backlog
 
 - **#15/#2 (correção em código):** desligamento ordenado de monitor, servidor HTTP, fontes/radios, workers e banco SQLite, seguido de saída explícita do próprio processo para liberar Setup/Portable externo. Mantida validação SHA256 e reinício. **Ainda requer teste real com Win11 físico; não encerrar issue com CI.**
