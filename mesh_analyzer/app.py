@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 import urllib.parse
+import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -21,6 +22,36 @@ from .database import Database, profile_dir
 from .transports import SourceManager, available_serial_ports
 
 LOG = logging.getLogger("pt2vhf.mesh")
+_UPDATE_CACHE = {"at": 0.0, "data": None}
+_UPDATE_LOCK = threading.Lock()
+
+
+def latest_release():
+    """Bounded, cached request to the project's public GitHub Releases endpoint."""
+    with _UPDATE_LOCK:
+        if _UPDATE_CACHE["data"] is not None and time.monotonic()-_UPDATE_CACHE["at"] < 300:
+            return _UPDATE_CACHE["data"]
+        request = urllib.request.Request(
+            "https://api.github.com/repos/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest",
+            headers={"User-Agent": "PT2VHF-Mesh-Analyzer/"+__version__,
+                     "Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(request, timeout=6) as response:
+            info = json.load(response)
+        tag = str(info.get("tag_name") or "").removeprefix("v")
+        if not tag or not all(x.isdigit() for x in tag.split(".")):
+            raise ValueError("Release remota sem versão válida")
+        current = tuple(int(x) for x in __version__.split("."))
+        remote = tuple(int(x) for x in tag.split("."))
+        data = {"success": True, "current": __version__, "latest": tag,
+                "available": remote > current,
+                "release_url": "https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest",
+                "notes": str(info.get("body") or "")[:1800],
+                "assets": [{"name":str(a.get("name") or ""),
+                            "url":str(a.get("browser_download_url") or "")}
+                           for a in info.get("assets", []) if a.get("name")]}
+        _UPDATE_CACHE.update(at=time.monotonic(), data=data)
+        return data
+
 
 
 def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
@@ -62,6 +93,12 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
                 elif path == "/api/links":self._json({"success":True,"data":db.link_rows()})
                 elif path == "/api/events":self._json({"success":True,"data":db.event_rows()})
                 elif path == "/api/ports":self._json({"success":True,"data":available_serial_ports()})
+                elif path == "/api/device/config":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    source_id=int(query.get("source_id",[0])[0])
+                    self._json({"success":True,"data":sources.radio_config(source_id)})
+                elif path == "/api/update/latest":
+                    self._json(latest_release())
                 elif path == "/api/retention":self._json({"success":True,"data":db.retention()})
                 elif path == "/api/stats":self._json({"success":True,"counts":db.stats(),"connections":sources.snapshot()})
                 else:self._error("Rota não encontrada",404)
@@ -110,6 +147,10 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str):
                     self._json({"success":True,"retention":result})
                 elif path == "/api/retention/cleanup":
                     self._json({"success":True,"removed":db.cleanup()})
+                elif path == "/api/device/lora":
+                    result=sources.update_lora(payload.get("source_id"),payload.get("revision"),
+                                               payload.get("changes"))
+                    self._json(result)
                 elif path == "/api/messages/send":
                     result=sources.send_text(payload.get("source_id"),payload.get("to_node"),payload.get("text"),payload.get("channel",0))
                     self._json(result,201)
@@ -157,14 +198,14 @@ def run(host="127.0.0.1",port=8789,launch_browser=True,database=None):
 
 
 def main(argv=None):
-    parser=argparse.ArgumentParser(description="PT2VHF Mesh Analyzer v0.1.0")
+    parser=argparse.ArgumentParser(description="PT2VHF Mesh Analyzer v"+__version__)
     parser.add_argument("--host",default="127.0.0.1",help="Interface de escuta (padrão: apenas localhost)")
     parser.add_argument("--port",type=int,default=8789)
     parser.add_argument("--no-browser",action="store_true")
     parser.add_argument("--data-dir",default=None)
     opts=parser.parse_args(argv)
     if opts.host not in ("127.0.0.1","localhost","::1"):
-        parser.error("Por segurança, a v0.1.0 aceita apenas localhost; publicação LAN virá com autenticação própria.")
+        parser.error("Por segurança, esta versão aceita apenas localhost; publicação LAN virá com autenticação própria.")
     if opts.data_dir:os.environ["PT2VHF_MESH_DATA"]=opts.data_dir
     logging.basicConfig(level=logging.WARNING,format="%(levelname)s: %(message)s")
     return run(opts.host,opts.port,not opts.no_browser)
