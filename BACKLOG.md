@@ -40,7 +40,14 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
   - Ranking RF direto requer comprovação de recepção/enlace e correlação espacial/temporal; rotas observadas/inferidas ficam explicitamente separadas.
   - Adaptar a arquitetura, os cálculos e os componentes a **múltiplas fontes** Serial/USB, TCP/IP, BLE e MQTT e às retenções configuradas.
 
-**Situação:** as três issues estão registradas; ainda não houve implementação nesta atualização de backlog.
+- [**#11 — Mapa: enlaces amarelos e animação de tráfego**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/11): linha de enlace amarela por padrão (configurável/persistente), animação ao vivo dos pacotes como no Traffic Analyzer, controle de velocidade/pausa, filtros e múltiplos eventos simultâneos.
+  - Não representar caminho RF desconhecido como salto direto; distinguir visualmente RF confirmado, rota apenas observada e Internet/MQTT. Não remover enlaces históricos quando a animação terminar.
+- [**#12 — Mapa: mapas-base, radar meteorológico e relevo com corte**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/12): seletor Ruas/OSM, Topográfico, Claro, Escuro e Satélite; overlays independentes.
+  - **Radar meteorológico** baseado no provedor disponível (legado: RainViewer), ligado por padrão, atualização normalmente a cada 5 minutos, transparência e indicação da idade/disponibilidade do quadro.
+  - **Relevo com corte** baseado em DEM real (legado: Terrain Tiles/Terrarium), com máscara de terrenos >= cota definida, slider vertical direito, limite superior inicial de 3.000 m ajustável entre 100 e 9.000 m, opacidade e preferências persistentes.
+  - **Relevo sombreado** permanece overlay independente; camadas meteorológicas/topográficas não ocultam nós, enlaces nem animações. Sem dados externos, mapa e banco continuam funcionais.
+
+**Situação:** issues de Nós, Tráfego, Estatísticas e Mapa registradas; pendentes de implementação na aplicação.
 
 ## Próximos passos (não implementados ou ainda não validados)
 
