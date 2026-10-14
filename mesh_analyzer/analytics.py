@@ -100,11 +100,24 @@ def calculate(db, params=None, connection_status=None):
                     (clause+" AND " if clause else " WHERE ") +
                     "hop_start IS NOT NULL AND hop_limit IS NOT NULL"
                     " AND hop_start >= hop_limit GROUP BY (hop_start-hop_limit) ORDER BY hops", args)
-    links = db._rows("SELECT quality, COUNT(*) as count, SUM(observations) as observations"
-                     " FROM links GROUP BY quality ORDER BY observations DESC")
+    # Keep relation counts aligned to the period/source/node filters. The
+    # relationship table does not encode channel; do not invent that filter.
+    link_where,link_args=[],[]
+    if PERIODS[filters["period"]]:
+        link_where.append("last_seen_ms >= ?")
+        link_args.append((int(time.time())-PERIODS[filters["period"]])*1000)
+    if filters["source"] is not None:
+        link_where.append("source_id = ?")
+        link_args.append(filters["source"])
+    if filters["node"] is not None:
+        link_where.append("(a = ? OR b = ?)")
+        link_args.extend([filters["node"],filters["node"]])
+    link_sql=" WHERE "+" AND ".join(link_where) if link_where else ""
+    links=db._rows("SELECT quality, COUNT(*) as count, SUM(observations) as observations"
+                   " FROM links"+link_sql+" GROUP BY quality ORDER BY observations DESC",tuple(link_args))
     # 'quality' can represent an observed traceroute without confirming RF.
     node_rows = db._rows("SELECT node_num, node_id, long_name, short_name, role, hw_model,"
-                         " latitude, longitude, position_ms, first_seen_ms, last_seen_ms, battery, snr"
+                         " latitude, longitude, position_ms, first_seen_ms, last_seen_ms, battery, voltage, snr"
                          " FROM nodes ORDER BY last_seen_ms DESC LIMIT 5000")
     node_names = {n["node_num"]: n["long_name"] or n["short_name"] or n["node_id"] for n in node_rows}
     for p in origins:
@@ -114,6 +127,12 @@ def calculate(db, params=None, connection_status=None):
         s["name"] = meta["name"] if meta else f"Fonte histórica #{s['id']}"
         s["kind"] = meta["kind"] if meta else "unknown"
         s["connection"] = (connection_status or {}).get(str(s["id"]), {}).get("status", "não informado")
+    message_by_channel=db._rows(
+        "SELECT channel, COUNT(*) AS count FROM messages"+msg_clause+
+        " GROUP BY channel ORDER BY count DESC",msg_args)
+    message_by_direction=db._rows(
+        "SELECT direction, COUNT(*) AS count FROM messages"+msg_clause+
+        " GROUP BY direction ORDER BY count DESC",msg_args)
     silent = [n for n in node_rows if n["last_seen_ms"] < cutoff and n["last_seen_ms"] > 0]
     low_battery = [n for n in node_rows if n["battery"] is not None and 0 <= n["battery"] < 20]
     alerts = ([{"severity": "atenção", "kind": "nó silencioso",
@@ -164,7 +183,10 @@ def calculate(db, params=None, connection_status=None):
         "counts": {"nodes_known": total_nodes,"nodes_recent_catalog": recent_nodes,
                    "active_originators": active, "observations":int(count.get("observations") or 0),
                    "mqtt":int(count.get("mqtt") or 0),"receiver":int(count.get("receiver") or 0),
-                   "messages":int(msg.get("n") or 0), "traceroutes":int(count.get("traceroutes") or 0),
+                   "messages":int(msg.get("n") or 0),
+                   "rx_observations":int(count.get("observations") or 0),
+                   "tx_observations":None,
+                   "traceroutes":int(count.get("traceroutes") or 0),
                    "telemetry":int(count.get("telemetry") or 0),
                    "sources_observed":int(count.get("receivers") or 0),
                    "mean_snr":count.get("mean_snr"), "mean_rssi":count.get("mean_rssi"),
@@ -172,6 +194,7 @@ def calculate(db, params=None, connection_status=None):
                    "confirmed_direct_rf":None,
                    "alerts":len(alerts), "critical":sum(a["severity"]=="crítico" for a in alerts)},
         "packet_types":types, "source_breakdown":sources, "top_originators":origins,
+        "message_by_channel":message_by_channel,"message_by_direction":message_by_direction,
         "hourly":hourly,"hops":hops,"link_types":links,"alerts":alerts,
         "nodes":node_rows,"rf_samples":rf_summary,
         "diagnosis": {
