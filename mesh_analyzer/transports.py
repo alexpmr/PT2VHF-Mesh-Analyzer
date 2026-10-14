@@ -9,6 +9,7 @@ import time
 from typing import Any
 
 from .database import Database, now_ms
+from .topology import extract_topology
 
 
 def number(value):
@@ -22,7 +23,9 @@ def number(value):
 
 def port_name(value):
     if isinstance(value,str): return value
-    ports = {1:"TEXT_MESSAGE_APP",3:"POSITION_APP",4:"NODEINFO_APP",5:"ROUTING_APP",6:"ADMIN_APP",67:"TRACEROUTE_APP",65:"TELEMETRY_APP"}
+    ports = {1:"TEXT_MESSAGE_APP",3:"POSITION_APP",4:"NODEINFO_APP",
+             5:"ROUTING_APP",6:"ADMIN_APP",65:"STORE_FORWARD_APP",
+             67:"TELEMETRY_APP",70:"TRACEROUTE_APP",71:"NEIGHBORINFO_APP"}
     return ports.get(number(value),str(value or "UNKNOWN"))
 
 
@@ -111,20 +114,20 @@ class PacketIngestor:
           "encrypted":int(bool(packet.get("encrypted")) and not decoded),"text_preview":text[:180] if text else "", "raw_json":raw_json})
         if not accepted:return False
         if from_num is not None:
-            self.db.upsert_node(from_num,source_id,timestamp_ms=ts,snr=packet.get("rxSnr",packet.get("rx_snr")))
+            self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,snr=packet.get("rxSnr",packet.get("rx_snr")))
         if port in ("NODEINFO_APP","4") and from_num is not None:
             user=decoded.get("user") if isinstance(decoded.get("user"),dict) else {}
             if not user and isinstance(decoded.get("nodeInfo"),dict):user=decoded["nodeInfo"].get("user") or {}
             if isinstance(user,dict):
-                self.db.upsert_node(from_num,source_id,timestamp_ms=ts,long_name=user.get("longName") or user.get("long_name"),
+                self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,long_name=user.get("longName") or user.get("long_name"),
                                     short_name=user.get("shortName") or user.get("short_name"),hw_model=user.get("hwModel") or user.get("hw_model"))
         if port in ("POSITION_APP","3") and from_num is not None:
             loc=position_from_decoded(decoded)
             if loc:
                 lat,lon,alt=loc
-                self.db.upsert_node(from_num,source_id,timestamp_ms=ts,latitude=lat,longitude=lon,altitude=alt)
+                self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,latitude=lat,longitude=lon,altitude=alt)
                 self.db.add_position(from_num,source_id,ts,lat,lon,alt)
-        if port in ("TELEMETRY_APP","67","65") and from_num is not None:
+        if port in ("TELEMETRY_APP","67") and from_num is not None:
             # Payload shape varies by firmware/transport. Persist only telemetry
             # fields explicitly present in decoded data; never infer CRC from rx_bad.
             tele=decoded.get("telemetry") if isinstance(decoded.get("telemetry"),dict) else decoded
@@ -138,7 +141,7 @@ class PacketIngestor:
             voltage=metric(dev,"voltage","batteryVoltage","battery_voltage")
             battery=metric(dev,"batteryLevel","battery_level")
             if battery is not None or voltage is not None:
-                self.db.upsert_node(from_num,source_id,timestamp_ms=ts,battery=battery,voltage=voltage)
+                self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,battery=battery,voltage=voltage)
             self.db.add_rf_sample(
                 source_id,from_num,ts,
                 battery=battery, voltage=voltage,
@@ -150,15 +153,10 @@ class PacketIngestor:
             self.db.add_message({"source_id":source_id,"packet_key":unique,"packet_id":str(packet_id),"timestamp_ms":ts,
                                  "from_node":from_num,"to_node":to_num,"channel":int(packet.get("channel") or 0),
                                  "direction":"rx","text":text[:1024],"state":"received"})
-        if port in ("TRACEROUTE_APP","67"):
-            route=decoded.get("route")
-            if isinstance(route,dict):route=route.get("route") or route.get("routeNodes")
-            if isinstance(route,list) and from_num is not None and to_num is not None:
-                hops=[from_num]+[n for x in route if (n:=number(x)) is not None]+[to_num]
-                self.db.add_trace(source_id,ts,from_num,to_num,hops)
-                # A sequence of relay IDs proves topology of this traceroute, NOT direct RF.
-                # No SNR for each hop? Keep it unclassified; never report RF-confirmed.
-                for a,b in zip(hops,hops[1:]):self.db.add_link(source_id,a,b,ts,"observed_route_unverified_rf")
+        kind,edges=extract_topology(packet)
+        if kind is not None:
+            self.db.record_topology(unique,source_id,ts,edges or [],
+               trace={"from":from_num,"to":to_num,"type":kind} if kind=="traceroute" and edges else None)
         return True
 
 
@@ -183,7 +181,17 @@ class SourceManager:
                               "packets":old.get("packets",0),"type":old.get("type","")}
 
     def snapshot(self):
-        with self._lock:return {str(k):dict(v) for k,v in self._states.items()}
+        with self._lock:
+            result={str(k):dict(v) for k,v in self._states.items()}
+            for sid,interface in self._interfaces.items():
+                info=getattr(interface,"myInfo",None)
+                local=getattr(interface,"localNode",None)
+                own=number(getattr(info,"my_node_num",None) or
+                           getattr(local,"nodeNum",None) or
+                           getattr(interface,"myNodeNum",None))
+                if own and str(sid) in result:
+                    result[str(sid)]["local_node_num"]=own
+            return result
 
     def _on_packet(self,packet=None,interface=None,**kwargs):
         with self._lock:
