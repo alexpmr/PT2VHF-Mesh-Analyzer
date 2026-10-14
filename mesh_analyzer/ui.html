@@ -215,9 +215,101 @@ function setTiles(){
  dark:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}','© OpenStreetMap contributors © CARTO']
  };
  const [url,attr]=sources[kind]||sources.osm;
- currentTiles=L.tileLayer(url,{maxZoom:18,attribution:attr}).addTo(map);
+ currentTiles=L.tileLayer(url,{maxZoom:18,attribution:attr}).addTo(map);applyMapBrightness();
  try{localStorage.setItem('mesh.map.base',kind);}catch(e){}
 }
+
+const MAP_IDS=['mapWindow','mapMinObservations','mapBrightness','mapTerrainMaxSetting','mapRfColor',
+'mapRfWidth','mapInternetColor','mapInternetWidth','mapShowLinksSetting','mapShowNodesSetting',
+'mapHeatmap','mapShowNamesSetting','mapIdentifiedOnly','mapAutoZoom',
+'soundEnabled','soundTheme','soundVolume','soundDensity','soundMinInterval','soundMaxVoices',
+'soundRouting','soundMessages','soundAlerts','soundStereo','mapAnimateNodes','mapHighlightSource',
+'mapHighlightRelay','mapPulseSeconds','mapAnimationSpeed'];
+function applyMapBrightness(){
+ if(currentTiles&&currentTiles.getContainer())currentTiles.getContainer().style.filter=
+   'brightness('+Number($('mapBrightness').value||100)+'%)';
+}
+function storeMapControls(){
+ const values={};
+ for(const id of MAP_IDS){const el=$(id);if(el)values[id]=el.type==='checkbox'?el.checked:el.value;}
+ try{localStorage.setItem('mesh.map.controls',JSON.stringify(values));}catch(e){}
+}
+function loadMapControls(){
+ try{
+  const values=JSON.parse(localStorage.getItem('mesh.map.controls')||'{}');
+  for(const [id,value] of Object.entries(values)){
+   if(!MAP_IDS.includes(id)||!$(id))continue;
+   if($(id).type==='checkbox')$(id).checked=Boolean(value);
+   else $(id).value=String(value);
+  }
+ }catch(e){}
+ $('mapTerrainMaxSetting').value=$('terrainMax').value;
+ $('mapShowLinksSetting').checked=$('showMapLinks').checked;
+ $('mapShowNodesSetting').checked=$('showMapNodes').checked;
+ $('mapShowNamesSetting').checked=$('showNames').checked;
+}
+function initMapControls(){
+ for(const id of MAP_IDS){
+  if(!$(id))continue;
+  $(id).addEventListener('change',()=>{
+   if(id==='mapMinObservations'&&(!Number.isInteger(Number($(id).value))||
+          Number($(id).value)<1||Number($(id).value)>99999)){
+      notify('Mínimo de observações: 1 a 99999',true);$(id).value='1';
+   }
+   if(id==='mapTerrainMaxSetting'){
+      const n=Number($(id).value);
+      if(!Number.isInteger(n)||n<100||n>9000){
+        notify('Altura deve ficar entre 100 e 9000 m',true);$(id).value=$('terrainMax').value;
+      }else{$('terrainMax').value=$(id).value;$('terrainMax').dispatchEvent(new Event('change'));}
+   }
+   if(id==='mapShowLinksSetting')$('showMapLinks').checked=$(id).checked;
+   if(id==='mapShowNodesSetting')$('showMapNodes').checked=$(id).checked;
+   if(id==='mapShowNamesSetting')$('showNames').checked=$(id).checked;
+   storeMapControls();
+   if(id==='mapType')setTiles();
+   else if(id==='mapBrightness')applyMapBrightness();
+   else renderMap();
+  });
+ }
+ $('mapRestoreColors').onclick=()=>{
+  Object.entries({mapRfColor:'#ffff00',mapRfWidth:2,mapInternetColor:'#ff3322',mapInternetWidth:3})
+   .forEach(([k,v])=>$(k).value=v);
+  storeMapControls();renderMap();notify('Cores e espessuras restauradas.');
+ };
+ $('soundTest').onclick=()=>playMeshTone('test',true);
+ $('mapBrightness').oninput=()=>{applyMapBrightness();storeMapControls();};
+}
+let meshSoundContext=null,lastMeshSound=0,meshSoundVoices=0;
+function playMeshTone(kind,explicit=false){
+ if(!explicit&&!$('soundEnabled').checked)return;
+ if(!explicit&&(kind==='message'&&!$('soundMessages').checked ||
+                  kind==='traceroute'&&!$('soundRouting').checked))return;
+ const density=$('soundDensity').value;
+ const minInterval=Number($('soundMinInterval').value)*
+                   (density==='low'?3:density==='normal'?1.5:1);
+ if(!explicit&&Date.now()-lastMeshSound<minInterval)return;
+ if(meshSoundVoices>=Number($('soundMaxVoices').value))return;
+ const Type=window.AudioContext||window.webkitAudioContext;
+ if(!Type)return;
+ try{
+  meshSoundContext=meshSoundContext||new Type();
+  if(meshSoundContext.state==='suspended'&&!explicit)return;
+  if(explicit)meshSoundContext.resume();
+  lastMeshSound=Date.now();meshSoundVoices++;
+  const ctx=meshSoundContext,osc=ctx.createOscillator(),gain=ctx.createGain();
+  const t=ctx.currentTime;
+  osc.type=$('soundTheme').value==='arcade'?'square':'sine';
+  const freq=kind==='message'?700:kind==='traceroute'?370:500;
+  osc.frequency.setValueAtTime(freq,t);
+  osc.frequency.exponentialRampToValueAtTime(freq*1.35,t+.14);
+  gain.gain.setValueAtTime(Math.max(.0001,.10*Number($('soundVolume').value)/100),t);
+  gain.gain.exponentialRampToValueAtTime(.0001,t+.16);
+  osc.connect(gain);gain.connect(ctx.destination);
+  osc.onended=()=>{meshSoundVoices=Math.max(0,meshSoundVoices-1);osc.disconnect();gain.disconnect();};
+  osc.start();osc.stop(t+.17);
+ }catch(e){meshSoundVoices=Math.max(0,meshSoundVoices-1);}
+}
+
 function readMapSettings(){
  try{
  const base=localStorage.getItem('mesh.map.base');if([...$('mapType').options].some(o=>o.value===base))$('mapType').value=base;
@@ -305,7 +397,7 @@ function updateTerrain(){
   terrainLayer.addTo(map);
  }else if(terrainLayer){map.removeLayer(terrainLayer);terrainLayer=null;}
 }
-readMapSettings();
+readMapSettings();loadMapControls();initMapControls();
 $('terrainCut').max=$('terrainMax').value;
 let terrainRefresh=null;
 for(const id of ['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity']){
@@ -337,19 +429,25 @@ function pulseNewPackets(current){
  const fresh=current.filter(p=>p.timestamp_ms>lastAnimatedTs&&(!mapSourceFilter||String(p.source_id)===mapSourceFilter)).slice(-12);
  lastAnimatedTs=newest;
  for(const p of fresh){
+  if(p.port==='TEXT_MESSAGE_APP')playMeshTone('message');
+  else if(p.port==='TRACEROUTE_APP')playMeshTone('traceroute');
+  if(!$('mapAnimateNodes').checked||!$('mapHighlightSource').checked)continue;
   if(activePulses>=20)break;
   if(p.via_mqtt)continue; // MQTT transport cannot prove a radio-hop path.
   const n=nodes.find(x=>x.node_num===p.from_node);
   if(!n||!validPos(n))continue;
   // Pulse at observed transmitting node only; no fabricated direct path.
   activePulses++;
-  const marker=L.circleMarker([n.latitude,n.longitude],{radius:5,color:'#ffd438',weight:2,opacity:1,fillOpacity:.6}).addTo(map);
+  const marker=L.circleMarker([n.latitude,n.longitude],{radius:5,color:'#63b9fb',weight:2,opacity:1,fillOpacity:.6}).addTo(map);
   marker.bindTooltip('Pacote observado: '+String(p.port||'')+'. Caminho RF não confirmado.');
   let step=0;
+  const ticks=Math.max(8,Math.round(Number($('mapPulseSeconds').value)*14));
+  const delay=Math.max(25,Math.round(Number($('mapPulseSeconds').value)*1000/
+                      ticks/Number($('mapAnimationSpeed').value)));
   const animation=setInterval(()=>{
-   if(!map||++step>=16){clearInterval(animation);if(map&&map.hasLayer(marker))map.removeLayer(marker);activePulses--;return;}
-   marker.setRadius(5+step*1.4);marker.setStyle({opacity:1-step/16,fillOpacity:.6*(1-step/16)});
-  },70);
+   if(!map||++step>=ticks){clearInterval(animation);if(map&&map.hasLayer(marker))map.removeLayer(marker);activePulses--;return;}
+   marker.setRadius(5+step*25/ticks);marker.setStyle({opacity:1-step/ticks,fillOpacity:.6*(1-step/ticks)});
+  },delay);
  }
 }
 
@@ -381,7 +479,12 @@ function renderMap(){
  const available=sourceMapNodes(),q=$('mapSearchInput').value;
  const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>n.node_num));
  $('mapSearchCount').textContent=q?allowed.size+' de '+available.length:available.length+' nós';
- const activeLinks=links.filter(e=>!source||String(e.source_id)===source);
+ const intervals={all:0,'1h':3600000,'12h':43200000,'24h':86400000,'7d':604800000,'30d':2592000000};
+ const win=intervals[$('mapWindow').value]||0;
+ const since=Date.now()-win;
+ const required=Math.max(1,Number($('mapMinObservations').value)||1);
+ const activeLinks=links.filter(e=>(!source||String(e.source_id)===source) &&
+     Number(e.observations||0)>=required && (!win||Number(e.last_seen_ms)>=since));
  let visible=0,missing=0,hiddenBySearch=0;
  if($('showMapLinks').checked){
   for(const edge of activeLinks){
@@ -391,9 +494,9 @@ function renderMap(){
    const quality=String(edge.quality||'');
    const confirmed=quality==='confirmed_direct_rf';
    const mqtt=quality.includes('mqtt')||quality.includes('non_rf');
-   const color=confirmed?'#ffff00':mqtt?'#357ec7':'#ffbd50';
+   const color=confirmed?$('mapRfColor').value:mqtt?$('mapInternetColor').value:'#ffbd50';
    const line=L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],{
-      color,weight:confirmed?2:mqtt?3:2,dashArray:confirmed?null:mqtt?'2 7':'6 8',opacity:.9});
+      color,weight:confirmed?Number($('mapRfWidth').value):mqtt?Number($('mapInternetWidth').value):2,dashArray:confirmed?null:mqtt?'2 7':'6 8',opacity:.9});
    const descr=confirmed?'RF direto comprovado':mqtt?'Internet/MQTT — não RF':
       quality.startsWith('neighbor')?'Vizinhança indicada pelo nó, ainda não confirmada por receptor':
       'Trecho de traceroute observado, RF direto não confirmado';
@@ -406,6 +509,7 @@ function renderMap(){
   const coords=[];
   for(const n of available){
    if(!allowed.has(n.node_num)||!validPos(n))continue;
+   if($('mapIdentifiedOnly').checked&&!n.long_name&&!n.short_name)continue;
    const point=[n.latitude,n.longitude];
    const marker=L.circleMarker(point,{radius:7,color:'#ffffff',
      fillColor:Date.now()-n.last_seen_ms<7200000?'#2ecc71':'#e9a94d',fillOpacity:.95,weight:1});
@@ -431,7 +535,7 @@ function showNode(n){const title=`${n.long_name||n.node_id} (${n.short_name||'�
 function positionSuggestions(){const pop=$('mapSearchMatches'),el=$('mapSearchInput');if(pop.hidden)return;const r=el.getBoundingClientRect(),w=pop.getBoundingClientRect().width;pop.style.left=Math.max(5,Math.min(r.left,window.innerWidth-w-6))+'px';pop.style.top=(r.bottom+5)+'px';}
 function suggest(){const q=$('mapSearchInput').value;const pop=$('mapSearchMatches');if(!q.trim()){pop.hidden=true;pop.innerHTML='';return;}const rows=sourceMapNodes().filter(n=>matches(n,q)).slice(0,15);pop.innerHTML=rows.map(n=>`<button data-num="${n.node_num}"><b>${esc(n.long_name||n.node_id)}</b><br><small>${esc(n.short_name)} · ${esc(n.node_id)} · ${validPos(n)?'Com posição':'Sem localização'}</small></button>`).join('')||'<div style="padding:12px">Nenhum nó encontrado</div>';pop.hidden=false;positionSuggestions();pop.querySelectorAll('button[data-num]').forEach(b=>b.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(b.dataset.num));pop.hidden=true;showNode(n);});}
 $('mapSearchInput').addEventListener('input',()=>{renderMap();suggest();});$('mapSearchInput').addEventListener('keydown',ev=>{if(ev.key==='Escape'){$('mapSearchInput').value='';renderMap();suggest();}if(ev.key==='Enter'){const rows=sourceMapNodes().filter(n=>matches(n,$('mapSearchInput').value));if(rows.length===1){showNode(rows[0]);$('mapSearchMatches').hidden=true;}}});$('mapSearchClear').onclick=()=>{$('mapSearchInput').value='';renderMap();suggest();$('mapSearchInput').focus();};
-$('mapType').onchange=setTiles;$('showMapNodes').onchange=renderMap;$('showMapLinks').onchange=renderMap;$('showNames').onchange=renderMap;$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
+$('mapType').onchange=()=>{setTiles();storeMapControls();};$('showMapNodes').onchange=renderMap;$('showMapLinks').onchange=renderMap;$('showNames').onchange=renderMap;$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
 $('layersBtn').onclick=()=>{const panel=$('mapLayersPanel');panel.hidden=!panel.hidden;if(!panel.hidden){const r=$('layersBtn').getBoundingClientRect();panel.style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';panel.style.top=r.bottom+6+'px';}};$('closeLayers').onclick=()=>{$('mapLayersPanel').hidden=true;};window.addEventListener('resize',()=>{positionSuggestions();if(!$('mapLayersPanel').hidden){const r=$('layersBtn').getBoundingClientRect();$('mapLayersPanel').style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';$('mapLayersPanel').style.top=r.bottom+6+'px';}});$('playback').addEventListener('scroll',positionSuggestions,{passive:true});
 
 
