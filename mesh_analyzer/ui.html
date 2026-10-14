@@ -46,6 +46,15 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #radarStatus{font-size:11px;color:var(--muted)}
 .mentions{position:absolute;bottom:60px;left:22px;max-height:240px;overflow:auto;background:#1c3040;border:1px solid #5a7787;border-radius:7px;min-width:240px;z-index:1000}.mentions[hidden]{display:none}.mentions button{display:block;width:100%;text-align:left;border:0;border-radius:0;border-bottom:1px solid var(--line)}
 @media(max-width:850px){#trafficDetails.active{max-width:36vw;min-width:200px}.statsToolbar{overflow-x:auto;flex-wrap:nowrap}.reportBody{padding:6px}}
+#topUpdate{border-radius:9px;font-size:10px;font-weight:700;white-space:nowrap;padding:7px;max-width:200px}
+#topUpdate.waiting{border-color:#718396;color:#b7c8d1}
+#topUpdate.latest{background:#164a36;border-color:#238c5e;color:#a1e7bf}
+#topUpdate.available{background:#6e4914;border-color:#d29b2c;color:#ffe2a0;animation:versionPulse 1.9s ease-in-out infinite}
+#topUpdate.error{border-color:#8e6772;color:#ffd1d4}
+@keyframes versionPulse{50%{box-shadow:0 0 0 3px #efb94750}}
+@media(prefers-reduced-motion:reduce){#topUpdate.available{animation:none}}
+.deviceSection{border:1px solid var(--line);border-radius:8px;padding:11px;background:#172837;margin:12px 0}
+.deviceSection summary{font-weight:700;cursor:pointer}.deviceSection .formGrid{margin-top:12px}
 </style>
 </head>
 <body>
@@ -53,7 +62,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <header><div class="brand"><span class="logo">◉</span><div><h1>PT2VHF Mesh Analyzer <small>v0.2.0</small></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
-</nav><span class="version" id="connectedStatus">Carregando fontes...</span></header>
+</nav><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.3.0 · verificando...</button><span class="version" id="connectedStatus">Carregando fontes...</span></header>
 <section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> fontes conectadas</div><div class="metric"><b id="summaryLinks">0</b> enlaces observados</div></section>
 <section class="view active" id="viewMap">
 <div id="playback">
@@ -93,7 +102,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <button id="statsReload">Atualizar tudo</button><small id="statsUpdated" class="muted"></small><button id="statsPDF">Relatório / PDF</button><button id="statsCSV">Exportar CSV</button></div>
 <div class="subtabs" id="statsTabs"></div><div class="reportBody" id="statsContents"><div id="statsGrid" class="statGrid"></div></div></section>
 <section class="view" id="viewAutomations"><div class="toolbar"><h2>Automações</h2></div><div class="panels"><div class="card"><h3>Arquitetura preparada para bots</h3><p>O motor independente já recebe mensagens e salva os dados no SQLite. Bots PING/CLIMA, consultas agendadas e regras RF da aplicação anterior serão migrados em etapas. <strong>Não há bot automático transmitindo RF nesta versão.</strong></p></div></div></section>
-<section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Fontes</button><button class="settingsTab" data-panel="lora">LoRa</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="general">Geral</button></div>
+<section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Fontes</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="general">Geral</button></div>
 <section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Fontes de dados e rádios</h3><p class="muted">Cadastre várias fontes independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.2.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
 <div class="card"><h3 id="sourceFormTitle">Adicionar fonte</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da fonte</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
 <div class="field src serial"><label for="sourcePort">Porta serial / COM</label><input id="sourcePort" placeholder="COM3" list="serialOptions"><datalist id="serialOptions"></datalist></div>
@@ -107,20 +116,39 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
     <div class="actions"><label for="loraSource">Dispositivo:</label><select id="loraSource"></select><button id="loraRead">Ler do rádio</button></div>
     <p class="muted" id="loraStatus">Selecione um rádio conectado para consultar a configuração.</p>
   </div>
-  <div class="card"><h3>Parâmetros LoRa</h3><div class="formGrid" id="loraFields"></div>
-    <div class="actions" style="margin-top:14px"><button id="loraSave" disabled>Revisar e aplicar alterações LoRa</button><button id="loraExport" disabled>Exportar cópia sem segredos (JSON)</button></div>
-    <p class="notice">A operação envia o comando ao rádio, mas não comprova ACK, gravação persistente nem leitura posterior. Região, potência e frequência devem respeitar as regras locais e o hardware.</p>
+  <div class="card"><h3>Parâmetros disponíveis do dispositivo</h3>
+  <p class="muted">Altere os campos suportados pelo schema do rádio e revise tudo antes do envio. Campos sensíveis, canais e módulos ficam somente leitura nesta etapa. A gravação é sequencial, não atômica.</p>
+  <div id="deviceFields"></div>
+  <div id="loraFields" hidden></div>
+  <div class="actions"><button id="loraSave" disabled>Salvar todas as alterações</button><button id="loraExport" disabled>Exportar snapshot sem segredos</button></div>
+  <p class="notice">Confirmação de envio não equivale a persistência/ACK. Mudanças de frequência, região, rede, Bluetooth ou canais podem interromper comunicação; faça backup e releia após reiniciar.</p>
   </div>
-  <div class="card"><h3>Outras configurações disponíveis (somente leitura)</h3>
-    <p class="muted">As seções Device, Position, Power, Network, Bluetooth, módulos e canais podem ser inspecionadas aqui. Campos sensíveis, chaves e senhas são ocultados. Edição avançada e restauração serão incorporadas em versão posterior.</p>
+  <div class="card"><h3>Inventário e parâmetros adicionais (somente leitura)</h3>
     <pre id="loraOther" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto">Nenhum rádio consultado.</pre>
   </div>
 </section>
 <section class="settingsPanel" id="settingsRetention"><div class="card"><h3>Retenção individual dos dados</h3><p class="muted">Configuração persistente do banco SQLite. <b>"Nunca" é o padrão</b>: nada é apagado automaticamente. Um prazo remove registros anteriores à idade definida; a limpeza executa a cada hora ou pelo botão abaixo.</p><form id="retentionForm"><div class="formGrid" id="retentionFields"></div><div class="actions" style="margin-top:15px"><button type="submit">Salvar retenções</button><button type="button" class="danger" id="retentionCleanup">Executar limpeza agora</button></div></form></div></section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.2.0</b> — versão inicial Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div><div class="card"><h3>Atualizações do aplicativo</h3>
-  <div class="actions"><label for="updateInterval">Verificar a cada (minutos):</label><input type="number" id="updateInterval" min="5" max="1440" step="1" style="width:100px" value="15"><button id="updateCheck">Verificar agora</button><a id="updateLink" href="https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest" target="_blank" rel="noopener noreferrer">Abrir último lançamento</a></div>
-  <p id="updateStatus" class="muted">A verificação depende de acesso ao GitHub. A instalação é manual, para não interromper a recepção RF sem consentimento.</p>
-</div></section></section>
+<section class="settingsPanel" id="settingsSystem">
+<div class="card"><h3>Inicialização</h3>
+  <label><input id="systemOpenBrowser" type="checkbox"> Abrir uma página web no navegador ao iniciar</label>
+  <p class="muted">Desativado por padrão. A janela própria do PT2VHF Mesh Analyzer abre sempre, mesmo sem navegador.</p>
+  <button id="systemOpenNow">Abrir interface local no navegador agora</button>
+</div>
+<div class="card"><h3>Compartilhamento Web na rede</h3>
+  <label><input id="systemAllowLan" type="checkbox" disabled> Permitir acesso de outros computadores pela Web</label>
+  <p class="warn">Indisponível nesta versão: o acesso LAN só poderá ser ativado após implementação de autenticação e proteção de todas as APIs. O aplicativo permanece restrito a 127.0.0.1.</p>
+</div>
+<div class="card"><h3>Atualizações</h3>
+  <div class="actions"><label for="updateInterval">Verificar novas versões a cada</label>
+  <input type="number" id="updateInterval" min="5" max="1440" value="15" step="1" style="width:85px"> minutos
+  <button id="updateCheck">Verificar agora</button>
+  <a id="updateLink" href="https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest" target="_blank" rel="noopener noreferrer">Ver releases</a></div>
+  <p id="updateStatus" class="muted">Aguardando verificação da versão no GitHub.</p>
+  <p id="updateSchedule" class="muted"></p>
+</div>
+<div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
+</section>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.2.0</b> — versão inicial Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Fontes</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a fonte. Quando conectada, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.2.0.</p></div></div></section>
 </div>
 <div id="toast" role="status"></div>
