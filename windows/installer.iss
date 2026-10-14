@@ -1,5 +1,5 @@
 #define AppName "PT2VHF Mesh Analyzer"
-#define AppVersion "0.6.0"
+#define AppVersion "0.6.1"
 [Setup]
 AppId={{8AB1D4E5-9A9C-46DC-8C24-5D89A6D98701}
 AppName={#AppName}
@@ -15,14 +15,15 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 UninstallDisplayIcon={app}\PT2VHF-Mesh-Analyzer.exe
 WizardStyle=modern
+SetupIconFile=..\branding\mesh-analyzer.ico
 CloseApplications=yes
 RestartApplications=no
 
 [Files]
 Source: "..\dist\PT2VHF-Mesh-Analyzer.exe"; DestDir: "{app}"; Flags: ignoreversion
 [Icons]
-Name: "{group}\PT2VHF Mesh Analyzer"; Filename: "{app}\PT2VHF-Mesh-Analyzer.exe"
-Name: "{autodesktop}\PT2VHF Mesh Analyzer"; Filename: "{app}\PT2VHF-Mesh-Analyzer.exe"; Tasks: desktopicon
+Name: "{group}\PT2VHF Mesh Analyzer"; Filename: "{app}\PT2VHF-Mesh-Analyzer.exe"; IconFilename: "{app}\PT2VHF-Mesh-Analyzer.exe"; AppUserModelID: "PT2VHF.MeshAnalyzer"
+Name: "{autodesktop}\PT2VHF Mesh Analyzer"; Filename: "{app}\PT2VHF-Mesh-Analyzer.exe"; IconFilename: "{app}\PT2VHF-Mesh-Analyzer.exe"; AppUserModelID: "PT2VHF.MeshAnalyzer"; Tasks: desktopicon
 [Tasks]
 Name: desktopicon; Description: "Criar atalho na área de trabalho"; Flags: unchecked
 [Run]
