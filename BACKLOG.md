@@ -67,6 +67,10 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
 
 **Situação:** itens #5, #8–#13 parcialmente implementados na v0.2.0; pendências e validações continuam nas issues.
 
+## Instalador — impedimento ao atualizar com aplicação aberta (14/10/2026)
+
+- [**#15 — Instalação/atualização bloqueada por instâncias abertas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/15): o instalador Inno Setup da v0.2.0 informa que existem aplicações abertas e não consegue pará-las. Detectar a instância correta do **PT2VHF Mesh Analyzer**; solicitar fechamento seguro, encerrar atividade de fontes LoRa e SQLite, aguardar liberação do executável (incluindo PyInstaller onefile), e continuar automaticamente. Se falhar, oferecer Tentar novamente/Cancelar e término forçado somente da instância validada, com consentimento. **Não encerrar navegadores, outros softwares/PT2VHF ou processos de terceiros.** Preservar banco, configurações e instalação anterior em caso de erro; testar em Windows 11 instalado, com aplicativo aberto e durante atualização. Pendente de implementação/validação.
+
 ## Próximos passos (não implementados ou ainda não validados)
 
 1. **Validar rádio físico no Windows 11:** USB/Serial, TCP/IP e BLE; conferir recepção, envio privado, ACK/NAK, múltiplas fontes e reconexões.
