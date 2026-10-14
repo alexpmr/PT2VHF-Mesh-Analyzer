@@ -692,7 +692,7 @@ $('messageSend').onclick=async()=>{try{const text=$('messageText').value.trim();
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
- ['energia','Energia'],['anomalias','Pontos de atenção'],['acessos','Acessos']];
+ ['energia','Energia'],['anomalias','Pontos de atenção']];
 let currentStatTab='geral',statData=null,lastStatsFetch=0,statsLoading=false;
 const fmtCount=v=>v==null?'Sem dados':Number(v).toLocaleString('pt-BR');
 const fmtMeasure=(v,u)=>v==null?'Não medido':Number(v).toFixed(1).replace('.',',')+' '+u;
@@ -712,22 +712,30 @@ function renderStats(){
  const d=statData,c=d?.counts;
  if(!d){$('statsContents').innerHTML='<div class="statsCard">Aguardando dados analíticos do SQLite.</div>';return;}
  const kpis=[
-  ['Nós originadores no período',c.active_originators,'Conhecidos: '+c.nodes_known],
-  ['Pacotes observados',c.observations,'MQTT: '+c.mqtt+' · Rádio: '+c.receiver],
-  ['Mensagens',c.messages,'Registros na base própria'],
+  ['Nós ativos no período',c.active_originators,fmtCount(c.nodes_known)+' conhecidos'],
+  ['Pacotes',c.observations,'RX observados: '+fmtCount(c.rx_observations)+' · TX: '+
+                        (c.tx_observations==null?'não medido':fmtCount(c.tx_observations))],
+  ['Mensagens',c.messages,'tráfego observado'],
   ['Traceroutes',c.traceroutes,'Pacotes observados'],
-  ['Relações observadas',c.relations_observed,'Não equivale a RF direto'],
-  ['SNR médio',fmtMeasure(c.mean_snr,'dB'),'Apenas rádio com métrica'],
-  ['RSSI médio',fmtMeasure(c.mean_rssi,'dBm'),'Apenas rádio com métrica'],
-  ['Pontos de atenção',c.alerts,'Críticos: '+c.critical]
+  ['Relações observadas',c.relations_observed,'origem → destino; não equivale a RF direto'],
+  ['SNR médio',fmtMeasure(c.mean_snr,'dB'),'Apenas amostras RF válidas'],
+  ['RSSI médio',fmtMeasure(c.mean_rssi,'dBm'),'Apenas amostras RF válidas'],
+  ['Pontos de atenção',c.alerts,fmtCount(c.critical)+' críticos']
  ];
  let html='';
  switch(currentStatTab){
  case 'geral':
-   html='<div class="statGrid">'+kpis.map(([label,v,sub])=>'<div class="stat"><b>'+esc(typeof v==='number'?fmtCount(v):v)+'</b><span>'+esc(label)+'</span><div class="muted" style="font-size:11px;margin-top:6px">'+esc(sub)+'</div></div>').join('')+'</div>';
-   html+=statsHead('Resumo do período',fmtCount(c.active_originators)+' nós originaram '+fmtCount(c.observations)+' observações de pacotes ('+
-       fmtCount(c.receiver)+' de rádios e '+fmtCount(c.mqtt)+' via MQTT), incluindo '+fmtCount(c.messages)+' mensagens, '+fmtCount(c.traceroutes)+
-       ' traceroutes e '+fmtCount(c.telemetry)+' telemetrias. Há '+fmtCount(c.alerts)+' pontos de atenção. Origem e destino não representam enlace direto.');
+   html='<div class="statGrid stats-overview">'+kpis.map(([label,v,sub])=>'<div class="stat"><b>'+esc(typeof v==='number'?fmtCount(v):v)+'</b><span>'+esc(label)+'</span><div class="muted" style="font-size:11px;margin-top:6px">'+esc(sub)+'</div></div>').join('')+'</div>';
+   const leader=d.top_originators?.[0];
+   html+='<div class="stats-summary"><b>'+fmtCount(c.active_originators)+'</b> nós originaram tráfego no período selecionado, de <b>'+fmtCount(c.nodes_known)+'</b> nós conhecidos. '+
+      'Foram registradas <b>'+fmtCount(c.observations)+'</b> observações de pacotes (RX observados: '+fmtCount(c.rx_observations)+
+      '; TX: '+(c.tx_observations==null?'não medido':fmtCount(c.tx_observations))+
+      '; via MQTT: '+fmtCount(c.mqtt)+'), incluindo '+fmtCount(c.messages)+' mensagens, '+
+      fmtCount(c.traceroutes)+' traceroutes e '+fmtCount(c.telemetry)+' telemetrias. '+
+      (leader?'O nó que mais originou tráfego observado foi <b>'+esc(leader.name)+'</b>, com '+
+          fmtCount(leader.count)+' pacotes. ':'')+
+      'A análise registra '+fmtCount(c.alerts)+' pontos de atenção, sendo '+fmtCount(c.critical)+
+      ' críticos. Relações lógicas não equivalem a enlaces RF diretos.</div>';
    break;
  case 'rede':
    html=statsHead('Inventário conhecido',statsTbl(['Indicador','Quantidade'],[
@@ -735,6 +743,9 @@ function renderStats(){
     ['Fontes com observações',c.sources_observed],['Nós com comunicação recente no catálogo',c.nodes_recent_catalog]]));
    html+=statsHead('Fontes',statsTbl(['Fonte','Tipo','Conexão','Pacotes'],
        d.source_breakdown.map(x=>[x.name,x.kind,x.connection,x.count])));
+   html+=statsHead('Nós com observação recente',statsTbl(['Nó','Última recepção','Role','Hardware'],
+     d.nodes.filter(x=>x.last_seen_ms>0).slice(0,35).map(x=>[
+       x.long_name||x.short_name||x.node_id,age(x.last_seen_ms),x.role||'—',x.hw_model||'—'])));
    break;
  case 'rf':
    html=statsHead('Métricas observadas',
@@ -750,11 +761,13 @@ function renderStats(){
    break;
  case 'ranking':
    html=statsHead('Nós que mais originam tráfego',statsTbl(['Nó','Pacotes'],d.top_originators.map(x=>[x.name,x.count])));
+   html+=statsHead('Ranking visual por observações',statBar(d.top_originators.slice(0,10)));
    html+=statsHead('Enlaces RF diretos mais longos','Ranking indisponível: a base ainda não possui comprovação suficiente de adjacência RF e posições sincronizadas. Relações observadas não são tratadas como RF direto.');
    break;
  case 'routing':
    html=statsHead('Distribuição por saltos',statsTbl(['Saltos calculáveis','Pacotes'],d.hops.map(x=>[x.hops,x.count])));
    html+=statsHead('Categorias de relações',statsTbl(['Evidência','Relações','Observações'],d.link_types.map(x=>[x.quality,x.count,x.observations])));
+   html+=statsHead('Limitações de roteamento','Apenas saltos efetivamente recuperados do protocolo são incluídos. Não é possível reconstruir todo percurso de broadcasts multissalto sem observações suficientes.');
    break;
  case 'trafego':
    html=statsHead('Pacotes por tipo',statBar(d.packet_types));
@@ -762,22 +775,29 @@ function renderStats(){
    html+=statsHead('Séries horárias',statsTbl(['Hora UTC','Observações','MQTT'],d.hourly.map(x=>[new Date(x.timestamp_ms).toLocaleString('pt-BR'),x.count,x.mqtt])));
    break;
  case 'consultas':
-   html=statsHead('Consultas Meshtastic','Tráfego de consultas está incluído nas contagens por tipo. Taxas de resposta e timeout precisam de correlação TX/ACK/RX confiável; sem isso não serão estimadas.');
+   html=statsHead('Tipos relacionados a consultas',statsTbl(['Portnum/tipo','Observações'],
+     d.packet_types.filter(x=>/TRACEROUTE|NODEINFO|ADMIN|ROUTING|POSITION|TELEMETRY/.test(x.name)).map(x=>[x.name,x.count])));
+   html+=statsHead('Status de consultas','Taxas de resposta, ACK e timeout dependem de registros TX/RX correlacionados; indisponíveis onde ainda não houver evidência.');
    break;
  case 'chat':
    html=statsHead('Mensagens',statsTbl(['Indicador','Quantidade'],[['Mensagens observadas',c.messages]]));
+   html+=statsHead('Direção informada no registro de mensagens',statsTbl(['Direção','Mensagens'],
+      (d.message_by_direction||[]).map(x=>[x.direction,x.count])));
+   html+=statsHead('Canais observados',statsTbl(['Canal','Mensagens'],
+      (d.message_by_channel||[]).map(x=>[x.channel,x.count])));
    html+=statsHead('Privacidade','Conteúdo de mensagens privadas nunca integra relatório técnico por padrão.');
    break;
  case 'energia':
-   html=statsHead('Telemetria de energia',statsTbl(['Nó','Bateria','Tensão','Último contato'],
+   html=statsHead('Resumo de bateria',statsTbl(['Condição','Nós'],
+    [['Bateria inferior a 10%',d.nodes.filter(x=>x.battery!=null&&x.battery>=0&&x.battery<10).length],
+     ['Bateria entre 10 e 19%',d.nodes.filter(x=>x.battery!=null&&x.battery>=10&&x.battery<20).length],
+     ['Alimentação externa indicada (101)',d.nodes.filter(x=>x.battery===101).length]]));
+   html+=statsHead('Telemetria de energia',statsTbl(['Nó','Bateria','Tensão','Último contato'],
     d.nodes.filter(x=>x.battery!=null||x.voltage!=null).slice(0,100).map(x=>[x.long_name||x.node_id,
      x.battery===101?'EXT':x.battery==null?'Não medido':x.battery+'%',fmtMeasure(x.voltage,'V'),age(x.last_seen_ms)])));
    break;
  case 'anomalias':
    html=statsHead('Pontos de atenção',statsTbl(['Severidade','Nó','Ocorrência'],d.alerts.map(x=>[x.severity,x.node,x.description])));
-   break;
- case 'acessos':
-   html=statsHead('Auditoria de acessos','A interface permanece limitada a localhost por segurança. Não há telemetria de sessões autenticadas; nenhum acesso externo foi inferido.');
    break;
  }
  $('statsContents').innerHTML=html+'<p class="muted">'+esc(d.scope)+' | Atualizado '+new Date(d.generated_ms).toLocaleString('pt-BR')+'</p>';
@@ -1089,7 +1109,11 @@ setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
 
 async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources')]);state=results[0];nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';renderMap();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
-resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){const slug=location.pathname.split('/').pop();if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;}
+resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
+ const slug=location.pathname.split('/').pop();
+ if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;
+ else if(slug==='acessos')history.replaceState({},'','/estatisticas/geral');
+}
 setView(initialView,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
 </script>
 </body></html>
