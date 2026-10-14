@@ -1,16 +1,16 @@
-# PT2VHF Mesh Analyzer — v0.2.0
+# PT2VHF Mesh Analyzer — v0.3.0
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 11 x64 com banco próprio SQLite, fontes Meshtastic e análises locais. A arquitetura também permite evolução para Linux/macOS.
 
 ## Downloads — Windows 11 x64
 
-**Versão estável publicada: [v0.2.0](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.2.0)**
+**Versão candidata — os links serão ativados após a publicação: [v0.3.0](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.3.0)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
-| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.2.0-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.2.0/PT2VHF-Mesh-Analyzer-v0.2.0-Setup-Win11-x64.exe)** |
-| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.2.0-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.2.0/PT2VHF-Mesh-Analyzer-v0.2.0-Portable-Win11-x64.zip)** |
-| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.2.0/SHA256SUMS.txt) |
+| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.3.0-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.3.0/PT2VHF-Mesh-Analyzer-v0.3.0-Setup-Win11-x64.exe)** |
+| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.3.0-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.3.0/PT2VHF-Mesh-Analyzer-v0.3.0-Portable-Win11-x64.zip)** |
+| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.3.0/SHA256SUMS.txt) |
 
 **Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
 [Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
@@ -20,7 +20,7 @@
 
 **Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable pode ser extraído e executado sem instalação. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
 
-### Destaques da v0.2.0
+### Destaques da v0.3.0
 
 - **Estatísticas (11 subabas)**: Visão Geral, Rede, RF, Ranking, Routing, Tráfego, Consultas, Chat, Energia, Pontos de atenção e Acessos. Dados do SQLite próprio, filtros por período, fonte e nó, evolução horária, tabelas e médias RF quando medidas.
 - **Relatório técnico PDF nativo e offline**: capítulos com inventário, fontes, tráfego, RX/RSSI/SNR, telemetria LocalStats quando disponível, relações observadas, diagnóstico de possíveis interferências/colisões, hipóteses e ações técnicas. Não necessita Home Assistant nem MeshMonitor.
@@ -79,16 +79,16 @@ O GitHub Actions de `.github/workflows/windows.yml` compila o EXE, o ZIP portát
 - Windows: `%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3`.
 - Linux/macOS (para desenvolvimento): `$XDG_DATA_HOME/PT2VHF-Mesh-Analyzer` ou `~/.local/share/PT2VHF-Mesh-Analyzer`.
 - Variável opcional de teste: `PT2VHF_MESH_DATA`.
-- Nunca coloque o SQLite, arquivo `.env` ou credenciais no repositório. Senhas MQTT são gravadas localmente no SQLite; **não há criptografia de credenciais em repouso na v0.2.0**. Evite computadores compartilhados e restrinja as permissões ao usuário do sistema.
+- Nunca coloque o SQLite, arquivo `.env` ou credenciais no repositório. Senhas MQTT são gravadas localmente no SQLite; **não há criptografia de credenciais em repouso na v0.3.0**. Evite computadores compartilhados e restrinja as permissões ao usuário do sistema.
 
-## Limites honestos da v0.2.0
+## Limites honestos da v0.3.0
 
-- O **visual e as abas** foram recriados a partir do padrão Traffic Analyzer; a v0.2.0 **não é uma cópia funcional completa** da v1.62.1. Funcionalidades de dashboard avançado ainda não implementadas em paridade, bots PING/CLIMA, integrações geográficas/APRS, rankings RF diretos comprovados, consulta ativa NodeInfo e cobertura especializada permanecem pendentes.
+- O **visual e as abas** foram recriados a partir do padrão Traffic Analyzer; a v0.3.0 **não é uma cópia funcional completa** da v1.62.1. Funcionalidades de dashboard avançado ainda não implementadas em paridade, bots PING/CLIMA, integrações geográficas/APRS, rankings RF diretos comprovados, consulta ativa NodeInfo e cobertura especializada permanecem pendentes.
 - **Hardware físico ainda não foi testado.** USB e TCP utilizam interfaces oficiais Meshtastic Python. BLE requer identificador apropriado e suporte da plataforma/firmware; conectar diversos BLE simultâneos pode depender do hardware e do SO. MQTT armazena envelopes Meshtastic; payloads criptografados sem chaves conhecidas não são decodificados, e MQTT **não transmite** RF.
 - O radio Meshtastic deve usar firmware compatível e **a mesma porta não deve ser ocupada por outro cliente**. Fontes múltiplas podem escutar rádios distintos; transmissões acontecem somente na fonte escolhida.
-- Para ser confiável, um enlace direto RF necessita evidência por hop, não apenas um registro de traceroute. Na v0.2.0, o mapa diferencia rotas observadas de RF confirmado.
+- Para ser confiável, um enlace direto RF necessita evidência por hop, não apenas um registro de traceroute. Na v0.3.0, o mapa diferencia rotas observadas de RF confirmado.
 - A interface usa Leaflet e mapas-base online; **recepção e banco independem da internet**, mas a cartografia requer acesso à internet e pode ficar vazia offline.
-- A interface HTTP da v0.2.0 é apenas localhost. Acesso remoto exigirá autenticação/TLS antes de permitir publicação na rede.
+- A interface HTTP da v0.3.0 é apenas localhost. Acesso remoto exigirá autenticação/TLS antes de permitir publicação na rede.
 - O gerenciamento LoRa confirma apenas que o comando foi aceito pela API local, não o readback persistente do rádio. Campos de segurança e PSK não são editáveis nesta tela.
 - O tratamento de ACK/retransmissões e estados detalhados de entrega será ampliado. Estado inicial `accepted_by_radio` **não significa entregue nem lido**.
 
