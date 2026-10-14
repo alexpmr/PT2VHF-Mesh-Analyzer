@@ -147,7 +147,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
             if not self._local_host():return self._error("Host não autorizado",403)
             path=urllib.parse.urlsplit(self.path).path
             try:
-                if path in ("/","/mapa","/nos","/trafego","/mensagens","/estatisticas","/automacoes","/configuracoes","/ajuda") or path.startswith("/estatisticas/"):
+                if path in ("/","/mapa","/nos","/trafego","/mensagens","/estatisticas","/automacoes","/configuracoes","/ajuda") or path.startswith("/estatisticas/") or path.startswith("/configuracoes/"):
                     content=doc.replace("__CSRF_TOKEN__",html.escape(csrf,quote=True)).encode("utf-8")
                     self.send_response(200);self.send_header("Content-Type","text/html; charset=utf-8")
                     self.send_header("X-Frame-Options","DENY")
