@@ -133,7 +133,7 @@ class APITests(unittest.TestCase):
         try:
             with urllib.request.urlopen(url+"/health") as resp:
                 from mesh_analyzer import __version__
-            self.assertEqual(json.loads(resp.read())["version"],__version__)
+                self.assertEqual(json.loads(resp.read())["version"],__version__)
             with urllib.request.urlopen(url+"/") as resp:
                 self.assertIn(b"id=\"settingsRetention\"",resp.read())
             body=json.dumps({"name":"USB bench","kind":"serial","config":{"port":"COM5"},"enabled":False}).encode()
