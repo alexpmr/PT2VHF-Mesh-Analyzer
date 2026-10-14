@@ -75,6 +75,22 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #updateProgress{width:100%}
 @media(max-width:1050px){.stats-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.mapConfigGrid,.stats-overview{grid-template-columns:1fr}}
+
+.settingsSaveFooter{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--line);background:#182836;flex:0 0 auto;flex-wrap:wrap;z-index:3}
+.settingsSaveFooter button{font-weight:750;background:#b99116;color:#0c1a22;border:1px solid #edc638}
+.settingsSaveFooter button:disabled{background:#435260;color:#becbd5}
+.nodeDetailOverlay{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;padding:15px;background:#040910c4}
+.nodeDetailOverlay.open{display:flex}
+.nodeDetail{width:min(1060px,97vw);min-width:min(500px,96vw);height:min(82vh,800px);max-width:98vw;max-height:94vh;resize:both;overflow:auto;border-radius:9px;border:1px solid #607487;background:#16242f;box-shadow:0 16px 50px #000b}
+.nodeDetailHeader{position:sticky;top:0;display:flex;gap:10px;align-items:center;padding:12px;background:#1b2d3b;border-bottom:1px solid var(--line);z-index:2;cursor:move}
+.nodeDetailHeader strong{margin-right:auto}
+.nodeDetailBody{padding:14px}.nodeDetailGrid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px 20px}
+.nodeField{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #354656;padding:5px 0;gap:10px}
+.nodeField .value{overflow-wrap:anywhere}.nodeSection{margin:15px 0;border-top:1px solid #3e5364;padding-top:12px}
+.nodeSection h3{margin:0 0 10px;color:#e4b800}
+.nodeQueryGrid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:7px}
+.nodeQueryRow{padding:9px;background:#1d303e;border:1px solid #3d5566;border-radius:5px}.nodeQueryRow progress{width:100%;height:5px}
+@media(max-width:700px){.nodeDetailGrid,.nodeQueryGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -177,9 +193,12 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 </div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.5.0</b> — versão inicial Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section></section>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.5.0</b> — versão inicial Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
+<small class="muted">Aplicar no rádio e Salvar fonte continuam ações separadas.</small></div></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Fontes</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a fonte. Quando conectada, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.5.0.</p></div></div></section>
 </div>
+<div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="updateDialog" role="dialog" aria-modal="true" aria-labelledby="updateTitle"><div class="updateBox">
 <h3 id="updateTitle">Atualização do Mesh Analyzer</h3><p id="updateSummary"></p>
 <div id="updateNotes"></div><p id="updateProgressText" class="muted"></p><progress id="updateProgress" max="100" value="0" hidden></progress>
