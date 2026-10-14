@@ -172,17 +172,21 @@ class Database:
             if "voltage" not in columns:
                 self._db.execute("ALTER TABLE nodes ADD COLUMN voltage REAL")
             self._db.execute("INSERT OR IGNORE INTO settings(key,value) VALUES('retention',?)", (json.dumps(DEFAULT_RETENTION),))
-            # Existing installations retain source provenance where available.
-            self._db.execute("""INSERT OR IGNORE INTO node_sources(source_id,node_num,first_seen_ms,last_seen_ms,observed)
-              SELECT last_source_id,node_num,first_seen_ms,last_seen_ms,0
-              FROM nodes WHERE last_source_id IS NOT NULL""")
-            self._db.execute("""INSERT INTO node_sources(source_id,node_num,first_seen_ms,last_seen_ms,observed)
-              SELECT source_id,from_node,MIN(timestamp_ms),MAX(timestamp_ms),1 FROM packets
-              WHERE from_node IS NOT NULL AND from_node>0 AND from_node<4294967295 GROUP BY source_id,from_node
-              ON CONFLICT(source_id,node_num) DO UPDATE SET
-                first_seen_ms=MIN(first_seen_ms,excluded.first_seen_ms),
-                last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
-                observed=MAX(observed,excluded.observed)""")
+            # Run heavy archival provenance import once, not on every startup.
+            migrated=self._db.execute("SELECT 1 FROM settings WHERE key='migrated_node_sources_v1'").fetchone()
+            if migrated is None:
+                self._db.execute("""INSERT OR IGNORE INTO node_sources(source_id,node_num,first_seen_ms,last_seen_ms,observed)
+                  SELECT last_source_id,node_num,first_seen_ms,last_seen_ms,0
+                  FROM nodes WHERE last_source_id IS NOT NULL""")
+                self._db.execute("""INSERT INTO node_sources(source_id,node_num,first_seen_ms,last_seen_ms,observed)
+                  SELECT source_id,from_node,MIN(timestamp_ms),MAX(timestamp_ms),1 FROM packets
+                  WHERE from_node IS NOT NULL AND from_node>0 AND from_node<4294967295
+                  GROUP BY source_id,from_node
+                  ON CONFLICT(source_id,node_num) DO UPDATE SET
+                    first_seen_ms=MIN(first_seen_ms,excluded.first_seen_ms),
+                    last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
+                    observed=MAX(observed,excluded.observed)""")
+                self._db.execute("INSERT INTO settings(key,value) VALUES('migrated_node_sources_v1','true')")
 
     def close(self):
         with self._lock:
