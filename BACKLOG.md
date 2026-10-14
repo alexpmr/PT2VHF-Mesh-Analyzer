@@ -93,6 +93,13 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
 
 - [**#10 — Remover Acessos de Estatísticas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10): retirar a subaba `Acessos`, mantendo somente 10 subabas, sem remover dados de auditoria técnica armazenados. Garantir navegação e URLs antigas sem tela em branco. **A v0.4.0 ainda exibe essa subaba; pendente de implementação.**
 
+## DEFEITO BLOQUEANTE — atualizador v0.5.0 não encerra o aplicativo (14/10/2026)
+
+- [**#15 — Shutdown/instalador bloqueado**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/15) / [**#2 — Atualização direta**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/2): ao atualizar pelo próprio Mesh Analyzer, o processo **continua ativo**, e o instalador só avança depois que o usuário o encerra no Gerenciador de Tarefas. **Prioridade alta / bloqueante. Ainda não corrigido.**
+- **Pontos identificados em código:** `/api/update/install` aciona `threading.Timer(0.8, shutdown)`; `request_shutdown` chama `webview.windows[0].destroy()` e assume que o loop encerrou, sem verificar conclusão; o worker externo aguarda até **90 s** pelo PID principal e falha, sem handshake ou alternativa segura. Investigar também tarefas fontes LoRa USB/Serial, BLE, TCP, MQTT, servidor HTTP e processos PyInstaller onefile; relatório do usuário é evidência da falha, mas diagnóstico técnico definitivo depende dos logs Win11.
+- **Corrigir:** shutdown gracioso verificável em etapas (interromper TX/reconexão, fechar WebView2 pelo caminho correto, HTTP, fontes e SQLite), sinalização IPC de encerramento, espera PID e filhos identificados por identidade/caminho, execução do Setup/Portable somente após liberação dos arquivos, log de fases, timeouts e retries. Plano B de término forçado **somente do próprio Mesh Analyzer identificado e com confirmação expressa**, sem encerrar apps ou processos terceiros. Se falhar, interromper a atualização preservando banco e instalação anterior.
+- **Aceite:** atualizar sem abrir Gerenciador de Tarefas, com janela aberta/minimizada, rádios ativos, WebView2, Setup/Portable Win11; após instalação reiniciar uma única instância e mostrar changelog. **Não fechar #2/#15 pelo CI; exigir ensaio real.**
+
 ## v0.5.0 — implementado no código (validação de campo pendente)
 
 - **#2 / #15 Atualização direta:** botão de nova versão abre popup, download oficial Setup/Portable com SHA256 e progresso, fechamento controlado da UI, substituição por worker externo e reinício; popup de novidades uma única vez. Testar em Windows 11 instalado e Portable em uso antes de concluir as issues. Atualizações 0.4→0.5 ainda manuais.
