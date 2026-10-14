@@ -154,8 +154,8 @@ function setTiles(){
  osm:['https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png','© OpenStreetMap contributors'],
  topo:['https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png','© OpenTopoMap contributors'],
  satellite:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','Tiles © Esri'],
- light:['https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png','© OpenStreetMap contributors © CARTO'],
- dark:['https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png','© OpenStreetMap contributors © CARTO']
+ light:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}','Tiles © Esri'],
+ dark:['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}','© OpenStreetMap contributors © CARTO']
  };
  const [url,attr]=sources[kind]||sources.osm;
  currentTiles=L.tileLayer(url,{maxZoom:18,attribution:attr}).addTo(map);
@@ -249,6 +249,7 @@ function updateTerrain(){
  }else if(terrainLayer){map.removeLayer(terrainLayer);terrainLayer=null;}
 }
 readMapSettings();
+$('terrainCut').max=$('terrainMax').value;
 let terrainRefresh=null;
 for(const id of ['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity']){
  $(id).addEventListener('change',()=>{
