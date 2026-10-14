@@ -137,14 +137,14 @@ def calculate(db, params=None, connection_status=None):
         for a,b in zip(samples,samples[1:]):
             if a["rx_good"] is None or a["rx_bad"] is None or b["rx_good"] is None or b["rx_bad"] is None:
                 continue
-            good = b["rx_good"] - a["rx_good"]
+            total = b["rx_good"] - a["rx_good"]
             bad = b["rx_bad"] - a["rx_bad"]
-            # LocalStats RX good/bad are distinct; denominator is valid+invalid.
-            # Skip resets and empty windows; these are NOT hardware CRC counters.
-            if good < 0 or bad < 0 or good+bad == 0:
+            # LocalStats num_packets_rx is received total, num_packets_rx_bad
+            # is an invalid subset; neither is an explicit CRC counter.
+            if total <= 0 or bad < 0 or bad > total:
                 continue
-            rates.append((good,bad))
-        good = sum(x for x,_ in rates)
+            rates.append((total,bad))
+        total_rx = sum(x for x,_ in rates)
         bad = sum(y for _,y in rates)
         rf_summary.append({"source":source, "node":node_names.get(node, f"!{node:08x}"),
                            "node_num":node,"samples":len(samples),
@@ -153,9 +153,9 @@ def calculate(db, params=None, connection_status=None):
                            "air_util": newest["air_util"],
                            "voltage": newest["voltage"],
                            "battery": newest["battery"],
-                           "rx_good_delta": good if rates else None,
+                           "rx_total_delta": total_rx if rates else None,
                            "rx_bad_delta": bad if rates else None,
-                           "rx_invalid_percent": round(100*bad/(good+bad),2) if good+bad else None,
+                           "rx_invalid_percent": round(100*bad/total_rx,2) if total_rx else None,
                            "crc_error_percent": None,
                            "crc_note": "Contador específico de CRC não disponível; RX inválido ≠ erro de CRC."})
     return {
