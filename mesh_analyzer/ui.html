@@ -610,7 +610,7 @@ $('statsCSV').onclick=()=>{
  a.href=url;a.download='PT2VHF_Estatisticas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 
-function showSettings(panel){document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));if(panel==='sources')renderSources();if(panel==='retention')renderRetention();if(panel==='lora')renderLoraSources();}
+function showSettings(panel){document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));if(panel==='sources')renderSources();if(panel==='retention')renderRetention();if(panel==='lora')renderLoraSources();if(panel==='system')renderSystem();}
 document.querySelectorAll('.settingsTab').forEach(b=>b.onclick=()=>showSettings(b.dataset.panel));
 const kindTitles={serial:'USB/Serial',tcp:'Wi-Fi/TCP',ble:'Bluetooth LE',mqtt:'MQTT (RX)'};
 function renderSources(){const sources=state.sources;const status=state.connections;$('sourceCards').innerHTML=sources.map(s=>{const conn=status[String(s.id)]||{};const label=conn.status||(s.enabled?'Aguardando':'Desativada');const color=label==='connected'?'ok':label==='error'?'bad':label==='connecting'?'warn':'';return `<div class="sourceCard"><b>${esc(s.name)} <small class="badge">${esc(kindTitles[s.kind]||s.kind)}</small></b><p>ID ${s.id} · <span class="${color}">${esc(label)}</span> · ${Number(conn.packets||0)} pacotes nesta sessão</p>${conn.error?`<p class="bad">${esc(conn.error)}</p>`:''}<div class="sourceActions"><button data-action="edit" data-id="${s.id}">Editar</button><button data-action="enable" data-id="${s.id}" data-value="${s.enabled?'0':'1'}">${s.enabled?'Desativar':'Conectar'}</button><button data-action="delete" data-id="${s.id}" class="danger">Excluir</button></div></div>`;}).join('')||'<p class="muted">Nenhuma fonte cadastrada. Use o formulário abaixo para começar.</p>';$('sourceCards').querySelectorAll('button[data-action]').forEach(btn=>btn.onclick=async()=>{const id=Number(btn.dataset.id),action=btn.dataset.action;if(action==='edit')return editSource(id);try{if(action==='delete'){if(!confirm('Excluir esta fonte? O histórico coletado será preservado.'))return;await api('/api/sources/delete',{id});}else await api('/api/sources/enable',{id,enabled:btn.dataset.value==='1'});await refreshAll();notify('Fonte atualizada.');}catch(e){notify(e.message,true);}});}
@@ -732,35 +732,69 @@ $('loraExport').onclick=()=>{
  const link=document.createElement('a');link.href=url;link.download='PT2VHF-Mesh-Config-Redacted.json';link.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
-let updateMinutes=15,updateTimer=null;
-try{const v=Number(localStorage.getItem('pt2vhf.mesh.update_minutes'));if(Number.isInteger(v)&&v>=5&&v<=1440)updateMinutes=v;}catch(e){}
-$('updateInterval').value=updateMinutes;
-async function checkUpdates(manual=false){
+let monitorState=null,sysLoaded=false,checkingManually=false;
+function renderSystem(){
+ const cfg=state.system||{open_browser_on_start:false,allow_lan_access:false,update_minutes:15};
+ if(!sysLoaded){$('systemOpenBrowser').checked=Boolean(cfg.open_browser_on_start);
+  $('systemAllowLan').checked=false;$('updateInterval').value=Number(cfg.update_minutes)||15;sysLoaded=true;}
+ $('systemStatus').textContent='Preferências persistidas no perfil da aplicação. Acesso LAN permanece bloqueado.';
+}
+$('systemSave').onclick=async()=>{
+ const minutes=Number($('updateInterval').value);
+ if(!Number.isInteger(minutes)||minutes<5||minutes>1440){notify('Intervalo válido: 5 a 1440 minutos',true);return;}
  try{
-   $('updateStatus').textContent='Consultando GitHub Releases...';
-   const info=await api('/api/update/latest');
-   $('updateStatus').textContent=info.available
-      ? 'Nova versão '+info.latest+' disponível (instalada: '+info.current+'). Abra o link para baixar e atualizar.'
-      : 'Versão atual: '+info.current+'. Última release estável: '+info.latest+'.';
-   $('updateLink').href=info.release_url;
-   if(info.available&&manual)notify('Nova versão '+info.latest+' disponível!');
- }catch(e){$('updateStatus').textContent='Verificação indisponível: '+e.message;if(manual)notify('Falha ao verificar: '+e.message,true);}
-}
-function scheduleUpdateCheck(){
- if(updateTimer)clearInterval(updateTimer);
- updateTimer=setInterval(()=>checkUpdates(false),updateMinutes*60*1000);
-}
-$('updateInterval').onchange=()=>{
- const n=Number($('updateInterval').value);
- if(!Number.isInteger(n)||n<5||n>1440){$('updateInterval').value=updateMinutes;notify('Intervalo entre 5 e 1440 minutos',true);return;}
- updateMinutes=n;try{localStorage.setItem('pt2vhf.mesh.update_minutes',String(n));}catch(e){}
- scheduleUpdateCheck();notify('Verificação a cada '+n+' minutos neste navegador.');
+  const result=await api('/api/system/settings',{
+    open_browser_on_start:$('systemOpenBrowser').checked,
+    update_minutes:minutes,allow_lan_access:false
+  });
+  state.system=result.settings;sysLoaded=false;renderSystem();
+  notify('Configurações salvas no SQLite. Checagem a cada '+minutes+' minutos.');
+ }catch(e){notify('Sistema: '+e.message,true);}
 };
+$('systemOpenNow').onclick=()=>{window.open(location.origin,'_blank','noopener,noreferrer');};
+function updateVersionState(info){
+ monitorState=info;const btn=$('topUpdate');
+ btn.className='';let label='';
+ if(info.error){btn.classList.add('error');label='VERIFICAÇÃO INDISPONÍVEL';}
+ else if(!info.checked_at){btn.classList.add('waiting');label='v'+(info.current||'')+' · verificando...';}
+ else if(info.available){btn.classList.add('available');label='NOVA VERSÃO v'+info.latest;}
+ else{btn.classList.add('latest');label='v'+info.current+' · ATUALIZADO';}
+ btn.textContent=label;
+ btn.title=info.available?'Nova versão disponível. Clique para ver novidades e baixar.':'Clique para verificar a última versão agora';
+ $('updateStatus').textContent=info.error?'Verificação indisponível: '+info.error:
+ info.available?'Nova versão '+info.latest+' disponível, instalada '+info.current+'. Download manual disponível.':
+ info.checked_at?'Versão '+info.current+' atualizada.':'Aguardando resposta do GitHub.';
+ $('updateLink').href=info.release_url||'https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest';
+ $('updateSchedule').textContent=(info.checked_at?'Última: '+new Date(info.checked_at*1000).toLocaleString('pt-BR'):'Sem verificação')+
+ (info.next_check?' · Próxima: '+new Date(info.next_check*1000).toLocaleString('pt-BR'):'')+
+ ' · '+(info.interval_minutes||15)+' min';
+}
+async function checkUpdates(manual=false){
+ if(manual&&checkingManually)return;
+ try{
+  if(manual){checkingManually=true;$('topUpdate').textContent='VERIFICANDO...';}
+  const info=manual?await api('/api/update/check',{}):await api('/api/update/latest');
+  updateVersionState(info);
+  if(manual)notify(info.error?'GitHub indisponível: '+info.error:
+     info.available?'Nova versão '+info.latest+' disponível.':'Nenhuma atualização disponível.',Boolean(info.error));
+ }catch(e){
+  $('topUpdate').className='error';$('topUpdate').textContent='VERIFICAÇÃO INDISPONÍVEL';
+  $('updateStatus').textContent=e.message;if(manual)notify(e.message,true);
+ }finally{checkingManually=false;}
+}
 $('updateCheck').onclick=()=>checkUpdates(true);
-scheduleUpdateCheck();
-setTimeout(()=>checkUpdates(false),3000);
+$('topUpdate').onclick=()=>{
+ if(monitorState?.available){
+   const info=monitorState;
+   if(confirm('Existe a versão '+info.latest+' (instalada: '+info.current+').\n\n'+
+      String(info.notes||'').slice(0,1000)+'\n\nA instalação automática ainda não está disponível. Abrir a release para download?'))
+        window.open(info.release_url,'_blank','noopener,noreferrer');
+ }else checkUpdates(true);
+};
+setTimeout(()=>checkUpdates(false),3500);
+setInterval(()=>checkUpdates(false),30000);
 
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){const slug=location.pathname.split('/').pop();if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;}
 setView(initialView,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
 </script>
