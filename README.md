@@ -10,9 +10,7 @@
 |---|---|---|
 | **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.2.0-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.2.0/PT2VHF-Mesh-Analyzer-v0.2.0-Setup-Win11-x64.exe)** |
 | **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.2.0-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.2.0/PT2VHF-Mesh-Analyzer-v0.2.0-Portable-Win11-x64.zip)** |
-| **Executável avulso** | `PT2VHF-Mesh-Analyzer.exe` | [Baixar EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.2.0/PT2VHF-Mesh-Analyzer.exe) |
 | **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.2.0/SHA256SUMS.txt) |
-| **Código-fonte da release** | `PT2VHF-Mesh-Analyzer-v0.2.0-Codigo-Fonte.zip` | [Baixar código-fonte ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.2.0/PT2VHF-Mesh-Analyzer-v0.2.0-Codigo-Fonte.zip) |
 
 **Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
 [Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
