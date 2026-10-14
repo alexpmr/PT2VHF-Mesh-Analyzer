@@ -28,7 +28,7 @@ A existência de código e o êxito da compilação não comprovam comportamento
 
 ## v0.2.0 — implementado no código (aguarda publicação e validação em campo)
 
-- **#8 Nós (parcial):** tabela compacta, 11 colunas, pesquisa/ordenação, seleção de colunas e referência de distância. Hops por nó aparecem indisponíveis quando não há evidência; faltam detalhes históricos completos.
+- **#8 Nós (parcial):** tabela compacta, 11 colunas, pesquisa/ordenação, seleção de colunas. **Remover seleção manual da referência de distância**: distância automática desde o nó próprio da fonte rádio Serial/BLE/Wi-Fi ativa, usando posição conhecida e identificação comprovada. Na ausência de referência válida, mostrar `—`. Hops por nó sem evidência permanecem indisponíveis; faltam detalhes históricos.
 - **#9 Tráfego (parcial):** filtro de fonte/tipo, painel de detalhe, pausa e CSV. RX observado; contabilidade TX integral e dump raw auditável ainda não incorporados.
 - **#10 Estatísticas (parcial):** 11 subabas com consultas próprias filtráveis, KPIs, médias SNR/RSSI, tendências horárias, dados de energia/LocalStats e pontos de atenção. Sem paridade integral de indicadores/rankings avançados do legado.
 - **#13 PDF (parcial):** relatório técnico offline nativo, com diversas seções de topologia/tráfego/diagnóstico RF, hipótese de colisão/interferência e proteção de privacidade. Não identifica LoRa externo, ruído real ou CRC específico sem instrumento/firmware compatível.
@@ -56,7 +56,7 @@ As melhorias abaixo são **itens de backlog**, não funcionalidades já entregue
 
 Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/alexpmr/traffic-analyzer)**. Reaproveitar experiência de navegação e regras analíticas, **não** a API/servidor do MeshMonitor. Os exemplos visuais foram enviados na conversa do projeto.
 
-- [**#8 — Aba Nós, tabela analítica**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/8): replicar cabeçalho compacto, total de nós, referência de distância, busca, limpar, Colunas e Atualizar; mostrar Nome longo, Nome curto, Role, Hardware, Saltos, Bateria, Tensão, Distância, SNR, Última interação, Última posição. Campos opcionais quando existentes; ordenação/filtros persistentes, última interação distinta da posição e nós antigos jamais forçados a online por NodeDB importado.
+- [**#8 — Aba Nós, tabela analítica**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/8): cabeçalho compacto, total de nós, busca, limpar, Colunas e Atualizar, **sem pull-down de referência de distância**. Usar automaticamente coordenadas e identidade do **nó local efetivamente conectado à fonte Serial/USB, BLE ou Wi-Fi/TCP ativa**; se houver várias fontes conectadas, usar contexto de rádio ativo inequívoco, nunca um nó arbitrário ou MQTT. Sem coordenadas/identidade válidas, mostrar `—`, e indicar origem/idade dos dados. Mostrar Nome longo, Nome curto, Role, Hardware, Saltos, Bateria, Tensão, Distância, SNR, Última interação e Última posição; preservar ordenação/filtros e evitar falso status online.
 - [**#9 — Aba Tráfego, histórico avançado**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/9): tabela conforme referência, busca, filtros de período/origem/destino/canal/tipo/fonte, ordenação, colunas personalizáveis, detalhes de pacote, distinção RF vs MQTT, dados de SNR/RSSI/hops/ACK quando realmente presentes, respeito à privacidade e desempenho com grande histórico.
 - [**#10 — Estatísticas: paridade funcional integral com o Traffic Analyzer v1.62.1 NO PT2VHF Mesh Analyzer**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10): migrar todas as **11 subabas**, cards de KPIs, resumo automático, filtros globais de período/nó/fonte, gráficos, tabelas, rankings RF interativos, pontos de atenção, auditoria, **Relatório/PDF e CSV**, URLs individuais, drill-down e cálculos auditáveis baseados exclusivamente no SQLite próprio e nas fontes Meshtastic. O Traffic Analyzer é somente a referência; não modificar nem depender do MM.
   - Não inventar valores de firmware, telemetria, acesso, consulta ou enlace RF quando dados insuficientes.
@@ -76,6 +76,10 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
   - Vinculada à [**#10 — Estatísticas completas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/10). O relatório é uma funcionalidade **pendente**, não uma nova release.
 
 **Situação:** itens #5, #8–#13 parcialmente implementados na v0.2.0; pendências e validações continuam nas issues.
+
+## Defeito prioritário — enlaces ausentes no Mesh Analyzer v0.3.0 (14/10/2026)
+
+- [**#22 — Enlaces não processados ou exibidos no Mapa**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/22): investigar o fluxo recepção → decodificação/roteamento → SQLite `links` → API → mapa. Código atual só registra segmentos de traceroute quando `TRACEROUTE_APP` tem rota decodificada; outros pacotes não geram evidência de enlace, e a UI omite linhas quando qualquer ponta não tem coordenadas. Incluir proveniência e classificação rigorosa de RF direto comprovado, traceroute/rota, MQTT e desconhecido; sem fabricar enlaces por SNR/hops/origem-destino. Mostrar contadores distintos **enlaces observados / armazenados / desenhados / sem posição**, motivos de descarte, dados de vários receptores, timestamps compatíveis de nós móveis e reprocessamento confiável de histórico. Não excluir relações antigas nem confundir ausência de linhas com rede sem enlaces. **Prioridade alta, ainda não corrigido.** Relacionado a #10, #11, #16 e #20.
 
 ## Mapa: escolha de fonte e layout do menu principal (14/10/2026)
 
