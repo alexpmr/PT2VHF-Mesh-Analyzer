@@ -1,5 +1,14 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.5.0 — 14/10/2026 — Atualização interna, Mapa e Estatísticas
+
+- **Atualização pelo aplicativo (primeira implementação):** indicador superior abre janela de novidades e opção para baixar nova versão sem navegador; seleção automática de Setup/Portable, comparação SHA256, barra de progresso, instalador externo que aguarda encerramento do Mesh Analyzer antes de substituir arquivos e reiniciar; popup de novidades exibido uma única vez. Log em `%LOCALAPPDATA%\\PT2VHF-Mesh-Analyzer\\update.log`. Necessita teste em Windows 11 instalado e portátil antes de encerrar issues #2 e #15.
+- **Configurações → Mapa:** painel de topologia, janela/min. observações, mapa-base, brilho, máximo de relevo, cores/espessuras RF e MQTT, linhas/nós/nomes, mapa de calor com observações reais, filtros, Auto Zoom em novos traceroutes, sons sintetizados localmente e animação com duração/velocidade.
+- **Barra Mapa:** remover Reprodução histórica e Velocidade inoperantes, mover mapa-base para Configurações → Mapa e manter controles operacionais.
+- **Estatísticas:** 10 subabas (Acessos removida); Visão Geral no formato 4×2 com 8 cartões e narrativa amarela; aprimoradas outras subabas com dados próprios e direção/canal de mensagens, energia/voltagem, ranking de observações e análise de rotas. Relações filtradas por período/fonte/nó, respeitando a ausência de evidência de RF direto e TX de pacotes quando não medido.
+
+**Limitações conhecidas:** instalação via atualizador não testada em Windows 11 físico (Setup/Portable); não há autenticação LAN e ela permanece desligada; paridade integral com o legado ainda pendente; várias métricas RF, ACK, taxa de sucesso e TX não são verificáveis por todos os rádios. CI não prova execução em hardware real.
+
 ## v0.4.0 — 14/10/2026 — Correção de topologia e fontes do mapa
 
 - **Correção prioritária #22:** portas oficiais Meshtastic corrigidas: TELEMETRY_APP 67, TRACEROUTE_APP 70, NEIGHBORINFO_APP 71 e STORE_FORWARD_APP 65. Interpretar RouteDiscovery de payload protobuf, JSON conhecido e bytes codificados, rotas de ida e volta e anúncios de vizinhança quando disponíveis. Evidências de traceroute e vizinhança continuam *não comprovadas como RF direto*.
