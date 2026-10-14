@@ -133,6 +133,41 @@ def calculate(db, params=None, connection_status=None):
     message_by_direction=db._rows(
         "SELECT direction, COUNT(*) AS count FROM messages"+msg_clause+
         " GROUP BY direction ORDER BY count DESC",msg_args)
+    message_originators=db._rows(
+        "SELECT from_node as node_num,COUNT(*) as count FROM messages"+
+        (msg_clause+" AND " if msg_clause else " WHERE ")+
+        "from_node IS NOT NULL GROUP BY from_node ORDER BY count DESC LIMIT 30",msg_args)
+    for row in message_originators:
+        row["name"]=node_names.get(row["node_num"],f"!{row['node_num']:08x}")
+    # Only positively classified RF-direct records are ranking candidates.
+    # A route/neighbor/MQTT record must never be promoted to direct RF.
+    confirmed_where=["quality='confirmed_direct_rf'"]+link_where
+    confirmed_links=db._rows(
+        "SELECT a,b,source_id,quality,observations,last_seen_ms FROM links WHERE "+
+        " AND ".join(confirmed_where)+" ORDER BY last_seen_ms DESC LIMIT 500",
+        tuple(link_args))
+    coords={n["node_num"]:n for n in node_rows}
+    direct_rank=[]
+    for link in confirmed_links:
+        a,b=coords.get(link["a"]),coords.get(link["b"])
+        if not a or not b:continue
+        if any(n["latitude"] is None or n["longitude"] is None or not n["position_ms"] for n in (a,b)):
+            continue
+        # Historical/mobile links cannot inherit coordinates far from their
+        # RF observation. Position timestamps require close temporal agreement.
+        if any(abs(n["position_ms"]-link["last_seen_ms"])>1800000 for n in (a,b)):
+            continue
+        lat1,lon1,lat2,lon2=map(math.radians,
+             [a["latitude"],a["longitude"],b["latitude"],b["longitude"]])
+        delta=2*6371.0088*math.asin(min(1,math.sqrt(
+              math.sin((lat2-lat1)/2)**2+
+              math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2)))
+        direct_rank.append({"a":link["a"],"b":link["b"],"name_a":node_names[link["a"]],
+                            "name_b":node_names[link["b"]],"distance_km":round(delta,3),
+                            "observations":link["observations"],"snr":None,
+                            "source_id":link["source_id"],"last_rf_ms":link["last_seen_ms"]})
+    direct_rank.sort(key=lambda x:(-x["distance_km"],x["a"],x["b"]))
+    direct_rank=direct_rank[:10]
     silent = [n for n in node_rows if n["last_seen_ms"] < cutoff and n["last_seen_ms"] > 0]
     low_battery = [n for n in node_rows if n["battery"] is not None and 0 <= n["battery"] < 20]
     alerts = ([{"severity": "atenção", "kind": "nó silencioso",
@@ -195,6 +230,7 @@ def calculate(db, params=None, connection_status=None):
                    "alerts":len(alerts), "critical":sum(a["severity"]=="crítico" for a in alerts)},
         "packet_types":types, "source_breakdown":sources, "top_originators":origins,
         "message_by_channel":message_by_channel,"message_by_direction":message_by_direction,
+        "message_originators":message_originators,"direct_rf_rank":direct_rank,
         "hourly":hourly,"hops":hops,"link_types":links,"alerts":alerts,
         "nodes":node_rows,"rf_samples":rf_summary,
         "diagnosis": {

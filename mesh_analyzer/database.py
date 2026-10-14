@@ -304,6 +304,57 @@ class Database:
     SYSTEM_DEFAULTS = {"open_browser_on_start": False, "allow_lan_access": False,
                        "update_minutes": 15}
 
+    def ui_preferences(self):
+        """Validated persisted map presentation options, independent of browser."""
+        with self._lock:
+            row=self._db.execute("SELECT value FROM settings WHERE key='ui_preferences'").fetchone()
+        try:
+            value=json.loads(row[0]) if row else {}
+            return value if isinstance(value,dict) else {}
+        except (TypeError,ValueError):
+            return {}
+
+    def save_ui_preferences(self,options):
+        if not isinstance(options,dict):raise ValueError("Preferências inválidas")
+        allowed={
+            "mapWindow","mapMinObservations","mapBrightness","mapTerrainMaxSetting",
+            "mapRfColor","mapRfWidth","mapInternetColor","mapInternetWidth",
+            "mapShowLinksSetting","mapShowNodesSetting","mapHeatmap","mapShowNamesSetting",
+            "mapIdentifiedOnly","mapAutoZoom","soundEnabled","soundTheme","soundVolume",
+            "soundDensity","soundMinInterval","soundMaxVoices","soundRouting","soundMessages",
+            "soundAlerts","soundStereo","mapAnimateNodes","mapHighlightSource","mapHighlightRelay",
+            "mapPulseSeconds","mapAnimationSpeed","mapType","mapRadar","mapRadarOpacity",
+            "mapHillshade","mapTerrain","terrainCut","terrainMax","terrainOpacity"}
+        if set(options)-allowed:raise ValueError("Opção de mapa desconhecida")
+        if len(json.dumps(options))>12000:raise ValueError("Preferências excedem o limite")
+        for k,v in options.items():
+            if isinstance(v,(dict,list)) or v is None:raise ValueError("Valor inválido em "+k)
+            if isinstance(v,str) and len(v)>100:raise ValueError("Valor muito longo em "+k)
+        if "mapWindow" in options and options["mapWindow"] not in ("all","1h","12h","24h","7d","30d"):
+            raise ValueError("Período do mapa inválido")
+        if "mapType" in options and options["mapType"] not in ("osm","topo","satellite","light","dark"):
+            raise ValueError("Tipo de mapa inválido")
+        for name,low,high in (("mapMinObservations",1,99999),("mapBrightness",20,150),
+             ("mapTerrainMaxSetting",100,9000),("mapRfWidth",1,12),
+             ("mapInternetWidth",1,12),("soundVolume",0,100),
+             ("soundMinInterval",40,1000),("soundMaxVoices",1,12),
+             ("terrainCut",0,9000),("terrainMax",100,9000),("terrainOpacity",20,100),
+             ("mapRadarOpacity",10,100)):
+            if name in options:
+                try:num=float(options[name])
+                except (TypeError,ValueError):raise ValueError("Número inválido em "+name)
+                if not low<=num<=high:raise ValueError("Fora do intervalo em "+name)
+        import re
+        for color in ("mapRfColor","mapInternetColor"):
+            if color in options and not re.fullmatch(r"#[0-9a-fA-F]{6}",str(options[color])):
+                raise ValueError("Cor inválida: "+color)
+        merged=self.ui_preferences()
+        merged.update(options)
+        with self._lock,self._db:
+            self._db.execute("INSERT INTO settings(key,value) VALUES('ui_preferences',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                             (json.dumps(merged,ensure_ascii=False),))
+        return merged
+
     def system_settings(self):
         """Global per-profile preferences shared across desktop and local web UI."""
         with self._lock:
