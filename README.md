@@ -29,6 +29,7 @@
 - **Dados RF auditáveis**: `num_packets_rx_bad` de LocalStats indica RX inválido, **não** contador CRC específico. Outro LoRa na faixa, piso de ruído e colisões não são comprovados sem instrumentação adicional; o relatório marca explicitamente o que não pode medir.
 - **Nós**: 11 colunas iniciais, busca, ordenação, ocultação de colunas, idade da última observação/posição e referência de distância selecionável. Hops sem evidência não são exibidos como zero.
 - **Tráfego**: filtro por fonte/tipo, detalhes dos pacotes, pausa da tabela e CSV visível.
+- **Mensagens**: autocomplete incremental de nós ao digitar `@`, inserindo nome/identificador como texto comum interoperável; **não é um DM nativo nem garante alerta remoto**.
 - **Mapa**: base OSM, topográfico, satélite, claro e escuro; radar meteorológico, hillshade e relevo com corte (DEM), slider e opacidades. Pulsos animados em nós observados, sem desenhar uma rota RF não comprovada.
 - **Preservação**: migração incremental do SQLite sem remover posições e tráfego históricos. Setup e Portable do GitHub são buildados por CI Windows.
 
