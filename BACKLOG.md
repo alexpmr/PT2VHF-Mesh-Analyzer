@@ -39,6 +39,16 @@ A existência de código e o êxito da compilação não comprovam comportamento
 
 **Não fechar issues de backlog somente por existência de telas; exigem evidência e critérios de aceite completos.** Todos os dados permanecem no banco próprio e nenhuma instalação mexe no Traffic Analyzer legado.
 
+## v0.6.0 — progresso de implementação (sem alegar conclusão total)
+
+- **#15/#2**: desligamento ordenado e autoencerramento do aplicativo após preparação do pacote; teste real Setup/Portable com Windows 11 e dispositivos conectados ainda necessário. Não há força contra processos de terceiros.
+- **#8**: ordenação padrão Distância ▲ desde rádio local já implementada; validar preferências antigas, GPS e múltiplas fontes.
+- **#25**: botão Salvar com persistência de Mapa/Sistema/Retenções no SQLite e status de mudanças pendentes. Editor rádio e Fonte separados; faltam transação multi-grupo e testes UI operacionais.
+- **#26**: aviso de Automações em breve na interface, sem execução fictícia.
+- **#27**: popup redimensionável/arrastável com dados do banco, posição opcional e histórico; **consultas individuais/Tudo e respostas reais ainda pendentes** (não simuladas).
+- **#10**: formato das tabelas de ranking/rotas/tráfego/consultas/chat/energia/atenção ampliado, sem inferência RF direta. Paridade integral das dez subabas e consultas correlacionadas ainda pendente.
+- **NÃO IMPLEMENTADO/VALIDADO NESTA RELEASE:** #1 idiomas completos, #3 LAN autenticada, #6 edição integral e backup/restauração completos, consultas ao rádio #27, #13 PDF avançado com todos os relatórios, #4 chat integral e critérios pendentes em #9–#12, #16, #18, #20–#22. **Todas as issues continuam abertas até seus critérios de aceite serem cumpridos.**
+
 ## Nós: distância crescente por padrão (14/10/2026)
 
 - [**#8 — Ordenação automática por distância**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/8): primeira execução deve ordenar **Distância ▲**, do nó mais próximo ao mais distante, com referência no rádio local conectado Serial/USB, BLE ou Wi-Fi/TCP, sem referência arbitrária em MQTT. Distância numérica real em km, empates estáveis, sem coordenadas no final (sempre) e atualização com mudança da fonte/posição. Respeitar ordenação escolhida e persistida pelo usuário. A v0.5.0 ordena por `Última interação ▼`; **pendente para a próxima release**.
