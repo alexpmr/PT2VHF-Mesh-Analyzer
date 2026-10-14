@@ -274,6 +274,49 @@ class Database:
         with self._lock,self._db:
             self._db.execute("DELETE FROM sources WHERE id=?", (int(source_id),))
 
+    SYSTEM_DEFAULTS = {"open_browser_on_start": False, "allow_lan_access": False,
+                       "update_minutes": 15}
+
+    def system_settings(self):
+        """Global per-profile preferences shared across desktop and local web UI."""
+        with self._lock:
+            row = self._db.execute("SELECT value FROM settings WHERE key='system'").fetchone()
+        try:
+            stored = json.loads(row[0]) if row else {}
+            if not isinstance(stored, dict): stored = {}
+        except (TypeError, ValueError):
+            stored = {}
+        data = dict(self.SYSTEM_DEFAULTS)
+        data.update({k: stored[k] for k in data if k in stored})
+        data["open_browser_on_start"] = data["open_browser_on_start"] is True
+        # LAN access is not implemented without authenticated sessions.
+        data["allow_lan_access"] = False
+        n = data["update_minutes"]
+        data["update_minutes"] = n if type(n) is int and 5 <= n <= 1440 else 15
+        return data
+
+    def set_system_settings(self, changes):
+        if not isinstance(changes, dict) or not changes:
+            raise ValueError("Informe preferências de Sistema")
+        allowed = set(self.SYSTEM_DEFAULTS)
+        if set(changes)-allowed:
+            raise ValueError("Preferência desconhecida")
+        if "allow_lan_access" in changes and changes["allow_lan_access"] is True:
+            raise ValueError("Acesso LAN bloqueado até a implementação de autenticação segura")
+        if "open_browser_on_start" in changes and type(changes["open_browser_on_start"]) is not bool:
+            raise ValueError("Opção do navegador deve ser sim ou não")
+        if "update_minutes" in changes and (type(changes["update_minutes"]) is not int or not 5 <= changes["update_minutes"] <= 1440):
+            raise ValueError("Intervalo de atualização: 5 a 1440 minutos")
+        updated = self.system_settings()
+        updated.update(changes)
+        updated["allow_lan_access"] = False
+        with self._lock, self._db:
+            self._db.execute(
+                "INSERT INTO settings(key,value) VALUES('system',?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (json.dumps(updated),))
+        return updated
+
     def retention(self):
         with self._lock:
             row = self._db.execute("SELECT value FROM settings WHERE key='retention'").fetchone()
