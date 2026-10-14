@@ -1,0 +1,188 @@
+"""Auditable Meshtastic analytics from the standalone SQLite database.
+
+All measurements are observations from configured receivers, not a reconstruction
+of the entire RF network. A route is not evidence of a direct physical link.
+"""
+from __future__ import annotations
+
+from collections import defaultdict
+from datetime import datetime, timezone
+import json
+import math
+import time
+
+PERIODS = {"1h": 3600, "6h": 21600, "24h": 86400, "7d": 604800,
+           "30d": 2592000, "all": None}
+BROADCAST = 0xFFFFFFFF
+
+
+def parse_filters(params=None):
+    params = params or {}
+    period = str(params.get("period") or "24h")
+    if period not in PERIODS:
+        raise ValueError("Período inválido")
+    result = {"period": period}
+    for key in ("source", "node", "channel"):
+        raw = params.get(key)
+        if raw in (None, "", "all"):
+            result[key] = None
+        else:
+            value = int(raw)
+            if not 0 <= value <= 0xFFFFFFFF:
+                raise ValueError("Filtro inválido: " + key)
+            result[key] = value
+    return result
+
+
+def _where(filters, table="packets", only_origin=False):
+    start = (int(time.time()) - PERIODS[filters["period"]]) * 1000 if PERIODS[filters["period"]] else None
+    where, args = [], []
+    if start is not None:
+        where.append("timestamp_ms >= ?")
+        args.append(start)
+    if filters["source"] is not None:
+        where.append("source_id = ?")
+        args.append(filters["source"])
+    if filters["node"] is not None:
+        if only_origin:
+            where.append("from_node = ?")
+            args.append(filters["node"])
+        else:
+            where.append("(from_node = ? OR to_node = ?)")
+            args.extend([filters["node"], filters["node"]])
+    if filters["channel"] is not None and table in ("packets", "messages"):
+        where.append("channel = ?")
+        args.append(filters["channel"])
+    return (" WHERE " + " AND ".join(where) if where else ""), tuple(args)
+
+
+def _aggregate(db, sql, params=()):
+    rows = db._rows(sql, params)
+    return rows[0] if rows else {}
+
+
+def calculate(db, params=None, connection_status=None):
+    filters = parse_filters(params)
+    clause, args = _where(filters)
+    count = _aggregate(db, """SELECT
+        COUNT(*) as observations,
+        SUM(CASE WHEN via_mqtt=1 THEN 1 ELSE 0 END) as mqtt,
+        SUM(CASE WHEN via_mqtt=0 THEN 1 ELSE 0 END) as receiver,
+        COUNT(DISTINCT from_node) as originators,
+        COUNT(DISTINCT source_id) as receivers,
+        AVG(CASE WHEN via_mqtt=0 THEN rx_snr END) as mean_snr,
+        AVG(CASE WHEN via_mqtt=0 THEN rx_rssi END) as mean_rssi,
+        SUM(CASE WHEN port='TRACEROUTE_APP' THEN 1 ELSE 0 END) as traceroutes,
+        SUM(CASE WHEN port='TELEMETRY_APP' THEN 1 ELSE 0 END) as telemetry
+        FROM packets""" + clause, args)
+    total_nodes = _aggregate(db, "SELECT COUNT(*) as n FROM nodes").get("n") or 0
+    cutoff = (int(time.time()) - 7200) * 1000
+    recent_nodes = _aggregate(db, "SELECT COUNT(*) as n FROM nodes WHERE last_seen_ms >= ?", (cutoff,)).get("n") or 0
+    # A NodeDB import can contain cached timestamps. Count originators in observed
+    # packets for the selected period separately from node-catalog activity.
+    active = int(count.get("originators") or 0)
+    msg_clause, msg_args = _where(filters, "messages")
+    msg = _aggregate(db, "SELECT COUNT(*) as n FROM messages" + msg_clause, msg_args)
+    types = db._rows("SELECT COALESCE(port,'UNKNOWN') as name, COUNT(*) as count FROM packets"
+                     + clause + " GROUP BY COALESCE(port,'UNKNOWN') ORDER BY count DESC LIMIT 20", args)
+    sources = db._rows("SELECT source_id as id, COUNT(*) as count,"
+                       " AVG(CASE WHEN via_mqtt=0 THEN rx_snr END) as mean_snr"
+                       " FROM packets" + clause + " GROUP BY source_id ORDER BY count DESC", args)
+    origins = db._rows("SELECT from_node as id, COUNT(*) as count FROM packets" + clause
+                       + " AND from_node IS NOT NULL GROUP BY from_node ORDER BY count DESC LIMIT 20"
+                       if clause else "SELECT from_node as id, COUNT(*) as count FROM packets WHERE from_node IS NOT NULL GROUP BY from_node ORDER BY count DESC LIMIT 20", args)
+    # Use SQL aggregation rather than truncating to a recent packet limit.
+    hourly = db._rows("SELECT (timestamp_ms / 3600000) * 3600000 as timestamp_ms,"
+                      " COUNT(*) as count, SUM(via_mqtt) as mqtt FROM packets" + clause
+                      + " GROUP BY (timestamp_ms / 3600000) ORDER BY timestamp_ms DESC LIMIT 168", args)
+    hourly.reverse()
+    hops = db._rows("SELECT (hop_start-hop_limit) as hops, COUNT(*) as count FROM packets" +
+                    (clause+" AND " if clause else " WHERE ") +
+                    "hop_start IS NOT NULL AND hop_limit IS NOT NULL"
+                    " AND hop_start >= hop_limit GROUP BY (hop_start-hop_limit) ORDER BY hops", args)
+    links = db._rows("SELECT quality, COUNT(*) as count, SUM(observations) as observations"
+                     " FROM links GROUP BY quality ORDER BY observations DESC")
+    # 'quality' can represent an observed traceroute without confirming RF.
+    node_rows = db._rows("SELECT node_num, node_id, long_name, short_name, role, hw_model,"
+                         " latitude, longitude, position_ms, first_seen_ms, last_seen_ms, battery, snr"
+                         " FROM nodes ORDER BY last_seen_ms DESC LIMIT 5000")
+    node_names = {n["node_num"]: n["long_name"] or n["short_name"] or n["node_id"] for n in node_rows}
+    for p in origins:
+        p["name"] = node_names.get(p["id"], f"!{p['id']:08x}" if p["id"] is not None else "—")
+    for s in sources:
+        meta = db.source(s["id"], public=True)
+        s["name"] = meta["name"] if meta else f"Fonte histórica #{s['id']}"
+        s["kind"] = meta["kind"] if meta else "unknown"
+        s["connection"] = (connection_status or {}).get(str(s["id"]), {}).get("status", "não informado")
+    silent = [n for n in node_rows if n["last_seen_ms"] < cutoff and n["last_seen_ms"] > 0]
+    low_battery = [n for n in node_rows if n["battery"] is not None and 0 <= n["battery"] < 20]
+    alerts = ([{"severity": "atenção", "kind": "nó silencioso",
+                "node": n["node_id"], "description": "Sem observação recente no inventário local"}
+               for n in silent[:35]] +
+              [{"severity": "crítico" if n["battery"] < 10 else "atenção",
+                "kind": "bateria", "node": n["node_id"],
+                "description": f"Bateria registrada: {n['battery']}%"}
+               for n in low_battery[:35]])
+    alerts.sort(key=lambda x: (0 if x["severity"] == "crítico" else 1, x["node"]))
+    rx_samples = db._rows("SELECT source_id,node_num,timestamp_ms,rx_good,rx_bad,"
+                          "channel_util,air_util,voltage,battery FROM rf_samples ORDER BY timestamp_ms DESC LIMIT 5000")
+    rf_summary = []
+    grouped = defaultdict(list)
+    for item in rx_samples:
+        grouped[(item["source_id"], item["node_num"])].append(item)
+    for (source, node), samples in grouped.items():
+        samples.sort(key=lambda x: x["timestamp_ms"])
+        newest = samples[-1]
+        rates = []
+        for a,b in zip(samples,samples[1:]):
+            if a["rx_good"] is None or a["rx_bad"] is None or b["rx_good"] is None or b["rx_bad"] is None:
+                continue
+            good = b["rx_good"] - a["rx_good"]
+            bad = b["rx_bad"] - a["rx_bad"]
+            # LocalStats RX good/bad are distinct; denominator is valid+invalid.
+            # Skip resets and empty windows; these are NOT hardware CRC counters.
+            if good < 0 or bad < 0 or good+bad == 0:
+                continue
+            rates.append((good,bad))
+        good = sum(x for x,_ in rates)
+        bad = sum(y for _,y in rates)
+        rf_summary.append({"source":source, "node":node_names.get(node, f"!{node:08x}"),
+                           "node_num":node,"samples":len(samples),
+                           "last_seen_ms":newest["timestamp_ms"],
+                           "channel_util": newest["channel_util"],
+                           "air_util": newest["air_util"],
+                           "voltage": newest["voltage"],
+                           "battery": newest["battery"],
+                           "rx_good_delta": good if rates else None,
+                           "rx_bad_delta": bad if rates else None,
+                           "rx_invalid_percent": round(100*bad/(good+bad),2) if good+bad else None,
+                           "crc_error_percent": None,
+                           "crc_note": "Contador específico de CRC não disponível; RX inválido ≠ erro de CRC."})
+    return {
+        "success": True, "generated_ms": int(time.time()*1000), "filters":filters,
+        "scope": "Observações recebidas por fontes cadastradas; não representa todo o tráfego no ar.",
+        "counts": {"nodes_known": total_nodes,"nodes_recent_catalog": recent_nodes,
+                   "active_originators": active, "observations":int(count.get("observations") or 0),
+                   "mqtt":int(count.get("mqtt") or 0),"receiver":int(count.get("receiver") or 0),
+                   "messages":int(msg.get("n") or 0), "traceroutes":int(count.get("traceroutes") or 0),
+                   "telemetry":int(count.get("telemetry") or 0),
+                   "sources_observed":int(count.get("receivers") or 0),
+                   "mean_snr":count.get("mean_snr"), "mean_rssi":count.get("mean_rssi"),
+                   "relations_observed":sum(int(v["count"]) for v in links),
+                   "confirmed_direct_rf":None,
+                   "alerts":len(alerts), "critical":sum(a["severity"]=="crítico" for a in alerts)},
+        "packet_types":types, "source_breakdown":sources, "top_originators":origins,
+        "hourly":hourly,"hops":hops,"link_types":links,"alerts":alerts,
+        "nodes":node_rows,"rf_samples":rf_summary,
+        "diagnosis": {
+            "external_lora": "Não observável pelos dados atuais; receptor SDR/CAD dedicado necessário.",
+            "noise_floor": "Não medido; RSSI de pacotes não equivale a piso de ruído.",
+            "crc": "Indisponível: contadores específicos de CRC não são registrados.",
+            "coexistence": "Sobreposição RF exige frequência central, BW/SF e medições por receptor.",
+            "possible_causes": ["Enlace marginal / fading / obstrução",
+                                "Colisões de transmissões simultâneas",
+                                "Interferência de outras redes LoRa ou não-LoRa",
+                                "Antena, cabo, conectores, alimentação e configuração"],
+            "confidence":"Dados insuficientes para determinar a causa por RF",
+        },
+    }
