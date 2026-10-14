@@ -985,7 +985,7 @@ function updateVersionState(info){
  btn.textContent=label;
  btn.title=info.available?'Nova versão disponível. Clique para ver novidades e baixar.':'Clique para verificar a última versão agora';
  $('updateStatus').textContent=info.error?'Verificação indisponível: '+info.error:
- info.available?'Nova versão '+info.latest+' disponível, instalada '+info.current+'. Download manual disponível.':
+ info.available?'Nova versão '+info.latest+' disponível, instalada '+info.current+'. Clique no indicador para atualizar diretamente.':
  info.checked_at?'Versão '+info.current+' atualizada.':'Aguardando resposta do GitHub.';
  $('updateLink').href=info.release_url||'https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest';
  $('updateSchedule').textContent=(info.checked_at?'Última: '+new Date(info.checked_at*1000).toLocaleString('pt-BR'):'Sem verificação')+
@@ -1006,14 +1006,85 @@ async function checkUpdates(manual=false){
  }finally{checkingManually=false;}
 }
 $('updateCheck').onclick=()=>checkUpdates(true);
+let currentUpdateNotice=false,updateInstalling=false,updatePoll=null;
+function showUpdateDialog(info,installed=false){
+ currentUpdateNotice=installed;
+ $('updateTitle').textContent=installed?'Novidades da versão '+info.version:
+   'Nova versão v'+info.latest+' disponível';
+ $('updateSummary').textContent=installed?'Atualização concluída com sucesso.':
+   'Versão instalada: v'+info.current+' · disponível: v'+info.latest+'.';
+ $('updateNotes').textContent=String(info.notes||'Novidades indisponíveis neste pacote.').slice(0,3000);
+ $('updateProgressText').textContent=installed?'':'O download e a instalação exigem sua confirmação.';
+ $('updateProgress').hidden=true;
+ $('updateApply').hidden=installed;
+ $('updateLater').disabled=false;
+ $('updateRelease').hidden=installed;
+ $('updateDialog').classList.add('active');
+}
+async function checkUpdateProgress(){
+ if(!updateInstalling)return;
+ try{
+  const status=await api('/api/update/progress');
+  if(status.phase==='error')throw Error(status.error||'Download não concluído');
+  const received=status.received||0,bytes=status.total||0;
+  const percent=bytes?Math.min(100,Math.floor(received*100/bytes)):0;
+  $('updateProgress').value=percent;
+  $('updateProgressText').textContent=status.phase==='verified'?'SHA256 verificado. Encerrando aplicativo para instalar...':
+   'Baixando pacote: '+(received/1048576).toFixed(1)+' MB'+(bytes?' / '+(bytes/1048576).toFixed(1)+' MB ('+percent+'%)':'');
+  if(status.phase==='verified'){
+    const installed=await api('/api/update/install',{});
+    if(!installed.success)throw Error('Falha ao iniciar instalador');
+    $('updateProgressText').textContent='Fechando a aplicação com segurança. A instalação continuará em segundo plano e reiniciará o Mesh Analyzer.';
+    $('updateLater').disabled=true;
+    updateInstalling=false;
+    return;
+  }
+  if(status.phase!=='downloading')throw Error('Estado inesperado da atualização');
+  updatePoll=setTimeout(checkUpdateProgress,750);
+ }catch(e){
+   updateInstalling=false;$('updateApply').disabled=false;$('updateLater').disabled=false;
+   $('updateProgressText').textContent='Atualização interrompida: '+e.message+
+      '. Sua instalação atual continua disponível; consulte Configurações → Sistema ou o log da atualização.';
+   notify('Atualização: '+e.message,true);
+ }
+}
 $('topUpdate').onclick=()=>{
- if(monitorState?.available){
-   const info=monitorState;
-   if(confirm('Existe a versão '+info.latest+' (instalada: '+info.current+').\n\n'+
-      String(info.notes||'').slice(0,1000)+'\n\nA instalação automática ainda não está disponível. Abrir a release para download?'))
-        window.open(info.release_url,'_blank','noopener,noreferrer');
- }else checkUpdates(true);
+ if(monitorState?.available)showUpdateDialog(monitorState);
+ else checkUpdates(true);
 };
+$('updateApply').onclick=async()=>{
+ if(!monitorState?.available||!monitorState.latest||updateInstalling)return;
+ if(!confirm('Baixar a versão v'+monitorState.latest+' do GitHub, verificar o SHA256, '+
+    'fechar o Mesh Analyzer e atualizar? As fontes de rádio serão desconectadas temporariamente.'))return;
+ updateInstalling=true;
+ $('updateApply').disabled=true;$('updateLater').disabled=true;
+ $('updateProgress').hidden=false;$('updateProgress').value=0;
+ $('updateProgressText').textContent='Preparando o download...';
+ try{
+  await api('/api/update/prepare',{version:monitorState.latest});
+  checkUpdateProgress();
+ }catch(e){
+  updateInstalling=false;$('updateApply').disabled=false;$('updateLater').disabled=false;
+  $('updateProgressText').textContent='Não foi possível iniciar a atualização: '+e.message;
+  notify('Atualização: '+e.message,true);
+ }
+};
+$('updateLater').onclick=async()=>{
+ if(updateInstalling)return;
+ $('updateDialog').classList.remove('active');
+ if(currentUpdateNotice){
+  try{await api('/api/update/ack',{});}catch(e){}
+ }
+};
+$('updateRelease').onclick=()=>{
+ if(monitorState?.release_url)window.open(monitorState.release_url,'_blank','noopener,noreferrer');
+};
+setTimeout(async()=>{
+ try{
+  const result=await api('/api/update/notice');
+  if(result.notice&&result.notice.status==='installed')showUpdateDialog(result.notice,true);
+ }catch(e){}
+},1800);
 setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
 
