@@ -64,7 +64,7 @@ class ConfigTests(unittest.TestCase):
                 serial = db.upsert_source({"name": "Bench", "kind": "serial",
                     "config": {"port": "COM4"}, "enabled": False})
                 mqtt = db.upsert_source({"name": "Broker", "kind": "mqtt",
-                    "config": {"host": "example.org"}, "enabled": False})
+                    "config": {"host": "example.org", "topic": "msh/+/2/e/#"}, "enabled": False})
                 radio = make_radio()
                 manager._interfaces[serial["id"]] = radio
                 state = manager.radio_config(serial["id"])
