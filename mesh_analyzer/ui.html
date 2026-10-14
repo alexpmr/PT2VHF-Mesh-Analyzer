@@ -93,7 +93,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <div id="map"><div style="padding:40px;color:#9bb1c3">Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.</div></div>
 <div id="terrainSlider" hidden><label>Corte: <strong id="terrainValue">0 m</strong></label><div><input id="terrainCut" type="range" min="0" max="3000" step="50" value="0"></div><label>Máx. (m) <input type="number" id="terrainMax" min="100" max="9000" value="3000" style="width:86px"></label><label>Opacidade <input type="range" id="terrainOpacity" min="20" max="100" value="65"></label></div>
 <div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>⋯ <span class="warn">Rota observada, enlace RF não comprovado</span></div><div id="mapTopologyStats">Topologia: aguardando...</div><div>Dados preservados no SQLite</div></div>
-<div id="mapLayersPanel" hidden><label><input id="showMapNodes" type="checkbox" checked> Mostrar nós</label><label><input id="showMapLinks" type="checkbox" checked> Mostrar enlaces</label><label><input id="showNames" type="checkbox"> Mostrar nomes curtos</label><label><input id="mapRadar" type="checkbox" checked> Radar meteorológico</label><label>Radar opacidade <input id="mapRadarOpacity" type="range" min="10" max="100" value="65"></label><div id="radarStatus">Aguardando radar...</div><label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label><label><input id="mapTerrain" type="checkbox"> Relevo com corte</label><button id="closeLayers">Fechar</button></div>
+<div id="mapLayersPanel" hidden><label hidden><input id="showMapNodes" type="checkbox" checked> Mostrar nós</label><label hidden><input id="showMapLinks" type="checkbox" checked> Mostrar enlaces</label><label hidden><input id="showNames" type="checkbox"> Mostrar nomes curtos</label><label><input id="mapRadar" type="checkbox" checked> Radar meteorológico</label><label>Radar opacidade <input id="mapRadarOpacity" type="range" min="10" max="100" value="65"></label><div id="radarStatus">Aguardando radar...</div><label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label><label><input id="mapTerrain" type="checkbox"> Relevo com corte</label><button id="closeLayers">Fechar</button></div>
 </section>
 <section class="view" id="viewNodes"><div class="toolbar" id="nodesToolbar">
 <h2>Nós</h2><span id="nodesCounter" class="muted"></span><div class="spacer"></div>
@@ -199,8 +199,8 @@ const initialView=location.pathname.startsWith('/estatisticas/')?'stats':Object.
 function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
 function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite(Number(n.longitude))&&n.latitude!==null&&n.longitude!==null&&!(Math.abs(Number(n.latitude))<.01&&Math.abs(Number(n.longitude))<.01);}
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
-function initMap(){if(map||!window.L)return;map=L.map('map',{zoomControl:true}).setView([-15.793,-47.882],9);nodeLayer=L.layerGroup().addTo(map);linkLayer=L.layerGroup().addTo(map);setTiles();}
-let currentTiles=null;
+function initMap(){if(map||!window.L)return;map=L.map('map',{zoomControl:true}).setView([-15.793,-47.882],9);nodeLayer=L.layerGroup().addTo(map);linkLayer=L.layerGroup().addTo(map);heatLayer=L.layerGroup().addTo(map);setTiles();}
+let currentTiles=null,heatLayer=null,previousTopoLastSeen=0,zoomRestore=null;
 
 let radarLayer=null,shadeLayer=null,terrainLayer=null,lastRadarPath='',radarTimer=null;
 function setTiles(){
@@ -474,7 +474,7 @@ $('mapSource').onchange=()=>{
 };
 function renderMap(){
  if(!map){initMap();if(!map)return;}
- nodeLayer.clearLayers();linkLayer.clearLayers();
+ nodeLayer.clearLayers();linkLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
  const source=mapSourceFilter;
  const available=sourceMapNodes(),q=$('mapSearchInput').value;
  const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>n.node_num));
@@ -503,6 +503,27 @@ function renderMap(){
    line.bindTooltip(esc(idName(edge.a))+' ↔ '+esc(idName(edge.b))+': '+esc(descr)+
        ' · '+Number(edge.observations||1)+' observações');
    line.addTo(linkLayer);visible++;
+  }
+ }
+ if($('mapHeatmap').checked&&heatLayer){
+  const count=new Map();
+  for(const p of packets){
+   if(source&&String(p.source_id)!==source)continue;
+   if(!p.from_node||!Number.isFinite(Number(p.timestamp_ms)))continue;
+   count.set(p.from_node,(count.get(p.from_node)||0)+1);
+  }
+  const max=Math.max(1,...count.values());
+  for(const n of available){
+   if(!allowed.has(n.node_num)||!validPos(n))continue;
+   const observations=count.get(n.node_num)||0;
+   if(!observations)continue;
+   const weight=observations/max;
+   L.circleMarker([n.latitude,n.longitude],{radius:12+weight*20,
+      color:'#f6bd2f',weight:0,fillColor:'#ff8d20',
+      fillOpacity:Math.max(.08,.13+weight*.28)})
+    .bindTooltip(esc(n.short_name||n.node_id)+': '+observations+
+      ' pacotes exibidos no histórico recente, não potência RF')
+    .addTo(heatLayer);
   }
  }
  if($('showMapNodes').checked){
@@ -535,7 +556,9 @@ function showNode(n){const title=`${n.long_name||n.node_id} (${n.short_name||'�
 function positionSuggestions(){const pop=$('mapSearchMatches'),el=$('mapSearchInput');if(pop.hidden)return;const r=el.getBoundingClientRect(),w=pop.getBoundingClientRect().width;pop.style.left=Math.max(5,Math.min(r.left,window.innerWidth-w-6))+'px';pop.style.top=(r.bottom+5)+'px';}
 function suggest(){const q=$('mapSearchInput').value;const pop=$('mapSearchMatches');if(!q.trim()){pop.hidden=true;pop.innerHTML='';return;}const rows=sourceMapNodes().filter(n=>matches(n,q)).slice(0,15);pop.innerHTML=rows.map(n=>`<button data-num="${n.node_num}"><b>${esc(n.long_name||n.node_id)}</b><br><small>${esc(n.short_name)} · ${esc(n.node_id)} · ${validPos(n)?'Com posição':'Sem localização'}</small></button>`).join('')||'<div style="padding:12px">Nenhum nó encontrado</div>';pop.hidden=false;positionSuggestions();pop.querySelectorAll('button[data-num]').forEach(b=>b.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(b.dataset.num));pop.hidden=true;showNode(n);});}
 $('mapSearchInput').addEventListener('input',()=>{renderMap();suggest();});$('mapSearchInput').addEventListener('keydown',ev=>{if(ev.key==='Escape'){$('mapSearchInput').value='';renderMap();suggest();}if(ev.key==='Enter'){const rows=sourceMapNodes().filter(n=>matches(n,$('mapSearchInput').value));if(rows.length===1){showNode(rows[0]);$('mapSearchMatches').hidden=true;}}});$('mapSearchClear').onclick=()=>{$('mapSearchInput').value='';renderMap();suggest();$('mapSearchInput').focus();};
-$('mapType').onchange=()=>{setTiles();storeMapControls();};$('showMapNodes').onchange=renderMap;$('showMapLinks').onchange=renderMap;$('showNames').onchange=renderMap;$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
+$('mapType').onchange=()=>{setTiles();storeMapControls();};$('showMapNodes').onchange=()=>{$('mapShowNodesSetting').checked=$('showMapNodes').checked;storeMapControls();renderMap();};
+$('showMapLinks').onchange=()=>{$('mapShowLinksSetting').checked=$('showMapLinks').checked;storeMapControls();renderMap();};
+$('showNames').onchange=()=>{$('mapShowNamesSetting').checked=$('showNames').checked;storeMapControls();renderMap();};$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
 $('layersBtn').onclick=()=>{const panel=$('mapLayersPanel');panel.hidden=!panel.hidden;if(!panel.hidden){const r=$('layersBtn').getBoundingClientRect();panel.style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';panel.style.top=r.bottom+6+'px';}};$('closeLayers').onclick=()=>{$('mapLayersPanel').hidden=true;};window.addEventListener('resize',()=>{positionSuggestions();if(!$('mapLayersPanel').hidden){const r=$('layersBtn').getBoundingClientRect();$('mapLayersPanel').style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';$('mapLayersPanel').style.top=r.bottom+6+'px';}});$('playback').addEventListener('scroll',positionSuggestions,{passive:true});
 
 
