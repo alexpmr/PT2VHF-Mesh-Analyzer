@@ -136,9 +136,9 @@ const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000
 let state={sources:[],connections:{},counts:{}},nodes=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
 function notify(txt,isError=false){const t=$('toast');t.textContent=txt;t.style.display='block';t.style.borderColor=isError?'#f48c8c':'#679ab8';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.style.display='none',5600);}
 async function api(path,body){const o=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(body)};const r=await fetch(path,o);const d=await r.json();if(!r.ok||d.success===false)throw Error(d.error||d.message||'HTTP '+r.status);return d;}
-function setView(next,updateUrl=true){view=next;document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));document.querySelectorAll('.navbtn').forEach(n=>n.classList.toggle('active',n.dataset.view===next));if(updateUrl)history.replaceState({},'',({map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes',help:'/ajuda'}[next]||'/mapa'));if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}if(next==='settings')renderSources();if(next==='messages')renderChat();}
+function setView(next,updateUrl=true){view=next;document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));document.querySelectorAll('.navbtn').forEach(n=>n.classList.toggle('active',n.dataset.view===next));if(updateUrl)history.replaceState({},'',({map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes',help:'/ajuda'}[next]||'/mapa'));if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}if(next==='stats'){syncStatFilters();fetchStats(false);}if(next==='settings')renderSources();if(next==='messages')renderChat();}
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
-const initialView=Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map';
+const initialView=location.pathname.startsWith('/estatisticas/')?'stats':Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map';
 function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
 function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite(Number(n.longitude))&&n.latitude!==null&&n.longitude!==null&&!(Math.abs(Number(n.latitude))<.01&&Math.abs(Number(n.longitude))<.01);}
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
@@ -255,7 +255,146 @@ function chatKey(m){if((m.to_node===null||m.to_node===0xffffffff)&&Number(m.chan
 function openDm(id){currentChat='node:'+id;setView('messages');renderChat();}
 function renderChat(){const chats=new Set(['channel:0']);for(const m of messages)chats.add(chatKey(m));for(const n of nodes)chats.add('node:'+n.node_num);const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:a.localeCompare(b));$('contacts').innerHTML=list.map(key=>`<button class="contact ${key===currentChat?'selected':''}" data-chat="${esc(key)}">${esc(key.startsWith('node:')?idName(Number(key.slice(5))):key==='channel:0'?'📡 Canal primário':'Canal '+key.slice(8))}</button>`).join('');$('contacts').querySelectorAll('[data-chat]').forEach(el=>el.onclick=()=>{currentChat=el.dataset.chat;renderChat();});$('chatHeader').textContent=currentChat.startsWith('node:')?'Privado: '+idName(Number(currentChat.slice(5))):currentChat==='channel:0'?'Canal primário':'Canal '+currentChat.slice(8);const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);$('bubbles').innerHTML=filtered.map(m=>`<div class="bubble ${m.direction==='tx'?'tx':''}"><div>${esc(m.text)}</div><small>${esc(idName(m.from_node))} · ${esc(fmtDate(m.timestamp_ms))} ${m.state==='accepted_by_radio'?'· TX aceito pelo rádio':''}</small></div>`).join('')||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';$('bubbles').scrollTop=$('bubbles').scrollHeight;const enabled=state.sources.filter(s=>s.enabled&&s.kind!=='mqtt'&&state.connections[String(s.id)]?.status==='connected');const old=$('messageSource').value;$('messageSource').innerHTML=enabled.map(s=>`<option value="${s.id}">${esc(s.name)} (${esc(s.kind)})</option>`).join('')||'<option value="">Nenhum rádio conectado</option>';if(enabled.some(x=>String(x.id)===old))$('messageSource').value=old;$('messageSend').disabled=enabled.length===0;}
 $('messageSend').onclick=async()=>{try{const text=$('messageText').value.trim();if(!text)throw Error('Digite a mensagem');const source_id=Number($('messageSource').value);if(!source_id)throw Error('Conecte uma fonte bidirecional');const to_node=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';const channel=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);const result=await api('/api/messages/send',{text,source_id,to_node,channel});$('messageText').value='';notify('Mensagem aceita pelo rádio. Entrega não confirmada.');await refreshAll();}catch(e){notify(e.message,true);}};$('messageText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('messageSend').click();}};
-function renderStats(){const values=state.counts||{};const labels={nodes:'Nós registrados',packets:'Pacotes',messages:'Mensagens',positions:'Posições históricas',traces:'Traceroutes',links:'Enlaces observados',sources:'Fontes cadastradas',events:'Eventos operacionais'};$('statsGrid').innerHTML=Object.entries(labels).map(([k,v])=>`<div class="stat"><b>${Number(values[k]||0).toLocaleString('pt-BR')}</b><span>${esc(v)}</span></div>`).join('');}$('statsReload').onclick=refreshAll;
+
+const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
+ ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
+ ['energia','Energia'],['anomalias','Pontos de atenção'],['acessos','Acessos']];
+let currentStatTab='geral',statData=null,lastStatsFetch=0,statsLoading=false;
+const fmtCount=v=>v==null?'Sem dados':Number(v).toLocaleString('pt-BR');
+const fmtMeasure=(v,u)=>v==null?'Não medido':Number(v).toFixed(1).replace('.',',')+' '+u;
+const statsHead=(title,body)=>'<div class="statsCard"><h3>'+esc(title)+'</h3>'+body+'</div>';
+const statsTbl=(labels,rows)=>'<div style="overflow-x:auto"><table class="reportTable"><thead><tr>'+
+ labels.map(v=>'<th>'+esc(v)+'</th>').join('')+'</tr></thead><tbody>'+
+ (rows.length?rows.map(row=>'<tr>'+row.map(v=>'<td>'+esc(v??'—')+'</td>').join('')+'</tr>').join(''):
+ '<tr><td colspan="'+labels.length+'">Sem dados para os filtros selecionados.</td></tr>')+
+ '</tbody></table></div>';
+const statBar=(rows)=>'<div style="display:grid;gap:6px">'+rows.slice(0,12).map(p=>{
+  const max=Math.max(1,...rows.map(x=>Number(x.count)||0));const w=Math.max(1,Math.round(100*(Number(p.count)||0)/max));
+  return '<div style="display:grid;grid-template-columns:155px minmax(0,1fr) 60px;gap:10px;align-items:center"><span>'+esc(p.name)+'</span><div style="background:#293b49;border-radius:3px"><div style="height:13px;width:'+w+'%;background:#48a3bc;border-radius:3px"></div></div><b>'+fmtCount(p.count)+'</b></div>';
+ }).join('')+'</div>';
+function renderStats(){
+ $('statsTabs').innerHTML=statTabs.map(([key,label])=>'<button class="subtab '+(key===currentStatTab?'active':'')+'" data-tab="'+key+'">'+esc(label)+'</button>').join('');
+ $('statsTabs').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>selectStatTab(b.dataset.tab));
+ const d=statData,c=d?.counts;
+ if(!d){$('statsContents').innerHTML='<div class="statsCard">Aguardando dados analíticos do SQLite.</div>';return;}
+ const kpis=[
+  ['Nós originadores no período',c.active_originators,'Conhecidos: '+c.nodes_known],
+  ['Pacotes observados',c.observations,'MQTT: '+c.mqtt+' · Rádio: '+c.receiver],
+  ['Mensagens',c.messages,'Registros na base própria'],
+  ['Traceroutes',c.traceroutes,'Pacotes observados'],
+  ['Relações observadas',c.relations_observed,'Não equivale a RF direto'],
+  ['SNR médio',fmtMeasure(c.mean_snr,'dB'),'Apenas rádio com métrica'],
+  ['RSSI médio',fmtMeasure(c.mean_rssi,'dBm'),'Apenas rádio com métrica'],
+  ['Pontos de atenção',c.alerts,'Críticos: '+c.critical]
+ ];
+ let html='';
+ switch(currentStatTab){
+ case 'geral':
+   html='<div class="statGrid">'+kpis.map(([label,v,sub])=>'<div class="stat"><b>'+esc(typeof v==='number'?fmtCount(v):v)+'</b><span>'+esc(label)+'</span><div class="muted" style="font-size:11px;margin-top:6px">'+esc(sub)+'</div></div>').join('')+'</div>';
+   html+=statsHead('Resumo do período',fmtCount(c.active_originators)+' nós originaram '+fmtCount(c.observations)+' observações de pacotes ('+
+       fmtCount(c.receiver)+' de rádios e '+fmtCount(c.mqtt)+' via MQTT), incluindo '+fmtCount(c.messages)+' mensagens, '+fmtCount(c.traceroutes)+
+       ' traceroutes e '+fmtCount(c.telemetry)+' telemetrias. Há '+fmtCount(c.alerts)+' pontos de atenção. Origem e destino não representam enlace direto.');
+   break;
+ case 'rede':
+   html=statsHead('Inventário conhecido',statsTbl(['Indicador','Quantidade'],[
+    ['Nós conhecidos',c.nodes_known],['Originadores no período',c.active_originators],
+    ['Fontes com observações',c.sources_observed],['Nós com comunicação recente no catálogo',c.nodes_recent_catalog]]));
+   html+=statsHead('Fontes',statsTbl(['Fonte','Tipo','Conexão','Pacotes'],
+       d.source_breakdown.map(x=>[x.name,x.kind,x.connection,x.count])));
+   break;
+ case 'rf':
+   html=statsHead('Métricas observadas',
+     statsTbl(['Indicador','Valor'],[['SNR médio',fmtMeasure(c.mean_snr,'dB')],['RSSI médio',fmtMeasure(c.mean_rssi,'dBm')],
+        ['Ruído de fundo','Não medido'],['CRC','Sem contador de CRC específico']]));
+   html+=statsHead('Receptores e métricas LocalStats',
+     statsTbl(['Receptor/Nó','Amostras','Canal','Air TX','RX inválido','CRC'],
+       d.rf_samples.map(x=>[x.node,x.samples,fmtMeasure(x.channel_util,'%'),fmtMeasure(x.air_util,'%'),
+           fmtMeasure(x.rx_invalid_percent,'%'),'Não medido'])));
+   html+=statsHead('Coexistência LoRa e interferências','Não há identificação de outras redes LoRa pela recepção Meshtastic convencional. '
+    +'Uma taxa alta de RX inválido pode sugerir enlace no limite, colisões ou interferências, mas não comprova a causa. '
+    +'Recomenda-se comparar receptores e, se necessário, utilizar um SDR secundário.');
+   break;
+ case 'ranking':
+   html=statsHead('Nós que mais originam tráfego',statsTbl(['Nó','Pacotes'],d.top_originators.map(x=>[x.name,x.count])));
+   html+=statsHead('Enlaces RF diretos mais longos','Ranking indisponível: a base ainda não possui comprovação suficiente de adjacência RF e posições sincronizadas. Relações observadas não são tratadas como RF direto.');
+   break;
+ case 'routing':
+   html=statsHead('Distribuição por saltos',statsTbl(['Saltos calculáveis','Pacotes'],d.hops.map(x=>[x.hops,x.count])));
+   html+=statsHead('Categorias de relações',statsTbl(['Evidência','Relações','Observações'],d.link_types.map(x=>[x.quality,x.count,x.observations])));
+   break;
+ case 'trafego':
+   html=statsHead('Pacotes por tipo',statBar(d.packet_types));
+   html+=statsHead('Fontes receptoras',statsTbl(['Fonte','Pacotes','SNR médio'],d.source_breakdown.map(x=>[x.name,x.count,fmtMeasure(x.mean_snr,'dB')])));
+   html+=statsHead('Séries horárias',statsTbl(['Hora UTC','Observações','MQTT'],d.hourly.map(x=>[new Date(x.timestamp_ms).toLocaleString('pt-BR'),x.count,x.mqtt])));
+   break;
+ case 'consultas':
+   html=statsHead('Consultas Meshtastic','Tráfego de consultas está incluído nas contagens por tipo. Taxas de resposta e timeout precisam de correlação TX/ACK/RX confiável; sem isso não serão estimadas.');
+   break;
+ case 'chat':
+   html=statsHead('Mensagens',statsTbl(['Indicador','Quantidade'],[['Mensagens observadas',c.messages]]));
+   html+=statsHead('Privacidade','Conteúdo de mensagens privadas nunca integra relatório técnico por padrão.');
+   break;
+ case 'energia':
+   html=statsHead('Telemetria de energia',statsTbl(['Nó','Bateria','Tensão','Último contato'],
+    d.nodes.filter(x=>x.battery!=null||x.voltage!=null).slice(0,100).map(x=>[x.long_name||x.node_id,
+     x.battery===101?'EXT':x.battery==null?'Não medido':x.battery+'%',fmtMeasure(x.voltage,'V'),age(x.last_seen_ms)])));
+   break;
+ case 'anomalias':
+   html=statsHead('Pontos de atenção',statsTbl(['Severidade','Nó','Ocorrência'],d.alerts.map(x=>[x.severity,x.node,x.description])));
+   break;
+ case 'acessos':
+   html=statsHead('Auditoria de acessos','A interface permanece limitada a localhost por segurança. Não há telemetria de sessões autenticadas; nenhum acesso externo foi inferido.');
+   break;
+ }
+ $('statsContents').innerHTML=html+'<p class="muted">'+esc(d.scope)+' | Atualizado '+new Date(d.generated_ms).toLocaleString('pt-BR')+'</p>';
+}
+function selectStatTab(next,historyUpdate=true){
+ if(!statTabs.some(x=>x[0]===next))return;
+ currentStatTab=next;if(historyUpdate)history.replaceState({},'','/estatisticas/'+next);
+ renderStats();
+}
+function statsFilters(){return {period:$('statsPeriod').value,node:$('statsNode').value||'all',source:$('statsSource').value||'all'};}
+async function fetchStats(force=false){
+ if(statsLoading||(!force&&Date.now()-lastStatsFetch<15000))return;
+ statsLoading=true;$('statsUpdated').textContent='Consultando SQLite...';
+ try{
+ const filter=new URLSearchParams(statsFilters());
+ const result=await api('/api/analytics?'+filter.toString());statData=result;lastStatsFetch=Date.now();
+ $('statsUpdated').textContent='Atualizado '+new Date(result.generated_ms).toLocaleTimeString('pt-BR');
+ renderStats();
+ }catch(e){$('statsUpdated').textContent='Falha: '+e.message;notify('Estatísticas: '+e.message,true);}
+ finally{statsLoading=false;}
+}
+$('statsPeriod').onchange=()=>fetchStats(true);$('statsNode').onchange=()=>fetchStats(true);$('statsSource').onchange=()=>fetchStats(true);
+$('statsReload').onclick=()=>fetchStats(true);
+function syncStatFilters(){
+ const n=$('statsNode'),old=n.value;const nodesig=nodes.map(x=>x.node_num+':'+x.long_name).join('|');
+ if(n.dataset.sig!==nodesig){n.innerHTML='<option value="">Todos</option>'+nodes.map(x=>'<option value="'+x.node_num+'">'+esc(x.short_name||x.long_name||x.node_id)+'</option>').join('');n.value=old;n.dataset.sig=nodesig;}
+ const src=$('statsSource'),v=src.value,sig=state.sources.map(x=>x.id+':'+x.name).join('|');
+ if(src.dataset.sig!==sig){src.innerHTML='<option value="">Todas</option>'+state.sources.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');src.value=v;src.dataset.sig=sig;}
+}
+$('statsPDF').onclick=async()=>{
+ try{
+ $('statsPDF').disabled=true;notify('Gerando PDF técnico a partir do SQLite...');
+ const res=await fetch('/api/report/pdf',{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(statsFilters())});
+ if(!res.ok){let err=await res.json();throw Error(err.error||'Falha PDF');}
+ const blob=await res.blob();if(blob.type!=='application/pdf')throw Error('Resposta não é PDF');
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;
+ a.download='PT2VHF_Mesh_Analyzer_Relatorio_'+new Date().toISOString().slice(0,16).replaceAll(':','-')+'.pdf';a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),5000);notify('Relatório PDF gerado.');
+ }catch(e){notify('PDF: '+e.message,true);}finally{$('statsPDF').disabled=false;}
+};
+$('statsCSV').onclick=()=>{
+ if(!statData){notify('Atualize Estatísticas primeiro.',true);return;}
+ const rows=[['Categoria','Item','Contagem']];
+ for(const p of statData.packet_types)rows.push(['Tipo',p.name,p.count]);
+ for(const p of statData.top_originators)rows.push(['Origem',p.name,p.count]);
+ for(const p of statData.source_breakdown)rows.push(['Fonte',p.name,p.count]);
+ const csv='\ufeff'+rows.map(row=>row.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(';')).join('\r\n');
+ const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');
+ a.href=url;a.download='PT2VHF_Estatisticas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
 function showSettings(panel){document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));if(panel==='sources')renderSources();if(panel==='retention')renderRetention();if(panel==='lora')renderLoraSources();}
 document.querySelectorAll('.settingsTab').forEach(b=>b.onclick=()=>showSettings(b.dataset.panel));
 const kindTitles={serial:'USB/Serial',tcp:'Wi-Fi/TCP',ble:'Bluetooth LE',mqtt:'MQTT (RX)'};
@@ -366,7 +505,8 @@ $('updateCheck').onclick=()=>checkUpdates(true);
 scheduleUpdateCheck();
 setTimeout(()=>checkUpdates(false),3000);
 
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();renderNodes();renderPackets();renderStats();if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
-resetSourceForm();setView(initialView,false);refreshAll();setInterval(refreshAll,4000);
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){const slug=location.pathname.split('/').pop();if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;}
+setView(initialView,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
 </script>
 </body></html>
