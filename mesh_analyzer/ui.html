@@ -144,7 +144,157 @@ function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
 function initMap(){if(map||!window.L)return;map=L.map('map',{zoomControl:true}).setView([-15.793,-47.882],9);nodeLayer=L.layerGroup().addTo(map);linkLayer=L.layerGroup().addTo(map);setTiles();}
 let currentTiles=null;
-function setTiles(){if(!map)return;if(currentTiles)map.removeLayer(currentTiles);const kind=$('mapType').value;const sources={osm:['https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png','© OpenStreetMap contributors'],topo:['https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png','© OpenTopoMap contributors'],satellite:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','Tiles © Esri']};const [url,attr]=sources[kind];currentTiles=L.tileLayer(url,{maxZoom:18,attribution:attr}).addTo(map);}
+
+let radarLayer=null,shadeLayer=null,terrainLayer=null,lastRadarPath='',radarTimer=null;
+function setTiles(){
+ if(!map)return;
+ if(currentTiles)map.removeLayer(currentTiles);
+ const kind=$('mapType').value;
+ const sources={
+ osm:['https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png','© OpenStreetMap contributors'],
+ topo:['https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png','© OpenTopoMap contributors'],
+ satellite:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}','Tiles © Esri'],
+ light:['https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png','© OpenStreetMap contributors © CARTO'],
+ dark:['https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png','© OpenStreetMap contributors © CARTO']
+ };
+ const [url,attr]=sources[kind]||sources.osm;
+ currentTiles=L.tileLayer(url,{maxZoom:18,attribution:attr}).addTo(map);
+ try{localStorage.setItem('mesh.map.base',kind);}catch(e){}
+}
+function readMapSettings(){
+ try{
+ const base=localStorage.getItem('mesh.map.base');if([...$('mapType').options].some(o=>o.value===base))$('mapType').value=base;
+ const obj=JSON.parse(localStorage.getItem('mesh.map.layers')||'{}');
+ for(const [id,val] of Object.entries(obj)){
+  const el=$(id);if(!el)continue;if(el.type==='checkbox')el.checked=Boolean(val);else el.value=String(val);
+ }
+ }catch(e){}
+ $('terrainSlider').hidden=!$('mapTerrain').checked;
+ $('terrainValue').textContent=$('terrainCut').value+' m';
+}
+function saveMapSettings(){
+ const ids=['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity'];
+ const value={};for(const id of ids){const el=$(id);value[id]=el.type==='checkbox'?el.checked:el.value;}
+ try{localStorage.setItem('mesh.map.layers',JSON.stringify(value));}catch(e){}
+}
+async function updateRadar(){
+ if(!map||!$('mapRadar').checked){if(radarLayer){map?.removeLayer(radarLayer);radarLayer=null;}return;}
+ $('radarStatus').textContent='Radar: consultando imagens...';
+ try{
+ const ctrl=new AbortController();const timeout=setTimeout(()=>ctrl.abort(),6500);
+ let response;try{response=await fetch('https://api.rainviewer.com/public/weather-maps.json',{signal:ctrl.signal,cache:'no-cache'});}finally{clearTimeout(timeout);}
+ if(!response.ok)throw Error('HTTP '+response.status);
+ const info=await response.json();const frames=info.radar?.past||[];const frame=frames.at(-1)||info.radar?.nowcast?.[0];
+ if(!frame?.path||!info.host)throw Error('Quadro de radar indisponível');
+ const url=info.host+frame.path+'/256/{z}/{x}/{y}/2/1_1.png';
+ if(frame.path!==lastRadarPath){
+  if(radarLayer)map.removeLayer(radarLayer);
+  radarLayer=L.tileLayer(url,{minZoom:0,maxNativeZoom:7,maxZoom:18,opacity:Number($('mapRadarOpacity').value)/100,attribution:'Radar © RainViewer'}).addTo(map);
+  lastRadarPath=frame.path;
+ }else if(radarLayer)radarLayer.setOpacity(Number($('mapRadarOpacity').value)/100);
+ const clock=new Date(Number(frame.time)*1000);
+ $('radarStatus').textContent='Radar: '+clock.toLocaleTimeString('pt-BR');
+ }catch(e){$('radarStatus').textContent='Radar indisponível: '+e.message;
+  if(radarLayer){map.removeLayer(radarLayer);radarLayer=null;}
+ }
+}
+function updateHillshade(){
+ if(!map)return;
+ if($('mapHillshade').checked){
+  if(!shadeLayer)shadeLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
+    {maxNativeZoom:13,maxZoom:18,opacity:.45,attribution:'Hillshade © Esri'}).addTo(map);
+ }else if(shadeLayer){map.removeLayer(shadeLayer);shadeLayer=null;}
+}
+function getTerrainClass(){
+ if(!window.L)return null;
+ return L.GridLayer.extend({
+  createTile:function(coords,done){
+   const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
+   const ctx=canvas.getContext('2d',{willReadFrequently:true});
+   const img=new Image();img.crossOrigin='anonymous';
+   img.onload=()=>{
+    try{
+     ctx.drawImage(img,0,0,256,256);
+     const dat=ctx.getImageData(0,0,256,256),rgba=dat.data;
+     const cutoff=Number($('terrainCut').value);
+     for(let i=0;i<rgba.length;i+=4){
+      const alt=rgba[i]*256+rgba[i+1]+rgba[i+2]/256-32768;
+      if(alt<cutoff){rgba[i+3]=0;continue;}
+      const height=Math.min(1,(alt-cutoff)/1800);
+      rgba[i]=65+Math.round(height*110);
+      rgba[i+1]=144+Math.round(height*44);
+      rgba[i+2]=91-Math.round(height*36);
+      rgba[i+3]=210;
+     }
+     ctx.putImageData(dat,0,0);done(null,canvas);
+    }catch(e){ctx.clearRect(0,0,256,256);done(null,canvas);}
+   };
+   img.onerror=()=>done(null,canvas);
+   const zz=Math.min(coords.z,12);
+   const factor=Math.pow(2,coords.z-zz);
+   const x=Math.floor(coords.x/factor),y=Math.floor(coords.y/factor);
+   img.src='https://s3.amazonaws.com/elevation-tiles-prod/terrarium/'+zz+'/'+x+'/'+y+'.png';
+   return canvas;
+  }
+ });
+}
+function updateTerrain(){
+ if(!map)return;
+ $('terrainSlider').hidden=!$('mapTerrain').checked;
+ if($('mapTerrain').checked){
+  if(terrainLayer){map.removeLayer(terrainLayer);terrainLayer=null;}
+  const Terrain=getTerrainClass();
+  terrainLayer=new Terrain({tileSize:256,opacity:Number($('terrainOpacity').value)/100,maxZoom:18,updateWhenIdle:true});
+  terrainLayer.addTo(map);
+ }else if(terrainLayer){map.removeLayer(terrainLayer);terrainLayer=null;}
+}
+readMapSettings();
+let terrainRefresh=null;
+for(const id of ['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity']){
+ $(id).addEventListener('change',()=>{
+  if(id==='terrainMax'){
+    const n=Number($('terrainMax').value);
+    if(!Number.isInteger(n)||n<100||n>9000){notify('O limite deve estar entre 100 e 9000 m',true);return;}
+    $('terrainCut').max=n;if(Number($('terrainCut').value)>n)$('terrainCut').value=n;
+  }
+  $('terrainValue').textContent=$('terrainCut').value+' m';saveMapSettings();
+  if(id.startsWith('mapRadar'))updateRadar();
+  else if(id==='mapHillshade')updateHillshade();
+  else {clearTimeout(terrainRefresh);terrainRefresh=setTimeout(updateTerrain,150);}
+ });
+}
+$('terrainCut').oninput=()=>{$('terrainValue').textContent=$('terrainCut').value+' m';clearTimeout(terrainRefresh);terrainRefresh=setTimeout(()=>{saveMapSettings();updateTerrain();},240);};
+const oldInit=initMap;
+initMap=function(){
+ if(map||!window.L)return;oldInit();
+ updateRadar();updateHillshade();updateTerrain();
+ if(!radarTimer)radarTimer=setInterval(updateRadar,300000);
+};
+let lastAnimatedTs=null,activePulses=0;
+function pulseNewPackets(current){
+ if(!map||view!=='map'||!Array.isArray(current))return;
+ const newest=Math.max(0,...current.map(p=>Number(p.timestamp_ms)||0));
+ if(lastAnimatedTs===null){lastAnimatedTs=newest;return;}
+ if(newest<=lastAnimatedTs)return;
+ const fresh=current.filter(p=>p.timestamp_ms>lastAnimatedTs).slice(-12);
+ lastAnimatedTs=newest;
+ for(const p of fresh){
+  if(activePulses>=20)break;
+  if(p.via_mqtt)continue; // MQTT transport cannot prove a radio-hop path.
+  const n=nodes.find(x=>x.node_num===p.from_node);
+  if(!n||!validPos(n))continue;
+  // Pulse at observed transmitting node only; no fabricated direct path.
+  activePulses++;
+  const marker=L.circleMarker([n.latitude,n.longitude],{radius:5,color:'#ffd438',weight:2,opacity:1,fillOpacity:.6}).addTo(map);
+  marker.bindTooltip('Pacote observado: '+String(p.port||'')+'. Caminho RF não confirmado.');
+  let step=0;
+  const animation=setInterval(()=>{
+   if(!map||++step>=16){clearInterval(animation);if(map&&map.hasLayer(marker))map.removeLayer(marker);activePulses--;return;}
+   marker.setRadius(5+step*1.4);marker.setStyle({opacity:1-step/16,fillOpacity:.6*(1-step/16)});
+  },70);
+ }
+}
+
 function renderMap(){if(!map){initMap();if(!map)return;}nodeLayer.clearLayers();linkLayer.clearLayers();const query=$('mapSearchInput').value;const allowed=new Set(nodes.filter(n=>matches(n,query)).map(n=>n.node_num));$('mapSearchCount').textContent=query?`${allowed.size} de ${nodes.length}`:`${nodes.length} nós`;
  if($('showMapLinks').checked){for(const edge of links){if(!allowed.has(edge.a)||!allowed.has(edge.b))continue;const a=nodes.find(n=>n.node_num===edge.a),b=nodes.find(n=>n.node_num===edge.b);if(!a||!b||!validPos(a)||!validPos(b))continue;let line=L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],{color:'#ffbd50',weight:2,dashArray:'6 8',opacity:.8});line.bindTooltip(`${esc(idName(edge.a))} ↔ ${esc(idName(edge.b))}: rota observada, RF direto não confirmado`);line.addTo(linkLayer);}}
  if($('showMapNodes').checked){const coords=[];for(const n of nodes){if(!allowed.has(n.node_num)||!validPos(n))continue;const point=[n.latitude,n.longitude],marker=L.circleMarker(point,{radius:7,color:'#ffffff',fillColor:Date.now()-n.last_seen_ms<7200000?'#2ecc71':'#e9a94d',fillOpacity:.95,weight:1});marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id),{permanent:$('showNames').checked,direction:'top'});marker.on('click',()=>showNode(n));marker.addTo(nodeLayer);coords.push(point);}lastMapBounds=coords.length?L.latLngBounds(coords):null;}}
@@ -505,7 +655,7 @@ $('updateCheck').onclick=()=>checkUpdates(true);
 scheduleUpdateCheck();
 setTimeout(()=>checkUpdates(false),3000);
 
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links')]);state=results[0];nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;$('connectedStatus').textContent=connections.length?connections.length+' fonte(s) conectada(s)':'Sem fontes conectadas';$('mapSourceState').textContent=connections.length?'Ao vivo · '+connections.length+' fonte(s)':'Aguardando rádio';renderMap();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){const slug=location.pathname.split('/').pop();if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;}
 setView(initialView,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
 </script>
