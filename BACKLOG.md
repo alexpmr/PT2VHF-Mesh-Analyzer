@@ -71,6 +71,17 @@ Referência visual/funcional: **[PT2VHF Traffic Analyzer](https://github.com/ale
 
 - [**#16 — Configurações → Mapa, controles completos**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/16): replicar a subaba Mapa do Traffic Analyzer legado conforme as duas capturas; janela temporal, mínimo de observações, tipo/brilho do mapa, máximo do slider de relevo, estilos independentes RF amarelo contínuo (somente comprovado) e MQTT/não RF tracejado, espessuras e botão restaurar, opções mostrar nós/linhas/nomes/identificados/heatmap, Auto Zoom durante traceroutes com restauração. Incluir **sonificação** (tema Fliperama anos 70, testes, volume, densidade, intervalo, máximo simultâneo, categories e estéreo espacial) e **animações de atividade em tempo real** (origem/resposta/relay observado, duração). Configurações persistentes e sincronizadas com o mapa sem inventar RF/ACK/retransmissores. Relacionada às issues #11 e #12; **pendente**.
 
+## Inicialização desktop e Configurações → Sistema — opções Web (14/10/2026)
+
+- [**#17 — Abrir janela própria do aplicativo por padrão**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/17): corrigir o executável atual, que chama `webbrowser.open` e abre a interface no navegador por padrão. Abrir janela desktop independente (WebView2 ou equivalente) com ícone na barra de tarefas, mantendo servidor local em loopback sem navegador externo automático.
+- [**#18 — Configurações → Sistema: duas opções Web independentes**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/18):
+  1. **Abrir página web no navegador ao iniciar:** padrão **Não**. Quando Sim, abrir navegador **local** adicionalmente à janela desktop, sem abrir instância duplicada.
+  2. **Permitir acesso via Web de outros computadores:** padrão **Não**. Quando Sim, disponibilizar LAN **somente após autenticação segura** (issue #3), seleção de IP/porta, status do listener, URL e botão de copiar; desligar retira acesso LAN imediatamente sem afetar o app local.
+  - Quatro combinações testáveis: ambos Não (apenas desktop); navegador Sim/LAN Não (desktop + navegador local); navegador Não/LAN Sim (desktop + rede autenticada); ambos Sim (desktop + navegador local + rede autenticada). Persistir escolhas no perfil, informar erros e evitar conflito de porta e processos órfãos. Ativar uma opção nunca habilita a outra.
+- [**#3 — Segurança do acesso Web pela LAN**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/3): autenticação em todas as APIs, sessão, CSRF, HTTPS/proxy e restrição de acesso remoto; **não abrir 0.0.0.0 sem essas proteções**.
+
+**Status: backlog, ainda não implementado na v0.2.0.**
+
 ## Instalador — impedimento ao atualizar com aplicação aberta (14/10/2026)
 
 - [**#15 — Instalação/atualização bloqueada por instâncias abertas**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/15): o instalador Inno Setup da v0.2.0 informa que existem aplicações abertas e não consegue pará-las. Detectar a instância correta do **PT2VHF Mesh Analyzer**; solicitar fechamento seguro, encerrar atividade de fontes LoRa e SQLite, aguardar liberação do executável (incluindo PyInstaller onefile), e continuar automaticamente. Se falhar, oferecer Tentar novamente/Cancelar e término forçado somente da instância validada, com consentimento. **Não encerrar navegadores, outros softwares/PT2VHF ou processos de terceiros.** Preservar banco, configurações e instalação anterior em caso de erro; testar em Windows 11 instalado, com aplicativo aberto e durante atualização. Pendente de implementação/validação.
