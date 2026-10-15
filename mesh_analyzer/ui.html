@@ -1004,10 +1004,35 @@ async function refreshNodeQueryStatus(node){
   const r=await api('/api/queries?node='+encodeURIComponent(node));
   const out=$('nodeQueryLive');if(!out)return;
   const rows=r.data||[];
-  out.textContent=rows.length?rows.slice(0,12).map(q=>
-    q.kind+': '+q.state+' · '+fmtDate(q.created_ms)+
-    (q.response?' · '+JSON.stringify(q.response).slice(0,350):'')+
-    (q.error?' · '+q.error:'')).join('\n'):'Nenhuma consulta efetuada.';
+  const states={replied:'Resposta recebida',awaiting_reply:'Aguardando resposta',
+    sending:'Transmitindo',timeout:'Sem resposta (timeout)',error:'Erro',disconnected:'Rádio desconectado'};
+  out.innerHTML=rows.length?rows.slice(0,12).map(q=>{
+    const heading='<div class="nodeField"><b>'+esc(q.kind.toUpperCase())+'</b><span>'+
+      esc(states[q.state]||q.state)+' · '+esc(fmtDate(q.created_ms))+'</span></div>';
+    if(q.kind==='traceroute'&&q.state==='replied'){
+      const d=q.route_detail||{},forward=Array.isArray(d.route)?d.route:[],
+       back=Array.isArray(d.route_back)?d.route_back:[];
+      const source=state.connections?.[String(q.source_id)]?.local_node_num;
+      const routeLine=(title,ids,reverse=false)=>{
+        if(!ids.length)return '<p class="muted">'+esc(title)+': nenhum salto intermediário informado.</p>';
+        const chain=reverse?[q.target,...ids,source]:[source,...ids,q.target];
+        return '<p><b>'+esc(title)+':</b> '+chain.filter(x=>x!=null).
+          map(x=>esc(idName(Number(x)))).join(' → ')+
+          ' <span class="muted">(evidência de traceroute, não enlace RF direto local)</span></p>';
+      };
+      const fS=Array.isArray(d.snr_towards_raw)?d.snr_towards_raw:[],
+       bS=Array.isArray(d.snr_back_raw)?d.snr_back_raw:[];
+      return '<div class="nodeSection">'+heading+
+       '<p class="muted">Resposta recebida. Rotas vazias não comprovam enlace direto.</p>'+
+       routeLine('Ida',forward)+routeLine('Retorno',back,true)+
+       '<p class="muted">SNR bruto (ida): '+esc(fS.join(', ')||'não informado')+
+       ' · retorno: '+esc(bS.join(', ')||'não informado')+
+       '. Valores do protocolo ainda não convertidos para dB.</p></div>';
+    }
+    return '<div class="nodeSection">'+heading+
+       (q.response?'<pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(JSON.stringify(q.response).slice(0,1300))+'</pre>':'')+
+       (q.error?'<p class="bad">'+esc(q.error)+'</p>':'')+'</div>';
+  }).join(''):'Nenhuma consulta efetuada.';
  }catch(e){}
 }
 const NODE_QUERY_LABELS=['Informações do nó','Posição','Energia','Traceroute',
@@ -1061,7 +1086,7 @@ function nodePopupHtml(n){
    '<p class="muted">Consultas reais pelo rádio ativo; a transmissão não garante resposta. Telemetria depende do firmware remoto.</p><div class="actions">'+
    RF_QUERY_TYPES.map(([k,l])=>'<button type="button" data-rf-query="'+k+'" '+(activeRadioSource()?'':'disabled')+'>'+esc(l)+'</button>').join('')+
    '<button type="button" disabled title="Sem implementação segura nesta versão">Tudo (em breve)</button></div>'+ 
-   '<pre id="nodeQueryLive" style="white-space:pre-wrap;overflow-wrap:anywhere">Nenhuma consulta efetuada.</pre>'+
+   '<div id="nodeQueryLive" aria-live="polite">Nenhuma consulta efetuada.</div>'+
    '<div class="nodeQueryGrid">'+queries+'</div></div>'+
    '<div class="nodeSection"><h3>Últimos metadados recebidos</h3>'+
    '<p class="muted">Histórico recente disponível localmente. Nem todas as métricas podem ser obtidas dos pacotes.</p>'+
