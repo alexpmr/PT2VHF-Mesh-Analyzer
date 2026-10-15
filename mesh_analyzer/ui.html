@@ -1221,8 +1221,97 @@ $('trafficExport').onclick=()=>{
 $('trafficFilter').oninput=renderPackets;$('trafficReload').onclick=refreshAll;
 function chatKey(m){if((m.to_node===null||m.to_node===0xffffffff)&&Number(m.channel||0)===0)return 'channel:0';if(m.to_node===null||m.to_node===0xffffffff)return 'channel:'+m.channel;const a=m.direction==='tx'?m.to_node:m.from_node;return a!=null?'node:'+a:'channel:'+m.channel;}
 function openDm(id){currentChat='node:'+id;setView('messages');renderChat();}
-function renderChat(){const chats=new Set(['channel:0']);for(const m of messages)chats.add(chatKey(m));for(const n of nodes)chats.add('node:'+n.node_num);const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:a.localeCompare(b));$('contacts').innerHTML=list.map(key=>`<button class="contact ${key===currentChat?'selected':''}" data-chat="${esc(key)}">${esc(key.startsWith('node:')?idName(Number(key.slice(5))):key==='channel:0'?'📡 Canal primário':'Canal '+key.slice(8))}</button>`).join('');$('contacts').querySelectorAll('[data-chat]').forEach(el=>el.onclick=()=>{currentChat=el.dataset.chat;renderChat();});$('chatHeader').textContent=currentChat.startsWith('node:')?'Privado: '+idName(Number(currentChat.slice(5))):currentChat==='channel:0'?'Canal primário':'Canal '+currentChat.slice(8);const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);$('bubbles').innerHTML=filtered.map(m=>`<div class="bubble ${m.direction==='tx'?'tx':''}"><div>${esc(m.text)}</div><small>${esc(idName(m.from_node))} · ${esc(fmtDate(m.timestamp_ms))} ${m.state==='accepted_by_radio'?'· TX aceito pelo rádio':''}</small></div>`).join('')||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';$('bubbles').scrollTop=$('bubbles').scrollHeight;const enabled=state.sources.filter(s=>s.enabled&&s.kind!=='mqtt'&&state.connections[String(s.id)]?.status==='connected');const old=$('messageSource').value;$('messageSource').innerHTML=enabled.map(s=>`<option value="${s.id}">${esc(s.name)} (${esc(s.kind)})</option>`).join('')||'<option value="">Nenhum rádio conectado</option>';if(enabled.some(x=>String(x.id)===old))$('messageSource').value=old;$('messageSend').disabled=enabled.length===0;}
-$('messageSend').onclick=async()=>{try{const text=$('messageText').value.trim();if(!text)throw Error('Digite a mensagem');const source_id=Number($('messageSource').value);if(!source_id)throw Error('Conecte um rádio bidirecional');const to_node=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';const channel=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);const result=await api('/api/messages/send',{text,source_id,to_node,channel});$('messageText').value='';notify('Mensagem aceita pelo rádio. Entrega não confirmada.');await refreshAll();}catch(e){notify(e.message,true);}};$('messageText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('messageSend').click();}};
+let messageSending=false,pendingChat=null;
+function txRadioSources(){
+ return (state.sources||[]).filter(x=>x.kind!=='mqtt'&&x.enabled&&
+   state.connections?.[String(x.id)]?.status==='connected'&&
+   state.connections[String(x.id)].tx_capable===true);
+}
+function txStatusReason(){
+ const radios=(state.sources||[]).filter(x=>x.kind!=='mqtt');
+ if(!radios.length)return 'Cadastre um rádio USB/BLE/TCP em Configurações → Conexões.';
+ if(!radios.some(x=>x.enabled))return 'As conexões de rádio estão desativadas.';
+ if(!radios.some(x=>state.connections?.[String(x.id)]?.status==='connected'))
+   return 'Rádio desconectado; consulte Configurações → Conexões.';
+ return 'O rádio está conectado, mas o driver não oferece envio de texto.';
+}
+function messageStateHtml(m){
+ if(m.direction!=='tx')return '';
+ if(m.state==='accepted_by_radio')
+   return '<span class="msgState accepted" title="✓ Aceita pelo rádio local; entrega e leitura desconhecidas">✓</span>';
+ if(m.state==='queued'||m.state==='sending')
+   return '<span class="msgState working" title="Aguardando envio">◷</span>';
+ if(m.state==='rejected'||m.state==='failed')
+   return '<span class="msgState error" title="Falha no envio">!</span>';
+ return '';
+}
+function renderChat(){
+ const chats=new Set(['channel:0']);
+ for(const m of messages)chats.add(chatKey(m));
+ for(const n of nodes)chats.add('node:'+n.node_num);
+ const nameOf=key=>key.startsWith('node:')?idName(Number(key.slice(5))):
+   key==='channel:0'?'Canal primário':'Canal '+key.slice(8);
+ const lastByKey=key=>Math.max(0,...messages.filter(m=>chatKey(m)===key).map(m=>Number(m.timestamp_ms)||0));
+ const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:lastByKey(b)-lastByKey(a)||a.localeCompare(b));
+ $('contacts').innerHTML=list.map(key=>{
+  const latest=messages.filter(m=>chatKey(m)===key).at(-1);
+  return '<button type="button" class="contact '+(key===currentChat?'selected':'')+
+    '" data-chat="'+esc(key)+'">'+esc(nameOf(key))+
+    (latest?'<small style="display:block;color:var(--muted)">'+esc(latest.text.slice(0,55))+'</small>':'')+
+    '</button>';
+ }).join('');
+ $('contacts').querySelectorAll('[data-chat]').forEach(el=>{
+   el.onclick=()=>{currentChat=el.dataset.chat;renderChat();};
+   if(el.dataset.chat.startsWith('node:')){
+     el.addEventListener('contextmenu',e=>{e.preventDefault();openNodeContext(Number(el.dataset.chat.slice(5)),e.clientX,e.clientY);});
+   }
+ });
+ $('chatHeader').textContent=currentChat.startsWith('node:')?
+   'Privado · '+nameOf(currentChat):nameOf(currentChat);
+ const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);
+ let html=filtered.map(m=>'<div class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
+   esc(m.text)+'</div><small>'+esc(new Date(m.timestamp_ms).toLocaleTimeString('pt-BR'))+
+   (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
+   messageStateHtml(m)+'</small></div>').join('');
+ if(pendingChat?.chat===currentChat){
+  html+='<div class="bubble tx"><div>'+esc(pendingChat.text)+'</div><small>'+
+     (pendingChat.failed?'Falha':'Enviando')+
+     (pendingChat.failed?'<span class="msgState error">!</span>':
+       '<span class="msgState working" title="Aguardando rádio">◷</span>')+'</small></div>';
+ }
+ $('bubbles').innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
+ $('bubbles').scrollTop=$('bubbles').scrollHeight;
+ const choices=txRadioSources(),previous=$('messageSource').value;
+ $('messageSource').innerHTML=choices.map(x=>'<option value="'+x.id+'">'+esc(x.name)+' ('+esc(x.kind)+')</option>').join('')||
+   '<option value="">Nenhum rádio TX disponível</option>';
+ if(choices.some(x=>String(x.id)===previous))$('messageSource').value=previous;
+ $('messageSend').disabled=!choices.length||messageSending;
+ $('messageSend').title=choices.length?'Enviar via rádio':'Indisponível: '+txStatusReason();
+ $('messageTxStatus').textContent=messageSending?'◷ Enviando ao rádio local...':
+   choices.length?'Rádio TX disponível. Entrega/leitura não comprovadas.':txStatusReason();
+}
+$('messageSend').onclick=async()=>{
+ if(messageSending)return;
+ const original=$('messageText').value,text=original.trim();
+ if(!text){notify('Digite a mensagem.',true);return;}
+ const bytes=new TextEncoder().encode(text).length;
+ if(bytes>220){notify('Limite 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
+ const src=Number($('messageSource').value);
+ if(!txRadioSources().some(x=>x.id===src)){notify(txStatusReason(),true);renderChat();return;}
+ const target=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';
+ const ch=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);
+ messageSending=true;pendingChat={chat:currentChat,text,failed:false};renderChat();
+ try{
+  await api('/api/messages/send',{source_id:src,to_node:target,text,channel:ch});
+  $('messageText').value='';pendingChat=null;
+  notify('✓ Aceita pelo rádio local. Entrega e leitura não confirmadas.');
+  await refreshAll();
+ }catch(e){pendingChat={chat:currentChat,text,failed:true};notify('Falha TX: '+e.message,true);}
+ finally{messageSending=false;renderChat();}
+};
+$('messageText').onkeydown=e=>{
+ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!$('messageSend').disabled)$('messageSend').click();}
+};
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
