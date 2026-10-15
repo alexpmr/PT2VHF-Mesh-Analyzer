@@ -109,6 +109,9 @@ class PassiveTrafficTests(unittest.TestCase):
         self.assertIn("Start-Process -FilePath $exe -WorkingDirectory",RUNNER_PS)
         self.assertIn("WriteNotice 'failed' $reason",RUNNER_PS)
         self.assertIn("System.Windows.Forms.MessageBox",RUNNER_PS)
+        self.assertIn("'/SILENT'",RUNNER_PS)
+        self.assertNotIn("'/VERYSILENT'",RUNNER_PS)
+        self.assertIn("PHASE setup-finished exit=",RUNNER_PS)
 
     def test_detached_runner_handshake_before_shutdown(self):
         import json
