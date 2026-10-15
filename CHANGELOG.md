@@ -1,3 +1,11 @@
+# v0.6.16 — Monitor TX/RX e aprimoramentos da topologia
+
+- Consultas RF do usuário e da automação gravadas como TX com origem do rádio local e destino individual do nó, packet ID e tipo; separação de RX na aba de tráfego e exportação CSV (#85).
+- Preserva histórico RX no SQLite com migração idempotente da coluna direction.
+- Integra mudanças da PR #84 portando decomposição orientada de traceroute do Traffic Analyzer, com testes de integração pacote → SQLite → API. #76 permanece aberta até validação do mapa real.
+- Não considera mensagens de broadcast RX como TX. Mantém a cautela sobre RF direto sem evidência.
+- Pendências conhecidas: autodetecção de rádios #72, ícone Windows #77 e validação de atualização #69.
+
 # v0.6.15 — Correção de inicialização do atualizador Windows (15/10/2026)
 
 - Corrige o launcher PowerShell externo removendo a combinação DETACHED_PROCESS + CREATE_NO_WINDOW; mantém execução oculta.

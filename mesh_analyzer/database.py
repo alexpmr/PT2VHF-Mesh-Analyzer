@@ -84,6 +84,7 @@ class Database:
                 hop_limit INTEGER,
                 via_mqtt INTEGER NOT NULL DEFAULT 0,
                 encrypted INTEGER NOT NULL DEFAULT 0,
+                direction TEXT NOT NULL DEFAULT 'rx',
                 text_preview TEXT,
                 raw_json TEXT
             );
@@ -198,6 +199,9 @@ class Database:
                 value TEXT NOT NULL
             );
             """)
+            packet_columns = {row[1] for row in self._db.execute("PRAGMA table_info(packets)")}
+            if "direction" not in packet_columns:
+                self._db.execute("ALTER TABLE packets ADD COLUMN direction TEXT NOT NULL DEFAULT 'rx'")
             columns = {row[1] for row in self._db.execute("PRAGMA table_info(nodes)")}
             if "voltage" not in columns:
                 self._db.execute("ALTER TABLE nodes ADD COLUMN voltage REAL")
@@ -742,12 +746,13 @@ class Database:
                 "note":"Relações de rota/neighbor não são prova de RF direto."}
 
     def add_packet(self, item:dict):
-        fields=["source_id","packet_id","source_packet_key","timestamp_ms","from_node","to_node", "port","channel","rx_snr","rx_rssi","hop_start","hop_limit","via_mqtt","encrypted","text_preview","raw_json"]
+        fields=["source_id","packet_id","source_packet_key","timestamp_ms","from_node","to_node", "port","channel","rx_snr","rx_rssi","hop_start","hop_limit","via_mqtt","encrypted","direction","text_preview","raw_json"]
         with self._lock,self._db:
             try:
                 values = dict(item)
                 values.setdefault("via_mqtt",0)
                 values.setdefault("encrypted",0)
+                values.setdefault("direction","rx")
                 self._db.execute("INSERT INTO packets("+",".join(fields)+") VALUES("+",".join("?" for _ in fields)+")",
                                  [values.get(k) for k in fields])
                 return True
@@ -815,7 +820,7 @@ class Database:
               last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),observations=observations+1""",(source_id,a,b,quality,ts,ts))
 
     def packet_rows(self,limit=300):
-        return self._rows("SELECT id,source_id,packet_id,timestamp_ms,from_node,to_node,port,channel,rx_snr,rx_rssi,hop_start,hop_limit,via_mqtt,encrypted,text_preview FROM packets ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(min(int(limit),3000),))
+        return self._rows("SELECT id,source_id,packet_id,timestamp_ms,from_node,to_node,port,channel,rx_snr,rx_rssi,hop_start,hop_limit,via_mqtt,encrypted,direction,text_preview FROM packets ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(min(int(limit),3000),))
 
     def message_rows(self,limit=300):
         return self._rows("SELECT * FROM messages ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(min(int(limit),3000),))
