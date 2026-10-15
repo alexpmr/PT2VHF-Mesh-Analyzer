@@ -13,7 +13,7 @@ Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
-UninstallDisplayIcon={app}\PT2VHF-Mesh-Analyzer.exe
+UninstallDisplayIcon={app}\branding\mesh-analyzer.ico
 WizardStyle=modern
 SetupIconFile=..\branding\mesh-analyzer.ico
 CloseApplications=no
@@ -21,11 +21,13 @@ RestartApplications=no
 
 [Files]
 Source: "..\dist\PT2VHF-Mesh-Analyzer.exe"; DestDir: "{app}"; Flags: ignoreversion
+; Icon stored separately at a stable path, independent of onefile exe resource cache.
+Source: "..\branding\mesh-analyzer.ico"; DestDir: "{app}\branding"; Flags: ignoreversion
 Source: "..\windows\close_running_mesh.ps1"; Flags: dontcopy
 
 [Icons]
-Name: "{group}\PT2VHF Mesh Analyzer"; Filename: "{app}\PT2VHF-Mesh-Analyzer.exe"; IconFilename: "{app}\PT2VHF-Mesh-Analyzer.exe"; AppUserModelID: "PT2VHF.MeshAnalyzer"
-Name: "{autodesktop}\PT2VHF Mesh Analyzer"; Filename: "{app}\PT2VHF-Mesh-Analyzer.exe"; IconFilename: "{app}\PT2VHF-Mesh-Analyzer.exe"; AppUserModelID: "PT2VHF.MeshAnalyzer"; Tasks: desktopicon
+Name: "{group}\PT2VHF Mesh Analyzer"; Filename: "{app}\PT2VHF-Mesh-Analyzer.exe"; IconFilename: "{app}\branding\mesh-analyzer.ico"; AppUserModelID: "PT2VHF.MeshAnalyzer"
+Name: "{autodesktop}\PT2VHF Mesh Analyzer"; Filename: "{app}\PT2VHF-Mesh-Analyzer.exe"; IconFilename: "{app}\branding\mesh-analyzer.ico"; AppUserModelID: "PT2VHF.MeshAnalyzer"; Tasks: desktopicon
 [Tasks]
 Name: desktopicon; Description: "Criar atalho na área de trabalho"; Flags: unchecked
 [Run]
