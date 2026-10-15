@@ -141,7 +141,10 @@ class PacketIngestor:
         packet_id=packet.get("id") or packet.get("packetId")
         if not packet_id:packet_id=hashlib.blake2s(json.dumps(_json_safe(packet),sort_keys=True).encode(),digest_size=8).hexdigest()
         # Duplicate RX events in same source should not inflate statistics.
-        unique=f"{source_id}:{from_num}:{packet_id}:{port_name(decoded.get('portnum'))}:{ts//1000}"
+        # Retransmissions/repeated callbacks with the same Meshtastic packet ID
+        # must remain idempotent even when an API retry crosses a second boundary.
+        # A UTC day bucket avoids conflating genuinely recycled IDs months apart.
+        unique=f"{source_id}:{from_num}:{packet_id}:{port_name(decoded.get('portnum'))}:{ts//86400000}"
         raw_json=json.dumps(_json_safe(packet),ensure_ascii=False)[:12000]
         port=port_name(decoded.get("portnum"))
         text=_parse_text(decoded) if port in ("TEXT_MESSAGE_APP","1") else ""
