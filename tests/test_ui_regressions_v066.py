@@ -78,7 +78,7 @@ class DisplayRegression(unittest.TestCase):
         self.assertIn("el.oncontextmenu=",HTML)
         self.assertIn("el.addEventListener('contextmenu'",HTML)
         self.assertIn("function openNodeContext",HTML)
-        self.assertIn("consulta remota",HTML.lower())
+        self.assertIn("consultas remotas",HTML.lower())
 
 
 if __name__=="__main__":unittest.main()
