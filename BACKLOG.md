@@ -1,3 +1,27 @@
+## v0.6.7 — Correções em validação (15/10/2026)
+
+- **Instalador bloqueado (#15/#34):** script externo fecha exclusivamente as instâncias do Mesh Analyzer do mesmo usuário e mesmo caminho de EXE, com encerramento gracioso e fallback restrito aos PIDs validados, ou interrompe instalação se falhar. Registrar `installer-close.log`. Não garante ainda que a atualização automática funcione até teste físico.
+- **Ícone antigo (#40):** ICO instalado em caminho estável, usado também pelos atalhos e pela janela WebView2. Confirmar comportamento do Windows 11 e cache de atalhos fixados.
+- **Cabeçalho:** verde quando rádio USB/BLE/TCP realmente conectado, vermelho quando desconectado; MQTT não conta como rádio. Tooltip por conexão.
+- **Enviar offline (#45):** popup com “Não há conexão ativa com um rádio Meshtastic para enviar mensagens”, opções **Ir para Conexões** e **Fechar**, sem perder o texto digitado e sem TX.
+- **Popup de enlace (#51):** primeira implementação de `linkPopupHtml()`/`attachLinkPopup()` para RF, rota observada e comunicação lógica: nós clicáveis, qualidade da evidência, fonte, datas, contagens e distância geográfica temporalmente confiável. **Pendentes:** evidências RF detalhadas e métricas RSSI/SNR/hops por segmento, filtros de pacotes e validação visual WebView2.
+- **Não concluídos:** consultas remotas, ACK/REJ de entrega com correlação, leitura humana comprovada, LAN autenticada, i18n integral e dezenas de outras issues. Nenhum recurso depende de criar dados fictícios.
+
+## #51 — Popup completo ao clicar em enlace no mapa (15/10/2026)
+
+- **Pedido com imagem de referência:** clicar em qualquer linha de enlace ou fluxo lógico no Mapa deve abrir uma **janela de detalhes do enlace**; atualmente `renderMap()` utiliza somente `bindTooltip` e não disponibiliza popup com métricas.
+- **Conteúdo:** nomes amigáveis e Node IDs de ambas as pontas, tipo/qualidade da relação, fonte, primeira/última observação, quantidade de pacotes, horários, distância entre coordenadas confiáveis, origem da descoberta e evidências de traceroute/neighbor/RF/MQTT. SNR, RSSI, saltos e histórico apenas quando o banco conseguir rastrear amostras daquela aresta; sem valores artificiais.
+- **Classes distintas:** **RF direto comprovado**, **trecho de traceroute observado**, **vizinhança anunciada**, **comunicação lógica com caminho físico desconhecido**, **Internet/MQTT**. Linhas lógicas não entram em rankings RF direto e nunca recebem rótulo de hop confirmado só por unicast.
+- **Ações:** abrir informações completas de cada nó (#27), ver pacotes relacionados, copiar metadados e fechar; preservar filtros de Conexão/período, enlaces antigos/offline e contexto de nós móveis (posição no tempo do evento, não atual se incoerente).
+- **Implementação:** `links`/`communications` existentes trazem metadados agregados, mas não armazenam necessariamente RSSI/SNR por aresta. Criar identificação estável da relação, API de evidências associadas com limites/segurança e popup Leaflet/compartilhado, sem cruzar medição de pacote multissalto como se fosse do segmento. Clique/teclado/Escape, responsividade, nomes sanitizados, Win11 WebView2.
+- **Issue:** [#51](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/51). **Status:** popup básico implementado em branch v0.6.7; métricas de RF detalhadas ainda pendentes, e recurso não está publicado na v0.6.6.
+
+## v0.6.7 — Mensagens: aviso quando rádio estiver desconectado (14/10/2026)
+
+- **#45:** botão Enviar permanece clicável mesmo sem rádio TX ativo para abrir popup explícito **“Não há conexão ativa com um rádio Meshtastic para enviar mensagens”** com as ações **Ir para Conexões** e **Fechar**. Ir abre `Configurações → Conexões`; Fechar retorna à conversa. Mensagem digitada preservada. Nenhum pacote é transmitido enquanto desconectado.
+- **Critério de aceite:** sem rádio cadastrado, rádio desligado, conexão desativada, MQTT observador e driver sem TX exibem explicação adequada; ao conectar rádio realmente capaz de transmitir, Enviar opera normalmente. Testar Win11/WebView2 e reconexão.
+- **Status:** implementação em branch e testes automatizados; pendente merge/publicação e validação real.
+
 ## v0.6.6 — Itens em revisão (14/10/2026)
 
 - **Implementação candidata:** #49 migração de Camadas para Ver, #48 broadcast amigável, #47 e #35 tipos/hardware amigáveis.

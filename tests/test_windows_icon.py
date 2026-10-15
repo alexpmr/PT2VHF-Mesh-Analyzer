@@ -23,6 +23,22 @@ class TaskbarIconTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "Ícone nativo PT2VHF"):
                     native_window_icon()
 
+    def test_setup_prefers_same_stable_icon_as_shortcuts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            installed = base/"install"/"branding"/"mesh-analyzer.ico"
+            installed.parent.mkdir(parents=True)
+            installed.write_bytes(b"installed-current-ico")
+            embedded = base/"unpack"/"branding"/"mesh-analyzer.ico"
+            embedded.parent.mkdir(parents=True)
+            embedded.write_bytes(b"embedded-portable-ico")
+            with patch.object(sys, "_MEIPASS", str(base/"unpack"), create=True), \
+                 patch.object(sys, "frozen", True, create=True), \
+                 patch.object(sys, "executable", str(base/"install"/"PT2VHF-Mesh-Analyzer.exe")):
+                self.assertTrue(native_window_icon().samefile(installed))
+                installed.unlink()
+                self.assertTrue(native_window_icon().samefile(embedded))
+
     def test_source_checkout_does_not_require_generated_ico(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch.object(sys, "_MEIPASS", tmp, create=True), \
@@ -43,6 +59,10 @@ class TaskbarIconTests(unittest.TestCase):
             self.assertIn("--icon branding/mesh-analyzer.ico", script)
             self.assertIn("--add-data 'branding/mesh-analyzer.ico;branding'", script)
         self.assertIn("AppUserModelID: \"PT2VHF.MeshAnalyzer\"", installer)
+        self.assertIn('Source: "..\\branding\\mesh-analyzer.ico"; DestDir: "{app}\\branding"', installer)
+        self.assertEqual(installer.count('IconFilename: "{app}\\branding\\mesh-analyzer.ico"'), 2)
+        self.assertIn("UninstallDisplayIcon={app}\\branding\\mesh-analyzer.ico", installer)
+        self.assertNotIn('IconFilename: "{app}\\PT2VHF-Mesh-Analyzer.exe"', installer)
 
 
 if __name__ == "__main__":

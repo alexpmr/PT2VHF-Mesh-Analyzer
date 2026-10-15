@@ -16,6 +16,13 @@ def native_window_icon() -> Path | None:
     PyInstaller --onefile extracts --add-data files under sys._MEIPASS.
     """
     base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
+    # Inno Setup copies this icon to an installed, stable path shared by
+    # Desktop/Start shortcuts. Point the WebView2 host there too when present:
+    # a PyInstaller onefile _MEIPASS path changes on every launch.
+    if getattr(sys, "frozen", False):
+        stable = Path(sys.executable).resolve().parent / "branding" / "mesh-analyzer.ico"
+        if stable.is_file():
+            return stable
     icon = base / "branding" / "mesh-analyzer.ico"
     if icon.is_file():
         return icon
