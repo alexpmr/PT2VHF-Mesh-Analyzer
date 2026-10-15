@@ -8,4 +8,4 @@ PyPubSub>=4,<5
 reportlab>=4.2,<5
 
 # Windows embedded WebView2 desktop shell
-pywebview>=5.4,<7
+pywebview>=6.2,<7  # WinForms window icon via webview.start(icon=...) since 6.2.
