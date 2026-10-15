@@ -278,7 +278,9 @@ class UpdateManager:
         approved_asset_url(matches[0].get("url"),version,filename)
         with self._lock:
             if self._phase in ("downloading","verified","installing"):
-                raise ValueError("Já existe uma atualização em andamento")
+                if self._version == version:
+                    return self.status()
+                raise ValueError("Outra versão está em atualização; aguarde a conclusão")
             self._cancel.clear()
             self._phase="downloading"
             self._error=None
