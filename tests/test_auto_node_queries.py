@@ -126,6 +126,15 @@ class EnrichmentTests(unittest.TestCase):
         self.assertIn("Mais de um rádio",result["reason"])
         self.assertFalse(self.sources.queries.sent)
 
+    def test_nodes_heard_only_over_mqtt_are_not_rf_targets(self):
+        mqtt = self.db.upsert_source({"name": "MQTT", "kind": "mqtt",
+            "config": {"host": "test", "topic": "msh/+/2/e/#"}, "enabled": True})
+        self.db.upsert_node(555, mqtt["id"], timestamp_ms=self.now-600000,
+                            observed=True)
+        queue = self.service.tick(dry_run=True)["queue"]
+        self.assertNotIn(555, [q["node"] for q in queue])
+        self.assertIn(200, [q["node"] for q in queue])
+
     def test_simulation_never_transmits_even_when_enabled(self):
         self.service.save({"enabled": True, "max_per_hour": 2})
         result = self.service.tick(dry_run=True)
@@ -162,12 +171,14 @@ class EnrichmentTests(unittest.TestCase):
                 self.service.save(bad)
         self.assertFalse(self.service.config()["enabled"])
 
-    def test_passive_nodeinfo_and_telemetry_skip_completed_queries(self):
+    def test_unknown_age_data_is_eligible_for_freshness_refresh(self):
         self.db.upsert_node(200,self.sid,timestamp_ms=self.now-1000,observed=True,
                long_name="Remote",short_name="REMT",hw_model="HELTEC_V4",
                battery=86,voltage=4.08,latitude=-15.8,longitude=-47.8)
         queue = self.service.tick(dry_run=True)["queue"]
-        self.assertFalse(queue)  # legacy known values, no forced RF refresh
+        self.assertIn("nodeinfo", [x["kind"] for x in queue])
+        self.assertIn("telemetry", [x["kind"] for x in queue])
+        self.assertNotIn("position", [x["kind"] for x in queue])
         self.assertFalse(self.sources.queries.sent)
 
 
