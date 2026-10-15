@@ -128,7 +128,7 @@ class PacketIngestor:
         except Exception:
             self.db.log("Não foi possível importar o catálogo inicial do rádio", "warning",source_id)
 
-    def handle(self,source_id:int,packet:dict,via_mqtt=False):
+    def handle(self,source_id:int,packet:dict,via_mqtt=False,local_node_num=None):
         if not isinstance(packet,dict):return False
         decoded=packet.get("decoded") if isinstance(packet.get("decoded"),dict) else {}
         from_num=number(packet.get("from") if "from" in packet else packet.get("fromId"))
@@ -155,6 +155,20 @@ class PacketIngestor:
         # Persist communication as a logical relationship; it is NOT a direct RF link.
         self.db.record_communication(unique,source_id,ts,from_num,to_num,
             bool(via_mqtt) or packet.get("viaMqtt") is True or packet.get("via_mqtt") is True)
+        # A packet with zero relays and a valid local radio receiver provides
+        # evidence of one RF hop from its origin to that particular receiver.
+        # A remote logical destination is never used as RF receiver.
+        local=number(local_node_num)
+        hs=number(packet.get("hopStart",packet.get("hop_start")))
+        hl=number(packet.get("hopLimit",packet.get("hop_limit")))
+        raw_snr=packet.get("rxSnr",packet.get("rx_snr"))
+        try: snr=float(raw_snr) if raw_snr is not None else None
+        except (ValueError,TypeError): snr=None
+        is_rf=not (via_mqtt or packet.get("viaMqtt") is True or packet.get("via_mqtt") is True)
+        if (is_rf and local is not None and from_num is not None and local!=from_num and
+            hs is not None and hl is not None and hs==hl and
+            snr is not None and snr>-32 and -35<snr<35):
+            self.db.add_link(source_id,from_num,local,ts,"confirmed_direct_rf")
         if from_num is not None:
             self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,snr=packet.get("rxSnr",packet.get("rx_snr")))
         if port in ("NODEINFO_APP","4") and from_num is not None:
@@ -249,7 +263,13 @@ class SourceManager:
             source_id=next((k for k,v in self._interfaces.items() if v is interface),None)
         if source_id is None:return
         try:
-            if self.ingest.handle(source_id,packet or {}):
+            info=getattr(interface,"myInfo",None)
+            radio_info=info if isinstance(info,dict) else {}
+            own=number(radio_info.get("my_node_num") or radio_info.get("myNodeNum") or
+                       getattr(info,"my_node_num",None) or
+                       getattr(getattr(interface,"localNode",None),"nodeNum",None) or
+                       getattr(interface,"myNodeNum",None))
+            if self.ingest.handle(source_id,packet or {},local_node_num=own):
                 with self._lock:
                     state=self._states.get(source_id)
                     if state is not None:
