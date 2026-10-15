@@ -144,6 +144,30 @@ class NodeQueries:
             row["received_ms"] = now
             row["correlation"] = "request_id" if candidates else "source_sender_port_time"
             row["response"] = {k: str(v)[:300] for k, v in decoded.items() if k != "payload"}
+            if kind == "traceroute":
+                # Keep the route evidence structured. A reply without route
+                # arrays is NOT proof that the destination was heard directly.
+                parsed = decoded.get("route") or decoded.get("routeDiscovery") or {}
+                if not isinstance(parsed, dict):
+                    parsed = {}
+                def ids(field, alternate):
+                    raw = parsed.get(field, parsed.get(alternate, decoded.get(field, decoded.get(alternate, []))))
+                    if isinstance(raw, (tuple, list)):
+                        return [n for item in raw if (n := number(item)) is not None]
+                    return []
+                def metrics(field, alternate):
+                    raw = parsed.get(field, parsed.get(alternate, decoded.get(field, decoded.get(alternate, []))))
+                    if not isinstance(raw, (tuple, list)):
+                        return []
+                    return [float(item) for item in raw if isinstance(item, (int, float)) and not isinstance(item, bool)]
+                row["route_detail"] = {
+                    "route": ids("route", "routeTowards"),
+                    "route_back": ids("routeBack", "route_back"),
+                    "snr_towards_raw": metrics("snrTowards", "snr_towards"),
+                    "snr_back_raw": metrics("snrBack", "snr_back"),
+                    "has_intermediate_hops": bool(ids("route", "routeTowards") or ids("routeBack", "route_back")),
+                    "status": "Rota com saltos informados" if ids("route", "routeTowards") or ids("routeBack", "route_back") else "Nenhum salto intermediário informado",
+                }
 
     def status(self, target=None):
         now = int(time.time()*1000)
