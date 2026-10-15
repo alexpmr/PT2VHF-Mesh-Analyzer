@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import secrets
 import subprocess
 import sys
 import threading
@@ -43,6 +44,12 @@ function WriteNotice([string]$status,[string]$detail) {
 }
 $child = $null
 try {
+    # Detached runner readiness is acknowledged before app shutdown.
+    $ready = @{ nonce = [string]$p.run_nonce; pid = $PID; status = 'ready' } |
+        ConvertTo-Json -Compress
+    WriteLog ('Detached updater ready PID=' + $PID + '; mode=' + [string]$p.mode)
+    [IO.File]::WriteAllText([string]$p.runner_ready, $ready, [Text.Encoding]::UTF8)
+
     WriteLog 'Waiting for Mesh Analyzer process and database handles to close'
     $timeout = [DateTime]::UtcNow.AddSeconds(90)
     while ([DateTime]::UtcNow -lt $timeout) {
@@ -64,9 +71,12 @@ try {
         if ($same) { throw 'Original application still running after 90 seconds' }
     }
     if ([string]$p.mode -eq 'setup') {
-        WriteLog 'Installing verified Windows Setup'
-        $args = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-')
+        WriteLog ('PHASE setup-started path=' + [string]$p.package)
+        # SILENT shows Inno's installation progress, without a second confirmation.
+        # VERYSILENT concealed the entire installer and looked like nothing happened.
+        $args = @('/SILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-')
         $proc = Start-Process -FilePath ([string]$p.package) -ArgumentList $args -Wait -PassThru
+        WriteLog ('PHASE setup-finished exit=' + $proc.ExitCode)
         if ($proc.ExitCode -ne 0) { throw ('Setup failed: exit code ' + $proc.ExitCode) }
     } elseif ([string]$p.mode -eq 'portable') {
         WriteLog 'Replacing portable executable'
@@ -88,9 +98,11 @@ try {
         throw ('Executable missing after installation: ' + $exe)
     }
     WriteLog 'Launching updated executable'
-    $child = Start-Process -FilePath $exe -PassThru
+    WriteLog ('Launching path=' + $exe + '; cwd=' + [IO.Path]::GetDirectoryName($exe))
+    $child = Start-Process -FilePath $exe -WorkingDirectory ([IO.Path]::GetDirectoryName($exe)) -PassThru
+    WriteLog ('Launched PID=' + $child.Id)
     $healthy = $false
-    $deadline = [DateTime]::UtcNow.AddSeconds(50)
+    $deadline = [DateTime]::UtcNow.AddSeconds(90)
     while ([DateTime]::UtcNow -lt $deadline) {
         Start-Sleep -Milliseconds 700
         $child.Refresh()
@@ -123,6 +135,20 @@ try {
         } catch { WriteLog ('Rollback failed: ' + $_.Exception.Message) }
     }
     try { WriteNotice 'failed' $reason } catch { WriteLog ('Cannot save update failure: ' + $_.Exception.Message) }
+    # The original GUI is already closed: make the failure recoverable and visible.
+    try {
+        Add-Type -AssemblyName System.Windows.Forms
+        $answer = [System.Windows.Forms.MessageBox]::Show(
+          ('PT2VHF Mesh Analyzer nao reiniciou automaticamente.' + [Environment]::NewLine +
+           $reason + [Environment]::NewLine + [Environment]::NewLine +
+           'Abrir a pasta com o log de atualizacao?'),
+          'PT2VHF Mesh Analyzer - Atualizacao falhou',
+          [System.Windows.Forms.MessageBoxButtons]::YesNo,
+          [System.Windows.Forms.MessageBoxIcon]::Error)
+        if ($answer -eq [System.Windows.Forms.DialogResult]::Yes) {
+            Start-Process -FilePath 'explorer.exe' -ArgumentList ('/select,' + [string]$p.log)
+        }
+    } catch { WriteLog ('Recovery dialog unavailable: ' + $_.Exception.Message) }
     exit 1
 }
 """
@@ -155,7 +181,11 @@ def deployment_mode(executable=None):
         raise RuntimeError("Atualização direta disponível apenas no Windows")
     standard = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / \
         "Programs" / "PT2VHF Mesh Analyzer" / "PT2VHF-Mesh-Analyzer.exe"
-    return "setup" if exe == standard.resolve() else "portable"
+    # Inno Setup may remember a user-selected installation directory.
+    # Treat a folder with an actual Inno uninstaller as Setup even if the
+    # install path differs from DefaultDirName.
+    installed=(exe.parent/"unins000.exe").is_file() and (exe.parent/"unins000.dat").is_file()
+    return "setup" if exe == standard.resolve() or installed else "portable"
 
 
 def approved_asset_url(url, version, name):
@@ -165,7 +195,7 @@ def approved_asset_url(url, version, name):
     return url
 
 
-def stream_verified(url, dest, expected_sha, max_size=MAX_SIZE, report=None):
+def stream_verified(url, dest, expected_sha, max_size=MAX_SIZE, report=None, cancelled=None):
     if not isinstance(expected_sha,str) or not re.fullmatch(r"[a-f0-9]{64}",expected_sha):
         raise ValueError("SHA256 esperado inválido")
     partial = Path(str(dest) + ".part")
@@ -177,8 +207,10 @@ def stream_verified(url, dest, expected_sha, max_size=MAX_SIZE, report=None):
             total = int(resp.headers.get("Content-Length",0))
             if total > max_size:raise ValueError("Pacote excede o tamanho seguro")
             while True:
+                if cancelled and cancelled.is_set():raise RuntimeError("Download cancelado")
                 chunk = resp.read(131072)
                 if not chunk:break
+                if cancelled and cancelled.is_set():raise RuntimeError("Download cancelado")
                 count += len(chunk)
                 if count > max_size:raise ValueError("Pacote excede o tamanho seguro")
                 h.update(chunk)
@@ -207,6 +239,7 @@ class UpdateManager:
         self._mode=None
         self._plan=None
         self._busy=None
+        self._cancel=threading.Event()
 
     def status(self):
         with self._lock:
@@ -246,6 +279,7 @@ class UpdateManager:
         with self._lock:
             if self._phase in ("downloading","verified","installing"):
                 raise ValueError("Já existe uma atualização em andamento")
+            self._cancel.clear()
             self._phase="downloading"
             self._error=None
             self._version=version
@@ -270,7 +304,7 @@ class UpdateManager:
             package=folder/filename
             def report(n,total):
                 with self._lock:self._received=n;self._size=total
-            stream_verified(RELEASE_BASE+"v"+version+"/"+filename,package,expected,report=report)
+            stream_verified(RELEASE_BASE+"v"+version+"/"+filename,package,expected,report=report,cancelled=self._cancel)
             candidate=None
             if mode=="portable":
                 candidate=folder/"candidate.exe"
@@ -294,7 +328,9 @@ class UpdateManager:
                   "version":version,"notes":(self.monitor._result or {}).get("notes","")[:3000],
                   "notice":str(self.profile/"update_complete.json"),
                   "log":str(self.profile/"update.log"),
-                  "health_url":"http://127.0.0.1:8789/health"}
+                  "health_url":"http://127.0.0.1:8789/health",
+                  "runner_ready":str(folder/"runner_ready.json"),
+                  "run_nonce":secrets.token_hex(8)}
             planfile=folder/"plan.json"
             planfile.write_text(json.dumps(plan,ensure_ascii=False),encoding="utf-8")
             script=folder/"apply_update.ps1"
@@ -304,8 +340,15 @@ class UpdateManager:
                 self._phase="verified"
         except Exception as exc:
             with self._lock:
-                self._phase="error"
-                self._error=str(exc)[:240]
+                self._phase="cancelled" if self._cancel.is_set() else "error"
+                self._error=None if self._cancel.is_set() else str(exc)[:240]
+
+    def cancel(self):
+        with self._lock:
+            if self._phase!="downloading":
+                raise ValueError("Só é possível cancelar durante o download")
+            self._cancel.set()
+            return self.status()
 
     def launch(self):
         with self._lock:
@@ -313,13 +356,37 @@ class UpdateManager:
                 raise ValueError("Download não foi verificado ou não está pronto")
             script,plan=self._plan
             if os.name!="nt":raise RuntimeError("Instalação interna requer Windows")
+            expected=json.loads(Path(plan).read_text(encoding="utf-8"))
+            marker=Path(expected["runner_ready"])
+            marker.unlink(missing_ok=True)
             creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0)|getattr(subprocess,"DETACHED_PROCESS",0)
-            subprocess.Popen(
+            proc=subprocess.Popen(
                 ["powershell.exe","-NoProfile","-NonInteractive",
                  "-ExecutionPolicy","Bypass","-WindowStyle","Hidden",
                  "-File",script,"-Plan",plan],
                 cwd=str(self.profile),stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                 creationflags=creationflags,close_fds=True)
+            # Do not close original application until the detached updater is alive.
+            acknowledged=False
+            deadline=time.monotonic()+12
+            while time.monotonic()<deadline:
+                if marker.exists():
+                    try:
+                        ready=json.loads(marker.read_text(encoding="utf-8-sig"))
+                        if ready.get("status")=="ready" and ready.get("nonce")==expected["run_nonce"]:
+                            acknowledged=True
+                            break
+                    except (OSError,ValueError,TypeError):pass
+                if proc.poll() is not None:break
+                time.sleep(.15)
+            if not acknowledged:
+                if proc.poll() is None:
+                    try:proc.terminate()
+                    except OSError:pass
+                raise RuntimeError(
+                  "Atualizador externo não confirmou inicialização. "
+                  "O Mesh Analyzer permanecerá aberto. Consulte update.log.")
+
             self._phase="installing"
             return self.status()
