@@ -14,7 +14,7 @@ class DesktopRegressionTests(unittest.TestCase):
         self.assertIn("String(s.kind||'').toLowerCase()!=='mqtt'",UI)
         self.assertIn("c.status==='connected'?'Conectado'",UI)
         self.assertIn("pill.dataset.status=yes?'connected':'disconnected'",UI)
-        self.assertIn("state=results[0];updateRadioConnectionIndicator();",UI)
+        self.assertIn("state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();",UI)
 
     def test_offline_tx_popup_with_actions_without_draft_loss(self):
         self.assertEqual(UI.count('id="messageNoConnectionDialog"'),1)
