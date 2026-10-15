@@ -47,8 +47,8 @@ try {
     # Detached runner readiness is acknowledged before app shutdown.
     $ready = @{ nonce = [string]$p.run_nonce; pid = $PID; status = 'ready' } |
         ConvertTo-Json -Compress
-    [IO.File]::WriteAllText([string]$p.runner_ready, $ready, [Text.Encoding]::UTF8)
     WriteLog ('Detached updater ready PID=' + $PID + '; mode=' + [string]$p.mode)
+    [IO.File]::WriteAllText([string]$p.runner_ready, $ready, [Text.Encoding]::UTF8)
 
     WriteLog 'Waiting for Mesh Analyzer process and database handles to close'
     $timeout = [DateTime]::UtcNow.AddSeconds(90)
