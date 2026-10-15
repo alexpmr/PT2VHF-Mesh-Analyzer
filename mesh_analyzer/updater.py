@@ -97,7 +97,7 @@ try {
         if ($child.HasExited) { throw ('Updated application exited early: ' + $child.ExitCode) }
         try {
             $response = Invoke-RestMethod -Uri ([string]$p.health_url) -TimeoutSec 2 -ErrorAction Stop
-            if ($response.version -eq [string]$p.version -and $response.success -eq $true) {
+            if ($response.version -eq [string]$p.version -and $response.success -eq $true -and $response.ui_ready -eq $true) {
                 $healthy = $true
                 break
             }
