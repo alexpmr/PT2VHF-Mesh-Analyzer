@@ -252,8 +252,6 @@ class SourceManager:
         with self._lock:
             result={str(k):dict(v) for k,v in self._states.items()}
             for sid,interface in self._interfaces.items():
-                src=self.db.source(sid)
-                if not src or src.get("kind")=="mqtt":continue
                 info=getattr(interface,"myInfo",None)
                 local=getattr(interface,"localNode",None)
                 values=info if isinstance(info,dict) else {}
