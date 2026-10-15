@@ -1,16 +1,16 @@
-# PT2VHF Mesh Analyzer — v0.6.2
+# PT2VHF Mesh Analyzer — v0.6.3
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 11 x64 com banco próprio SQLite, fontes Meshtastic e análises locais. A arquitetura também permite evolução para Linux/macOS.
 
 ## Downloads — Windows 11 x64
 
-**Versão publicada e verificada: [v0.6.2](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.2)**
+**Versão publicada e verificada: [v0.6.3](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.3)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
-| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.2-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.2/PT2VHF-Mesh-Analyzer-v0.6.2-Setup-Win11-x64.exe)** |
-| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.2-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.2/PT2VHF-Mesh-Analyzer-v0.6.2-Portable-Win11-x64.zip)** |
-| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.2/SHA256SUMS.txt) |
+| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.3-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.3/PT2VHF-Mesh-Analyzer-v0.6.3-Setup-Win11-x64.exe)** |
+| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.3-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.3/PT2VHF-Mesh-Analyzer-v0.6.3-Portable-Win11-x64.zip)** |
+| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.3/SHA256SUMS.txt) |
 
 **Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
 [Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
@@ -19,6 +19,17 @@
 [Todas as releases](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases)
 
 **Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable pode ser extraído e executado sem instalação. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
+
+### Novidades da v0.6.3
+
+- **Atualização #34 (correção no código):** o atualizador confirma que o processo da nova versão permanece vivo e responde com a versão pretendida em `/health` antes de escrever um aviso de sucesso; falhas ficam registradas em `update.log` e `update_complete.json`. No Portable, pode restaurar o executável anterior se o novo processo já terminou. **Ainda exige teste real Setup → Setup e Portable → Portable em Windows 11, portanto não há garantia de correção em campo.**
+- **Banco SQLite #33 (parcial):** Configurações → Sistema mostra contagens, arquivos WAL/SHM, espaço, páginas, retenções e último backup. `quick_check`/integridade referencial por ação explícita, e backup consistente via API nativa `sqlite3.backup` sem alterar retenção ou apagar histórico. Prévia de limpeza, restauração e maintenance avançada continuam pendentes.
+- **Nomes amigáveis #35 (parcial):** botão **Renomear** no detalhe do nó armazena apelido local por Node ID no SQLite. O nome é priorizado em identificações que usam `idName`, sem substituir a identidade rádio nem dados de NodeInfo. Auditoria de todos os cartões e tabelas ainda pendente.
+- **LEDs de tráfego #30 (parcial):** TX vermelho ao aceitar envio via interface; RX verde em novo pacote de rádio USB/BLE/TCP (sem incluir MQTT). Contadores de evento por conexão, baseline sem pulsos durante carregamento de histórico e intervalo de polling local de 650 ms; requer medição física de precisão e desempenho. TX aceito **não** comprova RF irradiado.
+- **Primeiro acesso #37 (correção):** guarda de sessão impede repetição no F5, com apresentação sequencial após avaliação das novidades da release. Conferir em WebView2 no Windows real.
+- **Testes novos:** backup WAL, integridade SQLite, nomes locais preservados por NodeDB, sequência RX/TX e ordem lógica de sucesso do atualizador. Pipeline Windows verifica Python, JavaScript, PyInstaller e Inno Setup.
+
+**Escopo: esta é uma release de estabilização e evolução parcial do backlog; NÃO marca como encerradas todas as 30 issues, especialmente #31, #29, #6, #3, #1 e #10.**
 
 ### Novidades da v0.6.2
 
