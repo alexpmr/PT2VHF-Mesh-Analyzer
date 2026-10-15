@@ -43,6 +43,10 @@ class TaskbarIconTests(unittest.TestCase):
             self.assertIn("--icon branding/mesh-analyzer.ico", script)
             self.assertIn("--add-data 'branding/mesh-analyzer.ico;branding'", script)
         self.assertIn("AppUserModelID: \"PT2VHF.MeshAnalyzer\"", installer)
+        self.assertIn('Source: "..\\branding\\mesh-analyzer.ico"; DestDir: "{app}\\branding"', installer)
+        self.assertEqual(installer.count('IconFilename: "{app}\\branding\\mesh-analyzer.ico"'), 2)
+        self.assertIn("UninstallDisplayIcon={app}\\branding\\mesh-analyzer.ico", installer)
+        self.assertNotIn('IconFilename: "{app}\\PT2VHF-Mesh-Analyzer.exe"', installer)
 
 
 if __name__ == "__main__":
