@@ -100,14 +100,24 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #firstRunDialog p{line-height:1.65;margin:0 0 16px;color:#c5d7df}
 #firstRunDialog .primary{font-weight:750;border-color:#3ebd72;background:#225a3f;color:#efffed}
 #firstRunDialog .actions{justify-content:flex-end}
+
+.activityLed{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700}
+.activityLed .bulb{width:12px;height:12px;border-radius:50%;background:#303e45;border:1px solid #6a757f;transition:background .08s}
+.activityLed.rx.on .bulb{background:#25e675;box-shadow:0 0 11px #25e675}
+.activityLed.tx.on .bulb{background:#f35151;box-shadow:0 0 11px #f35151}
+.activityGroup{display:flex;gap:11px;align-items:center;margin-left:auto}
+#dbHealthText{white-space:pre-wrap;line-height:1.6;overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){.activityLed .bulb{transition:none}}
 </style>
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.2</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.3</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
-</nav><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.2 · verificando...</button></header>
+</nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
+<div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
+<div class="activityLed rx" id="rxLed" title="RX ao vivo via USB/BLE/TCP; MQTT excluído"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.3 · verificando...</button></header>
 <section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> enlaces observados</div></section>
 <section class="view active" id="viewMap">
 <div id="playback">
@@ -200,14 +210,18 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
   <p id="updateStatus" class="muted">Aguardando verificação da versão no GitHub.</p>
   <p id="updateSchedule" class="muted"></p>
 </div>
+<div class="card"><h3>Banco de dados e manutenção</h3><p class="muted">Diagnóstico e backup consistente com SQLite WAL. Estes botões não executam limpeza.</p>
+<div class="actions"><button type="button" id="dbRefresh">Atualizar indicadores</button>
+<button type="button" id="dbIntegrity">Verificar integridade</button><button type="button" id="dbBackup">Criar backup</button></div>
+<p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.2</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.3</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.2.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.3.</p></div></div></section>
 </div>
-<div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
+<div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="firstRunDialog" role="dialog" aria-modal="true" aria-labelledby="firstRunTitle" aria-describedby="firstRunMessage">
 <div class="firstRunBox">
 <h2 id="firstRunTitle">Configure sua primeira conexão</h2>
@@ -268,7 +282,7 @@ const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
  Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map');
 const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
-function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
+function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.friendly_name||n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
 function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite(Number(n.longitude))&&n.latitude!==null&&n.longitude!==null&&!(Math.abs(Number(n.latitude))<.01&&Math.abs(Number(n.longitude))<.01);}
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
 function initMap(){if(map||!window.L)return;map=L.map('map',{zoomControl:true}).setView([-15.793,-47.882],9);nodeLayer=L.layerGroup().addTo(map);linkLayer=L.layerGroup().addTo(map);heatLayer=L.layerGroup().addTo(map);
@@ -758,7 +772,7 @@ function nodePopupHtml(n){
  const coord=validPos(n)?Number(n.latitude).toFixed(6)+', '+Number(n.longitude).toFixed(6):null;
  const source=state.sources.find(s=>s.id===n.last_source_id);
  const fields=[
-  ['Node ID',n.node_id],['Nome longo',n.long_name],['Nome curto',n.short_name],
+  ['Node ID',n.node_id],['Nome amigável local',n.friendly_name],['Nome longo',n.long_name],['Nome curto',n.short_name],
   ['Hardware',n.hw_model],['Role',n.role],['Firmware',null],
   ['Status',nodeRadioStatus(n)],['Conexão da última comunicação',source?.name||null],
   ['Coordenadas',coord],['Latitude',validPos(n)?n.latitude:null],
@@ -811,9 +825,21 @@ function closeNodeDetails(){
 function showNode(n){
  if(!n)return;
  nodeDetailSelected=n.node_num;
- $('nodeDetailTitle').textContent=(n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
+ $('nodeDetailTitle').textContent=(n.friendly_name||n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
  $('nodeDetailBody').innerHTML=nodePopupHtml(n);
  $('nodeDetailOverlay').classList.add('open');
+ $('nodeRename').onclick=async()=>{
+  const desired=prompt('Nome amigável local para '+n.node_id+' (vazio para restaurar):',n.friendly_name||'');
+  if(desired===null)return;
+  try{
+   const result=await api('/api/nodes/friendly',{node_num:n.node_num,friendly_name:desired});
+   n.friendly_name=result.node.friendly_name;
+   $('nodeDetailTitle').textContent=idName(n.node_num)+' · '+n.node_id;
+   $('nodeDetailBody').innerHTML=nodePopupHtml(n);
+   notify('Nome amigável salvo no banco local.');
+   await refreshAll();
+  }catch(e){notify('Nome amigável: '+e.message,true);}
+ };
  $('nodeDetailDM').onclick=()=>{closeNodeDetails();openDm(n.node_num);};
  $('nodeDetailLocate').onclick=()=>{
   if(!validPos(n))return;
@@ -946,7 +972,7 @@ function localRadioReference(){
 function renderNodes(){
  const ref=localRadioReference();
  const radioCount=(state.sources||[]).filter(src=>src.kind!=='mqtt'&&state.connections?.[String(src.id)]?.status==='connected').length;
- $('nodeDistanceStatus').textContent=ref?'Distâncias desde: '+(ref.short_name||ref.long_name||ref.node_id)+
+ $('nodeDistanceStatus').textContent=ref?'Distâncias desde: '+(ref.friendly_name||ref.long_name||ref.short_name||ref.node_id)+
    ' · posição '+age(ref.position_ms):radioCount>1?
     'Múltiplos rádios: selecione a conexão na aba Mapa':
     'Distância indisponível: rádio local sem posição/identidade válida';
