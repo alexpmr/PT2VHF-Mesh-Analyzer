@@ -63,6 +63,36 @@ class EnrichmentTests(unittest.TestCase):
         self.db.close()
         self.temp.cleanup()
 
+    def test_local_http_controls_require_csrf_and_save(self):
+        from http.server import ThreadingHTTPServer
+        from urllib.error import HTTPError
+        import urllib.request
+        import threading
+        from mesh_analyzer.app import build_handler
+        server = ThreadingHTTPServer(("127.0.0.1",0),
+            build_handler(self.db,self.sources,"safe-token","<html/>",
+                          automation=self.service))
+        thread=threading.Thread(target=server.serve_forever,daemon=True)
+        thread.start()
+        base="http://127.0.0.1:"+str(server.server_address[1])
+        try:
+            with urllib.request.urlopen(base+"/api/automation") as rsp:
+                self.assertFalse(json.load(rsp)["config"]["enabled"])
+            data=json.dumps({"enabled":True}).encode()
+            request=urllib.request.Request(base+"/api/automation/settings",
+                data=data,headers={"Content-Type":"application/json"},method="POST")
+            with self.assertRaises(HTTPError) as e:
+                urllib.request.urlopen(request)
+            self.assertEqual(e.exception.code,403)
+            request.add_header("X-PT2VHF-CSRF","safe-token")
+            with urllib.request.urlopen(request) as rsp:
+                self.assertTrue(json.load(rsp)["config"]["enabled"])
+            self.assertTrue(self.service.config()["enabled"])
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+
     def test_disabled_by_default_and_no_accidental_rf(self):
         self.assertFalse(self.service.config()["enabled"])
         result = self.service.tick()
