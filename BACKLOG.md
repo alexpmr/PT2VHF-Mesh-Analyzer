@@ -1,3 +1,10 @@
+## v0.6.6 — Itens em revisão (14/10/2026)
+
+- **Implementação candidata:** #49 migração de Camadas para Ver, #48 broadcast amigável, #47 e #35 tipos/hardware amigáveis.
+- **Correções parciais:** #8 saltos por pacote e identidade local para distância; #45 rádio TX elegível com explicação; #4 estados honestos de envio; #46 menu contextual compartilhado apenas nas operações disponíveis.
+- **Sem falsas confirmações:** ✓ significa aceitação do rádio local; ACK não é leitura e não gera ✓✓. Consultas remotas RF não suportadas permanecem desabilitadas.
+- **Validação pendente:** hardware Meshtastic real, Windows 11 WebView2, atualização/reinício #34, mensagens/ACK #45/#4, BLE/Serial/TCP, distância GPS, menu Ver com radar/relevo. O backlog não está integralmente encerrado.
+
 ## Mensagens e menu do nó — pendências v0.6.5 relatadas em campo (14/10/2026)
 
 - **P0 — [#45](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/45): Enviar desabilitado.** Na aba Mensagens, o botão Enviar permanece cinza e o usuário não consegue enviar. Análise: `renderChat()` desabilita a ação se `state.sources` não tiver fonte habilitada, diferente de MQTT, com `state.connections[source_id].status === 'connected'`. **Não assumir falta de rádio como causa sem diagnóstico**: validar estado TX real dos drivers Serial/BLE/TCP, reconexão, seleção de fonte, channel, WebView2, dados de resposta de `/api/state`, e corrigir divergência UI/backend. Exibir razão específica de indisponibilidade; reabilitar com rádio utilizável e texto válido; manter rascunho na falha. Testes reais de TX, privadas e canais.

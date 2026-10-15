@@ -157,6 +157,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/health":self._json({"success":True,"version":__version__,"database":"ok","ui_ready":bool(ready_event and ready_event.is_set())})
                 elif path == "/api/state":self._json({"success":True,"version":__version__,"sources":db.sources(),"connections":sources.snapshot(),"counts":db.stats(),"retention":db.retention(),"system":db.system_settings()})
                 elif path == "/api/nodes":self._json({"success":True,"data":db.node_rows()})
+                elif path == "/api/nodes/hops":self._json({"success":True,"data":db.node_hop_rows()})
                 elif path == "/api/nodes/sources":
                     self._json({"success":True,"data":db.node_source_rows()})
                 elif path == "/api/topology/diagnostics":

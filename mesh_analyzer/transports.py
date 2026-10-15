@@ -254,11 +254,14 @@ class SourceManager:
             for sid,interface in self._interfaces.items():
                 info=getattr(interface,"myInfo",None)
                 local=getattr(interface,"localNode",None)
-                own=number(getattr(info,"my_node_num",None) or
+                values=info if isinstance(info,dict) else {}
+                own=number(values.get("my_node_num") or values.get("myNodeNum") or
+                           getattr(info,"my_node_num",None) or
                            getattr(local,"nodeNum",None) or
                            getattr(interface,"myNodeNum",None))
-                if own and str(sid) in result:
-                    result[str(sid)]["local_node_num"]=own
+                if str(sid) in result:
+                    if own:result[str(sid)]["local_node_num"]=own
+                    result[str(sid)]["tx_capable"]=callable(getattr(interface,"sendText",None))
             return result
 
     def _on_packet(self,packet=None,interface=None,**kwargs):

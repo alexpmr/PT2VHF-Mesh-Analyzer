@@ -1,5 +1,18 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.6.6 — 14/10/2026 — Menu Ver, rótulos, Nós e Mensagens
+
+- **#49:** Camadas dentro do menu **Ver ▾** com radar, opacidade, relevo, nomes curtos, nós, enlaces e waypoints; botão redundante removido.
+- **#48:** destino broadcast (!ffffffff) exibido como **broadcast** no Tráfego e exportação, mantendo dados técnicos originais.
+- **#47/#35:** nomes em português para tipos de tráfego (Telemetria, Posição, Informações do nó, Mensagem) e nomes amigáveis para modelos de hardware conhecidos.
+- **#8 (parcial):** saltos calculados com base em pacotes RF verdadeiros por nó e fonte, sem atribuir MQTT nem caminhos físicos inferidos; reconhecimento ampliado do nó local para distâncias quando as duas coordenadas são conhecidas.
+- **#45 (parcial):** selector de rádio TX exige interface de envio real e apresenta motivo claro quando inoperante.
+- **#4 (parcial):** relógio durante tentativa de envio, check único após aceitação do rádio, erro visível e lista de conversas com prévia. **Dois checks de leitura não implementados** pois ACK Meshtastic não comprova leitura humana.
+- **#46 (parcial):** menu contextual comum para nós em Mapa, Nós e Mensagens com Mensagem, Detalhes, Localizar e Copiar Node ID. Consultas remotas sem backend estão explicitamente indisponíveis.
+- **Qualidade:** testes para saltos, transmissão, identidade local, broadcast, rótulos e controles do menu Ver.
+
+**PENDENTE:** backlog extenso continua aberto. Instalação/reinício via updater #34 e envio efetivo #45 exigem validação real Win11 com rádio. Consultas RF, recibos de leitura compatíveis, LAN autenticada, NodeDB contínuo e todos os demais itens não são declarados completos.
+
 ## v0.6.5 — 14/10/2026 — Descoberta passiva de tráfego e atualização assistida
 
 - **#22:** cada pacote unicast normal aceito gera uma **relação lógica observada** entre origem e destino com quantidade, fonte, intervalo e separação por transporte (rádio x MQTT). Isto **NÃO é RF direto**. Broadcasts e endereços inválidos não produzem linhas fictícias. Tráfego histórico é recuperado incrementalmente pelo SQLite em thread de baixa prioridade, com chave idempotente por pacote.

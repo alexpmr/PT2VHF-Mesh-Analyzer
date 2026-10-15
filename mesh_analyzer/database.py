@@ -578,6 +578,25 @@ class Database:
             if target is not None: target.close()
             tmp.unlink(missing_ok=True)
 
+    def node_hop_rows(self, limit=10000):
+        """Last physically received hop count per origin node *and* radio source.
+
+        hopStart-hopLimit counts forwarding but does not identify intermediary
+        relays or prove one physical RF link. MQTT is intentionally excluded.
+        """
+        return self._rows("""SELECT from_node,source_id,timestamp_ms,hops
+          FROM (
+            SELECT from_node,source_id,timestamp_ms,(hop_start-hop_limit) AS hops,
+              ROW_NUMBER() OVER (PARTITION BY from_node,source_id
+                                 ORDER BY timestamp_ms DESC,id DESC) AS rank
+            FROM packets
+            WHERE from_node IS NOT NULL AND from_node>0 AND from_node<4294967295
+              AND via_mqtt=0 AND hop_start IS NOT NULL AND hop_limit IS NOT NULL
+              AND hop_start BETWEEN 0 AND 15 AND hop_limit BETWEEN 0 AND 15
+              AND hop_start>=hop_limit
+          ) WHERE rank=1 ORDER BY timestamp_ms DESC LIMIT ?""",
+          (max(1,min(int(limit),25000)),))
+
     def node_rows(self, limit=5000):
         rows=self._rows("SELECT * FROM nodes ORDER BY last_seen_ms DESC LIMIT ?",(min(int(limit),15000),))
         for r in rows: r["aliases"]=json.loads(r["aliases"] or "[]")

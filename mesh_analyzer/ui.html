@@ -21,13 +21,18 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #playback{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding:6px 8px;background:#14202b;border-bottom:1px solid var(--line);flex:0 0 auto}
 #playback>*{flex:0 0 auto}#playback label{display:flex;gap:4px;align-items:center}#mapSearchInput{width:175px;min-width:130px}#playback select{max-width:150px}
 .mapActions{display:flex;gap:5px;align-items:center;flex:0 0 auto;margin-left:auto}.mapSearchBox{display:flex;gap:4px;align-items:center}.mapSearchMatches{position:fixed;left:0;top:0;background:#172736;border:1px solid #526b7c;border-radius:7px;box-shadow:0 8px 20px #0009;width:min(400px,95vw);max-height:290px;overflow:auto;z-index:6000}.mapSearchMatches[hidden]{display:none!important}.mapSearchMatches button{width:100%;text-align:left;border-radius:0;border:0;border-bottom:1px solid var(--line);display:block;padding:10px}.mapSearchMatches small{color:var(--muted)}.mapSearchCount{font-size:11px;color:var(--muted)}
-#mapLayersPanel{position:fixed;z-index:6100;width:230px;background:#1b2b38;border:1px solid var(--line);padding:12px;border-radius:8px;box-shadow:0 12px 28px #0009}#mapLayersPanel label{display:block;margin-bottom:8px}
+
 #mapLegend{position:absolute;left:12px;bottom:12px;background:#17212bea;padding:8px;border:1px solid var(--line);z-index:450;border-radius:8px;font-size:11px}#mapLegend div+div{margin-top:3px}
 .panels{display:flex;flex-direction:column;gap:10px;padding:15px;min-height:0;overflow:auto}.toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:9px 12px;background:#14202b;border-bottom:1px solid var(--line)}.toolbar h2{margin:0 12px 0 0;font-size:15px}.toolbar .spacer{flex:1}
 .card{background:#17212b;border:1px solid var(--line);border-radius:10px;padding:14px}.card h3{margin:0 0 9px;color:#e9d46d;font-size:14px}.muted{color:var(--muted)}.muted small{line-height:1.5}.notice{border:1px solid #8a6c2f;background:#443b2226;padding:9px;border-radius:8px;color:#e4d5a8}
 .tableWrap{overflow:auto;min-height:0;flex:1}.dataTable{border-collapse:collapse;width:100%;font-size:12px}.dataTable th{position:sticky;top:0;background:#1b2b38;color:#cbd6df;padding:9px;text-align:left;white-space:nowrap;border-bottom:1px solid #405668;z-index:2}.dataTable td{padding:9px;border-bottom:1px solid #22313f;white-space:nowrap}.dataTable tr:hover td{background:#1e3140}.dataTable tr[data-node]{cursor:pointer}
 #viewMessages{overflow:hidden}#messageLayout{display:grid;grid-template-columns:285px 1fr;flex:1;min-height:0}.contacts{border-right:1px solid var(--line);overflow:auto;background:#111c27}.contact{display:block;width:100%;padding:11px;text-align:left;border:0;border-bottom:1px solid #2b3b48;border-radius:0}.contact.selected{background:#30465c;border-left:3px solid var(--accent)}
-.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:8px}.bubble{max-width:75%;padding:9px 12px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}.bubble small{display:block;text-align:right;color:#adbdc8;margin-top:4px;font-size:10px}.composer{display:flex;gap:7px;padding:10px;background:#152433;border-top:1px solid var(--line)}.composer input{flex:1;min-width:0}.composer select{max-width:180px}
+.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:8px}.bubble{max-width:75%;padding:9px 12px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}.bubble small{display:block;text-align:right;color:#adbdc8;margin-top:4px;font-size:10px}
+.bubble .msgState{display:inline-block;padding-left:5px;font-size:13px}
+.msgState.accepted{color:#b5f3d0}.msgState.working{color:#efd1a2}.msgState.error{color:#f8afaf}
+#messageTxStatus{padding:5px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
+#nodeContextMenu{position:fixed;z-index:8000;min-width:230px;max-width:min(300px,92vw);padding:7px;background:#172935;border:1px solid #59798a;box-shadow:0 18px 35px #0009;border-radius:9px}
+#nodeContextMenu[hidden]{display:none!important}#nodeContextMenu button{display:block;width:100%;text-align:left;padding:8px;border:0;background:transparent}#nodeContextMenu button:hover:not(:disabled){background:#30485a}#nodeContextMenu button:disabled{color:#8c99a2}.composer{display:flex;gap:7px;padding:10px;background:#152433;border-top:1px solid var(--line)}.composer input{flex:1;min-width:0}.composer select{max-width:180px}
 .settingsTabs{display:flex;gap:6px;padding:10px 15px 0;border-bottom:1px solid var(--line);background:#152433}.settingsTab{border-bottom:0;border-radius:6px 6px 0 0;font-weight:700}.settingsTab.active{background:var(--accent);color:#121a1f}.settingsPanel{display:none;overflow:auto;padding:15px;gap:12px;flex-direction:column}.settingsPanel.active{display:flex}.formGrid{display:grid;grid-template-columns:repeat(2,minmax(190px,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-weight:600;color:#bdcedd}.field input,.field select{width:100%}.span2{grid-column:1/-1}.sourceList{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}.sourceCard{padding:12px;background:#1a2b38;border:1px solid var(--line);border-radius:8px}.sourceCard b{display:block}.sourceCard p{font-size:12px;color:var(--muted);margin:4px 0}.sourceActions{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}.ok{color:#67e1a2}.bad{color:#ff9999}.warn{color:#f4ce73}
 .statGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.stat{background:#1c2b38;border:1px solid var(--line);border-radius:8px;padding:13px}.stat b{display:block;font-size:23px;margin-bottom:5px}.stat span{color:var(--muted)}
 #toast{position:fixed;bottom:18px;right:16px;background:#223d50;color:#fff;border:1px solid #679ab8;border-radius:10px;padding:12px 15px;z-index:9900;display:none;max-width:min(460px,90vw);box-shadow:0 12px 30px #0008}
@@ -108,31 +113,34 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .activityGroup{display:flex;gap:11px;align-items:center;margin-left:auto}
 #dbHealthText{white-space:pre-wrap;line-height:1.6;overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){.activityLed .bulb{transition:none}}
-#mapVisibilityPanel{position:fixed;z-index:6500;min-width:265px;max-width:min(330px,96vw);background:#192631;border:1px solid #556d7c;padding:10px;border-radius:9px;box-shadow:0 15px 33px #000b}
+#mapVisibilityPanel{position:fixed;z-index:6500;min-width:280px;max-width:min(350px,96vw);max-height:calc(100vh - 16px);overflow-y:auto;background:#192631;border:1px solid #556d7c;padding:10px;border-radius:9px;box-shadow:0 15px 33px #000b}
 #mapVisibilityPanel[hidden]{display:none!important}
 #mapVisibilityPanel .verHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 #mapVisibilityPanel .verHead button{font-size:10px;padding:4px 6px}
 #mapVisibilityPanel label{display:flex;gap:9px;align-items:center;padding:6px 3px;cursor:pointer}
 #mapVisibilityPanel label input{width:16px;height:16px;flex-shrink:0}
 #mapVisibilityPanel label small{font-size:11px;color:var(--muted);margin-left:auto}
+#mapVisibilityPanel .verSection{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--muted);padding:9px 2px 5px;margin-top:5px;border-top:1px solid var(--line)}
+#mapVisibilityPanel input[type=range]{max-width:110px;vertical-align:middle}
+#mapVisibilityPanel #radarStatus{font-size:11px;color:var(--muted);padding:0 4px 6px;white-space:normal}
 #mapVisibilityBtn[aria-expanded="true"]{border-color:#edc93c;color:#f6de80}
 </style>
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.5</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.6</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
 <div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
-<div class="activityLed rx" id="rxLed" title="RX ao vivo via USB/BLE/TCP; MQTT excluído"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.5 · verificando...</button></header>
+<div class="activityLed rx" id="rxLed" title="RX ao vivo via USB/BLE/TCP; MQTT excluído"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.6 · verificando...</button></header>
 <section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> relações observadas</div></section>
 <section class="view active" id="viewMap">
 <div id="playback">
 <label>Conexão: <select id="mapSource"><option value="">Todas as conexões</option></select></label>
 <button type="button" id="mapVisibilityBtn" aria-controls="mapVisibilityPanel" aria-expanded="false">Ver ▾</button>
 <div class="mapActions"><div class="mapSearchBox"><label for="mapSearchInput">⌕</label><input id="mapSearchInput" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nó no mapa por nome curto, longo ou ID" autocomplete="off"><button id="mapSearchClear" title="Limpar pesquisa" aria-label="Limpar pesquisa">×</button><span class="mapSearchCount" id="mapSearchCount">Todos</span><div id="mapSearchMatches" class="mapSearchMatches" hidden></div></div>
-<button id="layersBtn" aria-controls="mapLayersPanel">Camadas</button><button id="mapFit">Enquadrar</button><button id="mapRefresh">Atualizar</button></div>
+<button id="mapFit">Enquadrar</button><button id="mapRefresh">Atualizar</button></div>
 </div>
 <div id="map"><div style="padding:40px;color:#9bb1c3">Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.</div></div>
 <div id="terrainSlider" hidden><label>Corte: <strong id="terrainValue">0 m</strong></label><div><input id="terrainCut" type="range" min="0" max="3000" step="50" value="0"></div><label>Máx. (m) <input type="number" id="terrainMax" min="100" max="9000" value="3000" style="width:86px"></label><label>Opacidade <input type="range" id="terrainOpacity" min="20" max="100" value="65"></label></div>
@@ -143,8 +151,14 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <label><input id="showMapLinks" type="checkbox" checked> Enlaces <small id="mapLinksCount">0</small></label>
 <label><input id="showMapWaypoints" type="checkbox" checked> Waypoints <small id="mapWaypointsCount">0</small></label>
 <label><input id="showMapAnimate" type="checkbox" checked> Animar tráfego</label>
+<div class="verSection">CAMADAS E SOBREPOSIÇÕES</div>
+<label><input id="showNames" type="checkbox"> Mostrar nomes curtos</label>
+<label><input id="mapRadar" type="checkbox" checked> Radar meteorológico</label>
+<label>Opacidade do radar <input id="mapRadarOpacity" type="range" min="10" max="100" value="65"></label>
+<div id="radarStatus" role="status">Aguardando radar...</div>
+<label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label>
+<label><input id="mapTerrain" type="checkbox"> Relevo com corte</label>
 </div>
-<div id="mapLayersPanel" hidden><label hidden><input id="showNames" type="checkbox"> Mostrar nomes curtos</label><label><input id="mapRadar" type="checkbox" checked> Radar meteorológico</label><label>Radar opacidade <input id="mapRadarOpacity" type="range" min="10" max="100" value="65"></label><div id="radarStatus">Aguardando radar...</div><label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label><label><input id="mapTerrain" type="checkbox"> Relevo com corte</label><button id="closeLayers">Fechar</button></div>
 </section>
 <section class="view" id="viewNodes"><div class="toolbar" id="nodesToolbar">
 <h2>Nós</h2><span id="nodesCounter" class="muted"></span><div class="spacer"></div>
@@ -163,7 +177,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
 <aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></aside>
 </div></section>
-<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Conexão TX: <select id="messageSource"></select></label><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend">➤ Enviar</button></div></div></div></section>
+<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Conexão TX: <select id="messageSource"></select></label><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend" type="button">➤ Enviar</button></div></div></div></section>
 <section class="view" id="viewStats">
 <div class="toolbar statsToolbar"><h2>Estatísticas</h2><div class="spacer"></div>
 <label>Período: <select id="statsPeriod"><option value="1h">1 h</option><option value="6h">6 h</option><option value="24h" selected>24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all">Todo</option></select></label>
@@ -232,10 +246,10 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.5</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.6</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.5.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.6.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="firstRunDialog" role="dialog" aria-modal="true" aria-labelledby="firstRunTitle" aria-describedby="firstRunMessage">
@@ -258,7 +272,7 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const norm=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const fmtDate=x=>x?new Date(Number(x)).toLocaleString('pt-BR'):'—';
 const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000);return m<60?Math.round(m)+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d';};
-let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,waypointLayer=null,waypoints=[],communications=[],mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
+let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],nodeHops=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,waypointLayer=null,waypoints=[],communications=[],mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
 try{mapSourceFilter=localStorage.getItem('mesh.map.selected_source')||'';}catch(e){}
 let firstRunDialogChecked=false,updateNoticeChecked=false;
 function rememberFirstRunShown(){try{sessionStorage.setItem('mesh.firstRunShown','yes');}catch(e){}}
@@ -303,7 +317,42 @@ const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
  Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map');
 const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
-function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.friendly_name||n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
+const TRAFFIC_LABELS={
+ TELEMETRY_APP:'Telemetria',POSITION_APP:'Posição',NODEINFO_APP:'Informações do nó',
+ ROUTING_APP:'Roteamento',TEXT_MESSAGE_APP:'Mensagem',TRACEROUTE_APP:'Rastreamento de rota',
+ NODE_STATUS_APP:'Estado do nó',WAYPOINT_APP:'Ponto de interesse',ADMIN_APP:'Administração',
+ NEIGHBORINFO_APP:'Informações de vizinhos',STORE_FORWARD_APP:'Armazenar e encaminhar',
+ REMOTE_HARDWARE_APP:'Hardware remoto',DETECTION_SENSOR_APP:'Sensor de detecção',
+ RANGE_TEST_APP:'Teste de alcance',PAXCOUNTER_APP:'Contagem de pessoas',
+ REPLY_APP:'Resposta',SERIAL_APP:'Dados seriais',MAP_REPORT_APP:'Relatório de mapa'
+};
+const HARDWARE_LABELS={
+ HELTEC_V4:'Heltec WiFi LoRa 32 V4',HELTEC_V3:'Heltec WiFi LoRa 32 V3',
+ RAK4631:'RAK WisBlock 4631',HELTEC_WIRELESS_TRACKER_V2:'Heltec Wireless Tracker V2',
+ HELTEC_WSL_V3:'Heltec Wireless Stick Lite V3',
+ HELTEC_WIRELESS_PAPER:'Heltec Wireless Paper',SEEED_XIAO_S3:'Seeed Studio XIAO ESP32S3',
+ TBEAM:'LilyGO T-Beam'
+};
+function trafficName(code){
+ const raw=String(code??'').trim();
+ if(!raw)return 'Tipo não informado';
+ const key=raw.toUpperCase();
+ if(TRAFFIC_LABELS[key])return TRAFFIC_LABELS[key];
+ const num=/^\d+$/.test(raw)?Number(raw):null;
+ return num!==null?'Porta '+num+' (não identificada)':raw.replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase());
+}
+function hardwareName(code){
+ const raw=String(code??'').trim();
+ return HARDWARE_LABELS[raw]||(raw?raw.replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase()):'—');
+}
+function isBroadcastNode(num){
+ return num===4294967295||num==='4294967295'||num==='!ffffffff'||num==='0xffffffff'||num==='^all';
+}
+function idName(num){
+ if(isBroadcastNode(num))return 'broadcast';
+ const n=nodes.find(x=>x.node_num===num);
+ return n?.friendly_name||n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));
+}
 function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite(Number(n.longitude))&&n.latitude!==null&&n.longitude!==null&&!(Math.abs(Number(n.latitude))<.01&&Math.abs(Number(n.longitude))<.01);}
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
 function initMap(){if(map||!window.L)return;map=L.map('map',{zoomControl:true}).setView([-15.793,-47.882],9);nodeLayer=L.layerGroup().addTo(map);linkLayer=L.layerGroup().addTo(map);waypointLayer=L.layerGroup().addTo(map);heatLayer=L.layerGroup().addTo(map);
@@ -799,7 +848,9 @@ function renderMap(){
      fillColor:Date.now()-n.last_seen_ms<7200000?'#2ecc71':'#e9a94d',fillOpacity:.95,weight:1});
    marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id),{
      permanent:$('showNames').checked,direction:'top'});
-   marker.on('click',()=>showNode(n));marker.addTo(nodeLayer);coords.push(point);
+   marker.on('click',()=>showNode(n));
+   marker.on('contextmenu',e=>{L.DomEvent.stop(e);openNodeContext(n.node_num,e.originalEvent.clientX,e.originalEvent.clientY);});
+   marker.addTo(nodeLayer);coords.push(point);
   }
  }
  if($('showMapWaypoints').checked&&waypointLayer){
@@ -857,14 +908,14 @@ function nodePopupHtml(n){
  const source=state.sources.find(s=>s.id===n.last_source_id);
  const fields=[
   ['Node ID',n.node_id],['Nome amigável local',n.friendly_name],['Nome longo',n.long_name],['Nome curto',n.short_name],
-  ['Hardware',n.hw_model],['Role',n.role],['Firmware',null],
+  ['Hardware',hardwareName(n.hw_model)+' ('+(n.hw_model||'—')+')'],['Role',n.role],['Firmware',null],
   ['Status',nodeRadioStatus(n)],['Conexão da última comunicação',source?.name||null],
   ['Coordenadas',coord],['Latitude',validPos(n)?n.latitude:null],
   ['Longitude',validPos(n)?n.longitude:null],
   ['Altitude',n.altitude,n.altitude!=null?n.altitude+' m':null],
   ['Última posição',n.position_ms,fmtDate(n.position_ms)],
   ['Precisão da posição',null],['Precisão GPS / HDOP',null],
-  ['Conexão da posição',null],['Hops da última mensagem',hops,hops===null?null:String(hops)],
+  ['Conexão da posição',null],['Hops observados do último pacote RF',nodeValue(n,'hops'),nodeValue(n,'hops')===null?null:String(nodeValue(n,'hops'))],
   ['SNR recebido',lastSNR,lastSNR!=null?Number(lastSNR).toFixed(1)+' dB':null],
   ['RSSI recebido',lastRSSI,lastRSSI!=null?Math.round(lastRSSI)+' dBm':null],
   ['Canal do último pacote',recent?.channel],
@@ -980,8 +1031,9 @@ $('showMapWaypoints').onchange=()=>{$('mapShowWaypointsSetting').checked=$('show
 $('showMapAnimate').onchange=()=>{$('mapAnimateNodes').checked=$('showMapAnimate').checked;storeMapControls();};
 function placeVisibilityPanel(){
  const box=$('mapVisibilityBtn').getBoundingClientRect(),panel=$('mapVisibilityPanel');
- panel.style.left=Math.max(6,Math.min(box.left,window.innerWidth-285))+'px';
- panel.style.top=Math.max(6,Math.min(box.bottom+4,window.innerHeight-230))+'px';
+ const w=panel.offsetWidth||300,h=panel.offsetHeight||340;
+ panel.style.left=Math.max(6,Math.min(box.left,window.innerWidth-w-6))+'px';
+ panel.style.top=Math.max(6,Math.min(box.bottom+4,window.innerHeight-h-6))+'px';
 }
 function toggleVisibilityPanel(open){
  $('mapVisibilityPanel').hidden=!open;
@@ -990,12 +1042,14 @@ function toggleVisibilityPanel(open){
 }
 $('mapVisibilityBtn').onclick=()=>toggleVisibilityPanel($('mapVisibilityPanel').hidden);
 function setAllMapObjects(enabled){
- for(const id of ['showMapNodes','showMapLinks','showMapWaypoints','showMapAnimate'])$(id).checked=enabled;
+ for(const id of ['showMapNodes','showMapLinks','showMapWaypoints','showMapAnimate','showNames','mapRadar','mapHillshade','mapTerrain'])$(id).checked=enabled;
  $('mapShowNodesSetting').checked=enabled;
  $('mapShowLinksSetting').checked=enabled;
  $('mapShowWaypointsSetting').checked=enabled;
  $('mapAnimateNodes').checked=enabled;
- storeMapControls();renderMap();
+ $('mapShowNamesSetting').checked=enabled;
+ storeMapControls();saveMapSettings();
+ updateRadar();updateHillshade();updateTerrain();renderMap();
 }
 $('mapShowAll').onclick=()=>setAllMapObjects(true);
 $('mapHideAll').onclick=()=>setAllMapObjects(false);
@@ -1010,7 +1064,7 @@ document.addEventListener('keydown',ev=>{
 });
 window.addEventListener('resize',()=>{if(!$('mapVisibilityPanel').hidden)placeVisibilityPanel();});
 $('showNames').onchange=()=>{$('mapShowNamesSetting').checked=$('showNames').checked;storeMapControls();renderMap();};$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
-$('layersBtn').onclick=()=>{const panel=$('mapLayersPanel');panel.hidden=!panel.hidden;if(!panel.hidden){const r=$('layersBtn').getBoundingClientRect();panel.style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';panel.style.top=r.bottom+6+'px';}};$('closeLayers').onclick=()=>{$('mapLayersPanel').hidden=true;};window.addEventListener('resize',()=>{positionSuggestions();if(!$('mapLayersPanel').hidden){const r=$('layersBtn').getBoundingClientRect();$('mapLayersPanel').style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';$('mapLayersPanel').style.top=r.bottom+6+'px';}});$('playback').addEventListener('scroll',positionSuggestions,{passive:true});
+$('playback').addEventListener('scroll',positionSuggestions,{passive:true});
 
 
 let mentionOptions=[],mentionIndex=0,mentionStart=0,mentionEnd=0;
@@ -1060,7 +1114,12 @@ const km=(a,b)=>{if(!validPos(a)||!validPos(b))return null;const rad=x=>Number(x
  return 12742*Math.atan2(Math.sqrt(x),Math.sqrt(Math.max(0,1-x)));};
 function nodeValue(n,key){
  if(key==='distance'){const ref=localRadioReference();return ref?km(ref,n):null;}
- if(key==='hops')return null; // No durable, source-verified hops per node in current schema.
+ if(key==='hops'){
+   const found=nodeHops.filter(x=>Number(x.from_node)===Number(n.node_num)&&
+       (!mapSourceFilter||String(x.source_id)===mapSourceFilter))
+       .sort((a,b)=>Number(b.timestamp_ms)-Number(a.timestamp_ms));
+   return found.length?Number(found[0].hops):null;
+  }
  if(key==='last_seen_ms'||key==='position_ms')return n[key]||null;
  return n[key]??null;
 }
@@ -1068,6 +1127,7 @@ function nodeDisplay(n,key){
  const v=nodeValue(n,key);
  if(v===null||v===undefined||v==='')return '—';
  if(key==='distance')return Number(v).toFixed(1)+' km';
+ if(key==='hw_model')return hardwareName(v);
  if(key==='battery')return Number(v)===101?'EXT':v+'%';
  if(key==='voltage')return Number(v).toFixed(2)+' V';
  if(key==='snr')return Number(v).toFixed(1)+' dB';
@@ -1094,14 +1154,17 @@ function renderNodes(){
     'Múltiplos rádios: selecione a conexão na aba Mapa':
     'Distância indisponível: rádio local sem posição/identidade válida';
  const q=norm($('nodesFilter').value);
- const list=nodes.filter(n=>matches(n,q)||[n.hw_model,n.role].some(x=>norm(x).includes(q)));
+ const list=nodes.filter(n=>matches(n,q)||[n.hw_model,hardwareName(n.hw_model),n.role].some(x=>norm(x).includes(q)));
  $('nodesCounter').textContent=list.length+' de '+nodes.length+' nós';
  const visible=nodeCols.filter(x=>selectedNodeCols.has(x[0]));
  $('nodesHeader').innerHTML=visible.map(([k,label])=>'<th data-nodesort="'+k+'" role="button" tabindex="0">'+esc(label)+(k===nodeSort?(nodeSortAsc?' ▲':' ▼'):'')+'</th>').join('');
  list.sort((a,b)=>{const av=nodeValue(a,nodeSort),bv=nodeValue(b,nodeSort);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;
   const cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'pt-BR',{numeric:true});return nodeSortAsc?cmp:-cmp;});
  $('nodesRows').innerHTML=list.map(n=>'<tr data-node="'+n.node_num+'">'+visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>').join('')||'<tr><td>Nenhum nó conhecido.</td></tr>';
- $('nodesRows').querySelectorAll('[data-node]').forEach(el=>el.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(el.dataset.node));if(n){setView('map');showNode(n);}});
+ $('nodesRows').querySelectorAll('[data-node]').forEach(el=>{
+   el.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(el.dataset.node));if(n)showNode(n);};
+   el.oncontextmenu=ev=>{ev.preventDefault();openNodeContext(Number(el.dataset.node),ev.clientX,ev.clientY);};
+ });
 }
 $('nodesHeader').onclick=e=>{const th=e.target.closest('[data-nodesort]');if(!th)return;const key=th.dataset.nodesort;nodeSortAsc=nodeSort===key?!nodeSortAsc:(key==='distance'||key==='long_name');nodeSort=key;localStorage.setItem('mesh.nodes.sort',JSON.stringify({col:nodeSort,asc:nodeSortAsc}));renderNodes();};
 $('nodesHeader').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-nodesort]')){e.preventDefault();e.target.click();}};
@@ -1119,7 +1182,7 @@ let pausedTraffic=false, selectedPacketId=null,trafficFilterSignature='';
 function filteredTraffic(){
  const query=norm($('trafficFilter').value),src=$('trafficSource').value,typ=$('trafficType').value;
  return packets.filter(p=>(!src||String(p.source_id)===src)&&(!typ||p.port===typ)&&
- norm([p.port,idName(p.from_node),idName(p.to_node),p.packet_id,p.text_preview].join(' ')).includes(query));
+ norm([p.port,trafficName(p.port),idName(p.from_node),idName(p.to_node),p.packet_id,p.text_preview].join(' ')).includes(query));
 }
 function renderPackets(){
  if(pausedTraffic)return;
@@ -1128,24 +1191,24 @@ function renderPackets(){
   $('trafficSource').innerHTML='<option value="">Todas</option>'+state.sources.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
   $('trafficSource').value=old;trafficFilterSignature=signature;}
  const oldType=$('trafficType').value,types=[...new Set(packets.map(p=>p.port).filter(Boolean))].sort();
- const newOptions='<option value="">Todos</option>'+types.map(t=>'<option>'+esc(t)+'</option>').join('');
+ const newOptions='<option value="">Todos</option>'+types.map(t=>'<option value="'+esc(t)+'">'+esc(trafficName(t))+'</option>').join('');
  if($('trafficType').innerHTML!==newOptions){$('trafficType').innerHTML=newOptions;$('trafficType').value=oldType;}
  const list=filteredTraffic();
  $('trafficCounter').textContent=list.length+' exibidos · '+(state.counts?.packets||0)+' no banco';
  $('packetRows').innerHTML=list.map(p=>{
  const hops=p.hop_start!=null&&p.hop_limit!=null&&Number(p.hop_start)>=Number(p.hop_limit)?p.hop_start-p.hop_limit:'—';
- return '<tr data-pid="'+p.id+'"><td>'+esc(new Date(p.timestamp_ms).toLocaleTimeString('pt-BR'))+'</td><td><span class="badge">RX</span></td><td>'+esc(idName(p.from_node))+'</td><td>'+esc(idName(p.to_node))+'</td><td><span class="badge">'+esc(p.port||'UNKNOWN')+'</span></td><td>'+esc(p.rx_snr??'—')+'</td><td>'+esc(p.rx_rssi??'—')+'</td><td>'+esc(hops)+'</td><td>'+esc(p.via_mqtt?'MQTT':'Rádio RX')+'</td></tr>';
+ return '<tr data-pid="'+p.id+'"><td>'+esc(new Date(p.timestamp_ms).toLocaleTimeString('pt-BR'))+'</td><td><span class="badge">RX</span></td><td>'+esc(idName(p.from_node))+'</td><td>'+esc(idName(p.to_node))+'</td><td><span class="badge">'+esc(trafficName(p.port))+'</span></td><td>'+esc(p.rx_snr??'—')+'</td><td>'+esc(p.rx_rssi??'—')+'</td><td>'+esc(hops)+'</td><td>'+esc(p.via_mqtt?'MQTT':'Rádio RX')+'</td></tr>';
  }).join('')||'<tr><td colspan="9">Nenhum pacote encontrado.</td></tr>';
  $('packetRows').querySelectorAll('[data-pid]').forEach(row=>row.onclick=()=>{
   const p=packets.find(x=>String(x.id)===row.dataset.pid);if(!p)return;
   selectedPacketId=p.id;$('trafficDetails').classList.add('active');
-  $('trafficTitle').textContent=(p.port||'Pacote')+' #'+p.id;
+  $('trafficTitle').textContent=trafficName(p.port)+' #'+p.id;
   const fields={Hora:fmtDate(p.timestamp_ms),Conexão:p.source_id,Origem:idName(p.from_node),
      Destino:idName(p.to_node),Canal:p.channel??'—',SNR:p.rx_snr??'—',RSSI:p.rx_rssi??'—',
      HopStart:p.hop_start??'—',HopLimit:p.hop_limit??'—',
      Transporte:p.via_mqtt?'MQTT':'Rádio local RX',PacketID:p.packet_id,
      Criptografia:p.encrypted?'Payload não decodificado':'Não indicada',
-     Conteúdo:p.encrypted?'[conteúdo indisponível]':(p.text_preview||'—')};
+     Tipo:trafficName(p.port)+' ('+(p.port||'desconhecido')+')',Conteúdo:p.encrypted?'[conteúdo indisponível]':(p.text_preview||'—')};
   $('trafficInfo').textContent=Object.entries(fields).map(([k,v])=>k+': '+v).join('\n');
  });
 }
@@ -1163,8 +1226,138 @@ $('trafficExport').onclick=()=>{
 $('trafficFilter').oninput=renderPackets;$('trafficReload').onclick=refreshAll;
 function chatKey(m){if((m.to_node===null||m.to_node===0xffffffff)&&Number(m.channel||0)===0)return 'channel:0';if(m.to_node===null||m.to_node===0xffffffff)return 'channel:'+m.channel;const a=m.direction==='tx'?m.to_node:m.from_node;return a!=null?'node:'+a:'channel:'+m.channel;}
 function openDm(id){currentChat='node:'+id;setView('messages');renderChat();}
-function renderChat(){const chats=new Set(['channel:0']);for(const m of messages)chats.add(chatKey(m));for(const n of nodes)chats.add('node:'+n.node_num);const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:a.localeCompare(b));$('contacts').innerHTML=list.map(key=>`<button class="contact ${key===currentChat?'selected':''}" data-chat="${esc(key)}">${esc(key.startsWith('node:')?idName(Number(key.slice(5))):key==='channel:0'?'📡 Canal primário':'Canal '+key.slice(8))}</button>`).join('');$('contacts').querySelectorAll('[data-chat]').forEach(el=>el.onclick=()=>{currentChat=el.dataset.chat;renderChat();});$('chatHeader').textContent=currentChat.startsWith('node:')?'Privado: '+idName(Number(currentChat.slice(5))):currentChat==='channel:0'?'Canal primário':'Canal '+currentChat.slice(8);const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);$('bubbles').innerHTML=filtered.map(m=>`<div class="bubble ${m.direction==='tx'?'tx':''}"><div>${esc(m.text)}</div><small>${esc(idName(m.from_node))} · ${esc(fmtDate(m.timestamp_ms))} ${m.state==='accepted_by_radio'?'· TX aceito pelo rádio':''}</small></div>`).join('')||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';$('bubbles').scrollTop=$('bubbles').scrollHeight;const enabled=state.sources.filter(s=>s.enabled&&s.kind!=='mqtt'&&state.connections[String(s.id)]?.status==='connected');const old=$('messageSource').value;$('messageSource').innerHTML=enabled.map(s=>`<option value="${s.id}">${esc(s.name)} (${esc(s.kind)})</option>`).join('')||'<option value="">Nenhum rádio conectado</option>';if(enabled.some(x=>String(x.id)===old))$('messageSource').value=old;$('messageSend').disabled=enabled.length===0;}
-$('messageSend').onclick=async()=>{try{const text=$('messageText').value.trim();if(!text)throw Error('Digite a mensagem');const source_id=Number($('messageSource').value);if(!source_id)throw Error('Conecte um rádio bidirecional');const to_node=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';const channel=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);const result=await api('/api/messages/send',{text,source_id,to_node,channel});$('messageText').value='';notify('Mensagem aceita pelo rádio. Entrega não confirmada.');await refreshAll();}catch(e){notify(e.message,true);}};$('messageText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('messageSend').click();}};
+function closeNodeContext(){
+ const menu=$('nodeContextMenu');if(menu)menu.hidden=true;
+}
+function openNodeContext(nodeNum,x,y){
+ const n=nodes.find(v=>Number(v.node_num)===Number(nodeNum));if(!n)return;
+ const menu=$('nodeContextMenu');
+ const action=(key,title,enabled=true,note='')=>
+    '<button type="button" role="menuitem" data-node-action="'+key+'" '+
+    (enabled?'':'disabled title="'+esc(note)+'"')+'>'+esc(title)+
+    (enabled?'':' · Indisponível')+'</button>';
+ menu.innerHTML='<div class="ctxName">'+esc(idName(n.node_num))+
+      ' <small>'+esc(n.node_id)+'</small></div>'+
+      action('message','Enviar mensagem privada')+
+      action('detail','Informações completas')+
+      action('locate','Mostrar no mapa',validPos(n),'O nó não informou posição')+
+      action('copy','Copiar Node ID')+
+      '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
+      ['NodeInfo','Posição','Telemetria','Traceroute','Ping','Vizinhos'].map(a=>
+         action('future',a,false,'Consulta remota ainda não implementada; nenhum pacote RF será enviado')).join('');
+ menu.hidden=false;
+ const width=menu.offsetWidth||250,height=menu.offsetHeight||340;
+ menu.style.left=Math.max(6,Math.min(x,innerWidth-width-6))+'px';
+ menu.style.top=Math.max(6,Math.min(y,innerHeight-height-6))+'px';
+ menu.querySelectorAll('[data-node-action]').forEach(btn=>btn.onclick=async()=>{
+   closeNodeContext();
+   switch(btn.dataset.nodeAction){
+    case 'message':openDm(n.node_num);break;
+    case 'detail':showNode(n);break;
+    case 'locate':setView('map');initMap();if(map&&validPos(n))map.setView([n.latitude,n.longitude],13);break;
+    case 'copy':try{await navigator.clipboard.writeText(n.node_id);notify('Node ID copiado.');}catch(e){notify('Use o detalhe do nó para copiar Node ID.',true);}break;
+   }
+ });
+ menu.querySelector('[data-node-action]:not([disabled])')?.focus();
+}
+document.addEventListener('pointerdown',e=>{
+ if($('nodeContextMenu')&&!$('nodeContextMenu').hidden&&
+    !$('nodeContextMenu').contains(e.target))closeNodeContext();
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&$('nodeContextMenu')&&!$('nodeContextMenu').hidden){closeNodeContext();e.preventDefault();}
+});
+let messageSending=false,pendingChat=null;
+function txRadioSources(){
+ return (state.sources||[]).filter(x=>x.kind!=='mqtt'&&x.enabled&&
+   state.connections?.[String(x.id)]?.status==='connected'&&
+   state.connections[String(x.id)].tx_capable===true);
+}
+function txStatusReason(){
+ const radios=(state.sources||[]).filter(x=>x.kind!=='mqtt');
+ if(!radios.length)return 'Cadastre um rádio USB/BLE/TCP em Configurações → Conexões.';
+ if(!radios.some(x=>x.enabled))return 'As conexões de rádio estão desativadas.';
+ if(!radios.some(x=>state.connections?.[String(x.id)]?.status==='connected'))
+   return 'Rádio desconectado; consulte Configurações → Conexões.';
+ return 'O rádio está conectado, mas o driver não oferece envio de texto.';
+}
+function messageStateHtml(m){
+ if(m.direction!=='tx')return '';
+ if(m.state==='accepted_by_radio')
+   return '<span class="msgState accepted" title="✓ Aceita pelo rádio local; entrega e leitura desconhecidas">✓</span>';
+ if(m.state==='queued'||m.state==='sending')
+   return '<span class="msgState working" title="Aguardando envio">◷</span>';
+ if(m.state==='rejected'||m.state==='failed')
+   return '<span class="msgState error" title="Falha no envio">!</span>';
+ return '';
+}
+function renderChat(){
+ const chats=new Set(['channel:0']);
+ for(const m of messages)chats.add(chatKey(m));
+ for(const n of nodes)chats.add('node:'+n.node_num);
+ const nameOf=key=>key.startsWith('node:')?idName(Number(key.slice(5))):
+   key==='channel:0'?'Canal primário':'Canal '+key.slice(8);
+ const lastByKey=key=>Math.max(0,...messages.filter(m=>chatKey(m)===key).map(m=>Number(m.timestamp_ms)||0));
+ const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:lastByKey(b)-lastByKey(a)||a.localeCompare(b));
+ $('contacts').innerHTML=list.map(key=>{
+  const latest=messages.filter(m=>chatKey(m)===key).at(-1);
+  return '<button type="button" class="contact '+(key===currentChat?'selected':'')+
+    '" data-chat="'+esc(key)+'">'+esc(nameOf(key))+
+    (latest?'<small style="display:block;color:var(--muted)">'+esc(latest.text.slice(0,55))+'</small>':'')+
+    '</button>';
+ }).join('');
+ $('contacts').querySelectorAll('[data-chat]').forEach(el=>{
+   el.onclick=()=>{currentChat=el.dataset.chat;renderChat();};
+   if(el.dataset.chat.startsWith('node:')){
+     el.addEventListener('contextmenu',e=>{e.preventDefault();openNodeContext(Number(el.dataset.chat.slice(5)),e.clientX,e.clientY);});
+   }
+ });
+ $('chatHeader').textContent=currentChat.startsWith('node:')?
+   'Privado · '+nameOf(currentChat):nameOf(currentChat);
+ const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);
+ let html=filtered.map(m=>'<div class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
+   esc(m.text)+'</div><small>'+esc(new Date(m.timestamp_ms).toLocaleTimeString('pt-BR'))+
+   (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
+   messageStateHtml(m)+'</small></div>').join('');
+ if(pendingChat?.chat===currentChat){
+  html+='<div class="bubble tx"><div>'+esc(pendingChat.text)+'</div><small>'+
+     (pendingChat.failed?'Falha':'Enviando')+
+     (pendingChat.failed?'<span class="msgState error">!</span>':
+       '<span class="msgState working" title="Aguardando rádio">◷</span>')+'</small></div>';
+ }
+ $('bubbles').innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
+ $('bubbles').scrollTop=$('bubbles').scrollHeight;
+ const choices=txRadioSources(),previous=$('messageSource').value;
+ $('messageSource').innerHTML=choices.map(x=>'<option value="'+x.id+'">'+esc(x.name)+' ('+esc(x.kind)+')</option>').join('')||
+   '<option value="">Nenhum rádio TX disponível</option>';
+ if(choices.some(x=>String(x.id)===previous))$('messageSource').value=previous;
+ $('messageSend').disabled=!choices.length||messageSending;
+ $('messageSend').title=choices.length?'Enviar via rádio':'Indisponível: '+txStatusReason();
+ $('messageTxStatus').textContent=messageSending?'◷ Enviando ao rádio local...':
+   choices.length?'Rádio TX disponível. Entrega/leitura não comprovadas.':txStatusReason();
+}
+$('messageSend').onclick=async()=>{
+ if(messageSending)return;
+ const original=$('messageText').value,text=original.trim();
+ if(!text){notify('Digite a mensagem.',true);return;}
+ const bytes=new TextEncoder().encode(text).length;
+ if(bytes>220){notify('Limite 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
+ const src=Number($('messageSource').value);
+ if(!txRadioSources().some(x=>x.id===src)){notify(txStatusReason(),true);renderChat();return;}
+ const target=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';
+ const ch=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);
+ messageSending=true;pendingChat={chat:currentChat,text,failed:false};renderChat();
+ try{
+  await api('/api/messages/send',{source_id:src,to_node:target,text,channel:ch});
+  $('messageText').value='';pendingChat=null;
+  notify('✓ Aceita pelo rádio local. Entrega e leitura não confirmadas.');
+  await refreshAll();
+ }catch(e){pendingChat={chat:currentChat,text,failed:true};notify('Falha TX: '+e.message,true);}
+ finally{messageSending=false;renderChat();}
+};
+$('messageText').onkeydown=e=>{
+ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!$('messageSend').disabled)$('messageSend').click();}
+};
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
@@ -1214,7 +1407,7 @@ function renderStats(){
       ' críticos. Relações lógicas não equivalem a enlaces RF diretos.</div>';
    html+='<div class="statsSplit">'+statsHead('Tipos de tráfego',
        statsTbl(['Tipo','Pacotes','%'],d.packet_types.map(x=>
-        [x.name,fmtCount(x.count),c.observations?
+        [trafficName(x.name),fmtCount(x.count),c.observations?
           (100*x.count/c.observations).toFixed(1).replace('.',',')+'%':'—'])))+
       statsHead('Nós mais ativos',statsTbl(['Nó','Pacotes'],
         d.top_originators.slice(0,12).map(x=>[x.name,fmtCount(x.count)])))+'</div>';
@@ -1284,7 +1477,7 @@ function renderStats(){
     ['TX comprovados','Não medido'],['Nós originadores',fmtCount(c.active_originators)]
    ].map(([label,value])=>'<div class="stat"><b>'+esc(value)+'</b><span>'+esc(label)+'</span></div>').join('')+'</div>';
    html+=statsHead('Volume por tipo',statsTbl(['Tipo','Pacotes','Participação'],
-     d.packet_types.map(x=>[x.name,fmtCount(x.count),
+     d.packet_types.map(x=>[trafficName(x.name),fmtCount(x.count),
        c.observations?(x.count*100/c.observations).toFixed(1).replace('.',',')+'%':'—'])));
    html+=statsHead('Conexões receptoras',statsTbl(['Conexão','Pacotes','SNR médio'],d.source_breakdown.map(x=>[x.name,x.count,fmtMeasure(x.mean_snr,'dB')])));
    html+=statsHead('Séries horárias',statsTbl(['Hora UTC','Observações','MQTT'],d.hourly.map(x=>[new Date(x.timestamp_ms).toLocaleString('pt-BR'),x.count,x.mqtt])));
@@ -1738,7 +1931,7 @@ async function announceWindowReady(){
  if(windowReadySent)return;
  try{await api('/api/window/ready',{});windowReadySent=true;}catch(e){}
 }
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications')]);state=results[0];showFirstRunDialogOnce();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
  const slug=location.pathname.split('/').pop();
  if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;
@@ -1746,4 +1939,5 @@ resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
 }
 setView(initialView,false);if(initialView==='settings')showSettings(initialSettingsPanel,false);refreshAll();setInterval(refreshAll,4000);setInterval(()=>{if(view==='stats'){syncStatFilters();fetchStats(false);}},20000);
 </script>
+<div id="nodeContextMenu" role="menu" aria-label="Ações da estação" hidden></div>
 </body></html>
