@@ -350,6 +350,16 @@ class UpdateManager:
             self._cancel.set()
             return self.status()
 
+    def _record_update_error(self, phase, message):
+        """Best-effort bounded diagnostics in the local profile."""
+        try:
+            self.profile.mkdir(parents=True, exist_ok=True)
+            with (self.profile / "update.log").open("a", encoding="utf-8") as output:
+                output.write(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()) +
+                             " " + str(phase)[:32] + ": " + str(message)[:300] + "\n")
+        except OSError:
+            pass
+
     def launch(self):
         with self._lock:
             if self._phase!="verified" or self._plan is None:
@@ -360,13 +370,17 @@ class UpdateManager:
             marker=Path(expected["runner_ready"])
             marker.unlink(missing_ok=True)
             creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0)|getattr(subprocess,"DETACHED_PROCESS",0)
-            proc=subprocess.Popen(
-                ["powershell.exe","-NoProfile","-NonInteractive",
-                 "-ExecutionPolicy","Bypass","-WindowStyle","Hidden",
-                 "-File",script,"-Plan",plan],
-                cwd=str(self.profile),stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
-                creationflags=creationflags,close_fds=True)
+            try:
+                proc=subprocess.Popen(
+                    ["powershell.exe","-NoProfile","-NonInteractive",
+                     "-ExecutionPolicy","Bypass","-WindowStyle","Hidden",
+                     "-File",script,"-Plan",plan],
+                    cwd=str(self.profile),stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+                    creationflags=creationflags,close_fds=True)
+            except OSError as exc:
+                self._record_update_error("launcher",type(exc).__name__)
+                raise RuntimeError("Não foi possível iniciar o atualizador externo; consulte update.log.") from exc
             # Do not close original application until the detached updater is alive.
             acknowledged=False
             deadline=time.monotonic()+12
@@ -384,9 +398,13 @@ class UpdateManager:
                 if proc.poll() is None:
                     try:proc.terminate()
                     except OSError:pass
-                raise RuntimeError(
-                  "Atualizador externo não confirmou inicialização. "
-                  "O Mesh Analyzer permanecerá aberto. Consulte update.log.")
+                code=proc.poll()
+                reason=("Processo externo encerrou com código "+str(code) if code is not None
+                        else "Tempo esgotado aguardando confirmação do atualizador")
+                self._record_update_error("handshake",reason+
+                    "; marcador="+("presente" if marker.exists() else "ausente"))
+                raise RuntimeError("Atualizador externo não confirmou inicialização: "+reason+
+                                   ". Aplicação atual preservada; consulte update.log.")
 
             self._phase="installing"
             return self.status()

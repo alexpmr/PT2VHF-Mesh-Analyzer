@@ -298,6 +298,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 else:self._error("Operação não encontrada",404)
             except (ValueError,KeyError,TypeError) as exc:
                 self._error(exc,400)
+            except RuntimeError as exc:
+                LOG.exception("Falha operacional no POST %s",path)
+                self._error(str(exc)[:240] or "Falha operacional",500)
             except Exception as exc:
                 LOG.exception("Falha no POST %s",path)
                 self._error("Falha interna: "+type(exc).__name__,500)
