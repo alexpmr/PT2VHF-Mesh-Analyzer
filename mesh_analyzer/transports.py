@@ -87,8 +87,9 @@ def waypoint_from_decoded(decoded):
     lon=data.get("longitude_i",data.get("longitudeI"))
     if lat is None or lon is None or ident is None: return None
     try:
-        lat=float(lat)/1e7 if abs(float(lat))>90 else float(lat)
-        lon=float(lon)/1e7 if abs(float(lon))>180 else float(lon)
+        # latitude_i/longitude_i are fixed-point integers in units of 1e-7 degree.
+        lat=float(lat)/1e7
+        lon=float(lon)/1e7
         if not 0<ident<2**32 or not (-90<=lat<=90 and -180<=lon<=180):return None
         if abs(lat)<0.000001 and abs(lon)<0.000001:return None
         expire=int(data.get("expire") or 0)
