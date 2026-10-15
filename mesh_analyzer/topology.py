@@ -53,28 +53,36 @@ def decoded_traceroute(decoded):
 
 
 def traceroute_segments(packet, decoded):
-    """Persist only explicitly adjacent nodes, keeping unverified RF category.
+    """Port Traffic Analyzer's ordered leg decomposition for raw Meshtastic RF.
 
-    For a returned traceroute packet, the route sequence is from the requester
-    (packet.to) toward remote (packet.from). Empty intermediate arrays cannot
-    by themselves establish a one-hop direct link.
+    Traffic Analyzer receives requester-first, normalized MeshMonitor API
+    traceroutes. Here the raw answer is sent FROM remote TO requester.
+    Never bridge invalid/unknown hops or infer direct RF from an empty route.
     """
-    found=decoded_traceroute(decoded)
-    if found is None:return None
-    start=number(packet.get("to",packet.get("toId")))
-    end=number(packet.get("from",packet.get("fromId")))
-    out=[]
-    for label,route in (("route",found["route"]),("route_back",found["route_back"])):
-        nodes=[number(x) for x in route]
-        nodes=[x for x in nodes if x is not None]
-        if not nodes:continue
-        # Endpoint direction is known only for native RouteDiscovery responses;
-        # include the response endpoints as boundaries, not direct RF claims.
-        chain=[v for v in ([start]+nodes+[end] if label=="route"
-                 else [end]+nodes+[start]) if v is not None]
-        for a,b in zip(chain,chain[1:]):
-            if a!=b and a!=0xffffffff and b!=0xffffffff:
-                out.append((min(a,b),max(a,b),"observed_route_unverified_rf"))
+    found = decoded_traceroute(decoded)
+    if found is None:
+        return None
+    requester = number(packet.get("to", packet.get("toId")))
+    remote = number(packet.get("from", packet.get("fromId")))
+    if requester is None or remote is None:
+        return []
+    out = []
+    for label, raw_route in (("route", found.get("route") or []),
+                             ("route_back", found.get("route_back") or [])):
+        # Unlike Traffic Analyzer's oriented API, the raw packet's empty
+        # arrays are ambiguous; with no intermediate IDs, do not create links.
+        if not raw_route:
+            continue
+        # Invalid placeholder positions must remain gaps, not be discarded
+        # and connected around (e.g. A, invalid, B).
+        values = [number(x) for x in raw_route]
+        chain = ([requester] + values + [remote] if label == "route"
+                 else [remote] + values + [requester])
+        for a, b in zip(chain, chain[1:]):
+            if a is None or b is None or a == b:
+                continue
+            out.append((min(a, b), max(a, b),
+                        "observed_route_unverified_rf"))
     return list(dict.fromkeys(out))
 
 
