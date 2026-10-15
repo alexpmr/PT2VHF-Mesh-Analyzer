@@ -32,8 +32,8 @@ class TaskbarIconTests(unittest.TestCase):
             embedded = base/"unpack"/"branding"/"mesh-analyzer.ico"
             embedded.parent.mkdir(parents=True)
             embedded.write_bytes(b"embedded-portable-ico")
-            with patch.object(sys, "_MEIPASS", str(base/"unpack"), create=True), \\
-                 patch.object(sys, "frozen", True, create=True), \\
+            with patch.object(sys, "_MEIPASS", str(base/"unpack"), create=True), \
+                 patch.object(sys, "frozen", True, create=True), \
                  patch.object(sys, "executable", str(base/"install"/"PT2VHF-Mesh-Analyzer.exe")):
                 self.assertEqual(native_window_icon(), installed)
                 installed.unlink()
