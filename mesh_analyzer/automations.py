@@ -191,7 +191,7 @@ class NodeEnrichment:
     def _candidates(self, source_id, supported, own, config, now):
         observed = self._observed(source_id, now, config["recent_hours"]*3600000)
         attempts = self._attempts(source_id)
-        freshness = self._freshness(now, 365*86400000)
+        freshness = self._freshness(now, max(config["ages_hours"].values())*3600000)
         result = []
         for node in observed:
             num = node["node_num"]
