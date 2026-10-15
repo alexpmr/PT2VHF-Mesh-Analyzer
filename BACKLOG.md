@@ -1,3 +1,13 @@
+## Menu VER na faixa secundária/inferior do Mapa — referência visual (15/10/2026)
+
+- **Solicitação atualizada do usuário:** adicionar botão drop-down **`Ver ▼`** à faixa de controles da aba **MAPA**, situada abaixo do menu principal (faixa secundária/inferior), com visual semelhante à captura fornecida do PT2VHF APRS Client. A posição mais recente substitui o requisito anterior de ficar obrigatoriamente ao lado de Conexão se o layout assim exigir.
+- **Itens independentes:** checkboxes **Nós**, **Enlaces**, **Waypoints** e, opcionalmente, **Animação dos pacotes**. Cabeçalho **VER**, **Selecionar tudo** e **Remover tudo**, suportando indeterminação do checkbox pai quando houver subcategorias.
+- **Grupos facultativos:** papéis reais Meshtastic para nós (se disponíveis), tipos de enlace por evidência real (RF direto comprovado, rota observada, MQTT/Internet); **não** copiar indiscriminadamente categorias APRS como iGate/digipeater.
+- **Persistência e segurança:** refletir imediatamente no Leaflet sem refresh; sincronizar com `showMapNodes`/`showMapLinks`, fonte, busca, período e preferências do SQLite; a ação de ocultar nunca remove informações históricas, nem altera TX, retenção ou evidência RF.
+- **Waypoints:** implementar ingestão e armazenamento de `WAYPOINT_APP` com posição válida, origem, tempo e fonte, endpoints e camada de ícones próprios; em ausência de waypoints usar contagem zero sem elementos fictícios. Hoje não há suporte especializado completo no backend.
+- **Layout:** menu não pode cobrir permanentemente outros controles; usar Escape/clique externo, teclado, contraste e responsividade Win11/WebView2.
+- **Integração:** [issue #20](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/20) foi refinada com os detalhes da captura. **Status: backlog, não implementado nos binários v0.6.3.**
+
 ## #42 — Retirar texto redundante da barra superior do Mapa (15/10/2026)
 
 - **Relato com captura:** remover o indicador textual **“Todas as conexões · N”** ao lado do seletor de Conexão na barra de controles do mapa. Quando uma conexão específica for selecionada, **também não mostrar** o texto lateral “Nome · status”.
