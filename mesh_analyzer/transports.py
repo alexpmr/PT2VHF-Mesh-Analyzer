@@ -410,6 +410,8 @@ class SourceManager:
                         if state is not None:
                             state["packets"]+=1
                             state["mqtt_rx_seq"]+=1
+                            state["rx_seq"]+=1
+                            state["last_rx_ms"]=now_ms()
             except Exception:
                 self.db.log("Mensagem MQTT não é um envelope Meshtastic válido/decodificável","warning",id)
         client.on_connect=on_connect
