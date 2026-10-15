@@ -152,6 +152,9 @@ class PacketIngestor:
           "hop_limit":packet.get("hopLimit",packet.get("hop_limit")),"via_mqtt":int(bool(via_mqtt) or packet.get("viaMqtt") is True or packet.get("via_mqtt") is True),
           "encrypted":int(bool(packet.get("encrypted")) and not decoded),"text_preview":text[:180] if text else "", "raw_json":raw_json})
         if not accepted:return False
+        # Persist communication as a logical relationship; it is NOT a direct RF link.
+        self.db.record_communication(unique,source_id,ts,from_num,to_num,
+            bool(via_mqtt) or packet.get("viaMqtt") is True or packet.get("via_mqtt") is True)
         if from_num is not None:
             self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,snr=packet.get("rxSnr",packet.get("rx_snr")))
         if port in ("NODEINFO_APP","4") and from_num is not None:
