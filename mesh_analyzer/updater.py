@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import secrets
 import subprocess
 import sys
 import threading
@@ -43,6 +44,12 @@ function WriteNotice([string]$status,[string]$detail) {
 }
 $child = $null
 try {
+    # Detached runner readiness is acknowledged before app shutdown.
+    $ready = @{ nonce = [string]$p.run_nonce; pid = $PID; status = 'ready' } |
+        ConvertTo-Json -Compress
+    [IO.File]::WriteAllText([string]$p.runner_ready, $ready, [Text.Encoding]::UTF8)
+    WriteLog ('Detached updater ready PID=' + $PID + '; mode=' + [string]$p.mode)
+
     WriteLog 'Waiting for Mesh Analyzer process and database handles to close'
     $timeout = [DateTime]::UtcNow.AddSeconds(90)
     while ([DateTime]::UtcNow -lt $timeout) {
@@ -318,7 +325,9 @@ class UpdateManager:
                   "version":version,"notes":(self.monitor._result or {}).get("notes","")[:3000],
                   "notice":str(self.profile/"update_complete.json"),
                   "log":str(self.profile/"update.log"),
-                  "health_url":"http://127.0.0.1:8789/health"}
+                  "health_url":"http://127.0.0.1:8789/health",
+                  "runner_ready":str(folder/"runner_ready.json"),
+                  "run_nonce":secrets.token_hex(8)}
             planfile=folder/"plan.json"
             planfile.write_text(json.dumps(plan,ensure_ascii=False),encoding="utf-8")
             script=folder/"apply_update.ps1"
@@ -344,13 +353,37 @@ class UpdateManager:
                 raise ValueError("Download não foi verificado ou não está pronto")
             script,plan=self._plan
             if os.name!="nt":raise RuntimeError("Instalação interna requer Windows")
+            expected=json.loads(Path(plan).read_text(encoding="utf-8"))
+            marker=Path(expected["runner_ready"])
+            marker.unlink(missing_ok=True)
             creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0)|getattr(subprocess,"DETACHED_PROCESS",0)
-            subprocess.Popen(
+            proc=subprocess.Popen(
                 ["powershell.exe","-NoProfile","-NonInteractive",
                  "-ExecutionPolicy","Bypass","-WindowStyle","Hidden",
                  "-File",script,"-Plan",plan],
                 cwd=str(self.profile),stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                 creationflags=creationflags,close_fds=True)
+            # Do not close original application until the detached updater is alive.
+            acknowledged=False
+            deadline=time.monotonic()+12
+            while time.monotonic()<deadline:
+                if marker.exists():
+                    try:
+                        ready=json.loads(marker.read_text(encoding="utf-8-sig"))
+                        if ready.get("status")=="ready" and ready.get("nonce")==expected["run_nonce"]:
+                            acknowledged=True
+                            break
+                    except (OSError,ValueError,TypeError):pass
+                if proc.poll() is not None:break
+                time.sleep(.15)
+            if not acknowledged:
+                if proc.poll() is None:
+                    try:proc.terminate()
+                    except OSError:pass
+                raise RuntimeError(
+                  "Atualizador externo não confirmou inicialização. "
+                  "O Mesh Analyzer permanecerá aberto. Consulte update.log.")
+
             self._phase="installing"
             return self.status()
