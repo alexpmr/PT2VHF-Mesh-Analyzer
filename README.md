@@ -1,24 +1,33 @@
-# PT2VHF Mesh Analyzer — v0.6.12
+# PT2VHF Mesh Analyzer — v0.6.13
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 11 x64 com banco próprio SQLite, fontes Meshtastic e análises locais. A arquitetura também permite evolução para Linux/macOS.
 
 ## Downloads — Windows 11 x64
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.12](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.12)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.13](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.13)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
-| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.12-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.12/PT2VHF-Mesh-Analyzer-v0.6.12-Setup-Win11-x64.exe)** |
-| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.12-Portable-Win11-x64.zip` | **[Baixar Portable ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.12/PT2VHF-Mesh-Analyzer-v0.6.12-Portable-Win11-x64.zip)** |
-| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.12/SHA256SUMS.txt) |
+| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.13-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.13/PT2VHF-Mesh-Analyzer-v0.6.13-Setup-Win11-x64.exe)** |
+| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.13-Portable-Win11-x64.exe` | **[Baixar Portable EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.13/PT2VHF-Mesh-Analyzer-v0.6.13-Portable-Win11-x64.exe)** |
+| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.13/SHA256SUMS.txt) |
 
 **Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
 [Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
-[Portable mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip) ·
+[Portable mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe) ·
 [SHA256 mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt) ·
 [Todas as releases](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases)
 
-**Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable pode ser extraído e executado sem instalação. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
+**Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable EXE pode ser executado diretamente, sem instalação. O ZIP permanece disponível por compatibilidade. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
+
+### Novidades da v0.6.13
+
+- **Consultas remotas:** visualização de traceroute no detalhe do nó com saltos de ida/retorno e SNR bruto recebido; rotas sem intermediários não são identificadas indevidamente como RF direto. Veja #76.
+- **Senha Wi-Fi do rádio:** campo protegido de substituição do Wi-Fi PSK quando disponível no firmware Meshtastic; senha existente nunca é exibida nem apagada ao salvar campos não relacionados. Veja #6.
+- **Portable EXE direto:** download sem necessidade de extração ZIP; ZIP segue publicado por compatibilidade com o atualizador antigo. Veja #74.
+- **Testes:** pipeline Windows 11 valida regressões Python, sintaxe JS e PowerShell, ICO do executável, PyInstaller e instalador Inno Setup.
+
+**Limitações:** o backlog não está completamente resolvido; automações, favoritos, descoberta, integração visual completa da topologia, problemas do instalador e atualizador ainda exigem implementação ou validação em hardware real.
 
 ### Novidades da v0.6.12
 

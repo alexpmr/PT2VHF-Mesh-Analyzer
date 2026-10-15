@@ -148,7 +148,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.12</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.13</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -1004,10 +1004,35 @@ async function refreshNodeQueryStatus(node){
   const r=await api('/api/queries?node='+encodeURIComponent(node));
   const out=$('nodeQueryLive');if(!out)return;
   const rows=r.data||[];
-  out.textContent=rows.length?rows.slice(0,12).map(q=>
-    q.kind+': '+q.state+' · '+fmtDate(q.created_ms)+
-    (q.response?' · '+JSON.stringify(q.response).slice(0,350):'')+
-    (q.error?' · '+q.error:'')).join('\n'):'Nenhuma consulta efetuada.';
+  const states={replied:'Resposta recebida',awaiting_reply:'Aguardando resposta',
+    sending:'Transmitindo',timeout:'Sem resposta (timeout)',error:'Erro',disconnected:'Rádio desconectado'};
+  out.innerHTML=rows.length?rows.slice(0,12).map(q=>{
+    const heading='<div class="nodeField"><b>'+esc(q.kind.toUpperCase())+'</b><span>'+
+      esc(states[q.state]||q.state)+' · '+esc(fmtDate(q.created_ms))+'</span></div>';
+    if(q.kind==='traceroute'&&q.state==='replied'){
+      const d=q.route_detail||{},forward=Array.isArray(d.route)?d.route:[],
+       back=Array.isArray(d.route_back)?d.route_back:[];
+      const source=state.connections?.[String(q.source_id)]?.local_node_num;
+      const routeLine=(title,ids,reverse=false)=>{
+        if(!ids.length)return '<p class="muted">'+esc(title)+': nenhum salto intermediário informado.</p>';
+        const chain=reverse?[q.target,...ids,source]:[source,...ids,q.target];
+        return '<p><b>'+esc(title)+':</b> '+chain.filter(x=>x!=null).
+          map(x=>esc(idName(Number(x)))).join(' → ')+
+          ' <span class="muted">(evidência de traceroute, não enlace RF direto local)</span></p>';
+      };
+      const fS=Array.isArray(d.snr_towards_raw)?d.snr_towards_raw:[],
+       bS=Array.isArray(d.snr_back_raw)?d.snr_back_raw:[];
+      return '<div class="nodeSection">'+heading+
+       '<p class="muted">Resposta recebida. Rotas vazias não comprovam enlace direto.</p>'+
+       routeLine('Ida',forward)+routeLine('Retorno',back,true)+
+       '<p class="muted">SNR bruto (ida): '+esc(fS.join(', ')||'não informado')+
+       ' · retorno: '+esc(bS.join(', ')||'não informado')+
+       '. Valores do protocolo ainda não convertidos para dB.</p></div>';
+    }
+    return '<div class="nodeSection">'+heading+
+       (q.response?'<pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(JSON.stringify(q.response).slice(0,1300))+'</pre>':'')+
+       (q.error?'<p class="bad">'+esc(q.error)+'</p>':'')+'</div>';
+  }).join(''):'Nenhuma consulta efetuada.';
  }catch(e){}
 }
 const NODE_QUERY_LABELS=['Informações do nó','Posição','Energia','Traceroute',
@@ -1061,7 +1086,7 @@ function nodePopupHtml(n){
    '<p class="muted">Consultas reais pelo rádio ativo; a transmissão não garante resposta. Telemetria depende do firmware remoto.</p><div class="actions">'+
    RF_QUERY_TYPES.map(([k,l])=>'<button type="button" data-rf-query="'+k+'" '+(activeRadioSource()?'':'disabled')+'>'+esc(l)+'</button>').join('')+
    '<button type="button" disabled title="Sem implementação segura nesta versão">Tudo (em breve)</button></div>'+ 
-   '<pre id="nodeQueryLive" style="white-space:pre-wrap;overflow-wrap:anywhere">Nenhuma consulta efetuada.</pre>'+
+   '<div id="nodeQueryLive" aria-live="polite">Nenhuma consulta efetuada.</div>'+
    '<div class="nodeQueryGrid">'+queries+'</div></div>'+
    '<div class="nodeSection"><h3>Últimos metadados recebidos</h3>'+
    '<p class="muted">Histórico recente disponível localmente. Nem todas as métricas podem ser obtidas dos pacotes.</p>'+
@@ -1806,7 +1831,11 @@ function showLora(){
    }
    if(row.type==='float'){el.type='number';el.step='any';}
    if(row.type==='string')el.maxLength=128;
-   el.value=String(row.value);
+   if(row.type==='secret'){
+    el.type='password';el.autocomplete='new-password';el.maxLength=64;
+    el.placeholder=row.configured?'Senha configurada — deixe em branco para manter':'Nova senha (8–63 caracteres)';
+    el.value='';
+   }else el.value=String(row.value);
    div.append(el);grid.append(div);
   }
   section.append(grid);form.append(section);
@@ -1840,6 +1869,7 @@ $('loraSave').onclick=async()=>{
     if(!el||el.disabled)continue;
     if(!el.checkValidity())throw Error('Valor fora dos limites: '+group+'.'+row.name);
     let value;
+    if(row.type==='secret'&&!el.value)continue; // preserve existing Wi-Fi password
     if(row.type==='bool')value=el.value==='true';
     else if(row.type==='int')value=Number(el.value);
     else if(row.type==='float')value=Number(el.value);
@@ -1850,7 +1880,7 @@ $('loraSave').onclick=async()=>{
     if(value!==row.value){
       if(!changes[group])changes[group]={};
       changes[group][row.name]=value;
-      diff.push(group+'.'+row.name+': '+row.value+' → '+value);
+      diff.push(group+'.'+row.name+': '+(row.type==='secret'?'[protegida]':row.value)+' → '+(row.type==='secret'?'[nova senha protegida]':value));
     }
    }
   }

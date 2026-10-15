@@ -62,8 +62,25 @@ try {
         Log ('Terminating own remaining Mesh Analyzer PID=' + $id)
         Stop-Process -Id $id -Force -ErrorAction Stop
     }
-    Start-Sleep -Milliseconds 750
-    $alive = @($found | Where-Object { Get-Process -Id $_ -ErrorAction SilentlyContinue })
+    # Windows can retain terminating onefile parent/child processes longer than
+    # 750 ms. Verify only PIDs still pointing to the *same* target executable.
+    $waitUntil = [DateTime]::UtcNow.AddSeconds(10)
+    do {
+        $alive = @()
+        foreach ($oldPid in $found) {
+            $current = Get-CimInstance Win32_Process -Filter ("ProcessId=" + $oldPid) -ErrorAction SilentlyContinue
+            if (-not $current -or -not $current.ExecutablePath) { continue }
+            $currentPath = [IO.Path]::GetFullPath([string]$current.ExecutablePath)
+            if ([string]::Equals($currentPath, $target,
+                    [StringComparison]::OrdinalIgnoreCase)) {
+                $alive += [int]$oldPid
+            } else {
+                Log ('PID ' + $oldPid + ' is no longer the target executable')
+            }
+        }
+        if (-not $alive.Count) { break }
+        Start-Sleep -Milliseconds 350
+    } while ([DateTime]::UtcNow -lt $waitUntil)
     if ($alive.Count) {
         Log ('ERROR: still running after close: ' + ($alive -join ','))
         exit 3

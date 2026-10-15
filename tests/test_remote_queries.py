@@ -47,6 +47,40 @@ class RemoteQueryTests(unittest.TestCase):
                                 "requestId": 812345, "position": {"latitude": -15}}})
         self.assertEqual(self.queries.status(5678)[0]["state"], "replied")
 
+    def test_traceroute_without_hops_does_not_claim_direct_link(self):
+        self.queries.start(1, 5678, "traceroute")
+        self.queries.observe(1, {"from": 5678, "decoded": {
+            "portnum": "TRACEROUTE_APP", "requestId": 812345,
+            "snrTowards": [26], "snrBack": [28]}})
+        result = self.queries.status(5678)[0]
+        self.assertEqual(result["state"], "replied")
+        self.assertFalse(result["route_detail"]["has_intermediate_hops"])
+        self.assertEqual(result["route_detail"]["route"], [])
+        self.assertEqual(result["route_detail"]["snr_towards_raw"], [26])
+
+    def test_traceroute_preserves_ordered_hops(self):
+        self.queries.start(1, 5678, "traceroute")
+        self.queries.observe(1, {"from": 5678, "decoded": {
+            "portnum": "TRACEROUTE_APP", "requestId": 812345,
+            "route": [2222, 3333], "routeBack": [4444]}})
+        detail = self.queries.status(5678)[0]["route_detail"]
+        self.assertEqual(detail["route"], [2222, 3333])
+        self.assertEqual(detail["route_back"], [4444])
+        self.assertTrue(detail["has_intermediate_hops"])
+
+    def test_traceroute_protobuf_payload(self):
+        from meshtastic.protobuf import mesh_pb2
+        msg = mesh_pb2.RouteDiscovery()
+        msg.route.extend([2345, 3456])
+        msg.route_back.extend([4567])
+        self.queries.start(1, 5678, "traceroute")
+        self.queries.observe(1, {"from": 5678, "decoded": {
+            "portnum": "TRACEROUTE_APP", "requestId": 812345,
+            "payload": msg.SerializeToString()}})
+        detail = self.queries.status(5678)[0]["route_detail"]
+        self.assertEqual(detail["route"], [2345, 3456])
+        self.assertEqual(detail["route_back"], [4567])
+
     def test_mqtt_never_transmits(self):
         self.manager.db.source.return_value = {"kind": "mqtt"}
         with self.assertRaisesRegex(ValueError, "MQTT"):

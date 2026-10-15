@@ -56,6 +56,32 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "alterada"):
             prepare_lora(node, data["revision"], {"hop_limit": 5})
 
+    def test_wifi_password_write_only_and_kept_when_unchanged(self):
+        from mesh_analyzer.device_config import prepare_all
+        radio = make_radio()
+        node = radio.localNode
+        names = {f.name for f in node.localConfig.network.DESCRIPTOR.fields}
+        if "wifi_psk" not in names:
+            self.skipTest("Firmware schema does not support wifi_psk")
+        node.localConfig.network.wifi_psk = "ExistingSecret123"
+        fields = read_device(node, radio.metadata)
+        wifi = next(f for f in fields["editable_sections"]["network"] if f["name"] == "wifi_psk")
+        self.assertEqual(wifi["type"], "secret")
+        self.assertTrue(wifi["configured"])
+        self.assertEqual(wifi["value"], "")
+        self.assertNotIn("ExistingSecret123", json.dumps(fields))
+        original, changed = prepare_all(node, fields["full_revision"], {"network": {"wifi_ssid": "TestSSID"}})
+        self.assertEqual(node.localConfig.network.wifi_psk, "ExistingSecret123")
+        node.localConfig.CopyFrom(original)
+        fields = read_device(node, radio.metadata)
+        original, changed = prepare_all(node, fields["full_revision"], {"network": {"wifi_psk": "AnotherSecret456"}})
+        self.assertIn("wifi_psk", changed[0]["fields"])
+        self.assertEqual(node.localConfig.network.wifi_psk, "AnotherSecret456")
+        node.localConfig.CopyFrom(original)
+        with self.assertRaisesRegex(ValueError, "Senha Wi-Fi"):
+            prepare_all(node, fields["full_revision"], {"network": {"wifi_psk": "short"}})
+        self.assertEqual(node.localConfig.network.wifi_psk, "ExistingSecret123")
+
     def test_radio_write_and_mqtt_blocked(self):
         with tempfile.TemporaryDirectory() as d:
             db = Database(Path(d) / "test.sqlite3")
