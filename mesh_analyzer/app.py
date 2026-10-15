@@ -166,6 +166,8 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/packets":self._json({"success":True,"data":db.packet_rows()})
                 elif path == "/api/messages":self._json({"success":True,"data":db.message_rows()})
                 elif path == "/api/links":self._json({"success":True,"data":db.link_rows()})
+                elif path == "/api/communications":
+                    self._json({"success":True,"data":db.communication_rows()})
                 elif path == "/api/waypoints":self._json({"success":True,"data":db.waypoint_rows()})
                 elif path == "/api/events":self._json({"success":True,"data":db.event_rows()})
                 elif path == "/api/ports":self._json({"success":True,"data":available_serial_ports()})
@@ -325,6 +327,24 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         replay=threading.Thread(target=topology_migration,
                                 name="topology-backfill",daemon=True)
         replay.start()
+        def passive_migration():
+            try:
+                processed=observed=0
+                while not done.is_set():
+                    result=db.reprocess_archived_communications(limit=1200)
+                    processed+=result["processed"]
+                    observed+=result["communications"]
+                    if not result["remaining"]:break
+                    # Keep interactive reception responsive on large databases.
+                    time.sleep(0.025)
+                db.log("Comunicações passivas recuperadas do histórico: "+
+                       str(processed)+" pacotes analisados; "+
+                       str(observed)+" registros de fluxo.")
+            except Exception:
+                LOG.exception("Falha ao recuperar comunicações históricas")
+        passive_replay=threading.Thread(target=passive_migration,
+                      name="passive-traffic-backfill",daemon=True)
+        passive_replay.start()
         csrf=secrets.token_urlsafe(32)
         doc=Path(__file__).with_name("ui.html").read_text(encoding="utf-8")
         # One image source shared by HTML logo and favicon, with no external
@@ -355,6 +375,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 for t in list(drivers._threads.values()):
                     if t.is_alive() and t is not threading.current_thread():t.join(timeout=2)
                 replay.join(timeout=4)
+                passive_replay.join(timeout=4)
                 db.close()
                 shutdown_complete.set()
         def update_shutdown_coordinator():
