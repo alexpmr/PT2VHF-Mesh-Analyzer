@@ -1,3 +1,10 @@
+# v0.6.15 — Correção de inicialização do atualizador Windows (15/10/2026)
+
+- Corrige o launcher PowerShell externo removendo a combinação DETACHED_PROCESS + CREATE_NO_WINDOW; mantém execução oculta.
+- Captura stdout/stderr no perfil local em update-runner-output.log, além do update.log, para diagnosticar falhas de execução e ausência do marcador runner_ready.json.
+- Adiciona teste de integração Windows que inicia PowerShell real em modo oculto e verifica marcador de prontidão autenticado com nonce.
+- **Importante:** a correção ainda requer validação física do ciclo Setup → Setup e Portable → Portable; sem afirmar sucesso universal até teste no PC afetado. Outros itens do backlog permanecem abertos.
+
 # v0.6.14 — Automação inteligente para completar informações dos nós (15/10/2026)
 
 - **#80 (implementação inicial):** aba Automações com ativação explícita, consultas NodeInfo, Posição, Telemetria e Traceroute separadamente configuráveis, fila de nós com dados faltantes/desatualizados, simulação sem TX, execução manual e acompanhamento do estado.
