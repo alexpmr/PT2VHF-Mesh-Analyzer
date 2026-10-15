@@ -1437,6 +1437,55 @@ $('systemSave').onclick=async()=>{
  }catch(e){notify('Sistema: '+e.message,true);}
 };
 $('systemOpenNow').onclick=()=>{window.open(location.origin,'_blank','noopener,noreferrer');};
+
+async function updateDatabaseHealth(check=false){
+ const box=$('dbHealthText');box.textContent='Consultando SQLite...';
+ try{
+  const r=await api('/api/db/health'+(check?'?check=1':''));
+  const d=r.data,files=d.files_bytes||{},counts=d.counts||{};
+  const bytes=x=>Number(x||0).toLocaleString('pt-BR')+' bytes';
+  box.textContent='Arquivo de dados: '+bytes(files.db)+' | WAL: '+bytes(files.wal)+' | SHM: '+bytes(files.shm)+
+   '\nTotal: '+bytes(d.total_bytes)+' | Livre no disco: '+(d.free_disk_bytes==null?'indisponível':bytes(d.free_disk_bytes))+
+   '\nTabelas: '+Object.entries(counts).map(([k,v])=>k+'='+v).join(' · ')+
+   '\nPáginas: '+d.page_count+' x '+d.page_size+' | Livres: '+d.free_pages+' | Journal: '+d.journal+
+   '\nRetenções: '+Object.entries(d.retention||{}).map(([k,v])=>k+'='+(!v?'Nunca':v+'d')).join(' · ')+
+   '\nÚltimo backup: '+(d.last_backup||'Ainda não realizado')+
+   (d.integrity?'\nIntegridade: '+d.integrity.join(', ')+' | Violações FK: '+d.foreign_key_violations:
+   '\nUse Verificar integridade para executar quick_check e foreign_key_check.');
+ }catch(e){box.textContent='Diagnóstico indisponível: '+e.message;}
+}
+$('dbRefresh').onclick=()=>updateDatabaseHealth(false);
+$('dbIntegrity').onclick=()=>updateDatabaseHealth(true);
+$('dbBackup').onclick=async()=>{
+ if(!confirm('Criar um backup consistente do SQLite na pasta de dados? Nenhuma retenção será modificada.'))return;
+ try{
+  $('dbBackup').disabled=true;
+  const r=await api('/api/db/backup',{});
+  notify('Backup criado: '+r.backup.file+' ('+Number(r.backup.bytes).toLocaleString('pt-BR')+' bytes).');
+  await updateDatabaseHealth(false);
+ }catch(e){notify('Falha no backup: '+e.message,true);}
+ finally{$('dbBackup').disabled=false;}
+};
+let activityReady=false,activityBaselines={};
+function blinkActivity(id){
+ const el=$(id);el.classList.add('on');
+ clearTimeout(el._offTimer);el._offTimer=setTimeout(()=>el.classList.remove('on'),220);
+}
+async function pollActivity(){
+ try{
+  const r=await api('/api/activity'),latest={};
+  for(const src of state.sources||[]){
+   if(src.kind==='mqtt')continue;
+   const c=r.sources?.[String(src.id)]||{},old=activityBaselines[String(src.id)]||{};
+   const rx=Number(c.rx_seq||0),tx=Number(c.tx_seq||0);
+   latest[String(src.id)]={rx,tx};
+   if(activityReady&&rx>Number(old.rx||0))blinkActivity('rxLed');
+   if(activityReady&&tx>Number(old.tx||0))blinkActivity('txLed');
+  }
+  activityBaselines=latest;activityReady=true;
+ }catch(e){}
+}
+setInterval(pollActivity,650);
 function updateVersionState(info){
  monitorState=info;const btn=$('topUpdate');
  btn.className='';let label='';
