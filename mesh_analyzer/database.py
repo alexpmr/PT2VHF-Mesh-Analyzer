@@ -608,6 +608,13 @@ class Database:
             if not (0<a<0xffffffff and 0<b<0xffffffff) or a==b:return False
             ts=int(timestamp_ms)
             transport="mqtt" if via_mqtt else "radio"
+            # Destination was addressed, not necessarily heard. Do not flag it online.
+            self._db.execute("""INSERT OR IGNORE INTO nodes(
+                 node_num,node_id,first_seen_ms,last_seen_ms,last_source_id)
+                 VALUES(?,?,?,?,?)""",(b,f"!{b:08x}",0,0,int(source_id)))
+            self._db.execute("""INSERT OR IGNORE INTO node_sources(
+                 source_id,node_num,first_seen_ms,last_seen_ms,observed)
+                 VALUES(?,?,?,?,0)""",(int(source_id),b,0,0))
             self._db.execute("""INSERT INTO communications(
               source_id,from_node,to_node,transport,first_seen_ms,last_seen_ms,observations)
               VALUES(?,?,?,?,?,?,1)
