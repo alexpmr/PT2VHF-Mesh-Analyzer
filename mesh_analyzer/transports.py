@@ -329,9 +329,23 @@ class SourceManager:
         self._set(id,"disconnected")
 
     def restart(self,id):
+        """Restart without racing a still-running worker for the same COM port."""
+        id=int(id)
+        src=self.db.source(id)
+        if not src or not src["enabled"]:
+            raise ValueError("Conexão inexistente ou desativada")
+        if src["kind"] == "mqtt":
+            raise ValueError("Reconexão forçada do rádio exige USB, TCP ou BLE")
+        with self._lock:
+            old=self._threads.get(id)
         self.disconnect(id)
-        # Threads reconnect only while enabled; disable/re-enable source restarts.
+        if old and old is not threading.current_thread() and old.is_alive():
+            old.join(timeout=10)
+            if old.is_alive():
+                self._set(id,"error","A conexão anterior ainda não liberou o dispositivo")
+                raise RuntimeError("Porta ainda ocupada pelo worker anterior; tente novamente")
         self.connect(id)
+        return {"source_id":id,"state":"connecting"}
 
     def _worker(self,id):
         while not self._stop.is_set():
