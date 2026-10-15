@@ -35,7 +35,8 @@ class RemoteQueryTests(unittest.TestCase):
     def test_request_is_not_a_reply(self):
         result = self.queries.start(1, 5678, "position")
         self.assertEqual(result["state"], "awaiting_reply")
-        self.assertEqual(self.manager._interfaces[1].last_payload, b"")
+        from meshtastic.protobuf import mesh_pb2
+        self.assertIsInstance(self.manager._interfaces[1].last_payload, mesh_pb2.Position)
         self.assertTrue(self.manager._interfaces[1].last_options["wantResponse"])
 
     def test_only_matching_response_completes(self):
