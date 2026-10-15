@@ -42,6 +42,31 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(self.db.stats()["links"],4)
         self.assertEqual(self.db.stats()["traces"],1)
 
+    def test_invalid_intermediate_does_not_connect_across_gap(self):
+        # Traffic Analyzer semantics: an unknown intermediate breaks the leg.
+        packet={"from":300,"to":100,"id":880,
+                "decoded":{"portnum":70,"route":[200,0xffffffff,400]}}
+        self.assertTrue(self.ing.handle(1,packet))
+        links={(x["a"],x["b"]) for x in self.db.link_rows()}
+        self.assertEqual(links,{(100,200),(300,400)})
+        self.assertNotIn((200,400),links)
+
+    def test_forward_return_asymmetry_preserved(self):
+        packet={"from":300,"to":100,"id":881,"decoded":{
+                 "portnum":"TRACEROUTE_APP","route":[200],
+                 "routeBack":[500,600]}}
+        self.assertTrue(self.ing.handle(1,packet))
+        links={(x["a"],x["b"]) for x in self.db.link_rows()}
+        self.assertEqual(links,{(100,200),(200,300),(300,500),
+                                (500,600),(100,600)})
+
+    def test_snr_without_intermediates_must_not_fabricate_direct_rf(self):
+        packet={"from":300,"to":100,"id":883,"decoded":{
+                 "portnum":"TRACEROUTE_APP","route":[],
+                 "snrTowards":[26],"snrBack":[28]}}
+        self.assertTrue(self.ing.handle(1,packet))
+        self.assertEqual(self.db.link_rows(),[])
+
     def test_telemetry_is_not_traceroute(self):
         self.ing.handle(1,{"from":100,"to":200,"id":10,
              "decoded":{"portnum":67,"route":[150],"telemetry":{"deviceMetrics":{"batteryLevel":67}}}})
