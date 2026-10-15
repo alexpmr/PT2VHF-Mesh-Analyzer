@@ -1,3 +1,11 @@
+## Ícone da barra de tarefas Windows 11 — relatado na v0.6.3 (15/10/2026)
+
+- [**#40 — Ícone da janela WebView2 e barra de tarefas permanece genérico**](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/40): em campo, a barra de tarefas segue mostrando o ícone padrão do host WebView2/WinForms, embora o EXE, instalador, favicon e cabeçalho tenham a marca PT2VHF.
+- **Causa provável identificada:** `webview.start` não recebia o argumento `icon`. O arquivo `branding/mesh-analyzer.ico` era usado como recurso de EXE, mas não incluído como arquivo runtime no PyInstaller onefile.
+- **Correção candidata:** `webview.start(icon=...)` (suporte WinForms desde pywebview 6.2), ícone resolvido por `sys._MEIPASS`, cópia do ICO como `--add-data` nos dois builds, testes de regressão. Manter AppUserModelID estável.
+- **Critérios de aceite pendentes no Win11 real:** barra de tarefas e Alt+Tab com símbolo próprio, atalhos de Setup/Portable, atualização de instalação anterior, casos com atalho fixado e cache de ícones. Não encerrar #40 só por CI; se necessário, desfixar/refixar atalho antigo após atualizar.
+- **Não publicado ainda:** alterações preparadas em branch/PR de correção, não fazem parte dos binários v0.6.3.
+
 # Backlog — PT2VHF Mesh Analyzer
 
 Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.x.
