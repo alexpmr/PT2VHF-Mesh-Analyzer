@@ -248,6 +248,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     if obj["enabled"]:sources.connect(source_id)
                     else:sources.disconnect(source_id)
                     self._json({"success":True,"source":obj})
+                elif path == "/api/sources/reconnect":
+                    result=sources.restart(payload["id"])
+                    self._json({"success":True,"data":result})
                 elif path == "/api/sources/delete":
                     source_id=int(payload["id"])
                     sources.disconnect(source_id)
