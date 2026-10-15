@@ -118,7 +118,7 @@ class ReleaseMonitor:
             if due:self.check(force=True)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None):
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -178,6 +178,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/queries":
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
                     self._json({"success":True,"data":sources.queries.status(query.get("node",[None])[0])})
+                elif path == "/api/automation":
+                    self._json(automation.overview() if automation else
+                               {"success":False,"error":"Automação não disponível"})
                 elif path == "/api/activity":
                     self._json({"success":True,"sources":sources.snapshot()})
                 elif path == "/api/device/config":
@@ -301,6 +304,13 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/queries/send":
                     result=sources.queries.start(payload.get("source_id"),payload.get("node"),payload.get("kind"),payload.get("channel",0))
                     self._json({"success":True,"data":result},201)
+                elif path == "/api/automation/settings":
+                    if not automation:raise ValueError("Automação indisponível")
+                    self._json({"success":True,"config":automation.save(payload)})
+                elif path == "/api/automation/run":
+                    if not automation:raise ValueError("Automação indisponível")
+                    self._json({"success":True,"result":automation.tick(
+                        dry_run=payload.get("simulate") is True)})
                 elif path == "/api/messages/send":
                     result=sources.send_text(payload.get("source_id"),payload.get("to_node"),payload.get("text"),payload.get("channel",0))
                     self._json(result,201)
@@ -325,6 +335,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     updates=ReleaseMonitor(db)
     from .updater import UpdateManager
     updater=UpdateManager(data,updates)
+    from .automations import NodeEnrichment
+    automation=NodeEnrichment(db,drivers)
     server=None
     done=threading.Event()
     try:
@@ -384,6 +396,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 if shutdown_complete.is_set():return
                 done.set()
                 updates.stop()
+                automation.close()
                 if server:
                     server.shutdown()
                     server.server_close()
@@ -410,7 +423,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         threading.Thread(target=update_shutdown_coordinator,
                          name="update-clean-shutdown",daemon=True).start()
         server=ThreadingHTTPServer((host,int(port)),
-                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event))
+                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation))
         server.daemon_threads=True
         address="http://127.0.0.1:"+str(server.server_address[1])
         LOG.info("PT2VHF Mesh Analyzer v%s — %s",__version__,address)
@@ -424,6 +437,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         server_thread=threading.Thread(target=server.serve_forever,
              kwargs={"poll_interval":0.3},name="mesh-http",daemon=True)
         server_thread.start()
+        automation.start()
         open_browser=(db.system_settings()["open_browser_on_start"]
                      if launch_browser is None else launch_browser)
         if open_browser:
@@ -459,6 +473,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         else:
             done.set()
             updates.stop()
+            automation.close()
             if server:
                 server.shutdown()
                 server.server_close()

@@ -148,7 +148,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.13</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.14</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -206,10 +206,30 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <button id="statsReload">Atualizar tudo</button><small id="statsUpdated" class="muted"></small><button id="statsPDF">Relatório / PDF</button><button id="statsCSV">Exportar CSV</button></div>
 <div class="subtabs" id="statsTabs"></div><div class="reportBody" id="statsContents"><div id="statsGrid" class="statGrid"></div></div></section>
 <section class="view" id="viewAutomations"><div class="toolbar"><h2>Automações</h2></div>
-<div class="panels"><div class="card" role="status" style="max-width:850px;margin:auto">
-<h3>Automações — Em breve</h3><p><strong>Este recurso será implementado em breve.</strong></p>
-<p>Em versões futuras, será possível configurar bots, consultas agendadas e regras de eventos da rede Meshtastic.</p>
-<p class="muted">Nenhuma automação está ativa nesta versão. Nenhum envio RF é iniciado por esta aba.</p>
+<div class="panels">
+<div class="card" style="max-width:1020px;margin:auto">
+<h3>Completar e atualizar informações dos nós</h3>
+<p class="muted">Consulta informações ausentes ou vencidas dos nós recentemente observados por RF. Novatos têm 3 minutos para anunciar dados espontaneamente. Nós antigos e inacessíveis são preservados no banco, sem tentativas repetidas de transmissão.</p>
+<form id="autoForm">
+<div class="field"><label for="autoEnabled">Automação RF</label>
+<label><input id="autoEnabled" type="checkbox"> Ativar consultas automáticas (realiza transmissões RF)</label></div>
+<div class="formGrid" style="margin-top:12px">
+<div class="field"><label for="autoInterval">Avaliar a cada (minutos)</label><input id="autoInterval" type="number" min="1" max="1440" value="15"></div>
+<div class="field"><label for="autoPerHour">Máximo de consultas por hora</label><input id="autoPerHour" type="number" min="1" max="24" value="6"></div>
+<div class="field"><label for="autoMinGap">Intervalo mínimo entre TX (segundos)</label><input id="autoMinGap" type="number" min="30" max="3600" value="60"></div>
+<div class="field"><label for="autoRecent">Consultar nós observados nas últimas (horas)</label><input id="autoRecent" type="number" min="1" max="720" value="72"></div>
+</div>
+<h4>Consultas permitidas</h4>
+<div class="formGrid" id="autoQueryToggles"></div>
+<p class="muted">NodeInfo, posição e telemetria são recomendados. Traceroute aumenta o tráfego e fica desativado por padrão. Vizinhos e ping serão utilizados somente quando o aplicativo e o firmware fornecerem consultas reais compatíveis.</p>
+<div class="actions"><button type="submit">Salvar automação</button>
+<button type="button" id="autoPreview">Simular fila (sem TX)</button>
+<button type="button" id="autoRun">Executar uma consulta agora</button>
+<button type="button" id="autoReload">Atualizar estado</button></div>
+</form>
+<p id="autoStatus" class="muted" role="status">Aguardando estado da automação...</p>
+<h4>Próximas consultas elegíveis</h4><div id="autoQueue" class="muted">Nenhuma consulta selecionada.</div>
+<p class="muted">O rádio conectado é a única fonte TX. MQTT não transmite. Apenas uma consulta pode estar aguardando resposta. ACK não equivale a dados recebidos. Ativar exige ação explícita do usuário.</p>
 </div></div></section>
 <section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Conexões</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="general">Geral</button></div>
 <section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Conexões com rádios e serviços</h3><p class="muted">Cadastre várias conexões independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
@@ -343,6 +363,7 @@ function setView(next,updateUrl=true){
  if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}
  if(next==='stats'){syncStatFilters();fetchStats(false);}
  if(next==='messages')renderChat();
+ if(next==='automations')loadAutomation();
 }
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 const initialView=location.pathname.startsWith('/configuracoes')?'settings':
@@ -984,6 +1005,86 @@ function nodeRadioStatus(n){
  return delta<3600000?'Observado na última hora':delta<86400000?'Último tráfego há '+age(n.last_seen_ms):
     'Sem tráfego recente · '+age(n.last_seen_ms);
 }
+
+const AUTO_TYPES=[
+ ['nodeinfo','NodeInfo — identificação e hardware'],
+ ['position','Posição — coordenadas e altitude'],
+ ['telemetry','Telemetria — bateria e sensores'],
+ ['traceroute','Traceroute — saltos conhecidos'],
+ ['neighbors','Vizinhos — recurso futuro, se suportado'],
+ ['ping','Ping — recurso futuro, se suportado']
+];
+let automationConfigLoaded=false;
+function drawAutomationQueue(rows,caption=''){
+ const el=$('autoQueue');if(!el)return;
+ const items=rows||[];
+ el.innerHTML=(caption?'<p class="muted">'+esc(caption)+'</p>':'')+
+  (items.length?'<div class="nodeDetailGrid">'+items.slice(0,30).map(x=>
+    '<div class="nodeField"><b>'+esc(x.name||String(x.node))+'</b><span>'+
+    esc(x.kind)+' · '+esc(x.reason||'Pendente')+'</span></div>').join('')+'</div>':
+   '<p class="muted">Nenhuma consulta elegível nesta fonte e período.</p>');
+}
+async function loadAutomation(){
+ try{
+  const v=await api('/api/automation'),cfg=v.config||{};
+  $('autoEnabled').checked=!!cfg.enabled;
+  $('autoInterval').value=cfg.evaluate_minutes||15;
+  $('autoPerHour').value=cfg.max_per_hour||6;
+  $('autoMinGap').value=cfg.min_gap_seconds||60;
+  $('autoRecent').value=cfg.recent_hours||72;
+  const supported=new Set(v.supported||[]);
+  $('autoQueryToggles').innerHTML=AUTO_TYPES.map(([key,label])=>
+   '<div class="field"><label><input type="checkbox" data-auto-kind="'+esc(key)+'" '+
+    (cfg.types?.[key]?'checked ':'')+
+    ((!supported.has(key)&&['neighbors','ping'].includes(key))?'disabled ':'')+
+    '> '+esc(label)+'</label></div>').join('');
+  automationConfigLoaded=true;
+  showAutomationStatus(v);
+ }catch(e){$('autoStatus').textContent='Automação indisponível: '+e.message;}
+}
+function showAutomationStatus(v){
+ $('autoStatus').textContent=(v.config?.enabled?'Ativada':'Desativada')+
+   ' · '+(v.reason||('Rádio '+v.source_id+' disponível'))+
+   ' · '+Number(v.pending_count||0)+' tarefas elegíveis'+
+   (v.last_error?' · erro: '+v.last_error:'');
+ drawAutomationQueue(v.queue||[]);
+}
+$('autoForm').onsubmit=async e=>{
+ e.preventDefault();
+ if(!automationConfigLoaded){notify('Carregue o estado antes de salvar.',true);return;}
+ const types={};
+ document.querySelectorAll('[data-auto-kind]').forEach(el=>{if(!el.disabled)types[el.dataset.autoKind]=el.checked;});
+ const config={enabled:$('autoEnabled').checked,types,
+   evaluate_minutes:Number($('autoInterval').value),max_per_hour:Number($('autoPerHour').value),
+   min_gap_seconds:Number($('autoMinGap').value),recent_hours:Number($('autoRecent').value)};
+ try{
+  await api('/api/automation/settings',config);
+  notify('Automação salva. '+(config.enabled?'Consultas RF habilitadas.':'Nenhuma transmissão automática será feita.'));
+  await loadAutomation();
+ }catch(e){notify('Automação: '+e.message,true);}
+};
+$('autoPreview').onclick=async()=>{
+ try{
+  const r=await api('/api/automation/run',{simulate:true});
+  drawAutomationQueue(r.result.queue||[],r.result.reason+' · '+(r.result.pending_count||0)+' pendentes');
+  notify('Simulação concluída sem transmitir RF.');
+ }catch(e){notify('Simulação: '+e.message,true);}
+};
+$('autoRun').onclick=async()=>{
+ if(!confirm('Executar uma consulta real via RF? Serão respeitados os limites configurados.'))return;
+ try{
+  const r=await api('/api/automation/run',{simulate:false});
+  notify(r.result.sent?'Consulta RF enviada: '+r.result.kind+' → '+r.result.node:
+         'Nenhuma transmissão: '+r.result.reason,!r.result.sent);
+  const v=await api('/api/automation');showAutomationStatus(v);
+ }catch(e){notify('Consulta automática: '+e.message,true);}
+};
+$('autoReload').onclick=loadAutomation;
+setInterval(async()=>{
+ if(view!=='automations')return;
+ try{const v=await api('/api/automation');showAutomationStatus(v);}catch(e){}
+},30000);
+
 const RF_QUERY_TYPES=[['nodeinfo','NodeInfo'],['position','Posição'],['telemetry','Telemetria'],['traceroute','Traceroute']];
 function activeRadioSource(){
  const con=state.connections||{};
