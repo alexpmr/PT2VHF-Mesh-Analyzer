@@ -267,7 +267,7 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const norm=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const fmtDate=x=>x?new Date(Number(x)).toLocaleString('pt-BR'):'—';
 const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000);return m<60?Math.round(m)+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d';};
-let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,waypointLayer=null,waypoints=[],communications=[],mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
+let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],nodeHops=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,waypointLayer=null,waypoints=[],communications=[],mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
 try{mapSourceFilter=localStorage.getItem('mesh.map.selected_source')||'';}catch(e){}
 let firstRunDialogChecked=false,updateNoticeChecked=false;
 function rememberFirstRunShown(){try{sessionStorage.setItem('mesh.firstRunShown','yes');}catch(e){}}
@@ -908,7 +908,7 @@ function nodePopupHtml(n){
   ['Altitude',n.altitude,n.altitude!=null?n.altitude+' m':null],
   ['Última posição',n.position_ms,fmtDate(n.position_ms)],
   ['Precisão da posição',null],['Precisão GPS / HDOP',null],
-  ['Conexão da posição',null],['Hops da última mensagem',hops,hops===null?null:String(hops)],
+  ['Conexão da posição',null],['Hops observados do último pacote RF',nodeValue(n,'hops'),nodeValue(n,'hops')===null?null:String(nodeValue(n,'hops'))],
   ['SNR recebido',lastSNR,lastSNR!=null?Number(lastSNR).toFixed(1)+' dB':null],
   ['RSSI recebido',lastRSSI,lastRSSI!=null?Math.round(lastRSSI)+' dBm':null],
   ['Canal do último pacote',recent?.channel],
@@ -1107,7 +1107,12 @@ const km=(a,b)=>{if(!validPos(a)||!validPos(b))return null;const rad=x=>Number(x
  return 12742*Math.atan2(Math.sqrt(x),Math.sqrt(Math.max(0,1-x)));};
 function nodeValue(n,key){
  if(key==='distance'){const ref=localRadioReference();return ref?km(ref,n):null;}
- if(key==='hops')return null; // No durable, source-verified hops per node in current schema.
+ if(key==='hops'){
+   const found=nodeHops.filter(x=>Number(x.from_node)===Number(n.node_num)&&
+       (!mapSourceFilter||String(x.source_id)===mapSourceFilter))
+       .sort((a,b)=>Number(b.timestamp_ms)-Number(a.timestamp_ms));
+   return found.length?Number(found[0].hops):null;
+  }
  if(key==='last_seen_ms'||key==='position_ms')return n[key]||null;
  return n[key]??null;
 }
@@ -1786,7 +1791,7 @@ async function announceWindowReady(){
  if(windowReadySent)return;
  try{await api('/api/window/ready',{});windowReadySent=true;}catch(e){}
 }
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications')]);state=results[0];showFirstRunDialogOnce();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
  const slug=location.pathname.split('/').pop();
  if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;
