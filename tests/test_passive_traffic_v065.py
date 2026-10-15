@@ -110,6 +110,46 @@ class PassiveTrafficTests(unittest.TestCase):
         self.assertIn("WriteNotice 'failed' $reason",RUNNER_PS)
         self.assertIn("System.Windows.Forms.MessageBox",RUNNER_PS)
 
+    def test_detached_runner_handshake_before_shutdown(self):
+        import json
+        from unittest.mock import Mock
+        class Monitor:
+            def status(self):return {"current":"0.6.4"}
+        mgr=UpdateManager(self.temp.name,Monitor(),executable="C:/FakePT2VHF.exe")
+        plan=Path(self.temp.name)/"plan.json"
+        ready=Path(self.temp.name)/"runner_ready.json"
+        plan.write_text(json.dumps({"run_nonce":"nonce-fixture","runner_ready":str(ready)}),encoding="utf-8")
+        mgr._plan=(str(Path(self.temp.name)/"apply.ps1"),str(plan))
+        mgr._phase="verified"
+        def launched(*args,**kwargs):
+            ready.write_text(json.dumps({"nonce":"nonce-fixture","status":"ready"}),encoding="utf-8")
+            return Mock(poll=lambda:None)
+        with patch("mesh_analyzer.updater.subprocess.Popen",side_effect=launched):
+            with patch("mesh_analyzer.updater.os.name","nt"):
+                self.assertEqual(mgr.launch()["phase"],"installing")
+        self.assertIn("runner_ready",RUNNER_PS)
+        self.assertIn("Detached updater ready",RUNNER_PS)
+
+    def test_runner_absent_never_signals_install(self):
+        import json
+        from unittest.mock import Mock
+        class Monitor:
+            def status(self):return {"current":"0.6.4"}
+        mgr=UpdateManager(self.temp.name,Monitor(),executable="C:/FakePT2VHF.exe")
+        ready=Path(self.temp.name)/"never_ready.json"
+        plan=Path(self.temp.name)/"plan.json"
+        plan.write_text(json.dumps({"run_nonce":"nonce-fixture","runner_ready":str(ready)}),encoding="utf-8")
+        mgr._plan=(str(Path(self.temp.name)/"apply.ps1"),str(plan))
+        mgr._phase="verified"
+        process=Mock(poll=lambda:None)
+        with patch("mesh_analyzer.updater.subprocess.Popen",return_value=process):
+            with patch("mesh_analyzer.updater.os.name","nt"):
+                with patch("mesh_analyzer.updater.time.monotonic",side_effect=[0,13]):
+                    with self.assertRaisesRegex(RuntimeError,"não confirmou"):
+                        mgr.launch()
+        process.terminate.assert_called_once()
+        self.assertEqual(mgr.status()["phase"],"verified")
+
     def test_cancel_during_download_removes_partial_file(self):
         data=b"candidate-fixture"
         digest=hashlib.sha256(data).hexdigest()
