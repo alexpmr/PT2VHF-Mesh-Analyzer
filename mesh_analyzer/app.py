@@ -273,6 +273,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/update/prepare":
                     if not updater:raise ValueError("Atualização interna indisponível")
                     self._json(updater.start(str(payload.get("version") or "")))
+                elif path == "/api/update/cancel":
+                    if not updater:raise ValueError("Atualizador indisponível")
+                    self._json(updater.cancel())
                 elif path == "/api/update/install":
                     if not updater or not shutdown:raise ValueError("Atualização interna indisponível")
                     self._json(updater.launch())
