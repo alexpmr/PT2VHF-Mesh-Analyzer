@@ -35,9 +35,9 @@ class TaskbarIconTests(unittest.TestCase):
             with patch.object(sys, "_MEIPASS", str(base/"unpack"), create=True), \
                  patch.object(sys, "frozen", True, create=True), \
                  patch.object(sys, "executable", str(base/"install"/"PT2VHF-Mesh-Analyzer.exe")):
-                self.assertEqual(native_window_icon(), installed)
+                self.assertTrue(native_window_icon().samefile(installed))
                 installed.unlink()
-                self.assertEqual(native_window_icon(), embedded)
+                self.assertTrue(native_window_icon().samefile(embedded))
 
     def test_source_checkout_does_not_require_generated_ico(self):
         with tempfile.TemporaryDirectory() as tmp:
