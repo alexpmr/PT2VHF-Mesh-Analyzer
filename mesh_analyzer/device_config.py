@@ -139,6 +139,9 @@ def prepare_lora(local_node, expected_revision, changes):
 # Non-sensitive scalar fields on firmware-provided localConfig groups are editable.
 # Channels, security and moduleConfig remain visible in sanitized, read-only form.
 READ_ONLY_GROUPS = {"security"}
+# Wi-Fi PSK is supported by Meshtastic network config but must never
+# be returned to the browser; it may only be replaced explicitly.
+WRITE_ONLY_FIELDS = {("network", "wifi_psk")}
 
 
 def editable_fields(config):
@@ -150,12 +153,20 @@ def editable_fields(config):
         fields = []
         for field in sub.DESCRIPTOR.fields:
             name=field.name
-            if any(word in name.lower() for word in SENSITIVE):
+            is_secret = (section.name, name) in WRITE_ONLY_FIELDS
+            if any(word in name.lower() for word in SENSITIVE) and not is_secret:
                 continue
             if getattr(field,"is_repeated",False) or field.type in (field.TYPE_MESSAGE,field.TYPE_BYTES):
                 continue
-            value=getattr(sub,name)
-            desc={"name":name,"label":name.replace("_"," ").title()}
+            if is_secret and field.type != field.TYPE_STRING:
+                continue
+            # Never echo the existing Wi-Fi password to UI, even from local cache.
+            value = "" if is_secret else getattr(sub,name)
+            desc={"name":name,"label":"Senha Wi-Fi (substituir)" if is_secret else name.replace("_"," ").title()}
+            if is_secret:
+                desc.update(type="secret", value="", configured=bool(getattr(sub,name)))
+                fields.append(desc)
+                continue
             if field.type == field.TYPE_ENUM:
                 desc.update(type="enum",options=[v.name for v in field.enum_type.values],
                             value=field.enum_type.values_by_number[int(value)].name)
@@ -216,6 +227,12 @@ def prepare_all(local_node, expected_revision, edits):
                 elif row["type"]=="string":
                     if not isinstance(value,str) or len(value.encode("utf-8"))>128:
                         raise ValueError("Texto inválido: "+key)
+                elif row["type"]=="secret":
+                    if (group,key) not in WRITE_ONLY_FIELDS or not isinstance(value,str):
+                        raise ValueError("Credencial não autorizada: "+str(key))
+                    if not (8 <= len(value.encode("utf-8")) <= 63 or
+                            (len(value)==64 and all(c in "0123456789abcdefABCDEF" for c in value))):
+                        raise ValueError("Senha Wi-Fi deve ter 8 a 63 bytes ou 64 dígitos hexadecimais")
                 if getattr(getattr(config,group),key)!=value:
                     setattr(getattr(config,group),key,value)
                     group_changes.append(key)
