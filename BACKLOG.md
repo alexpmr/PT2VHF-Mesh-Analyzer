@@ -1,3 +1,11 @@
+## P0 — Atualizador v0.6.3 → v0.6.4: dois defeitos reproduzidos em campo (15/10/2026)
+
+- **#2 — Fluxo de atualização ainda possui dois diálogos indevidos:** primeiro o modal de changelog/"Atualizar agora", depois a confirmação nativa do navegador ("127.0.0.1:8789 diz"). A partir do indicador laranja, o usuário quer **um único clique**, início do download oficial e um único modal de progresso em tempo real, sem intermediação. Changelog só depois do reinício realmente concluído.
+- **#34 — Fechou e instalou, mas não voltou a abrir:** reincidência do problema em Windows 11 no upgrade v0.6.3 para v0.6.4. A implementação atual do runner PowerShell oculto não oferece mecanismo externo visível de recuperação; investigar caminho de EXE, PID, porta local, /health, ui_ready, Setup/Portable e logs.
+- **Evidência para coleta:** `%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\update.log` e `update_complete.json` (se presentes); registrar edição Setup vs Portable, se atalho abre manualmente e qual versão instalada aparece. Não descartar logs nem apagar banco.
+- **Critérios para fechamento:** atualização em um clique, SHA256 válido, progresso real, encerramento controlado, nova versão reaberta automaticamente com confirmação de WebView2 e versão; falha diagnosticada e recuperável por janela externa. Validar Setup→Setup e Portable→Portable no Windows 11; preservar o SQLite e a configuração do usuário.
+- **Status:** apenas documentado no backlog/issue nesta etapa; correção ainda pendente, não foi publicada nos binários v0.6.4.
+
 ## v0.6.4 — Implementado em código, requer aceite no Windows 11
 
 - **#40:** ícone nativo `.ico` atribuído à janela `pywebview.start` e incluído no PyInstaller; aguarda captura real da barra de tarefas e validação com atalhos antigos.
