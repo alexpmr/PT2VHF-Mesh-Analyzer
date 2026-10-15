@@ -24,7 +24,7 @@ def number(value):
 def port_name(value):
     if isinstance(value,str): return value
     ports = {1:"TEXT_MESSAGE_APP",3:"POSITION_APP",4:"NODEINFO_APP",
-             5:"ROUTING_APP",6:"ADMIN_APP",65:"STORE_FORWARD_APP",
+             5:"ROUTING_APP",6:"ADMIN_APP",8:"WAYPOINT_APP",65:"STORE_FORWARD_APP",
              67:"TELEMETRY_APP",70:"TRACEROUTE_APP",71:"NEIGHBORINFO_APP"}
     return ports.get(number(value),str(value or "UNKNOWN"))
 
@@ -61,6 +61,45 @@ def position_from_decoded(decoded):
         if not (-90<=lat<=90 and -180<=lon<=180) or (abs(lat)<.01 and abs(lon)<.01):return None
     except (TypeError,ValueError):return None
     return lat,lon,d.get("altitude")
+
+
+def waypoint_from_decoded(decoded):
+    """Decode actual Meshtastic WAYPOINT_APP data, never infer a marker from a node."""
+    if not isinstance(decoded, dict): return None
+    data = decoded.get("waypoint")
+    if not isinstance(data, dict):
+        payload = decoded.get("payload")
+        if isinstance(payload,dict) and isinstance(payload.get("base64"),str):
+            try: payload = base64.b64decode(payload["base64"],validate=True)
+            except (ValueError,TypeError): payload = None
+        if not isinstance(payload,bytes) or len(payload)>8192: return None
+        try:
+            from meshtastic.protobuf import mesh_pb2
+        except ImportError:
+            from meshtastic import mesh_pb2
+        msg=mesh_pb2.Waypoint()
+        msg.ParseFromString(payload)
+        data={"id":msg.id,"latitude_i":msg.latitude_i,"longitude_i":msg.longitude_i,
+              "name":msg.name,"description":msg.description,"icon":msg.icon,
+              "expire":msg.expire}
+    ident=number(data.get("id"))
+    lat=data.get("latitude_i",data.get("latitudeI"))
+    lon=data.get("longitude_i",data.get("longitudeI"))
+    if lat is None or lon is None or ident is None: return None
+    try:
+        # latitude_i/longitude_i are fixed-point integers in units of 1e-7 degree.
+        lat=float(lat)/1e7
+        lon=float(lon)/1e7
+        if not 0<ident<2**32 or not (-90<=lat<=90 and -180<=lon<=180):return None
+        if abs(lat)<0.000001 and abs(lon)<0.000001:return None
+        expire=int(data.get("expire") or 0)
+        if expire<0:return None
+        icon=int(data.get("icon") or 0)
+        return {"waypoint_id":ident,"latitude":lat,"longitude":lon,
+                "name":str(data.get("name") or "")[:30],
+                "description":str(data.get("description") or "")[:100],
+                "expires_ms":expire*1000 if expire else 0,"icon":icon}
+    except (ValueError,TypeError,OverflowError): return None
 
 
 class PacketIngestor:
@@ -121,6 +160,12 @@ class PacketIngestor:
             if isinstance(user,dict):
                 self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,long_name=user.get("longName") or user.get("long_name"),
                                     short_name=user.get("shortName") or user.get("short_name"),hw_model=user.get("hwModel") or user.get("hw_model"))
+        if port in ("WAYPOINT_APP","8"):
+            try:
+                wp=waypoint_from_decoded(decoded)
+                if wp:self.db.upsert_waypoint(source_id,from_node=from_num,ts=ts,**wp)
+            except (ValueError,TypeError,ImportError) as exc:
+                self.db.log("Waypoint inválido ou protobuf indisponível: "+type(exc).__name__,"warning",source_id)
         if port in ("POSITION_APP","3") and from_num is not None:
             loc=position_from_decoded(decoded)
             if loc:

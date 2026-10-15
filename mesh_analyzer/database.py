@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 SOURCE_TYPES = {"serial", "tcp", "ble", "mqtt"}
-RETAIN_KEYS = ("nodes", "packets", "messages", "positions", "traces", "links", "events")
+RETAIN_KEYS = ("nodes", "packets", "messages", "positions", "traces", "links", "events", "waypoints")
 DEFAULT_RETENTION = {key: 0 for key in RETAIN_KEYS}  # 0: never delete
 
 
@@ -103,6 +103,21 @@ class Database:
                 state TEXT NOT NULL DEFAULT 'received'
             );
             CREATE INDEX IF NOT EXISTS idx_messages_time ON messages(timestamp_ms DESC);
+            CREATE TABLE IF NOT EXISTS waypoints (
+                source_id INTEGER NOT NULL,
+                waypoint_id INTEGER NOT NULL,
+                from_node INTEGER,
+                latitude REAL NOT NULL,
+                longitude REAL NOT NULL,
+                name TEXT NOT NULL DEFAULT '',
+                description TEXT NOT NULL DEFAULT '',
+                icon INTEGER NOT NULL DEFAULT 0,
+                expires_ms INTEGER NOT NULL DEFAULT 0,
+                first_seen_ms INTEGER NOT NULL,
+                last_seen_ms INTEGER NOT NULL,
+                PRIMARY KEY(source_id, waypoint_id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_waypoints_time ON waypoints(last_seen_ms DESC);
             CREATE TABLE IF NOT EXISTS positions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 node_num INTEGER NOT NULL,
@@ -322,7 +337,7 @@ class Database:
         allowed={
             "mapWindow","mapMinObservations","mapBrightness","mapTerrainMaxSetting",
             "mapRfColor","mapRfWidth","mapInternetColor","mapInternetWidth",
-            "mapShowLinksSetting","mapShowNodesSetting","mapHeatmap","mapShowNamesSetting",
+            "mapShowLinksSetting","mapShowNodesSetting","mapShowWaypointsSetting","mapHeatmap","mapShowNamesSetting",
             "mapIdentifiedOnly","mapAutoZoom","soundEnabled","soundTheme","soundVolume",
             "soundDensity","soundMinInterval","soundMaxVoices","soundRouting","soundMessages",
             "soundAlerts","soundStereo","mapAnimateNodes","mapHighlightSource","mapHighlightRelay",
@@ -424,7 +439,7 @@ class Database:
         days = self.retention()
         columns = {"nodes":"last_seen_ms", "packets":"timestamp_ms", "messages":"timestamp_ms",
                    "positions":"timestamp_ms", "traces":"timestamp_ms", "links":"last_seen_ms", "events":"timestamp_ms",
-                   "rf_samples":"timestamp_ms"}
+                   "rf_samples":"timestamp_ms","waypoints":"last_seen_ms"}
         with self._lock,self._db:
             for table,col in columns.items():
                 if days["packets" if table == "rf_samples" else table] == 0:
@@ -493,7 +508,7 @@ class Database:
 
     def health(self, check=False):
         """Read-only SQLite diagnostics. Integrity PRAGMAs run only by request."""
-        tables = ("sources","nodes","node_sources","packets","messages","positions",
+        tables = ("sources","nodes","node_sources","packets","messages","positions","waypoints",
                   "traces","links","topology_processed","events","rf_samples")
         with self._lock:
             counts = {name: int(self._db.execute(
@@ -658,6 +673,40 @@ class Database:
                 return self._db.execute("SELECT last_insert_rowid()").fetchone()[0]
             except sqlite3.IntegrityError: return None
 
+    def upsert_waypoint(self, source_id, waypoint_id, from_node, ts, latitude, longitude,
+                        name="", description="", icon=0, expires_ms=0):
+        """One latest known waypoint per observing source, with historical provenance."""
+        source_id, waypoint_id = int(source_id), int(waypoint_id)
+        if not (0 < waypoint_id < 2**32): raise ValueError("Waypoint ID inválido")
+        lat, lon = float(latitude), float(longitude)
+        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+            raise ValueError("Coordenadas inválidas do waypoint")
+        if abs(lat)<0.000001 and abs(lon)<0.000001:
+            raise ValueError("Waypoint em 0,0 sem posição confiável")
+        ts = int(ts)
+        icon = int(icon or 0)
+        if not 0 <= icon <= 0x10ffff: icon = 0
+        with self._lock, self._db:
+            self._db.execute("""
+               INSERT INTO waypoints(source_id,waypoint_id,from_node,latitude,longitude,
+                  name,description,icon,expires_ms,first_seen_ms,last_seen_ms)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(source_id,waypoint_id) DO UPDATE SET
+                 from_node=excluded.from_node,latitude=excluded.latitude,
+                 longitude=excluded.longitude,name=excluded.name,
+                 description=excluded.description,icon=excluded.icon,
+                 expires_ms=excluded.expires_ms,last_seen_ms=excluded.last_seen_ms
+               WHERE excluded.last_seen_ms >= waypoints.last_seen_ms
+            """,(source_id,waypoint_id,from_node,lat,lon,str(name)[:30],
+                 str(description)[:100],icon,int(expires_ms or 0),ts,ts))
+
+    def waypoint_rows(self, limit=5000):
+        """Only active waypoints; expired records remain until normal retention cleanup."""
+        return self._rows("""SELECT * FROM waypoints
+           WHERE expires_ms=0 OR expires_ms>?
+           ORDER BY last_seen_ms DESC LIMIT ?""",
+           (now_ms(),min(int(limit),15000)))
+
     def add_position(self,num,source_id,ts,lat,lon,alt=None):
         with self._lock,self._db:
             self._db.execute("INSERT INTO positions(node_num,source_id,timestamp_ms,latitude,longitude,altitude) VALUES(?,?,?,?,?,?)",(num,source_id,ts,lat,lon,alt))
@@ -689,4 +738,4 @@ class Database:
     def stats(self):
         with self._lock:
             def count(table):return int(self._db.execute("SELECT COUNT(*) FROM "+table).fetchone()[0])
-            return {k:count(k) for k in ("nodes","packets","messages","positions","traces","links","events","sources")}
+            return {k:count(k) for k in ("nodes","packets","messages","positions","traces","links","events","sources","waypoints")}

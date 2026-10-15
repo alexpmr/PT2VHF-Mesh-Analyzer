@@ -1,3 +1,12 @@
+## v0.6.4 — Implementado em código, requer aceite no Windows 11
+
+- **#40:** ícone nativo `.ico` atribuído à janela `pywebview.start` e incluído no PyInstaller; aguarda captura real da barra de tarefas e validação com atalhos antigos.
+- **#42:** `mapSourceState` excluído de CSS/HTML/JS, preservado `mapSource`, suas opções e o contador de Conexões ativas em Resumo.
+- **#20:** menu **Ver** na faixa secundária: Nós / Enlaces / Waypoints / Animação do tráfego, selecionar/remover tudo, filtros imediatos, contagens; configurações de visualização persistentes quando salvas. Backend `WAYPOINT_APP` com SQLite, API e camada do mapa; remover nunca apaga históricos.
+- **Pendente para encerrar #20:** teste real com múltiplas fontes e waypoints/Protobuf de diferentes firmwares, performance, período histórico e experimento com WebView2; complementos avançados do filtro de proveniência dos nós (#20) não são automaticamente considerados prontos.
+- **Não foram implementadas nesta release todas as 32+ issues, entre elas:** LAN autenticada #3, detecção BLE/rede #31, i18n #1, edições remotas completas #6, sincronização NodeDB/favoritos #29, paridade integral Traffic Analyzer #10, estados de entrega Chat #4 e fechamento definitivo do updater #34.
+- **Status:** build automatizado e teste offline necessários; não fechar issues com pendências sem verificação.
+
 ## Menu VER na faixa secundária/inferior do Mapa — referência visual (15/10/2026)
 
 - **Solicitação atualizada do usuário:** adicionar botão drop-down **`Ver ▼`** à faixa de controles da aba **MAPA**, situada abaixo do menu principal (faixa secundária/inferior), com visual semelhante à captura fornecida do PT2VHF APRS Client. A posição mais recente substitui o requisito anterior de ficar obrigatoriamente ao lado de Conexão se o layout assim exigir.
