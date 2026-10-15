@@ -68,6 +68,19 @@ class RemoteQueryTests(unittest.TestCase):
         self.assertEqual(detail["route_back"], [4444])
         self.assertTrue(detail["has_intermediate_hops"])
 
+    def test_traceroute_protobuf_payload(self):
+        from meshtastic.protobuf import mesh_pb2
+        msg = mesh_pb2.RouteDiscovery()
+        msg.route.extend([2345, 3456])
+        msg.route_back.extend([4567])
+        self.queries.start(1, 5678, "traceroute")
+        self.queries.observe(1, {"from": 5678, "decoded": {
+            "portnum": "TRACEROUTE_APP", "requestId": 812345,
+            "payload": msg.SerializeToString()}})
+        detail = self.queries.status(5678)[0]["route_detail"]
+        self.assertEqual(detail["route"], [2345, 3456])
+        self.assertEqual(detail["route_back"], [4567])
+
     def test_mqtt_never_transmits(self):
         self.manager.db.source.return_value = {"kind": "mqtt"}
         with self.assertRaisesRegex(ValueError, "MQTT"):
