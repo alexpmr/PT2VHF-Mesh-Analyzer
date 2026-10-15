@@ -100,14 +100,24 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #firstRunDialog p{line-height:1.65;margin:0 0 16px;color:#c5d7df}
 #firstRunDialog .primary{font-weight:750;border-color:#3ebd72;background:#225a3f;color:#efffed}
 #firstRunDialog .actions{justify-content:flex-end}
+
+.activityLed{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700}
+.activityLed .bulb{width:12px;height:12px;border-radius:50%;background:#303e45;border:1px solid #6a757f;transition:background .08s}
+.activityLed.rx.on .bulb{background:#25e675;box-shadow:0 0 11px #25e675}
+.activityLed.tx.on .bulb{background:#f35151;box-shadow:0 0 11px #f35151}
+.activityGroup{display:flex;gap:11px;align-items:center;margin-left:auto}
+#dbHealthText{white-space:pre-wrap;line-height:1.6;overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){.activityLed .bulb{transition:none}}
 </style>
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.2</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.3</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
-</nav><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.2 · verificando...</button></header>
+</nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
+<div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
+<div class="activityLed rx" id="rxLed" title="RX ao vivo via USB/BLE/TCP; MQTT excluído"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.3 · verificando...</button></header>
 <section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> enlaces observados</div></section>
 <section class="view active" id="viewMap">
 <div id="playback">
@@ -200,14 +210,18 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
   <p id="updateStatus" class="muted">Aguardando verificação da versão no GitHub.</p>
   <p id="updateSchedule" class="muted"></p>
 </div>
+<div class="card"><h3>Banco de dados e manutenção</h3><p class="muted">Diagnóstico e backup consistente com SQLite WAL. Estes botões não executam limpeza.</p>
+<div class="actions"><button type="button" id="dbRefresh">Atualizar indicadores</button>
+<button type="button" id="dbIntegrity">Verificar integridade</button><button type="button" id="dbBackup">Criar backup</button></div>
+<p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.2</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.3</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.2.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.3.</p></div></div></section>
 </div>
-<div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
+<div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="firstRunDialog" role="dialog" aria-modal="true" aria-labelledby="firstRunTitle" aria-describedby="firstRunMessage">
 <div class="firstRunBox">
 <h2 id="firstRunTitle">Configure sua primeira conexão</h2>
@@ -230,12 +244,17 @@ const fmtDate=x=>x?new Date(Number(x)).toLocaleString('pt-BR'):'—';
 const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000);return m<60?Math.round(m)+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d';};
 let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
 try{mapSourceFilter=localStorage.getItem('mesh.map.selected_source')||'';}catch(e){}
-let firstRunDialogChecked=false;
+let firstRunDialogChecked=false,updateNoticeChecked=false;
+function rememberFirstRunShown(){try{sessionStorage.setItem('mesh.firstRunShown','yes');}catch(e){}}
+function previouslyShownThisSession(){try{return sessionStorage.getItem('mesh.firstRunShown')==='yes';}catch(e){return false;}}
 function dismissFirstRunDialog(){$('firstRunDialog').classList.remove('open');}
 function showFirstRunDialogOnce(){
- if(firstRunDialogChecked||!Array.isArray(state.sources))return;
- firstRunDialogChecked=true;
+ if(firstRunDialogChecked||!updateNoticeChecked||!Array.isArray(state.sources))return;
+ if($('updateDialog').classList.contains('active'))return;
+ if(previouslyShownThisSession()){firstRunDialogChecked=true;return;}
  if(state.sources.length===0){
+  firstRunDialogChecked=true;
+  rememberFirstRunShown();
   $('firstRunDialog').classList.add('open');
   $('firstRunConnections').focus();
  }
@@ -268,7 +287,7 @@ const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
  Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map');
 const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
-function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
+function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.friendly_name||n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
 function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite(Number(n.longitude))&&n.latitude!==null&&n.longitude!==null&&!(Math.abs(Number(n.latitude))<.01&&Math.abs(Number(n.longitude))<.01);}
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
 function initMap(){if(map||!window.L)return;map=L.map('map',{zoomControl:true}).setView([-15.793,-47.882],9);nodeLayer=L.layerGroup().addTo(map);linkLayer=L.layerGroup().addTo(map);heatLayer=L.layerGroup().addTo(map);
@@ -758,7 +777,7 @@ function nodePopupHtml(n){
  const coord=validPos(n)?Number(n.latitude).toFixed(6)+', '+Number(n.longitude).toFixed(6):null;
  const source=state.sources.find(s=>s.id===n.last_source_id);
  const fields=[
-  ['Node ID',n.node_id],['Nome longo',n.long_name],['Nome curto',n.short_name],
+  ['Node ID',n.node_id],['Nome amigável local',n.friendly_name],['Nome longo',n.long_name],['Nome curto',n.short_name],
   ['Hardware',n.hw_model],['Role',n.role],['Firmware',null],
   ['Status',nodeRadioStatus(n)],['Conexão da última comunicação',source?.name||null],
   ['Coordenadas',coord],['Latitude',validPos(n)?n.latitude:null],
@@ -811,9 +830,21 @@ function closeNodeDetails(){
 function showNode(n){
  if(!n)return;
  nodeDetailSelected=n.node_num;
- $('nodeDetailTitle').textContent=(n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
+ $('nodeDetailTitle').textContent=(n.friendly_name||n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
  $('nodeDetailBody').innerHTML=nodePopupHtml(n);
  $('nodeDetailOverlay').classList.add('open');
+ $('nodeRename').onclick=async()=>{
+  const desired=prompt('Nome amigável local para '+n.node_id+' (vazio para restaurar):',n.friendly_name||'');
+  if(desired===null)return;
+  try{
+   const result=await api('/api/nodes/friendly',{node_num:n.node_num,friendly_name:desired});
+   n.friendly_name=result.node.friendly_name;
+   $('nodeDetailTitle').textContent=idName(n.node_num)+' · '+n.node_id;
+   $('nodeDetailBody').innerHTML=nodePopupHtml(n);
+   notify('Nome amigável salvo no banco local.');
+   await refreshAll();
+  }catch(e){notify('Nome amigável: '+e.message,true);}
+ };
  $('nodeDetailDM').onclick=()=>{closeNodeDetails();openDm(n.node_num);};
  $('nodeDetailLocate').onclick=()=>{
   if(!validPos(n))return;
@@ -946,7 +977,7 @@ function localRadioReference(){
 function renderNodes(){
  const ref=localRadioReference();
  const radioCount=(state.sources||[]).filter(src=>src.kind!=='mqtt'&&state.connections?.[String(src.id)]?.status==='connected').length;
- $('nodeDistanceStatus').textContent=ref?'Distâncias desde: '+(ref.short_name||ref.long_name||ref.node_id)+
+ $('nodeDistanceStatus').textContent=ref?'Distâncias desde: '+(ref.friendly_name||ref.long_name||ref.short_name||ref.node_id)+
    ' · posição '+age(ref.position_ms):radioCount>1?
     'Múltiplos rádios: selecione a conexão na aba Mapa':
     'Distância indisponível: rádio local sem posição/identidade válida';
@@ -1406,6 +1437,55 @@ $('systemSave').onclick=async()=>{
  }catch(e){notify('Sistema: '+e.message,true);}
 };
 $('systemOpenNow').onclick=()=>{window.open(location.origin,'_blank','noopener,noreferrer');};
+
+async function updateDatabaseHealth(check=false){
+ const box=$('dbHealthText');box.textContent='Consultando SQLite...';
+ try{
+  const r=await api('/api/db/health'+(check?'?check=1':''));
+  const d=r.data,files=d.files_bytes||{},counts=d.counts||{};
+  const bytes=x=>Number(x||0).toLocaleString('pt-BR')+' bytes';
+  box.textContent='Arquivo de dados: '+bytes(files.db)+' | WAL: '+bytes(files.wal)+' | SHM: '+bytes(files.shm)+
+   '\nTotal: '+bytes(d.total_bytes)+' | Livre no disco: '+(d.free_disk_bytes==null?'indisponível':bytes(d.free_disk_bytes))+
+   '\nTabelas: '+Object.entries(counts).map(([k,v])=>k+'='+v).join(' · ')+
+   '\nPáginas: '+d.page_count+' x '+d.page_size+' | Livres: '+d.free_pages+' | Journal: '+d.journal+
+   '\nRetenções: '+Object.entries(d.retention||{}).map(([k,v])=>k+'='+(!v?'Nunca':v+'d')).join(' · ')+
+   '\nÚltimo backup: '+(d.last_backup||'Ainda não realizado')+
+   (d.integrity?'\nIntegridade: '+d.integrity.join(', ')+' | Violações FK: '+d.foreign_key_violations:
+   '\nUse Verificar integridade para executar quick_check e foreign_key_check.');
+ }catch(e){box.textContent='Diagnóstico indisponível: '+e.message;}
+}
+$('dbRefresh').onclick=()=>updateDatabaseHealth(false);
+$('dbIntegrity').onclick=()=>updateDatabaseHealth(true);
+$('dbBackup').onclick=async()=>{
+ if(!confirm('Criar um backup consistente do SQLite na pasta de dados? Nenhuma retenção será modificada.'))return;
+ try{
+  $('dbBackup').disabled=true;
+  const r=await api('/api/db/backup',{});
+  notify('Backup criado: '+r.backup.file+' ('+Number(r.backup.bytes).toLocaleString('pt-BR')+' bytes).');
+  await updateDatabaseHealth(false);
+ }catch(e){notify('Falha no backup: '+e.message,true);}
+ finally{$('dbBackup').disabled=false;}
+};
+let activityReady=false,activityBaselines={};
+function blinkActivity(id){
+ const el=$(id);el.classList.add('on');
+ clearTimeout(el._offTimer);el._offTimer=setTimeout(()=>el.classList.remove('on'),220);
+}
+async function pollActivity(){
+ try{
+  const r=await api('/api/activity'),latest={};
+  for(const src of state.sources||[]){
+   if(src.kind==='mqtt')continue;
+   const c=r.sources?.[String(src.id)]||{},old=activityBaselines[String(src.id)]||{};
+   const rx=Number(c.rx_seq||0),tx=Number(c.tx_seq||0);
+   latest[String(src.id)]={rx,tx};
+   if(activityReady&&rx>Number(old.rx||0))blinkActivity('rxLed');
+   if(activityReady&&tx>Number(old.tx||0))blinkActivity('txLed');
+  }
+  activityBaselines=latest;activityReady=true;
+ }catch(e){}
+}
+setInterval(pollActivity,650);
 function updateVersionState(info){
  monitorState=info;const btn=$('topUpdate');
  btn.className='';let label='';
@@ -1439,17 +1519,18 @@ async function checkUpdates(manual=false){
 $('updateCheck').onclick=()=>checkUpdates(true);
 let currentUpdateNotice=false,updateInstalling=false,updatePoll=null;
 function showUpdateDialog(info,installed=false){
- currentUpdateNotice=installed;
- $('updateTitle').textContent=installed?'Novidades da versão '+info.version:
+ const failed=info.status==='failed';
+ currentUpdateNotice=installed||failed;
+ $('updateTitle').textContent=failed?'Falha na atualização v'+info.version:installed?'Novidades da versão '+info.version:
    'Nova versão v'+info.latest+' disponível';
- $('updateSummary').textContent=installed?'Atualização concluída com sucesso.':
+ $('updateSummary').textContent=failed?'A nova versão não confirmou inicialização. A atualização não foi marcada como concluída.':installed?'Atualização concluída com sucesso.':
    'Versão instalada: v'+info.current+' · disponível: v'+info.latest+'.';
- $('updateNotes').textContent=String(info.notes||'Novidades indisponíveis neste pacote.').slice(0,3000);
- $('updateProgressText').textContent=installed?'':'O download e a instalação exigem sua confirmação.';
+ $('updateNotes').textContent=failed?String(info.error||'Consulte update.log').slice(0,1000):String(info.notes||'Novidades indisponíveis neste pacote.').slice(0,3000);
+ $('updateProgressText').textContent=failed?'Consulte update.log ou instale manualmente.':installed?'':'O download e a instalação exigem sua confirmação.';
  $('updateProgress').hidden=true;
- $('updateApply').hidden=installed;
+ $('updateApply').hidden=installed||failed;
  $('updateLater').disabled=false;
- $('updateRelease').hidden=installed;
+ $('updateRelease').hidden=installed||failed;
  $('updateDialog').classList.add('active');
 }
 async function checkUpdateProgress(){
@@ -1503,6 +1584,7 @@ $('updateApply').onclick=async()=>{
 $('updateLater').onclick=async()=>{
  if(updateInstalling)return;
  $('updateDialog').classList.remove('active');
+ showFirstRunDialogOnce();
  if(currentUpdateNotice){
   try{await api('/api/update/ack',{});}catch(e){}
  }
@@ -1513,13 +1595,20 @@ $('updateRelease').onclick=()=>{
 setTimeout(async()=>{
  try{
   const result=await api('/api/update/notice');
-  if(result.notice&&result.notice.status==='installed')showUpdateDialog(result.notice,true);
+  if(result.notice&&['installed','failed'].includes(result.notice.status))
+   showUpdateDialog(result.notice,result.notice.status==='installed');
  }catch(e){}
+ finally{updateNoticeChecked=true;showFirstRunDialogOnce();}
 },1800);
 setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
 
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources')]);state=results[0];showFirstRunDialogOnce();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+let windowReadySent=false;
+async function announceWindowReady(){
+ if(windowReadySent)return;
+ try{await api('/api/window/ready',{});windowReadySent=true;}catch(e){}
+}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources')]);state=results[0];showFirstRunDialogOnce();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=count.links||0;$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
  const slug=location.pathname.split('/').pop();
  if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;

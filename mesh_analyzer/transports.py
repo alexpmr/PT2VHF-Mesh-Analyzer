@@ -178,7 +178,10 @@ class SourceManager:
         with self._lock:
             old=self._states.get(id,{})
             self._states[id]={"status":state,"error":str(error)[:200],"updated_ms":now_ms(),
-                              "packets":old.get("packets",0),"type":old.get("type","")}
+                              "packets":old.get("packets",0),"type":old.get("type",""),
+                               "rx_seq":old.get("rx_seq",0),"tx_seq":old.get("tx_seq",0),
+                               "last_rx_ms":old.get("last_rx_ms",0),"last_tx_ms":old.get("last_tx_ms",0),
+                               "mqtt_rx_seq":old.get("mqtt_rx_seq",0)}
 
     def snapshot(self):
         with self._lock:
@@ -199,7 +202,12 @@ class SourceManager:
         if source_id is None:return
         try:
             if self.ingest.handle(source_id,packet or {}):
-                with self._lock:self._states[source_id]["packets"]+=1
+                with self._lock:
+                    state=self._states.get(source_id)
+                    if state is not None:
+                        state["packets"]+=1
+                        state["rx_seq"]+=1
+                        state["last_rx_ms"]=now_ms()
         except Exception as exc:
             self.db.log("Erro ao processar pacote do rádio: "+type(exc).__name__,"error",source_id)
 
@@ -323,7 +331,11 @@ class SourceManager:
                 if "to" not in packet:packet["to"]=getattr(envelope.packet,"to",None)
                 packet["via_mqtt"]=True
                 if self.ingest.handle(id,packet,via_mqtt=True):
-                    with self._lock:self._states[id]["packets"]+=1
+                    with self._lock:
+                        state=self._states.get(id)
+                        if state is not None:
+                            state["packets"]+=1
+                            state["mqtt_rx_seq"]+=1
             except Exception:
                 self.db.log("Mensagem MQTT não é um envelope Meshtastic válido/decodificável","warning",id)
         client.on_connect=on_connect
@@ -440,6 +452,11 @@ class SourceManager:
         packet_id=str(data.get("id") if isinstance(data,dict) else getattr(data,"id",""))
         local_num=number(getattr(iface,"myInfo",None) and getattr(iface.myInfo,"my_node_num",None))
         pktkey="tx:"+str(id)+":"+packet_id+":"+str(now_ms())
+        with self._lock:
+            state=self._states.get(id)
+            if state is not None:
+                state["tx_seq"]+=1
+                state["last_tx_ms"]=now_ms()
         self.db.add_message({"source_id":id,"packet_key":pktkey,"packet_id":packet_id,"timestamp_ms":now_ms(),
            "from_node":local_num,"to_node":number(recipient),"channel":channel,"direction":"tx","text":text,"state":"accepted_by_radio"})
         return {"success":True,"packet_id":packet_id,"state":"accepted_by_radio",

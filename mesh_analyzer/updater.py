@@ -33,8 +33,17 @@ $log = [string]$p.log
 function WriteLog([string]$line) {
     Add-Content -LiteralPath $log -Value ((Get-Date -Format 'o') + ' ' + $line) -Encoding UTF8
 }
+function WriteNotice([string]$status,[string]$detail) {
+    $obj = @{ version = [string]$p.version; notes = [string]$p.notes;
+              status = $status; error = $detail;
+              updated_at = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() } | ConvertTo-Json -Compress
+    $tmp = ([string]$p.notice + '.new')
+    [IO.File]::WriteAllText($tmp, $obj, [Text.Encoding]::UTF8)
+    Move-Item -LiteralPath $tmp -Destination ([string]$p.notice) -Force
+}
+$child = $null
 try {
-    WriteLog 'Awaiting original application exit'
+    WriteLog 'Waiting for Mesh Analyzer process and database handles to close'
     $timeout = [DateTime]::UtcNow.AddSeconds(90)
     while ([DateTime]::UtcNow -lt $timeout) {
         $running = Get-Process -Id ([int]$p.parent_pid) -ErrorAction SilentlyContinue
@@ -64,7 +73,7 @@ try {
         $target = [string]$p.executable
         $previous = [string]$p.previous
         $candidate = [string]$p.candidate
-        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw 'No extracted portable executable' }
+        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { throw 'Missing verified portable executable' }
         Copy-Item -LiteralPath $target -Destination $previous -Force
         try {
             Copy-Item -LiteralPath $candidate -Destination ($target + '.new') -Force
@@ -74,16 +83,46 @@ try {
             throw
         }
     } else { throw 'Invalid update mode' }
-    WriteLog 'Update completed'
-    $done = @{ version = [string]$p.version; notes = [string]$p.notes;
-               status = 'installed'; updated_at = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() } |
-            ConvertTo-Json -Compress
-    [IO.File]::WriteAllText([string]$p.notice, $done, [Text.Encoding]::UTF8)
-    WriteLog 'Restarting application'
-    Start-Process -FilePath ([string]$p.executable) | Out-Null
+    $exe = [string]$p.executable
+    if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) {
+        throw ('Executable missing after installation: ' + $exe)
+    }
+    WriteLog 'Launching updated executable'
+    $child = Start-Process -FilePath $exe -PassThru
+    $healthy = $false
+    $deadline = [DateTime]::UtcNow.AddSeconds(50)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        Start-Sleep -Milliseconds 700
+        $child.Refresh()
+        if ($child.HasExited) { throw ('Updated application exited early: ' + $child.ExitCode) }
+        try {
+            $response = Invoke-RestMethod -Uri ([string]$p.health_url) -TimeoutSec 2 -ErrorAction Stop
+            if ($response.version -eq [string]$p.version -and $response.success -eq $true -and $response.ui_ready -eq $true) {
+                $healthy = $true
+                break
+            }
+        } catch {
+            # The HTTP service may not have started yet.
+        }
+    }
+    if (-not $healthy) { throw 'Updated application did not confirm its version via /health' }
+    # Never report success before the new process actually launches and reports readiness.
+    WriteNotice 'installed' ''
+    WriteLog 'Updated version confirmed via /health and running'
     exit 0
 } catch {
-    WriteLog ('FAILED: ' + $_.Exception.Message)
+    $reason = $_.Exception.Message
+    WriteLog ('FAILED: ' + $reason)
+    if ([string]$p.mode -eq 'portable' -and
+        (Test-Path -LiteralPath ([string]$p.previous) -PathType Leaf)) {
+        try {
+            if ($null -eq $child -or $child.HasExited) {
+                Copy-Item -LiteralPath ([string]$p.previous) -Destination ([string]$p.executable) -Force
+                WriteLog 'Restored previous portable executable after failed restart'
+            }
+        } catch { WriteLog ('Rollback failed: ' + $_.Exception.Message) }
+    }
+    try { WriteNotice 'failed' $reason } catch { WriteLog ('Cannot save update failure: ' + $_.Exception.Message) }
     exit 1
 }
 """
@@ -179,7 +218,7 @@ class UpdateManager:
         path=self.profile/"update_complete.json"
         try:
             obj=json.loads(path.read_text(encoding="utf-8-sig"))
-            if obj.get("version") == self.monitor.status()["current"] and obj.get("status") == "installed":
+            if obj.get("status") == "failed" or (obj.get("version") == self.monitor.status()["current"] and obj.get("status") == "installed"):
                 return {"success":True,"notice":obj}
         except (OSError,TypeError,ValueError):pass
         return {"success":True,"notice":None}
@@ -188,7 +227,7 @@ class UpdateManager:
         path=self.profile/"update_complete.json"
         try:
             obj=json.loads(path.read_text(encoding="utf-8-sig"))
-            if obj.get("version") == self.monitor.status()["current"]:
+            if obj.get("status") == "failed" or obj.get("version") == self.monitor.status()["current"]:
                 path.unlink(missing_ok=True)
         except (OSError,TypeError,ValueError):pass
         return {"success":True}
@@ -254,7 +293,8 @@ class UpdateManager:
                   "previous":str(folder/"previous.exe"),"mode":mode,
                   "version":version,"notes":(self.monitor._result or {}).get("notes","")[:3000],
                   "notice":str(self.profile/"update_complete.json"),
-                  "log":str(self.profile/"update.log")}
+                  "log":str(self.profile/"update.log"),
+                  "health_url":"http://127.0.0.1:8789/health"}
             planfile=folder/"plan.json"
             planfile.write_text(json.dumps(plan,ensure_ascii=False),encoding="utf-8")
             script=folder/"apply_update.ps1"

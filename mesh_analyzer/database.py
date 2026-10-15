@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sqlite3
 import threading
 import time
@@ -171,6 +172,8 @@ class Database:
             columns = {row[1] for row in self._db.execute("PRAGMA table_info(nodes)")}
             if "voltage" not in columns:
                 self._db.execute("ALTER TABLE nodes ADD COLUMN voltage REAL")
+            if "friendly_name" not in columns:
+                self._db.execute("ALTER TABLE nodes ADD COLUMN friendly_name TEXT NOT NULL DEFAULT ''")
             self._db.execute("INSERT OR IGNORE INTO settings(key,value) VALUES('retention',?)", (json.dumps(DEFAULT_RETENTION),))
             # Run heavy archival provenance import once, not on every startup.
             migrated=self._db.execute("SELECT 1 FROM settings WHERE key='migrated_node_sources_v1'").fetchone()
@@ -472,6 +475,79 @@ class Database:
                 last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
                 observed=MAX(observed,excluded.observed)""",
                 (int(source_id),num,ts,ts,int(bool(observed))))
+
+    def set_node_friendly_name(self, node_num, friendly_name):
+        """Persistent local nickname: never changes the Meshtastic Node ID."""
+        num = int(node_num)
+        if not 0 < num < 0xffffffff:
+            raise ValueError("Identificador de nó inválido")
+        name = str(friendly_name).strip()
+        if len(name) > 80 or any(ord(c) < 32 for c in name):
+            raise ValueError("Nome amigável inválido (máximo 80 caracteres)")
+        with self._lock, self._db:
+            row = self._db.execute("SELECT node_num FROM nodes WHERE node_num=?", (num,)).fetchone()
+            if row is None:
+                raise ValueError("Nó não cadastrado")
+            self._db.execute("UPDATE nodes SET friendly_name=? WHERE node_num=?", (name, num))
+        return {"node_num": num, "friendly_name": name}
+
+    def health(self, check=False):
+        """Read-only SQLite diagnostics. Integrity PRAGMAs run only by request."""
+        tables = ("sources","nodes","node_sources","packets","messages","positions",
+                  "traces","links","topology_processed","events","rf_samples")
+        with self._lock:
+            counts = {name: int(self._db.execute(
+                "SELECT COUNT(*) FROM "+name).fetchone()[0]) for name in tables}
+            pages = int(self._db.execute("PRAGMA page_count").fetchone()[0])
+            page_size = int(self._db.execute("PRAGMA page_size").fetchone()[0])
+            free_pages = int(self._db.execute("PRAGMA freelist_count").fetchone()[0])
+            journal = str(self._db.execute("PRAGMA journal_mode").fetchone()[0])
+            integrity = None
+            foreign_keys = None
+            if check:
+                integrity = [row[0] for row in self._db.execute("PRAGMA quick_check").fetchall()][:20]
+                foreign_keys = len(self._db.execute("PRAGMA foreign_key_check").fetchall())
+        files = {}
+        for suffix in ("", "-wal", "-shm"):
+            candidate = Path(str(self.path)+suffix)
+            try: files["db" if not suffix else suffix[1:]] = candidate.stat().st_size
+            except OSError: files["db" if not suffix else suffix[1:]] = 0
+        backup_dir = self.path.parent / "backups"
+        snapshots = sorted(backup_dir.glob("mesh-analyzer-*.sqlite3"),reverse=True) if backup_dir.exists() else []
+        try: free_disk = shutil.disk_usage(self.path.parent).free
+        except OSError: free_disk = None
+        return {"counts":counts, "files_bytes":files,
+                "total_bytes":sum(files.values()),"free_disk_bytes":free_disk,
+                "page_count":pages,"page_size":page_size,"free_pages":free_pages,
+                "journal":journal,"integrity":integrity,"foreign_key_violations":foreign_keys,
+                "last_backup":snapshots[0].name if snapshots else None,
+                "retention":self.retention()}
+
+    def backup(self):
+        """Online SQLite backup uses sqlite3 backup API; never raw-copies a live WAL DB."""
+        folder = self.path.parent / "backups"
+        folder.mkdir(mode=0o700,parents=True,exist_ok=True)
+        name = "mesh-analyzer-" + time.strftime("%Y%m%d-%H%M%S",time.localtime()) + "-" + str(now_ms()%1000).zfill(3) + ".sqlite3"
+        dest = folder / name
+        tmp = folder / (name+".part")
+        target = None
+        try:
+            with self._lock:
+                target = sqlite3.connect(str(tmp))
+                self._db.backup(target,pages=128,sleep=0.1)
+                target.close()
+                target = None
+            validation = sqlite3.connect(str(tmp))
+            try:
+                if validation.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+                    raise RuntimeError("Backup inconsistente")
+            finally:
+                validation.close()
+            os.replace(tmp,dest)
+            return {"file":name,"bytes":dest.stat().st_size}
+        finally:
+            if target is not None: target.close()
+            tmp.unlink(missing_ok=True)
 
     def node_rows(self, limit=5000):
         rows=self._rows("SELECT * FROM nodes ORDER BY last_seen_ms DESC LIMIT ?",(min(int(limit),15000),))

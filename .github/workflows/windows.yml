@@ -40,6 +40,17 @@ jobs:
           Set-Content -Path $scriptPath -Value $match.Groups[1].Value -Encoding utf8
           node --check $scriptPath
           if ($LASTEXITCODE -ne 0) { throw 'Sintaxe JavaScript invalida' }
+      - name: Validar sintaxe do PowerShell de atualização
+        shell: pwsh
+        run: |
+          python -c "from mesh_analyzer.updater import RUNNER_PS; from pathlib import Path; Path('runner-ci.ps1').write_text(RUNNER_PS,encoding='utf-8')"
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'runner-ci.ps1'), [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Host $_ }
+            throw 'Script do atualizador com sintaxe PowerShell invalida'
+          }
       - name: Compilar EXE Windows 11 x64
         shell: pwsh
         run: |

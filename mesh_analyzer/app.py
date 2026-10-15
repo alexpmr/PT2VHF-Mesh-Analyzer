@@ -118,7 +118,7 @@ class ReleaseMonitor:
             if due:self.check(force=True)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None):
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -154,7 +154,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self.send_header("Content-Security-Policy","frame-ancestors 'none'")
                     self.send_header("Cache-Control","no-cache")
                     self.send_header("Content-Length",str(len(content)));self.end_headers();self.wfile.write(content)
-                elif path == "/health":self._json({"success":True,"version":__version__,"database":"ok"})
+                elif path == "/health":self._json({"success":True,"version":__version__,"database":"ok","ui_ready":bool(ready_event and ready_event.is_set())})
                 elif path == "/api/state":self._json({"success":True,"version":__version__,"sources":db.sources(),"connections":sources.snapshot(),"counts":db.stats(),"retention":db.retention(),"system":db.system_settings()})
                 elif path == "/api/nodes":self._json({"success":True,"data":db.node_rows()})
                 elif path == "/api/nodes/sources":
@@ -168,6 +168,11 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/links":self._json({"success":True,"data":db.link_rows()})
                 elif path == "/api/events":self._json({"success":True,"data":db.event_rows()})
                 elif path == "/api/ports":self._json({"success":True,"data":available_serial_ports()})
+                elif path == "/api/db/health":
+                    check=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get("check",["0"])[0]=="1"
+                    self._json({"success":True,"data":db.health(check=check)})
+                elif path == "/api/activity":
+                    self._json({"success":True,"sources":sources.snapshot()})
                 elif path == "/api/device/config":
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
                     source_id=int(query.get("source_id",[0])[0])
@@ -209,7 +214,10 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 if not 1<=size<=20000:return self._error("Corpo inválido",413)
                 payload=json.loads(self.rfile.read(size).decode("utf-8"))
                 if not isinstance(payload,dict):return self._error("JSON inválido")
-                if path == "/api/report/pdf":
+                if path == "/api/window/ready":
+                    if ready_event:ready_event.set()
+                    self._json({"success":True})
+                elif path == "/api/report/pdf":
                     from .reporting import generate
                     body=generate(db,payload,sources.snapshot())
                     self.send_response(200)
@@ -244,6 +252,11 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/retention":
                     result=db.set_retention(payload)
                     self._json({"success":True,"retention":result})
+                elif path == "/api/db/backup":
+                    self._json({"success":True,"backup":db.backup()})
+                elif path == "/api/nodes/friendly":
+                    self._json({"success":True,"node":db.set_node_friendly_name(
+                        payload.get("node_num"),payload.get("friendly_name",""))})
                 elif path == "/api/retention/cleanup":
                     self._json({"success":True,"removed":db.cleanup()})
                 elif path == "/api/system/settings":
@@ -319,6 +332,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         import base64
         from .branding import brand_image_data_uri
         doc=doc.replace("__PT2VHF_MESH_LOGO__",brand_image_data_uri())
+        ui_ready_event=threading.Event()
         shutdown_requested=threading.Event()
         shutdown_started=threading.Event()
         shutdown_complete=threading.Event()
@@ -358,7 +372,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         threading.Thread(target=update_shutdown_coordinator,
                          name="update-clean-shutdown",daemon=True).start()
         server=ThreadingHTTPServer((host,int(port)),
-                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown))
+                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event))
         server.daemon_threads=True
         address="http://127.0.0.1:"+str(server.server_address[1])
         LOG.info("PT2VHF Mesh Analyzer v%s — %s",__version__,address)
