@@ -1,3 +1,11 @@
+# v0.6.10 — Reconexão de rádio
+
+- Clique no indicador de rádio conectado/desconectado inicia reconexão quando existe uma única fonte de rádio habilitada.
+- Reconexão lógica aguarda o encerramento do worker anterior antes de reabrir a porta; falha explicitamente se não liberar em 10 segundos.
+- Com nenhuma ou múltiplas fontes habilitadas, encaminha para Configurações > Conexões sem desconectar indiscriminadamente.
+- Endpoint local de reconexão protegido por CSRF; fontes MQTT somente RX não são elegíveis.
+- Permanecem pendentes validação com dispositivo físico, failover em grupo, ranking RF e consultas remotas completas.
+
 # v0.6.9 — Layout e atividade multitransporte
 
 - Seletor de conexões do mapa exibe Conectado somente quando a fonte está ativa; fontes offline não mostram error.
