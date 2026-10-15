@@ -1,5 +1,16 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.6.7 — 15/10/2026 — Instalação segura, conexões e popup de enlaces
+
+- **#15 / #34 (parcial, prioritário):** instalador Inno Setup utiliza fechamento controlado antes de substituir o executável. Um processo PowerShell verifica o caminho exato do EXE e o SID do usuário, solicita fechamento gracioso, espera até 15 segundos e encerra **apenas** instâncias ainda vivas do próprio Mesh Analyzer, registrando resultado em `installer-close.log`. A instalação é interrompida se não puder parar os processos com segurança, para não travar aguardando o Gerenciador de Tarefas. **Necessário teste físico Win11 Setup e Portable**; atualização interna ainda depende de validação independente.
+- **#40 (parcial):** o Setup agora instala uma cópia estável do ICO `{app}\branding\mesh-analyzer.ico` usada pelos atalhos Iniciar/Área de Trabalho, pela referência de desinstalação e pela janela WebView2. A edição Portable continua usando o ícone embutido. Testar a barra de tarefas e atalhos antigos no Windows 11.
+- **Indicador de rádio:** status no cabeçalho, verde com pelo menos uma conexão Meshtastic USB/BLE/TCP ativa e vermelho quando nenhuma estiver conectada; tooltip mostra estados por dispositivo. MQTT observador não conta como rádio.
+- **#45 — Rádio desconectado:** clicar **Enviar** sem rádio TX abre janela informativa com **Ir para Conexões** e **Fechar**, preservando rascunho e destinatário. Sem fonte TX, não envia pacotes. Ações acessíveis via teclado e Escape.
+- **#51 (parcial):** clique em uma linha RF, rota observada ou comunicação lógica no mapa abre popup com os dois nós, classe de evidência, fonte, primeira/última observação, contagem e distância geográfica apenas com posições temporalmente válidas. Nomes clicáveis abrem a ficha do nó. RSSI/SNR por aresta permanecem indisponíveis até criar armazenamento de evidências por trecho.
+- **Testes:** novos contratos de interface, identidade de ícone, proteção do instalador e exibição de enlaces.
+
+**Limitações importantes:** esta release **não conclui todo o backlog**. Falhas de atualização automática e reinício (#34) ainda exigem verificação no Windows real; consultas remotas de NodeInfo/telemetria/posição/traceroute/ping (#46/#27), ACK/REJ correlacionados e recibos de leitura humana (#4) não são declarados operacionais. A confirmação Meshtastic de entrega não significa leitura. Nenhum processo de software de terceiros deve ser encerrado.
+
 ## v0.6.6 — 14/10/2026 — Menu Ver, rótulos, Nós e Mensagens
 
 - **#49:** Camadas dentro do menu **Ver ▾** com radar, opacidade, relevo, nomes curtos, nós, enlaces e waypoints; botão redundante removido.
