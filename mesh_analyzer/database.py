@@ -673,12 +673,12 @@ class Database:
                 return self._db.execute("SELECT last_insert_rowid()").fetchone()[0]
             except sqlite3.IntegrityError: return None
 
-    def upsert_waypoint(self, source_id, waypoint_id, from_node, ts, lat, lon,
+    def upsert_waypoint(self, source_id, waypoint_id, from_node, ts, latitude, longitude,
                         name="", description="", icon=0, expires_ms=0):
         """One latest known waypoint per observing source, with historical provenance."""
         source_id, waypoint_id = int(source_id), int(waypoint_id)
         if not (0 < waypoint_id < 2**32): raise ValueError("Waypoint ID inválido")
-        lat, lon = float(lat), float(lon)
+        lat, lon = float(latitude), float(longitude)
         if not (-90 <= lat <= 90 and -180 <= lon <= 180):
             raise ValueError("Coordenadas inválidas do waypoint")
         if abs(lat)<0.000001 and abs(lon)<0.000001:
