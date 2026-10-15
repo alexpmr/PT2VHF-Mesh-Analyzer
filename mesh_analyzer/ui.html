@@ -1806,7 +1806,11 @@ function showLora(){
    }
    if(row.type==='float'){el.type='number';el.step='any';}
    if(row.type==='string')el.maxLength=128;
-   el.value=String(row.value);
+   if(row.type==='secret'){
+    el.type='password';el.autocomplete='new-password';el.maxLength=64;
+    el.placeholder=row.configured?'Senha configurada — deixe em branco para manter':'Nova senha (8–63 caracteres)';
+    el.value='';
+   }else el.value=String(row.value);
    div.append(el);grid.append(div);
   }
   section.append(grid);form.append(section);
@@ -1840,6 +1844,7 @@ $('loraSave').onclick=async()=>{
     if(!el||el.disabled)continue;
     if(!el.checkValidity())throw Error('Valor fora dos limites: '+group+'.'+row.name);
     let value;
+    if(row.type==='secret'&&!el.value)continue; // preserve existing Wi-Fi password
     if(row.type==='bool')value=el.value==='true';
     else if(row.type==='int')value=Number(el.value);
     else if(row.type==='float')value=Number(el.value);
@@ -1850,7 +1855,7 @@ $('loraSave').onclick=async()=>{
     if(value!==row.value){
       if(!changes[group])changes[group]={};
       changes[group][row.name]=value;
-      diff.push(group+'.'+row.name+': '+row.value+' → '+value);
+      diff.push(group+'.'+row.name+': '+(row.type==='secret'?'[protegida]':row.value)+' → '+(row.type==='secret'?'[nova senha protegida]':value));
     }
    }
   }
