@@ -71,9 +71,12 @@ try {
         if ($same) { throw 'Original application still running after 90 seconds' }
     }
     if ([string]$p.mode -eq 'setup') {
-        WriteLog 'Installing verified Windows Setup'
-        $args = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-')
+        WriteLog ('PHASE setup-started path=' + [string]$p.package)
+        # SILENT shows Inno's installation progress, without a second confirmation.
+        # VERYSILENT concealed the entire installer and looked like nothing happened.
+        $args = @('/SILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-')
         $proc = Start-Process -FilePath ([string]$p.package) -ArgumentList $args -Wait -PassThru
+        WriteLog ('PHASE setup-finished exit=' + $proc.ExitCode)
         if ($proc.ExitCode -ne 0) { throw ('Setup failed: exit code ' + $proc.ExitCode) }
     } elseif ([string]$p.mode -eq 'portable') {
         WriteLog 'Replacing portable executable'
