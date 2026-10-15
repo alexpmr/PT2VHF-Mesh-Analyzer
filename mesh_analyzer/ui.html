@@ -141,16 +141,18 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #mapVisibilityPanel input[type=range]{max-width:110px;vertical-align:middle}
 #mapVisibilityPanel #radarStatus{font-size:11px;color:var(--muted);padding:0 4px 6px;white-space:normal}
 #mapVisibilityBtn[aria-expanded="true"]{border-color:#edc93c;color:#f6de80}
+ .sourceAutoLabel{display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;width:max-content;max-width:100%;cursor:pointer}.sourceAutoLabel input{width:auto!important;flex:0 0 auto;margin:0}
+#nav{order:2}header .brand{order:1;width:100%}.activityGroup{order:3}#radioConnectionStatus{order:3}#topUpdate{order:3;margin-left:auto}header{gap:8px}
 </style>
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.8</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.9</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
 <div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
-<div class="activityLed rx" id="rxLed" title="RX ao vivo via USB/BLE/TCP; MQTT excluído"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
+<div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
 <section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> relações observadas</div></section>
 <section class="view active" id="viewMap">
 <div id="playback">
@@ -215,7 +217,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <div class="field src tcp mqtt"><label for="sourceHost">Host / Endereço IP</label><input id="sourceHost" placeholder="192.168.1.100"></div><div class="field src tcp mqtt"><label for="sourceTcpPort">Porta TCP</label><input id="sourceTcpPort" type="number" min="1" max="65535" value="4403"></div>
 <div class="field src ble"><label for="sourceAddress">Identificador Bluetooth / endereço BLE</label><input id="sourceAddress" placeholder="Endereço ou UUID do rádio"></div>
 <div class="field src mqtt"><label for="mqttTopic">Tópico MQTT</label><input id="mqttTopic" value="msh/+/2/e/#"></div><div class="field src mqtt"><label for="mqttUsername">Usuário MQTT</label><input id="mqttUsername" autocomplete="off"></div><div class="field src mqtt"><label for="mqttPassword">Senha MQTT</label><input id="mqttPassword" type="password" autocomplete="new-password" placeholder="Em edição: deixe vazio para manter"></div><div class="field src mqtt"><label><input id="mqttTls" type="checkbox"> TLS</label></div>
-<div class="field span2"><label><input id="sourceEnabled" type="checkbox" checked> Conectar automaticamente ao iniciar</label></div></div><div class="actions" style="margin-top:13px"><button type="submit">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form></div></section>
+<div class="field span2"><label class="sourceAutoLabel">Conectar automaticamente ao iniciar <input id="sourceEnabled" type="checkbox" checked></label></div></div><div class="actions" style="margin-top:13px"><button type="submit">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form></div></section>
 <section class="settingsPanel" id="settingsLora">
   <div class="card"><h3>Configuração do rádio Meshtastic</h3>
     <p class="muted">Leia os parâmetros reais do dispositivo conectado por USB/Serial, TCP/IP ou BLE. MQTT é apenas uma conexão de dados e não pode configurar rádios. A gravação pode reiniciar o nó e interromper a conexão.</p>
@@ -774,8 +776,8 @@ function refreshMapSourceOptions(){
  if(el.dataset.sources===signature)return;
  const saved=mapSourceFilter;el.innerHTML='<option value="">Todas as conexões</option>'+
   (state.sources||[]).map(src=>'<option value="'+src.id+'">'+esc(src.name)+' ('+
-     esc(src.kind==='tcp'?'Wi-Fi/TCP':src.kind.toUpperCase())+' · '+
-     esc(state.connections?.[String(src.id)]?.status||'desconectada')+')</option>').join('');
+     esc(src.kind==='tcp'?'Wi-Fi/TCP':src.kind.toUpperCase())+
+     (state.connections?.[String(src.id)]?.status==='connected'?' · Conectado':'')+')</option>').join('');
  if(saved&&(state.sources||[]).some(src=>String(src.id)===saved)){el.value=saved;}
  else {el.value='';mapSourceFilter='';try{localStorage.removeItem('mesh.map.selected_source');}catch(e){}}
  el.dataset.sources=signature;
@@ -1899,7 +1901,6 @@ async function pollActivity(){
  try{
   const r=await api('/api/activity'),latest={};
   for(const src of state.sources||[]){
-   if(src.kind==='mqtt')continue;
    const c=r.sources?.[String(src.id)]||{},old=activityBaselines[String(src.id)]||{};
    const rx=Number(c.rx_seq||0),tx=Number(c.tx_seq||0);
    latest[String(src.id)]={rx,tx};
