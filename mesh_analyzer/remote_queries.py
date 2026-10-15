@@ -147,9 +147,14 @@ class NodeQueries:
             if kind == "traceroute":
                 # Keep the route evidence structured. A reply without route
                 # arrays is NOT proof that the destination was heard directly.
-                parsed = decoded.get("route") or decoded.get("routeDiscovery") or {}
+                from .topology import decoded_traceroute
+                parsed = decoded.get("traceroute") or decoded.get("routeDiscovery") or {}
                 if not isinstance(parsed, dict):
                     parsed = {}
+                evidence = decoded_traceroute(decoded) or {}
+                # The SDK may expose nested dictionaries or only raw Protobuf.
+                # RouteDiscovery's two ordered arrays are authoritative.
+                parsed = {**parsed, **evidence}
                 def ids(field, alternate):
                     raw = parsed.get(field, parsed.get(alternate, decoded.get(field, decoded.get(alternate, []))))
                     if isinstance(raw, (tuple, list)):
