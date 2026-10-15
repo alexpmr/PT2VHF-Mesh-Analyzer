@@ -28,9 +28,12 @@ class ReliabilityTests(unittest.TestCase):
         destination=self.db.path.parent/"backups"/result["file"]
         self.assertTrue(destination.is_file())
         self.assertEqual(result["bytes"], destination.stat().st_size)
-        with sqlite3.connect(str(destination)) as saved:
+        saved=sqlite3.connect(str(destination))
+        try:
             self.assertEqual(saved.execute("PRAGMA quick_check").fetchone()[0], "ok")
             self.assertEqual(saved.execute("SELECT COUNT(*) FROM nodes").fetchone()[0], 1)
+        finally:
+            saved.close()  # Windows cannot unlink an open SQLite file
         self.assertEqual(self.db.retention(), baseline)
         self.assertEqual(self.db.health()["last_backup"], result["file"])
 
