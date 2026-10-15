@@ -133,6 +133,28 @@ class EnrichmentTests(unittest.TestCase):
         self.assertTrue(result["pending_count"])
         self.assertEqual(self.sources.queries.sent, [])
 
+    def test_hourly_limit_uses_history_not_latest_job_only(self):
+        self.service.save({"enabled": True, "max_per_hour": 1})
+        first = self.service.tick()
+        self.assertTrue(first["sent"])
+        self.sources.queries.replies[first.get("request_id","rf-1")]["state"] = "replied"
+        with patch("mesh_analyzer.automations.time.time",return_value=time.time()+100):
+            next_result = self.service.tick()
+        self.assertFalse(next_result["sent"])
+        self.assertIn("Limite",next_result["reason"])
+        self.assertEqual(len(self.sources.queries.sent),1)
+        self.assertEqual(self.db._rows("SELECT COUNT(*) AS c FROM auto_query_transmissions")[0]["c"],1)
+
+    def test_unanswered_rf_is_backed_off_without_immediate_retry(self):
+        self.service.save({"enabled": True, "types": {"position": False, "telemetry": False}})
+        self.assertTrue(self.service.tick()["sent"])
+        with patch("mesh_analyzer.automations.time.time",return_value=time.time()+100):
+            result = self.service.tick()
+        self.assertFalse(result["sent"])
+        attempts = self.db._rows("SELECT state,attempts,due_ms FROM auto_node_queries")
+        self.assertEqual(attempts[0]["state"],"timeout")
+        self.assertGreater(attempts[0]["due_ms"],int(time.time()*1000)+360000)
+
     def test_validation_rejects_unreasonable_or_unknown_settings(self):
         for bad in ({"max_per_hour": 100}, {"min_gap_seconds": 1},
                     {"types": {"bad": True}}, {"enabled": "yes"}):
