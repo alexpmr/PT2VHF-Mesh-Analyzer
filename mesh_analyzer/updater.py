@@ -88,7 +88,9 @@ try {
         throw ('Executable missing after installation: ' + $exe)
     }
     WriteLog 'Launching updated executable'
-    $child = Start-Process -FilePath $exe -PassThru
+    WriteLog ('Launching path=' + $exe + '; cwd=' + [IO.Path]::GetDirectoryName($exe))
+    $child = Start-Process -FilePath $exe -WorkingDirectory ([IO.Path]::GetDirectoryName($exe)) -PassThru
+    WriteLog ('Launched PID=' + $child.Id)
     $healthy = $false
     $deadline = [DateTime]::UtcNow.AddSeconds(50)
     while ([DateTime]::UtcNow -lt $deadline) {
@@ -123,6 +125,20 @@ try {
         } catch { WriteLog ('Rollback failed: ' + $_.Exception.Message) }
     }
     try { WriteNotice 'failed' $reason } catch { WriteLog ('Cannot save update failure: ' + $_.Exception.Message) }
+    # The original GUI is already closed: make the failure recoverable and visible.
+    try {
+        Add-Type -AssemblyName System.Windows.Forms
+        $answer = [System.Windows.Forms.MessageBox]::Show(
+          ('PT2VHF Mesh Analyzer nao reiniciou automaticamente.' + [Environment]::NewLine +
+           $reason + [Environment]::NewLine + [Environment]::NewLine +
+           'Abrir a pasta com o log de atualizacao?'),
+          'PT2VHF Mesh Analyzer - Atualizacao falhou',
+          [System.Windows.Forms.MessageBoxButtons]::YesNo,
+          [System.Windows.Forms.MessageBoxIcon]::Error)
+        if ($answer -eq [System.Windows.Forms.DialogResult]::Yes) {
+            Start-Process -FilePath 'explorer.exe' -ArgumentList ('/select,' + [string]$p.log)
+        }
+    } catch { WriteLog ('Recovery dialog unavailable: ' + $_.Exception.Message) }
     exit 1
 }
 """
@@ -165,7 +181,7 @@ def approved_asset_url(url, version, name):
     return url
 
 
-def stream_verified(url, dest, expected_sha, max_size=MAX_SIZE, report=None):
+def stream_verified(url, dest, expected_sha, max_size=MAX_SIZE, report=None, cancelled=None):
     if not isinstance(expected_sha,str) or not re.fullmatch(r"[a-f0-9]{64}",expected_sha):
         raise ValueError("SHA256 esperado inválido")
     partial = Path(str(dest) + ".part")
@@ -177,8 +193,10 @@ def stream_verified(url, dest, expected_sha, max_size=MAX_SIZE, report=None):
             total = int(resp.headers.get("Content-Length",0))
             if total > max_size:raise ValueError("Pacote excede o tamanho seguro")
             while True:
+                if cancelled and cancelled.is_set():raise RuntimeError("Download cancelado")
                 chunk = resp.read(131072)
                 if not chunk:break
+                if cancelled and cancelled.is_set():raise RuntimeError("Download cancelado")
                 count += len(chunk)
                 if count > max_size:raise ValueError("Pacote excede o tamanho seguro")
                 h.update(chunk)
@@ -207,6 +225,7 @@ class UpdateManager:
         self._mode=None
         self._plan=None
         self._busy=None
+        self._cancel=threading.Event()
 
     def status(self):
         with self._lock:
@@ -246,6 +265,7 @@ class UpdateManager:
         with self._lock:
             if self._phase in ("downloading","verified","installing"):
                 raise ValueError("Já existe uma atualização em andamento")
+            self._cancel.clear()
             self._phase="downloading"
             self._error=None
             self._version=version
@@ -270,7 +290,7 @@ class UpdateManager:
             package=folder/filename
             def report(n,total):
                 with self._lock:self._received=n;self._size=total
-            stream_verified(RELEASE_BASE+"v"+version+"/"+filename,package,expected,report=report)
+            stream_verified(RELEASE_BASE+"v"+version+"/"+filename,package,expected,report=report,cancelled=self._cancel)
             candidate=None
             if mode=="portable":
                 candidate=folder/"candidate.exe"
@@ -304,8 +324,15 @@ class UpdateManager:
                 self._phase="verified"
         except Exception as exc:
             with self._lock:
-                self._phase="error"
-                self._error=str(exc)[:240]
+                self._phase="cancelled" if self._cancel.is_set() else "error"
+                self._error=None if self._cancel.is_set() else str(exc)[:240]
+
+    def cancel(self):
+        with self._lock:
+            if self._phase!="downloading":
+                raise ValueError("Só é possível cancelar durante o download")
+            self._cancel.set()
+            return self.status()
 
     def launch(self):
         with self._lock:
