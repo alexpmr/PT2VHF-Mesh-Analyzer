@@ -312,7 +312,42 @@ const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
  Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map');
 const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
-function idName(num){const n=nodes.find(x=>x.node_num===num);return n?.friendly_name||n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));}
+const TRAFFIC_LABELS={
+ TELEMETRY_APP:'Telemetria',POSITION_APP:'Posição',NODEINFO_APP:'Informações do nó',
+ ROUTING_APP:'Roteamento',TEXT_MESSAGE_APP:'Mensagem',TRACEROUTE_APP:'Rastreamento de rota',
+ NODE_STATUS_APP:'Estado do nó',WAYPOINT_APP:'Ponto de interesse',ADMIN_APP:'Administração',
+ NEIGHBORINFO_APP:'Informações de vizinhos',STORE_FORWARD_APP:'Armazenar e encaminhar',
+ REMOTE_HARDWARE_APP:'Hardware remoto',DETECTION_SENSOR_APP:'Sensor de detecção',
+ RANGE_TEST_APP:'Teste de alcance',PAXCOUNTER_APP:'Contagem de pessoas',
+ REPLY_APP:'Resposta',SERIAL_APP:'Dados seriais',MAP_REPORT_APP:'Relatório de mapa'
+};
+const HARDWARE_LABELS={
+ HELTEC_V4:'Heltec WiFi LoRa 32 V4',HELTEC_V3:'Heltec WiFi LoRa 32 V3',
+ RAK4631:'RAK WisBlock 4631',HELTEC_WIRELESS_TRACKER_V2:'Heltec Wireless Tracker V2',
+ HELTEC_WSL_V3:'Heltec Wireless Stick Lite V3',
+ HELTEC_WIRELESS_PAPER:'Heltec Wireless Paper',SEEED_XIAO_S3:'Seeed Studio XIAO ESP32S3',
+ TBEAM:'LilyGO T-Beam'
+};
+function trafficName(code){
+ const raw=String(code??'').trim();
+ if(!raw)return 'Tipo não informado';
+ const key=raw.toUpperCase();
+ if(TRAFFIC_LABELS[key])return TRAFFIC_LABELS[key];
+ const num=/^\d+$/.test(raw)?Number(raw):null;
+ return num!==null?'Porta '+num+' (não identificada)':raw.replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase());
+}
+function hardwareName(code){
+ const raw=String(code??'').trim();
+ return HARDWARE_LABELS[raw]||(raw?raw.replaceAll('_',' ').toLowerCase().replace(/^./,c=>c.toUpperCase()):'—');
+}
+function isBroadcastNode(num){
+ return num===4294967295||num==='4294967295'||num==='!ffffffff'||num==='0xffffffff'||num==='^all';
+}
+function idName(num){
+ if(isBroadcastNode(num))return 'broadcast';
+ const n=nodes.find(x=>x.node_num===num);
+ return n?.friendly_name||n?.long_name||n?.short_name||n?.node_id||(num==null?'—':'!'+Number(num).toString(16).padStart(8,'0'));
+}
 function validPos(n){return Number.isFinite(Number(n.latitude))&&Number.isFinite(Number(n.longitude))&&n.latitude!==null&&n.longitude!==null&&!(Math.abs(Number(n.latitude))<.01&&Math.abs(Number(n.longitude))<.01);}
 function matches(n,text){const q=norm(text.trim());if(!q)return true;return [n.long_name,n.short_name,n.node_id,n.node_num,...(n.aliases||[])].some(x=>norm(x).includes(q));}
 function initMap(){if(map||!window.L)return;map=L.map('map',{zoomControl:true}).setView([-15.793,-47.882],9);nodeLayer=L.layerGroup().addTo(map);linkLayer=L.layerGroup().addTo(map);waypointLayer=L.layerGroup().addTo(map);heatLayer=L.layerGroup().addTo(map);
@@ -866,7 +901,7 @@ function nodePopupHtml(n){
  const source=state.sources.find(s=>s.id===n.last_source_id);
  const fields=[
   ['Node ID',n.node_id],['Nome amigável local',n.friendly_name],['Nome longo',n.long_name],['Nome curto',n.short_name],
-  ['Hardware',n.hw_model],['Role',n.role],['Firmware',null],
+  ['Hardware',hardwareName(n.hw_model)+' ('+(n.hw_model||'—')+')'],['Role',n.role],['Firmware',null],
   ['Status',nodeRadioStatus(n)],['Conexão da última comunicação',source?.name||null],
   ['Coordenadas',coord],['Latitude',validPos(n)?n.latitude:null],
   ['Longitude',validPos(n)?n.longitude:null],
@@ -1080,6 +1115,7 @@ function nodeDisplay(n,key){
  const v=nodeValue(n,key);
  if(v===null||v===undefined||v==='')return '—';
  if(key==='distance')return Number(v).toFixed(1)+' km';
+ if(key==='hw_model')return hardwareName(v);
  if(key==='battery')return Number(v)===101?'EXT':v+'%';
  if(key==='voltage')return Number(v).toFixed(2)+' V';
  if(key==='snr')return Number(v).toFixed(1)+' dB';
@@ -1106,7 +1142,7 @@ function renderNodes(){
     'Múltiplos rádios: selecione a conexão na aba Mapa':
     'Distância indisponível: rádio local sem posição/identidade válida';
  const q=norm($('nodesFilter').value);
- const list=nodes.filter(n=>matches(n,q)||[n.hw_model,n.role].some(x=>norm(x).includes(q)));
+ const list=nodes.filter(n=>matches(n,q)||[n.hw_model,hardwareName(n.hw_model),n.role].some(x=>norm(x).includes(q)));
  $('nodesCounter').textContent=list.length+' de '+nodes.length+' nós';
  const visible=nodeCols.filter(x=>selectedNodeCols.has(x[0]));
  $('nodesHeader').innerHTML=visible.map(([k,label])=>'<th data-nodesort="'+k+'" role="button" tabindex="0">'+esc(label)+(k===nodeSort?(nodeSortAsc?' ▲':' ▼'):'')+'</th>').join('');
@@ -1131,7 +1167,7 @@ let pausedTraffic=false, selectedPacketId=null,trafficFilterSignature='';
 function filteredTraffic(){
  const query=norm($('trafficFilter').value),src=$('trafficSource').value,typ=$('trafficType').value;
  return packets.filter(p=>(!src||String(p.source_id)===src)&&(!typ||p.port===typ)&&
- norm([p.port,idName(p.from_node),idName(p.to_node),p.packet_id,p.text_preview].join(' ')).includes(query));
+ norm([p.port,trafficName(p.port),idName(p.from_node),idName(p.to_node),p.packet_id,p.text_preview].join(' ')).includes(query));
 }
 function renderPackets(){
  if(pausedTraffic)return;
@@ -1140,24 +1176,24 @@ function renderPackets(){
   $('trafficSource').innerHTML='<option value="">Todas</option>'+state.sources.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
   $('trafficSource').value=old;trafficFilterSignature=signature;}
  const oldType=$('trafficType').value,types=[...new Set(packets.map(p=>p.port).filter(Boolean))].sort();
- const newOptions='<option value="">Todos</option>'+types.map(t=>'<option>'+esc(t)+'</option>').join('');
+ const newOptions='<option value="">Todos</option>'+types.map(t=>'<option value="'+esc(t)+'">'+esc(trafficName(t))+'</option>').join('');
  if($('trafficType').innerHTML!==newOptions){$('trafficType').innerHTML=newOptions;$('trafficType').value=oldType;}
  const list=filteredTraffic();
  $('trafficCounter').textContent=list.length+' exibidos · '+(state.counts?.packets||0)+' no banco';
  $('packetRows').innerHTML=list.map(p=>{
  const hops=p.hop_start!=null&&p.hop_limit!=null&&Number(p.hop_start)>=Number(p.hop_limit)?p.hop_start-p.hop_limit:'—';
- return '<tr data-pid="'+p.id+'"><td>'+esc(new Date(p.timestamp_ms).toLocaleTimeString('pt-BR'))+'</td><td><span class="badge">RX</span></td><td>'+esc(idName(p.from_node))+'</td><td>'+esc(idName(p.to_node))+'</td><td><span class="badge">'+esc(p.port||'UNKNOWN')+'</span></td><td>'+esc(p.rx_snr??'—')+'</td><td>'+esc(p.rx_rssi??'—')+'</td><td>'+esc(hops)+'</td><td>'+esc(p.via_mqtt?'MQTT':'Rádio RX')+'</td></tr>';
+ return '<tr data-pid="'+p.id+'"><td>'+esc(new Date(p.timestamp_ms).toLocaleTimeString('pt-BR'))+'</td><td><span class="badge">RX</span></td><td>'+esc(idName(p.from_node))+'</td><td>'+esc(idName(p.to_node))+'</td><td><span class="badge">'+esc(trafficName(p.port))+'</span></td><td>'+esc(p.rx_snr??'—')+'</td><td>'+esc(p.rx_rssi??'—')+'</td><td>'+esc(hops)+'</td><td>'+esc(p.via_mqtt?'MQTT':'Rádio RX')+'</td></tr>';
  }).join('')||'<tr><td colspan="9">Nenhum pacote encontrado.</td></tr>';
  $('packetRows').querySelectorAll('[data-pid]').forEach(row=>row.onclick=()=>{
   const p=packets.find(x=>String(x.id)===row.dataset.pid);if(!p)return;
   selectedPacketId=p.id;$('trafficDetails').classList.add('active');
-  $('trafficTitle').textContent=(p.port||'Pacote')+' #'+p.id;
+  $('trafficTitle').textContent=trafficName(p.port)+' #'+p.id;
   const fields={Hora:fmtDate(p.timestamp_ms),Conexão:p.source_id,Origem:idName(p.from_node),
      Destino:idName(p.to_node),Canal:p.channel??'—',SNR:p.rx_snr??'—',RSSI:p.rx_rssi??'—',
      HopStart:p.hop_start??'—',HopLimit:p.hop_limit??'—',
      Transporte:p.via_mqtt?'MQTT':'Rádio local RX',PacketID:p.packet_id,
      Criptografia:p.encrypted?'Payload não decodificado':'Não indicada',
-     Conteúdo:p.encrypted?'[conteúdo indisponível]':(p.text_preview||'—')};
+     Tipo:trafficName(p.port)+' ('+(p.port||'desconhecido')+')',Conteúdo:p.encrypted?'[conteúdo indisponível]':(p.text_preview||'—')};
   $('trafficInfo').textContent=Object.entries(fields).map(([k,v])=>k+': '+v).join('\n');
  });
 }
@@ -1226,7 +1262,7 @@ function renderStats(){
       ' críticos. Relações lógicas não equivalem a enlaces RF diretos.</div>';
    html+='<div class="statsSplit">'+statsHead('Tipos de tráfego',
        statsTbl(['Tipo','Pacotes','%'],d.packet_types.map(x=>
-        [x.name,fmtCount(x.count),c.observations?
+        [trafficName(x.name),fmtCount(x.count),c.observations?
           (100*x.count/c.observations).toFixed(1).replace('.',',')+'%':'—'])))+
       statsHead('Nós mais ativos',statsTbl(['Nó','Pacotes'],
         d.top_originators.slice(0,12).map(x=>[x.name,fmtCount(x.count)])))+'</div>';
@@ -1296,7 +1332,7 @@ function renderStats(){
     ['TX comprovados','Não medido'],['Nós originadores',fmtCount(c.active_originators)]
    ].map(([label,value])=>'<div class="stat"><b>'+esc(value)+'</b><span>'+esc(label)+'</span></div>').join('')+'</div>';
    html+=statsHead('Volume por tipo',statsTbl(['Tipo','Pacotes','Participação'],
-     d.packet_types.map(x=>[x.name,fmtCount(x.count),
+     d.packet_types.map(x=>[trafficName(x.name),fmtCount(x.count),
        c.observations?(x.count*100/c.observations).toFixed(1).replace('.',',')+'%':'—'])));
    html+=statsHead('Conexões receptoras',statsTbl(['Conexão','Pacotes','SNR médio'],d.source_breakdown.map(x=>[x.name,x.count,fmtMeasure(x.mean_snr,'dB')])));
    html+=statsHead('Séries horárias',statsTbl(['Hora UTC','Observações','MQTT'],d.hourly.map(x=>[new Date(x.timestamp_ms).toLocaleString('pt-BR'),x.count,x.mqtt])));
