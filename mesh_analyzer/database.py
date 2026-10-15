@@ -158,6 +158,20 @@ class Database:
                 observations INTEGER NOT NULL DEFAULT 1,
                 PRIMARY KEY(source_id,a,b,quality)
             );
+            CREATE TABLE IF NOT EXISTS communications (
+                source_id INTEGER NOT NULL,
+                from_node INTEGER NOT NULL,
+                to_node INTEGER NOT NULL,
+                transport TEXT NOT NULL CHECK(transport IN ('radio','mqtt')),
+                first_seen_ms INTEGER NOT NULL,
+                last_seen_ms INTEGER NOT NULL,
+                observations INTEGER NOT NULL DEFAULT 1,
+                PRIMARY KEY(source_id,from_node,to_node,transport)
+            );
+            CREATE INDEX IF NOT EXISTS idx_communications_last ON communications(last_seen_ms DESC);
+            CREATE TABLE IF NOT EXISTS communication_processed (
+                source_packet_key TEXT PRIMARY KEY
+            );
             CREATE TABLE IF NOT EXISTS events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp_ms INTEGER NOT NULL,
@@ -508,7 +522,7 @@ class Database:
 
     def health(self, check=False):
         """Read-only SQLite diagnostics. Integrity PRAGMAs run only by request."""
-        tables = ("sources","nodes","node_sources","packets","messages","positions","waypoints",
+        tables = ("sources","nodes","node_sources","packets","messages","positions","waypoints","communications",
                   "traces","links","topology_processed","events","rf_samples")
         with self._lock:
             counts = {name: int(self._db.execute(
@@ -575,6 +589,57 @@ class Database:
     def topology_processed(self, key):
         with self._lock:
             return self._db.execute("SELECT 1 FROM topology_processed WHERE source_packet_key=?",(key,)).fetchone() is not None
+
+    def record_communication(self, key, source_id, timestamp_ms, from_node, to_node, via_mqtt=False):
+        """Capture *logical* unicast traffic, not a claim of a direct RF hop.
+
+        Idempotent across live ingestion and archival reconstruction. Broadcast
+        and incomplete addresses are deliberately not promoted into line segments.
+        """
+        with self._lock,self._db:
+            inserted=self._db.execute(
+                "INSERT OR IGNORE INTO communication_processed(source_packet_key) VALUES(?)",
+                (str(key),)).rowcount
+            if not inserted:return False
+            try:
+                a,b=int(from_node),int(to_node)
+            except (TypeError,ValueError):
+                return False
+            if not (0<a<0xffffffff and 0<b<0xffffffff) or a==b:return False
+            ts=int(timestamp_ms)
+            transport="mqtt" if via_mqtt else "radio"
+            self._db.execute("""INSERT INTO communications(
+              source_id,from_node,to_node,transport,first_seen_ms,last_seen_ms,observations)
+              VALUES(?,?,?,?,?,?,1)
+              ON CONFLICT(source_id,from_node,to_node,transport) DO UPDATE SET
+              first_seen_ms=MIN(first_seen_ms,excluded.first_seen_ms),
+              last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
+              observations=observations+1""",(int(source_id),a,b,transport,ts,ts))
+            # Address in packet is *not* proof that the destination was heard.
+            return True
+
+    def communication_rows(self, limit=10000):
+        return self._rows("""SELECT * FROM communications
+               ORDER BY last_seen_ms DESC LIMIT ?""",(min(int(limit),20000),))
+
+    def reprocess_archived_communications(self, limit=1000):
+        """Replay a small, ordered batch from raw packets, safe against live RX.
+
+        Progress is stored in communication_processed; reruns never double-count.
+        A caller may loop asynchronously until remaining becomes zero.
+        """
+        rows=self._rows("""SELECT p.source_packet_key,p.source_id,p.timestamp_ms,
+                  p.from_node,p.to_node,p.via_mqtt
+                  FROM packets AS p LEFT JOIN communication_processed AS c
+                    ON c.source_packet_key=p.source_packet_key
+                  WHERE c.source_packet_key IS NULL ORDER BY p.id LIMIT ?""",
+                  (max(1,min(int(limit),5000)),))
+        recorded=0
+        for row in rows:
+            if self.record_communication(row["source_packet_key"],row["source_id"],
+                row["timestamp_ms"],row["from_node"],row["to_node"],row["via_mqtt"]):
+                recorded+=1
+        return {"processed":len(rows),"communications":recorded,"remaining":len(rows)>=limit}
 
     def record_topology(self, key, source_id, timestamp_ms, edges, trace=None, historical=False):
         """Atomically store once per original packet; never invent direct RF status."""
@@ -738,4 +803,4 @@ class Database:
     def stats(self):
         with self._lock:
             def count(table):return int(self._db.execute("SELECT COUNT(*) FROM "+table).fetchone()[0])
-            return {k:count(k) for k in ("nodes","packets","messages","positions","traces","links","events","sources","waypoints")}
+            return {k:count(k) for k in ("nodes","packets","messages","positions","traces","links","events","sources","waypoints","communications")}
