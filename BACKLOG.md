@@ -1,3 +1,12 @@
+## #51 — Popup completo ao clicar em enlace no mapa (15/10/2026)
+
+- **Pedido com imagem de referência:** clicar em qualquer linha de enlace ou fluxo lógico no Mapa deve abrir uma **janela de detalhes do enlace**; atualmente `renderMap()` utiliza somente `bindTooltip` e não disponibiliza popup com métricas.
+- **Conteúdo:** nomes amigáveis e Node IDs de ambas as pontas, tipo/qualidade da relação, fonte, primeira/última observação, quantidade de pacotes, horários, distância entre coordenadas confiáveis, origem da descoberta e evidências de traceroute/neighbor/RF/MQTT. SNR, RSSI, saltos e histórico apenas quando o banco conseguir rastrear amostras daquela aresta; sem valores artificiais.
+- **Classes distintas:** **RF direto comprovado**, **trecho de traceroute observado**, **vizinhança anunciada**, **comunicação lógica com caminho físico desconhecido**, **Internet/MQTT**. Linhas lógicas não entram em rankings RF direto e nunca recebem rótulo de hop confirmado só por unicast.
+- **Ações:** abrir informações completas de cada nó (#27), ver pacotes relacionados, copiar metadados e fechar; preservar filtros de Conexão/período, enlaces antigos/offline e contexto de nós móveis (posição no tempo do evento, não atual se incoerente).
+- **Implementação:** `links`/`communications` existentes trazem metadados agregados, mas não armazenam necessariamente RSSI/SNR por aresta. Criar identificação estável da relação, API de evidências associadas com limites/segurança e popup Leaflet/compartilhado, sem cruzar medição de pacote multissalto como se fosse do segmento. Clique/teclado/Escape, responsividade, nomes sanitizados, Win11 WebView2.
+- **Issue:** [#51](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/51). **Status:** especificação no backlog, ainda não implementada na v0.6.6.
+
 ## v0.6.7 — Mensagens: aviso quando rádio estiver desconectado (14/10/2026)
 
 - **#45:** botão Enviar permanece clicável mesmo sem rádio TX ativo para abrir popup explícito **“Não há conexão ativa com um rádio Meshtastic para enviar mensagens”** com as ações **Ir para Conexões** e **Fechar**. Ir abre `Configurações → Conexões`; Fechar retorna à conversa. Mensagem digitada preservada. Nenhum pacote é transmitido enquanto desconectado.
