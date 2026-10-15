@@ -63,6 +63,8 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer.exe' "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe" -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer.exe' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe' -Force
           Compress-Archive -Path 'dist/PT2VHF-Mesh-Analyzer.exe' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" -Force
           Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip' -Force
           Compress-Archive -Path 'mesh_analyzer','tests','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt','branding' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip" -Force
@@ -83,6 +85,7 @@ jobs:
           name: PT2VHF-Mesh-Analyzer-Windows11
           path: |
             dist/PT2VHF-Mesh-Analyzer.exe
+            dist/*-Portable-Win11-x64.exe
             dist/*-Portable-Win11-x64.zip
             dist/*-Setup-Win11-x64.exe
             dist/*-Codigo-Fonte.zip
@@ -99,6 +102,8 @@ jobs:
           $repository = $env:GITHUB_REPOSITORY
           $assets = @(
             'dist/PT2VHF-Mesh-Analyzer.exe',
+            'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe',
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe",
             'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip',
             'dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe',
             "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip",
