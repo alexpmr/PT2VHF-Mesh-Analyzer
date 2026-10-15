@@ -1,3 +1,13 @@
+# v0.6.14 — Automação inteligente para completar informações dos nós (15/10/2026)
+
+- **#80 (implementação inicial):** aba Automações com ativação explícita, consultas NodeInfo, Posição, Telemetria e Traceroute separadamente configuráveis, fila de nós com dados faltantes/desatualizados, simulação sem TX, execução manual e acompanhamento do estado.
+- **Segurança RF:** default desligado, somente rádio ativo TX e nós realmente observados nessa fonte; nunca enviar consultas via MQTT. Aguarda anúncios iniciais de nós novos, apenas uma consulta aguardando resposta, intervalo mínimo, cota real de transmissões por hora, timeout com backoff progressivo e pausa com múltiplos rádios.
+- **SQLite:** persiste preferências, tarefas, tentativas, resultados e histórico de transmissões. Histórico de nós antigos continua intacto.
+- **Compatibilidade:** NeighborInfo e Ping são mostrados como futuras opções indisponíveis até haver suporte real do SDK/firmware (não são simulados). Nem todo nó fornece posição ou telemetria.
+- **Testes:** casos offline e integração API/CSRF, janela de escuta dos novatos, rádio único, MQTT, limites de TX, backoff e persistência em reinicialização.
+
+**Estado:** automação implementada em código, mas exige validação de campo com rádio Meshtastic e diferentes firmwares. Bugs anteriores de updater/instalador, ícone da barra de tarefas e descoberta automática de conexões permanecem abertos. Esta release não encerra todo o backlog.
+
 # v0.6.13 — Consultas RF e senha Wi-Fi protegida (15/10/2026)
 
 - **#76 (parcial):** respostas de traceroute passam a preservar listas de saltos de ida e retorno e os valores brutos de SNR; o painel do nó apresenta a sequência identificada. Respostas sem intermediários mostram aviso explícito e não geram enlaces RF diretos inventados. A camada topológica existente continua utilizando apenas evidências de saltos observadas.
