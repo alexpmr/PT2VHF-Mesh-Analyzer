@@ -51,6 +51,13 @@ jobs:
             $parseErrors | ForEach-Object { Write-Host $_ }
             throw 'Script do atualizador com sintaxe PowerShell invalida'
           }
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'windows/close_running_mesh.ps1'), [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Host $_ }
+            throw 'Script do instalador com sintaxe PowerShell invalida'
+          }
       - name: Compilar EXE Windows 11 x64
         shell: pwsh
         run: |
