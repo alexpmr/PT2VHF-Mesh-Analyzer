@@ -4,7 +4,7 @@ Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.
 
 ## v0.6.3 — Progresso no backlog (pendências preservadas)
 
-- **#34/#15/#2:** correção de *falso sucesso* no atualizador com verificação de versão via `/health`, erro persistido e rollback limitado para Portable. **Manter aberta até teste real no Windows 11.**
+- **#34/#15/#2:** correção de *falso sucesso* no atualizador com verificação de versão e carregamento do frontend via `/health`, erro persistido e rollback limitado para Portable. **Manter aberta até teste real no Windows 11.**
 - **#33:** implementados indicadores de saúde e backup transacional. **Pendente:** prévia de limpeza, restore testado, monitoramento de crescimento e recomendações.
 - **#35:** apelido local de nós persistente e apresentação preferencial em partes da interface. **Pendente:** abrangência em todas as visualizações e conflitos com múltiplos nomes.
 - **#30:** LEDs TX/RX baseados em contadores novos do driver, sem falso RX MQTT e TX baseado em solicitação aceita. **Pendente:** telemetria fina e validação com hardware.
