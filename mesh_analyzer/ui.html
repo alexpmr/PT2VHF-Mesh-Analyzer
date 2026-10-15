@@ -244,12 +244,17 @@ const fmtDate=x=>x?new Date(Number(x)).toLocaleString('pt-BR'):'—';
 const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000);return m<60?Math.round(m)+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d';};
 let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
 try{mapSourceFilter=localStorage.getItem('mesh.map.selected_source')||'';}catch(e){}
-let firstRunDialogChecked=false;
+let firstRunDialogChecked=false,updateNoticeChecked=false;
+function rememberFirstRunShown(){try{sessionStorage.setItem('mesh.firstRunShown','yes');}catch(e){}}
+function previouslyShownThisSession(){try{return sessionStorage.getItem('mesh.firstRunShown')==='yes';}catch(e){return false;}}
 function dismissFirstRunDialog(){$('firstRunDialog').classList.remove('open');}
 function showFirstRunDialogOnce(){
- if(firstRunDialogChecked||!Array.isArray(state.sources))return;
- firstRunDialogChecked=true;
+ if(firstRunDialogChecked||!updateNoticeChecked||!Array.isArray(state.sources))return;
+ if($('updateDialog').classList.contains('active'))return;
+ if(previouslyShownThisSession()){firstRunDialogChecked=true;return;}
  if(state.sources.length===0){
+  firstRunDialogChecked=true;
+  rememberFirstRunShown();
   $('firstRunDialog').classList.add('open');
   $('firstRunConnections').focus();
  }
@@ -1465,17 +1470,18 @@ async function checkUpdates(manual=false){
 $('updateCheck').onclick=()=>checkUpdates(true);
 let currentUpdateNotice=false,updateInstalling=false,updatePoll=null;
 function showUpdateDialog(info,installed=false){
- currentUpdateNotice=installed;
- $('updateTitle').textContent=installed?'Novidades da versão '+info.version:
+ const failed=info.status==='failed';
+ currentUpdateNotice=installed||failed;
+ $('updateTitle').textContent=failed?'Falha na atualização v'+info.version:installed?'Novidades da versão '+info.version:
    'Nova versão v'+info.latest+' disponível';
- $('updateSummary').textContent=installed?'Atualização concluída com sucesso.':
+ $('updateSummary').textContent=failed?'A nova versão não confirmou inicialização. A atualização não foi marcada como concluída.':installed?'Atualização concluída com sucesso.':
    'Versão instalada: v'+info.current+' · disponível: v'+info.latest+'.';
- $('updateNotes').textContent=String(info.notes||'Novidades indisponíveis neste pacote.').slice(0,3000);
- $('updateProgressText').textContent=installed?'':'O download e a instalação exigem sua confirmação.';
+ $('updateNotes').textContent=failed?String(info.error||'Consulte update.log').slice(0,1000):String(info.notes||'Novidades indisponíveis neste pacote.').slice(0,3000);
+ $('updateProgressText').textContent=failed?'Consulte update.log ou instale manualmente.':installed?'':'O download e a instalação exigem sua confirmação.';
  $('updateProgress').hidden=true;
- $('updateApply').hidden=installed;
+ $('updateApply').hidden=installed||failed;
  $('updateLater').disabled=false;
- $('updateRelease').hidden=installed;
+ $('updateRelease').hidden=installed||failed;
  $('updateDialog').classList.add('active');
 }
 async function checkUpdateProgress(){
@@ -1529,6 +1535,7 @@ $('updateApply').onclick=async()=>{
 $('updateLater').onclick=async()=>{
  if(updateInstalling)return;
  $('updateDialog').classList.remove('active');
+ showFirstRunDialogOnce();
  if(currentUpdateNotice){
   try{await api('/api/update/ack',{});}catch(e){}
  }
@@ -1539,8 +1546,10 @@ $('updateRelease').onclick=()=>{
 setTimeout(async()=>{
  try{
   const result=await api('/api/update/notice');
-  if(result.notice&&result.notice.status==='installed')showUpdateDialog(result.notice,true);
+  if(result.notice&&['installed','failed'].includes(result.notice.status))
+   showUpdateDialog(result.notice,result.notice.status==='installed');
  }catch(e){}
+ finally{updateNoticeChecked=true;showFirstRunDialogOnce();}
 },1800);
 setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
