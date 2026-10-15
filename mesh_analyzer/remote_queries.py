@@ -96,6 +96,31 @@ class NodeQueries:
                 payload, destinationId=dest, portNum=enum,
                 wantResponse=True, channelIndex=channel)
             packet_id = outgoing.get("id") if isinstance(outgoing, dict) else getattr(outgoing, "id", None)
+            # Outbound requests are not delivered back through the RX callback.
+            # Record separately with real local/destination IDs, never broadcast.
+            local_num = own
+            if local_num is None:
+                with self.manager._lock:
+                    info = getattr(iface, "myInfo", None)
+                    local_num = number(info.get("my_node_num") or info.get("myNodeNum")) if isinstance(info, dict) else number(getattr(info, "my_node_num", None))
+            if local_num is not None:
+                stamp=int(time.time()*1000)
+                self.manager.db.upsert_node(local_num,source_id,timestamp_ms=stamp)
+            self.manager.db.add_packet({
+                "source_id":source_id,
+                "packet_id":str(packet_id or rid),
+                "source_packet_key":f"tx:{source_id}:{rid}",
+                "timestamp_ms":int(time.time()*1000),
+                "from_node":local_num,"to_node":target,
+                "port":port_name(PORTS[kind]),"channel":channel,
+                "direction":"tx","via_mqtt":0,"encrypted":0,
+                "text_preview":"Consulta RF solicitada: "+kind
+            })
+            with self.manager._lock:
+                current=self.manager._states.get(source_id)
+                if current is not None:
+                    current["tx_seq"]=current.get("tx_seq",0)+1
+                    current["last_tx_ms"]=int(time.time()*1000)
             with self.lock:
                 row["state"] = "awaiting_reply"
                 row["packet_id"] = packet_id
