@@ -1,3 +1,10 @@
+# v0.6.12 — Laboratório de consultas remotas (experimental)
+
+- Controles de NodeInfo, posição, telemetria e traceroute para testes com rádio Meshtastic conectado, com solicitações identificadas e status individual.
+- Resultados recebidos exibidos no painel de detalhes; timeouts não são tratados como sucesso.
+- Funções ainda experimentais: respostas dependem de firmware, rádio e protocolo; recomenda-se validação em bancada antes de uso regular.
+- Ping e vizinhos, botão Tudo, histórico durável e refinamento de correlação continuam pendentes.
+
 # v0.6.11 — Cabeçalho e atualização idempotente
 
 - Navegação, LEDs de tráfego, status do rádio e botão de atualização na mesma linha em larguras adequadas, com adaptação responsiva em janelas menores.
