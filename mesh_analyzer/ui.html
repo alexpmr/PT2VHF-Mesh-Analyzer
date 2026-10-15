@@ -1981,9 +1981,12 @@ async function checkUpdateProgress(){
   if(status.phase!=='downloading')throw Error('Estado inesperado da atualização');
   updatePoll=setTimeout(checkUpdateProgress,750);
  }catch(e){
-   updateInstalling=false;$('updateApply').disabled=false;$('updateLater').disabled=false;
-   $('updateProgressText').textContent='Atualização interrompida: '+e.message+
-      '. Sua instalação atual continua disponível; consulte Configurações → Sistema ou o log da atualização.';
+   updateInstalling=false;clearTimeout(updatePoll);
+   $('updateApply').disabled=false;$('updateLater').disabled=false;
+   $('updateLater').textContent='Fechar';$('updateProgress').hidden=true;
+   $('updateSummary').textContent='Atualização interrompida; instalação anterior preservada.';
+   $('updateProgressText').textContent='Diagnóstico: '+e.message+
+      '. Consulte o log da atualização.';
    notify('Atualização: '+e.message,true);
  }
 }
@@ -2003,6 +2006,7 @@ async function beginUpdateDirect(){
   checkUpdateProgress();
  }catch(e){
   updateInstalling=false;$('updateLater').textContent='Fechar';
+  $('updateProgress').hidden=true;
   $('updateProgressText').textContent='Não foi possível iniciar a atualização: '+e.message;
   notify('Atualização: '+e.message,true);
  }
