@@ -54,6 +54,28 @@ class PassiveTrafficTests(unittest.TestCase):
         self.assertEqual({f["source_id"] for f in flows},{1,2})
         self.assertEqual(self.db.link_rows(),[])
 
+    def test_zero_hop_rf_to_verified_local_receiver_only(self):
+        pkt=self.packet(70,to=0xffffffff)
+        pkt.update({"hopStart":7,"hopLimit":7,"rxSnr":6.5})
+        self.ing.handle(1,pkt,local_node_num=500)
+        link=self.db.link_rows()
+        self.assertEqual(len(link),1)
+        self.assertEqual((link[0]["a"],link[0]["b"]),(100,500))
+        self.assertEqual(link[0]["quality"],"confirmed_direct_rf")
+        self.assertEqual(self.db.communication_rows(),[],"broadcast não cria fluxo ponto a ponto")
+        pkt2=self.packet(71,to=200)
+        pkt2.update({"hopStart":7,"hopLimit":5,"rxSnr":3.2})
+        self.ing.handle(1,pkt2,local_node_num=500)
+        self.assertEqual(len(self.db.link_rows()),1,"duas retransmissões não confirmam salto A↔receptor")
+        pkt3=self.packet(72,to=200)
+        pkt3.update({"hopStart":7,"hopLimit":7,"rxSnr":3.2})
+        self.ing.handle(2,pkt3,via_mqtt=True,local_node_num=500)
+        self.assertEqual(len(self.db.link_rows()),1,"MQTT não comprova recepção RF")
+        pkt4=self.packet(73,to=200)
+        pkt4.update({"hopStart":7,"hopLimit":7,"rxSnr":3.2})
+        self.ing.handle(3,pkt4)
+        self.assertEqual(len(self.db.link_rows()),1,"sem receptor local conhecido não confirmar RF")
+
     def test_archival_replay_recovers_existing_packets_and_is_idempotent(self):
         stamp=now_ms()
         for i,to in [(1,200),(2,200),(3,0xffffffff)]:
