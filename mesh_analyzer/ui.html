@@ -694,7 +694,7 @@ $('mapSource').onchange=()=>{
 };
 function renderMap(){
  if(!map){initMap();if(!map)return;}
- nodeLayer.clearLayers();linkLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
+ nodeLayer.clearLayers();linkLayer.clearLayers();if(waypointLayer)waypointLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
  const source=mapSourceFilter;
  const available=sourceMapNodes(),q=$('mapSearchInput').value;
  const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>n.node_num));
@@ -705,6 +705,12 @@ function renderMap(){
  const required=Math.max(1,Number($('mapMinObservations').value)||1);
  const activeLinks=links.filter(e=>(!source||String(e.source_id)===source) &&
      Number(e.observations||0)>=required && (!win||Number(e.last_seen_ms)>=since));
+ const eligibleWaypoints=waypoints.filter(w=>(!source||String(w.source_id)===source)&&
+   (!win||Number(w.last_seen_ms)>=since)&&(!q.trim()||
+   norm((w.name||'')+' '+(w.description||'')+' '+w.waypoint_id).includes(norm(q))));
+ $('mapNodesCount').textContent=allowed.size;
+ $('mapLinksCount').textContent=activeLinks.length;
+ $('mapWaypointsCount').textContent=eligibleWaypoints.length;
  let visible=0,missing=0,hiddenBySearch=0;
  if($('showMapLinks').checked){
   for(const edge of activeLinks){
@@ -746,8 +752,8 @@ function renderMap(){
     .addTo(heatLayer);
   }
  }
+ const coords=[];
  if($('showMapNodes').checked){
-  const coords=[];
   for(const n of available){
    if(!allowed.has(n.node_num)||!validPos(n))continue;
    if($('mapIdentifiedOnly').checked&&!n.long_name&&!n.short_name)continue;
@@ -758,18 +764,30 @@ function renderMap(){
      permanent:$('showNames').checked,direction:'top'});
    marker.on('click',()=>showNode(n));marker.addTo(nodeLayer);coords.push(point);
   }
-  lastMapBounds=coords.length?L.latLngBounds(coords):null;
  }
+ if($('showMapWaypoints').checked&&waypointLayer){
+  for(const w of eligibleWaypoints){
+   const p=[Number(w.latitude),Number(w.longitude)];
+   if(!Number.isFinite(p[0])||!Number.isFinite(p[1]))continue;
+   const marker=L.circleMarker(p,{radius:8,color:'#ffffff',weight:2,
+                   fillColor:'#a36eff',fillOpacity:.9});
+   const label=(w.name||'Waypoint #'+w.waypoint_id)+
+      ' · '+(w.description||'Sem descrição')+
+      ' · Origem: '+idName(w.from_node)+
+      ' · Conexão #'+w.source_id+
+      ' · Atualizado: '+fmtDate(w.last_seen_ms);
+   marker.bindTooltip(esc(label)).addTo(waypointLayer);
+   coords.push(p);
+  }
+ }
+ lastMapBounds=coords.length?L.latLngBounds(coords):null;
  const estimatedMissing=activeLinks.filter(e=>
      !nodes.some(n=>n.node_num===e.a&&validPos(n))||
      !nodes.some(n=>n.node_num===e.b&&validPos(n))).length;
  $('mapTopologyStats').textContent='Enlaces da conexão: '+activeLinks.length+
     ' · desenhados: '+visible+' · sem posição: '+estimatedMissing+
     ' · ocultos por filtros: '+Math.max(0,activeLinks.length-visible-estimatedMissing);
- $('mapSourceState').textContent=source?
-   ((state.sources||[]).find(x=>String(x.id)===source)?.name||'Conexão histórica')+' · '+
-    (state.connections?.[source]?.status||'offline'):
-   'Todas as conexões · '+(state.sources||[]).length;
+ 
 }
 
 let nodeDetailSelected=null,nodeDetailRestore=null;
@@ -921,6 +939,39 @@ $('mapType').onchange=()=>{setTiles();storeMapControls();};$('showMapNodes').onc
  $('mapShowWaypointsSetting').checked=$('showMapWaypoints').checked;
  $('showMapAnimate').checked=$('mapAnimateNodes').checked;storeMapControls();renderMap();};
 $('showMapLinks').onchange=()=>{$('mapShowLinksSetting').checked=$('showMapLinks').checked;storeMapControls();renderMap();};
+$('showMapWaypoints').onchange=()=>{$('mapShowWaypointsSetting').checked=$('showMapWaypoints').checked;storeMapControls();renderMap();};
+$('showMapAnimate').onchange=()=>{$('mapAnimateNodes').checked=$('showMapAnimate').checked;storeMapControls();};
+function placeVisibilityPanel(){
+ const box=$('mapVisibilityBtn').getBoundingClientRect(),panel=$('mapVisibilityPanel');
+ panel.style.left=Math.max(6,Math.min(box.left,window.innerWidth-285))+'px';
+ panel.style.top=Math.max(6,Math.min(box.bottom+4,window.innerHeight-230))+'px';
+}
+function toggleVisibilityPanel(open){
+ $('mapVisibilityPanel').hidden=!open;
+ $('mapVisibilityBtn').setAttribute('aria-expanded',String(open));
+ if(open){placeVisibilityPanel();$('showMapNodes').focus();}
+}
+$('mapVisibilityBtn').onclick=()=>toggleVisibilityPanel($('mapVisibilityPanel').hidden);
+function setAllMapObjects(enabled){
+ for(const id of ['showMapNodes','showMapLinks','showMapWaypoints','showMapAnimate'])$(id).checked=enabled;
+ $('mapShowNodesSetting').checked=enabled;
+ $('mapShowLinksSetting').checked=enabled;
+ $('mapShowWaypointsSetting').checked=enabled;
+ $('mapAnimateNodes').checked=enabled;
+ storeMapControls();renderMap();
+}
+$('mapShowAll').onclick=()=>setAllMapObjects(true);
+$('mapHideAll').onclick=()=>setAllMapObjects(false);
+document.addEventListener('pointerdown',ev=>{
+ if(!$('mapVisibilityPanel').hidden&&!$('mapVisibilityPanel').contains(ev.target)&&
+    !$('mapVisibilityBtn').contains(ev.target))toggleVisibilityPanel(false);
+});
+document.addEventListener('keydown',ev=>{
+ if(ev.key==='Escape'&&!$('mapVisibilityPanel').hidden){
+   toggleVisibilityPanel(false);$('mapVisibilityBtn').focus();
+ }
+});
+window.addEventListener('resize',()=>{if(!$('mapVisibilityPanel').hidden)placeVisibilityPanel();});
 $('showNames').onchange=()=>{$('mapShowNamesSetting').checked=$('showNames').checked;storeMapControls();renderMap();};$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
 $('layersBtn').onclick=()=>{const panel=$('mapLayersPanel');panel.hidden=!panel.hidden;if(!panel.hidden){const r=$('layersBtn').getBoundingClientRect();panel.style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';panel.style.top=r.bottom+6+'px';}};$('closeLayers').onclick=()=>{$('mapLayersPanel').hidden=true;};window.addEventListener('resize',()=>{positionSuggestions();if(!$('mapLayersPanel').hidden){const r=$('layersBtn').getBoundingClientRect();$('mapLayersPanel').style.left=Math.max(7,Math.min(r.right-230,window.innerWidth-237))+'px';$('mapLayersPanel').style.top=r.bottom+6+'px';}});$('playback').addEventListener('scroll',positionSuggestions,{passive:true});
 
