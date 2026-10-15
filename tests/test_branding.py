@@ -35,7 +35,7 @@ class BrandingTests(unittest.TestCase):
         self.assertIn("--icon branding/mesh-analyzer.ico", workflow)
         self.assertIn("SetupIconFile=..\\branding\\mesh-analyzer.ico", installer)
         self.assertEqual(installer.count('AppUserModelID: "PT2VHF.MeshAnalyzer"'), 2)
-        self.assertIn("PT2VHF.MeshAnalyzer", (ROOT/"mesh_analyzer"/"desktop.py").read_text())
+        self.assertIn("PT2VHF.MeshAnalyzer", (ROOT/"mesh_analyzer"/"desktop.py").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
