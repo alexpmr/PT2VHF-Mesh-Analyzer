@@ -2,6 +2,15 @@
 
 Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.x.
 
+## v0.6.3 — Progresso no backlog (pendências preservadas)
+
+- **#34/#15/#2:** correção de *falso sucesso* no atualizador com verificação de versão via `/health`, erro persistido e rollback limitado para Portable. **Manter aberta até teste real no Windows 11.**
+- **#33:** implementados indicadores de saúde e backup transacional. **Pendente:** prévia de limpeza, restore testado, monitoramento de crescimento e recomendações.
+- **#35:** apelido local de nós persistente e apresentação preferencial em partes da interface. **Pendente:** abrangência em todas as visualizações e conflitos com múltiplos nomes.
+- **#30:** LEDs TX/RX baseados em contadores novos do driver, sem falso RX MQTT e TX baseado em solicitação aceita. **Pendente:** telemetria fina e validação com hardware.
+- **#37:** F5 não reapresenta popup na sessão e modal de novidades tem prioridade. **Pendente:** testes UI reais e reinício WebView2.
+- **As demais issues #1–#37 continuam abertas no GitHub até cumprirem integralmente seus critérios de aceite.** Esta release não resolve integralmente o backlog.
+
 ## v0.6.2 — Implementações para testar no Windows 11 (14/10/2026)
 
 - **#37 (código):** popup inicial condicionado a `/api/state.sources.length === 0`; botões Ir para conexões e Agora não. Clique direciona para Configurações → Conexões e foca o formulário, sem reexibir em polling de 4 s. Fontes cadastradas porém desconectadas não ativam o aviso.
