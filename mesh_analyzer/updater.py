@@ -92,7 +92,7 @@ try {
     $child = Start-Process -FilePath $exe -WorkingDirectory ([IO.Path]::GetDirectoryName($exe)) -PassThru
     WriteLog ('Launched PID=' + $child.Id)
     $healthy = $false
-    $deadline = [DateTime]::UtcNow.AddSeconds(50)
+    $deadline = [DateTime]::UtcNow.AddSeconds(90)
     while ([DateTime]::UtcNow -lt $deadline) {
         Start-Sleep -Milliseconds 700
         $child.Refresh()
@@ -171,7 +171,11 @@ def deployment_mode(executable=None):
         raise RuntimeError("Atualização direta disponível apenas no Windows")
     standard = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / \
         "Programs" / "PT2VHF Mesh Analyzer" / "PT2VHF-Mesh-Analyzer.exe"
-    return "setup" if exe == standard.resolve() else "portable"
+    # Inno Setup may remember a user-selected installation directory.
+    # Treat a folder with an actual Inno uninstaller as Setup even if the
+    # install path differs from DefaultDirName.
+    installed=(exe.parent/"unins000.exe").is_file() and (exe.parent/"unins000.dat").is_file()
+    return "setup" if exe == standard.resolve() or installed else "portable"
 
 
 def approved_asset_url(url, version, name):
