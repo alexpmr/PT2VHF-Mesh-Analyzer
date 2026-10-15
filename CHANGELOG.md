@@ -1,5 +1,16 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.6.4 — 15/10/2026 — Menu VER, waypoints e ícone da janela
+
+- **#20 — Mapa:** novo botão **Ver ▾** na barra secundária, com checkboxes **Nós**, **Enlaces**, **Waypoints**, **Animar tráfego**, contagens por escopo e comandos **Selecionar tudo**/**Remover tudo**. Estados compartilhados com Configurações → Mapa, aplicados imediatamente; clique externo/Escape fecha o menu.
+- **#20 — WAYPOINT_APP:** parser de coordenadas Meshtastic fixas em 1e-7 grau, payload Protobuf nativo ou dicionário decodificado; persistência SQLite com origem/fonte/timestamp/validade/descrição; API local para objetos não expirados e camada Leaflet própria. Filtros de fonte, busca e janela temporal aplicáveis. Nenhum ponto fictício.
+- **#42 — Mapa:** removido o texto redundante `Todas as conexões · N` e o seu espaço na faixa de controles. O filtro Conexão e contador operacional no resumo continuam presentes.
+- **#40 — Windows:** pywebview recebe explicitamente o ICO nativo da marca PT2VHF via `webview.start(icon=...)`; PyInstaller empacota o ICO sob `branding` com `--add-data` nos dois scripts de build. Testes e verificação do asset no EXE.
+- **Retenção:** opção independente de Waypoints, padrão Nunca; waypoints expirados deixam de ser mostrados sem apagar registros antecipadamente.
+- **Qualidade:** novos testes de waypoints serializados como Protobuf, IDs, proveniência por conexão, timestamps, expiração, filtros de interface e build com ícone.
+
+**Validação pendente:** testar fisicamente o ícone do taskbar/Alt+Tab, recepção de waypoints e comportamento do menu no WebView2, e demais issues do backlog que permanecem abertas. Esta release não marca como concluídas todas as 32+ issues.
+
 ## v0.6.3 — 14/10/2026 — Atualizador verificado e manutenção do banco
 
 - **#34/#2/#15 (código):** atualização externa só é marcada como instalada após a nova instância iniciar, permanecer viva e responder `/health` com a versão esperada; a falha agora é persistida, pode ser exibida no popup e exige diagnóstico. Modo Portable guarda cópia anterior e pode fazer rollback quando o processo novo encerrou. **Não declarar resolução completa sem ensaio com Windows 11 físico.**
