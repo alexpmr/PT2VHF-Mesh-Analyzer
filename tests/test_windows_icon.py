@@ -23,6 +23,22 @@ class TaskbarIconTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "Ícone nativo PT2VHF"):
                     native_window_icon()
 
+    def test_setup_prefers_same_stable_icon_as_shortcuts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            installed = base/"install"/"branding"/"mesh-analyzer.ico"
+            installed.parent.mkdir(parents=True)
+            installed.write_bytes(b"installed-current-ico")
+            embedded = base/"unpack"/"branding"/"mesh-analyzer.ico"
+            embedded.parent.mkdir(parents=True)
+            embedded.write_bytes(b"embedded-portable-ico")
+            with patch.object(sys, "_MEIPASS", str(base/"unpack"), create=True), \\
+                 patch.object(sys, "frozen", True, create=True), \\
+                 patch.object(sys, "executable", str(base/"install"/"PT2VHF-Mesh-Analyzer.exe")):
+                self.assertEqual(native_window_icon(), installed)
+                installed.unlink()
+                self.assertEqual(native_window_icon(), embedded)
+
     def test_source_checkout_does_not_require_generated_ico(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch.object(sys, "_MEIPASS", tmp, create=True), \
