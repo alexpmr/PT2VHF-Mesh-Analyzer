@@ -238,6 +238,8 @@ class SourceManager:
         self._stop_sources=set()
         self._pub=None
         self._subscribed=False
+        from .remote_queries import NodeQueries
+        self.queries=NodeQueries(self)
 
     def _set(self,id,state,error=""):
         with self._lock:
@@ -269,6 +271,7 @@ class SourceManager:
             source_id=next((k for k,v in self._interfaces.items() if v is interface),None)
         if source_id is None:return
         try:
+            self.queries.observe(source_id,packet or {})
             info=getattr(interface,"myInfo",None)
             radio_info=info if isinstance(info,dict) else {}
             own=number(radio_info.get("my_node_num") or radio_info.get("myNodeNum") or
