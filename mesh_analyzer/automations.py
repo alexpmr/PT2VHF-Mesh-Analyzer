@@ -48,6 +48,13 @@ class NodeEnrichment:
                 error TEXT NOT NULL DEFAULT '',
                 PRIMARY KEY(source_id,node_num,kind)
             )""")
+            db._db.execute("""CREATE TABLE IF NOT EXISTS auto_query_transmissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_id INTEGER NOT NULL, node_num INTEGER NOT NULL,
+                kind TEXT NOT NULL, sent_ms INTEGER NOT NULL
+            )""")
+            db._db.execute("""CREATE INDEX IF NOT EXISTS idx_auto_query_transmissions_time
+                              ON auto_query_transmissions(sent_ms)""")
             db._db.execute("INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)",
                            ("node_enrichment", json.dumps(DEFAULTS)))
 
@@ -238,6 +245,10 @@ class NodeEnrichment:
               sent_ms=excluded.sent_ms,due_ms=excluded.due_ms,
               attempts=excluded.attempts,error=excluded.error""",
               (source_id,node,kind,reqid,state,now,due,attempts,error[:150]))
+            if state == "awaiting_reply":
+                self.db._db.execute("""INSERT INTO auto_query_transmissions
+                  (source_id,node_num,kind,sent_ms) VALUES(?,?,?,?)""",
+                  (source_id,node,kind,now))
 
     def _reconcile(self, now):
         active = self.db._rows(
@@ -310,7 +321,7 @@ class NodeEnrichment:
                 return {"sent": False, "reason": "Nenhum dado elegível pendente"}
             with self.db._lock:
                 recent = self.db._db.execute(
-                    "SELECT COUNT(*),MAX(sent_ms) FROM auto_node_queries WHERE sent_ms>=?",
+                    "SELECT COUNT(*),MAX(sent_ms) FROM auto_query_transmissions WHERE sent_ms>=?",
                     (now-3600000,)).fetchone()
             if recent[0] >= cfg["max_per_hour"]:
                 return {"sent": False, "reason": "Limite de consultas por hora"}
