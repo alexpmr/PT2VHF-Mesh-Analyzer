@@ -168,6 +168,11 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/links":self._json({"success":True,"data":db.link_rows()})
                 elif path == "/api/events":self._json({"success":True,"data":db.event_rows()})
                 elif path == "/api/ports":self._json({"success":True,"data":available_serial_ports()})
+                elif path == "/api/db/health":
+                    check=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get("check",["0"])[0]=="1"
+                    self._json({"success":True,"data":db.health(check=check)})
+                elif path == "/api/activity":
+                    self._json({"success":True,"sources":sources.snapshot()})
                 elif path == "/api/device/config":
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
                     source_id=int(query.get("source_id",[0])[0])
@@ -244,6 +249,11 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/retention":
                     result=db.set_retention(payload)
                     self._json({"success":True,"retention":result})
+                elif path == "/api/db/backup":
+                    self._json({"success":True,"backup":db.backup()})
+                elif path == "/api/nodes/friendly":
+                    self._json({"success":True,"node":db.set_node_friendly_name(
+                        payload.get("node_num"),payload.get("friendly_name",""))})
                 elif path == "/api/retention/cleanup":
                     self._json({"success":True,"removed":db.cleanup()})
                 elif path == "/api/system/settings":
