@@ -2073,6 +2073,7 @@ setTimeout(async()=>{
 },1800);
 setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
+setInterval(()=>{if(nodeDetailSelected!=null)refreshNodeQueryStatus(nodeDetailSelected);},3000);
 
 let windowReadySent=false;
 async function announceWindowReady(){
