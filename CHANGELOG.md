@@ -1,3 +1,9 @@
+# v0.6.11 — Cabeçalho e atualização idempotente
+
+- Navegação, LEDs de tráfego, status do rádio e botão de atualização na mesma linha em larguras adequadas, com adaptação responsiva em janelas menores.
+- Requisição repetida de atualização da mesma versão retorna o progresso da operação já iniciada, sem gerar erro de atualização em andamento.
+- Atualização e reconexão automática completas ainda dependem de testes em equipamento real; failover, ranking RF e demais recursos do backlog permanecem pendentes.
+
 # v0.6.10 — Reconexão de rádio
 
 - Clique no indicador de rádio conectado/desconectado inicia reconexão quando existe uma única fonte de rádio habilitada.
