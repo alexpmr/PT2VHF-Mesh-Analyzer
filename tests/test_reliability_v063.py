@@ -66,6 +66,7 @@ class ReliabilityTests(unittest.TestCase):
     def test_updater_success_is_after_new_health_check(self):
         self.assertIn("Invoke-RestMethod",RUNNER_PS)
         self.assertIn("$response.version -eq [string]$p.version",RUNNER_PS)
+        self.assertIn("$response.ui_ready -eq $true",RUNNER_PS)
         self.assertIn("WriteNotice 'failed' $reason",RUNNER_PS)
         self.assertIn("WriteNotice 'installed' ''",RUNNER_PS)
         self.assertLess(RUNNER_PS.index("if (-not $healthy)"),
