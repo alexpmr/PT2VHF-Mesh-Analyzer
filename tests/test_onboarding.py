@@ -1,4 +1,4 @@
-"""Regressões: primeira configuração, links por aba e apresentação da v0.6.2."""
+"""Regressões: primeira configuração, links por aba e apresentação da v0.6.3."""
 import json
 import tempfile
 import threading
@@ -21,8 +21,10 @@ class FirstConnectionTests(unittest.TestCase):
         self.assertIn('id="firstRunDialog"', HTML)
         self.assertIn('id="firstRunConnections"', HTML)
         self.assertIn('id="firstRunLater"', HTML)
-        self.assertIn('let firstRunDialogChecked=false;', HTML)
-        self.assertIn('if(firstRunDialogChecked||!Array.isArray(state.sources))return;', HTML)
+        self.assertIn('let firstRunDialogChecked=false,updateNoticeChecked=false;', HTML)
+        self.assertIn('if(firstRunDialogChecked||!updateNoticeChecked||!Array.isArray(state.sources))return;', HTML)
+        self.assertIn("sessionStorage.setItem('mesh.firstRunShown','yes')", HTML)
+        self.assertIn("sessionStorage.getItem('mesh.firstRunShown')", HTML)
         self.assertIn('if(state.sources.length===0)', HTML)
         self.assertIn('state=results[0];showFirstRunDialogOnce();', HTML)
         self.assertIn("dismissFirstRunDialog();\n setView('settings');\n showSettings('sources');", HTML)
