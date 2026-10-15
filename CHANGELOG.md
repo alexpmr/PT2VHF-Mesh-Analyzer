@@ -1,5 +1,17 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.6.5 — 14/10/2026 — Descoberta passiva de tráfego e atualização assistida
+
+- **#22:** cada pacote unicast normal aceito gera uma **relação lógica observada** entre origem e destino com quantidade, fonte, intervalo e separação por transporte (rádio x MQTT). Isto **NÃO é RF direto**. Broadcasts e endereços inválidos não produzem linhas fictícias. Tráfego histórico é recuperado incrementalmente pelo SQLite em thread de baixa prioridade, com chave idempotente por pacote.
+- **#22 (experimental):** recepção de pacote com `hopStart == hopLimit`, RSSI/SNR físico disponível e nó receptor local efetivamente identificado permite registrar um enlace `confirmed_direct_rf` entre originador e o receptor local. Sem essas evidências não há promoção. Enlaces resultantes podem exigir coordenadas válidas dos dois nós para aparecer no mapa.
+- **#11:** pulso de pacotes comuns da fonte, independentemente do checkbox "Realçar origem" e sem exigir traceroute; MQTT com tom visual separado; eventos sem coordenadas exibem mensagem de atividade e contador. **Não** simula movimento ao longo de saltos desconhecidos.
+- **#22 mapa:** as linhas de comunicações lógicas usam traço pontilhado lilás e legenda explícita "caminho RF desconhecido", não são inseridas como RF direto; geradas separadamente de enlaces de traceroute, com contadores e diagnósticos.
+- **#2:** clique no botão superior da nova versão inicia diretamente modal de progresso de download verificado com SHA256, sem changelog prévio nem confirmação do navegador; cancelar funciona enquanto o download não estiver finalizado.
+- **#34:** execução de instalador externo recebe diretório de trabalho, detecta instalações Inno Setup em diretórios alternativos, aguarda até 90 s por WebView2/prontidão, e em caso de falha apresenta diálogo do processo externo com opção de localizar log. **A causa do erro relatado no Win11 ainda NÃO foi confirmada com logs; teste físico é obrigatório antes de encerrar a issue.**
+- **Testes:** unicast, broadcast, MQTT, zero-hop com receptor conhecido, repetição, arquivo histórico, controles do mapa, cancelamento de pacote parcial e sintaxe PowerShell.
+
+**Limitações:** esta versão NÃO encerra as dezenas de questões de backlog, nem certifica automaticamente compatibilidade de todas as rádios, autodetecção BLE, API LAN autenticada, tradução integral ou todos os hops dos pacotes. O mapa não liga nós móveis com coordenadas temporalmente incompatíveis. Testes reais Win11 x64 Setup/Portable necessários.
+
 ## v0.6.4 — 15/10/2026 — Menu VER, waypoints e ícone da janela
 
 - **#20 — Mapa:** novo botão **Ver ▾** na barra secundária, com checkboxes **Nós**, **Enlaces**, **Waypoints**, **Animar tráfego**, contagens por escopo e comandos **Selecionar tudo**/**Remover tudo**. Estados compartilhados com Configurações → Mapa, aplicados imediatamente; clique externo/Escape fecha o menu.
