@@ -175,6 +175,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/db/health":
                     check=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get("check",["0"])[0]=="1"
                     self._json({"success":True,"data":db.health(check=check)})
+                elif path == "/api/queries":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    self._json({"success":True,"data":sources.queries.status(query.get("node",[None])[0])})
                 elif path == "/api/activity":
                     self._json({"success":True,"sources":sources.snapshot()})
                 elif path == "/api/device/config":
@@ -295,6 +298,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     result=sources.update_lora(payload.get("source_id"),payload.get("revision"),
                                                payload.get("changes"))
                     self._json(result)
+                elif path == "/api/queries/send":
+                    result=sources.queries.start(payload.get("source_id"),payload.get("node"),payload.get("kind"),payload.get("channel",0))
+                    self._json({"success":True,"data":result},201)
                 elif path == "/api/messages/send":
                     result=sources.send_text(payload.get("source_id"),payload.get("to_node"),payload.get("text"),payload.get("channel",0))
                     self._json(result,201)
