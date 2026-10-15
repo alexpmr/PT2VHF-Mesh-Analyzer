@@ -166,6 +166,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/packets":self._json({"success":True,"data":db.packet_rows()})
                 elif path == "/api/messages":self._json({"success":True,"data":db.message_rows()})
                 elif path == "/api/links":self._json({"success":True,"data":db.link_rows()})
+                elif path == "/api/waypoints":self._json({"success":True,"data":db.waypoint_rows()})
                 elif path == "/api/events":self._json({"success":True,"data":db.event_rows()})
                 elif path == "/api/ports":self._json({"success":True,"data":available_serial_ports()})
                 elif path == "/api/db/health":
