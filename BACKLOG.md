@@ -1,3 +1,9 @@
+## v0.6.7 — Mensagens: aviso quando rádio estiver desconectado (14/10/2026)
+
+- **#45:** botão Enviar permanece clicável mesmo sem rádio TX ativo para abrir popup explícito **“Não há conexão ativa com um rádio Meshtastic para enviar mensagens”** com as ações **Ir para Conexões** e **Fechar**. Ir abre `Configurações → Conexões`; Fechar retorna à conversa. Mensagem digitada preservada. Nenhum pacote é transmitido enquanto desconectado.
+- **Critério de aceite:** sem rádio cadastrado, rádio desligado, conexão desativada, MQTT observador e driver sem TX exibem explicação adequada; ao conectar rádio realmente capaz de transmitir, Enviar opera normalmente. Testar Win11/WebView2 e reconexão.
+- **Status:** implementação em branch e testes automatizados; pendente merge/publicação e validação real.
+
 ## v0.6.6 — Itens em revisão (14/10/2026)
 
 - **Implementação candidata:** #49 migração de Camadas para Ver, #48 broadcast amigável, #47 e #35 tipos/hardware amigáveis.
