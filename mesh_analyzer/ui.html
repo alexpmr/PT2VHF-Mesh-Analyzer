@@ -848,7 +848,9 @@ function renderMap(){
      fillColor:Date.now()-n.last_seen_ms<7200000?'#2ecc71':'#e9a94d',fillOpacity:.95,weight:1});
    marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id),{
      permanent:$('showNames').checked,direction:'top'});
-   marker.on('click',()=>showNode(n));marker.addTo(nodeLayer);coords.push(point);
+   marker.on('click',()=>showNode(n));
+   marker.on('contextmenu',e=>{L.DomEvent.stop(e);openNodeContext(n.node_num,e.originalEvent.clientX,e.originalEvent.clientY);});
+   marker.addTo(nodeLayer);coords.push(point);
   }
  }
  if($('showMapWaypoints').checked&&waypointLayer){
@@ -1159,7 +1161,10 @@ function renderNodes(){
  list.sort((a,b)=>{const av=nodeValue(a,nodeSort),bv=nodeValue(b,nodeSort);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;
   const cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'pt-BR',{numeric:true});return nodeSortAsc?cmp:-cmp;});
  $('nodesRows').innerHTML=list.map(n=>'<tr data-node="'+n.node_num+'">'+visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>').join('')||'<tr><td>Nenhum nó conhecido.</td></tr>';
- $('nodesRows').querySelectorAll('[data-node]').forEach(el=>el.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(el.dataset.node));if(n){setView('map');showNode(n);}});
+ $('nodesRows').querySelectorAll('[data-node]').forEach(el=>{
+   el.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(el.dataset.node));if(n)showNode(n);};
+   el.oncontextmenu=ev=>{ev.preventDefault();openNodeContext(Number(el.dataset.node),ev.clientX,ev.clientY);};
+ });
 }
 $('nodesHeader').onclick=e=>{const th=e.target.closest('[data-nodesort]');if(!th)return;const key=th.dataset.nodesort;nodeSortAsc=nodeSort===key?!nodeSortAsc:(key==='distance'||key==='long_name');nodeSort=key;localStorage.setItem('mesh.nodes.sort',JSON.stringify({col:nodeSort,asc:nodeSortAsc}));renderNodes();};
 $('nodesHeader').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-nodesort]')){e.preventDefault();e.target.click();}};
@@ -1221,6 +1226,47 @@ $('trafficExport').onclick=()=>{
 $('trafficFilter').oninput=renderPackets;$('trafficReload').onclick=refreshAll;
 function chatKey(m){if((m.to_node===null||m.to_node===0xffffffff)&&Number(m.channel||0)===0)return 'channel:0';if(m.to_node===null||m.to_node===0xffffffff)return 'channel:'+m.channel;const a=m.direction==='tx'?m.to_node:m.from_node;return a!=null?'node:'+a:'channel:'+m.channel;}
 function openDm(id){currentChat='node:'+id;setView('messages');renderChat();}
+function closeNodeContext(){
+ const menu=$('nodeContextMenu');if(menu)menu.hidden=true;
+}
+function openNodeContext(nodeNum,x,y){
+ const n=nodes.find(v=>Number(v.node_num)===Number(nodeNum));if(!n)return;
+ const menu=$('nodeContextMenu');
+ const action=(key,title,enabled=true,note='')=>
+    '<button type="button" role="menuitem" data-node-action="'+key+'" '+
+    (enabled?'':'disabled title="'+esc(note)+'"')+'>'+esc(title)+
+    (enabled?'':' · Indisponível')+'</button>';
+ menu.innerHTML='<div class="ctxName">'+esc(idName(n.node_num))+
+      ' <small>'+esc(n.node_id)+'</small></div>'+
+      action('message','Enviar mensagem privada')+
+      action('detail','Informações completas')+
+      action('locate','Mostrar no mapa',validPos(n),'O nó não informou posição')+
+      action('copy','Copiar Node ID')+
+      '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
+      ['NodeInfo','Posição','Telemetria','Traceroute','Ping','Vizinhos'].map(a=>
+         action('future',a,false,'Consulta remota ainda não implementada; nenhum pacote RF será enviado')).join('');
+ menu.hidden=false;
+ const width=menu.offsetWidth||250,height=menu.offsetHeight||340;
+ menu.style.left=Math.max(6,Math.min(x,innerWidth-width-6))+'px';
+ menu.style.top=Math.max(6,Math.min(y,innerHeight-height-6))+'px';
+ menu.querySelectorAll('[data-node-action]').forEach(btn=>btn.onclick=async()=>{
+   closeNodeContext();
+   switch(btn.dataset.nodeAction){
+    case 'message':openDm(n.node_num);break;
+    case 'detail':showNode(n);break;
+    case 'locate':setView('map');initMap();if(map&&validPos(n))map.setView([n.latitude,n.longitude],13);break;
+    case 'copy':try{await navigator.clipboard.writeText(n.node_id);notify('Node ID copiado.');}catch(e){notify('Use o detalhe do nó para copiar Node ID.',true);}break;
+   }
+ });
+ menu.querySelector('[data-node-action]:not([disabled])')?.focus();
+}
+document.addEventListener('pointerdown',e=>{
+ if($('nodeContextMenu')&&!$('nodeContextMenu').hidden&&
+    !$('nodeContextMenu').contains(e.target))closeNodeContext();
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&$('nodeContextMenu')&&!$('nodeContextMenu').hidden){closeNodeContext();e.preventDefault();}
+});
 let messageSending=false,pendingChat=null;
 function txRadioSources(){
  return (state.sources||[]).filter(x=>x.kind!=='mqtt'&&x.enabled&&
