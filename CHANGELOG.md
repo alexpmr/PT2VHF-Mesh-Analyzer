@@ -1,3 +1,11 @@
+# v0.6.13 — Consultas RF e senha Wi-Fi protegida (15/10/2026)
+
+- **#76 (parcial):** respostas de traceroute passam a preservar listas de saltos de ida e retorno e os valores brutos de SNR; o painel do nó apresenta a sequência identificada. Respostas sem intermediários mostram aviso explícito e não geram enlaces RF diretos inventados. A camada topológica existente continua utilizando apenas evidências de saltos observadas.
+- **#6 (parcial):** o editor do dispositivo agora permite substituir explicitamente a senha Wi-Fi da configuração *network* em firmwares que a oferecem, usando campo protegido sem revelar a credencial armazenada. Campos não editados, incluindo a senha, são preservados. O diff de confirmação nunca mostra segredos.
+- **#74 (entrega):** adicionar EXE Portable direto aos assets da release, mantendo o ZIP original para compatibilidade com versões antigas do atualizador.
+- **Testes:** casos de traceroute sem rota, rota com saltos, pacote protobuf nativo, não vazamento de Wi-Fi PSK, preservação da senha e validação de nova credencial.
+- **Limites:** editor e consultas exigem validação física com rádios Meshtastic. Permanecem abertas as pendências de sincronização automática de favoritos, automações RF, descoberta USB/BLE/Wi-Fi, ícone em cache no Windows, instalador/atualizador e a evolução do mapa de topologia. Esta release **não resolve todo o backlog**.
+
 # v0.6.12 — Laboratório de consultas remotas (experimental)
 
 - Controles de NodeInfo, posição, telemetria e traceroute para testes com rádio Meshtastic conectado, com solicitações identificadas e status individual.
