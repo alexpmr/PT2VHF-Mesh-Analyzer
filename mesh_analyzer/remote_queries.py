@@ -103,6 +103,9 @@ class NodeQueries:
                 with self.manager._lock:
                     info = getattr(iface, "myInfo", None)
                     local_num = number(info.get("my_node_num") or info.get("myNodeNum")) if isinstance(info, dict) else number(getattr(info, "my_node_num", None))
+            if local_num is None:
+                local_num = number(getattr(getattr(iface, "localNode", None), "nodeNum", None)
+                                   or getattr(iface, "myNodeNum", None))
             if local_num is not None:
                 stamp=int(time.time()*1000)
                 self.manager.db.upsert_node(local_num,source_id,timestamp_ms=stamp)
