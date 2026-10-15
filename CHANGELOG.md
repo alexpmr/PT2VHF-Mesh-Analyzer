@@ -1,5 +1,16 @@
 # Changelog — PT2VHF Mesh Analyzer
 
+## v0.6.3 — 14/10/2026 — Atualizador verificado e manutenção do banco
+
+- **#34/#2/#15 (código):** atualização externa só é marcada como instalada após a nova instância iniciar, permanecer viva e responder `/health` com a versão esperada; a falha agora é persistida, pode ser exibida no popup e exige diagnóstico. Modo Portable guarda cópia anterior e pode fazer rollback quando o processo novo encerrou. **Não declarar resolução completa sem ensaio com Windows 11 físico.**
+- **#33 (parcial):** tela de saúde SQLite, contagem de tabelas, páginas, WAL/SHM, retenções e disco; `quick_check` e `foreign_key_check` sob demanda; backup online verificado com `sqlite3.backup()` em pasta local, sem modificar retenções.
+- **#35 (parcial):** nome amigável de nó editável localmente, guardado no SQLite, separado do Node ID e preservado na sincronização futura de NodeDB.
+- **#30 (parcial):** LEDs TX/RX derivados de novos eventos observados no backend, sem confundir MQTT com RX do rádio ou TX aceito com RF comprovado.
+- **#37 (correção):** popup somente após checar novidades da atualização, sem reabrir durante F5 na mesma sessão.
+- **Testes offline:** diagnóstico e snapshot SQLite, preservação de alias, separação de eventos TX/RX, ordem do aviso do atualizador e rotas do aplicativo.
+
+**Validação pendente:** atualização automática no Setup e Portable físicos; LED RX/TX e foco dos diálogos no WebView2; nenhuma garantia de paridade total com o Traffic Analyzer nem de conclusão das demais issues.
+
 ## v0.6.2 — 14/10/2026 — Conexões, primeira inicialização e cabeçalho
 
 - **#37 — Primeira configuração:** quando `/api/state` retorna lista `sources` vazia, o aplicativo abre um diálogo central informando que é necessário cadastrar uma conexão Meshtastic. Os botões **Ir para conexões** e **Agora não** permitem respectivamente abrir `Configurações → Conexões` com foco no nome da nova conexão ou continuar sem cadastro. O aviso só aparece uma vez por carregamento, nunca apenas porque conexões cadastradas estão desconectadas; resposta inválida/falha de consulta não aciona o aviso.
