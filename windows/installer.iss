@@ -1,5 +1,5 @@
 #define AppName "PT2VHF Mesh Analyzer"
-#define AppVersion "0.6.6"
+#define AppVersion "0.6.7"
 [Setup]
 AppId={{8AB1D4E5-9A9C-46DC-8C24-5D89A6D98701}
 AppName={#AppName}
