@@ -1640,7 +1640,9 @@ function showUpdateDialog(info,installed=false){
  $('updateNotes').textContent=failed?String(info.error||'Consulte update.log').slice(0,1000):String(info.notes||'Novidades indisponíveis neste pacote.').slice(0,3000);
  $('updateProgressText').textContent=failed?'Consulte update.log ou instale manualmente.':installed?'':'O download e a instalação exigem sua confirmação.';
  $('updateProgress').hidden=true;
+ $('updateNotes').hidden=false;
  $('updateApply').hidden=installed||failed;
+ $('updateLater').textContent='Depois / Fechar';
  $('updateLater').disabled=false;
  $('updateRelease').hidden=installed||failed;
  $('updateDialog').classList.add('active');
@@ -1650,6 +1652,7 @@ async function checkUpdateProgress(){
  try{
   const status=await api('/api/update/progress');
   if(status.phase==='error')throw Error(status.error||'Download não concluído');
+  if(status.phase==='cancelled'){updateInstalling=false;$('updateDialog').classList.remove('active');return;}
   const received=status.received||0,bytes=status.total||0;
   const percent=bytes?Math.min(100,Math.floor(received*100/bytes)):0;
   $('updateProgress').value=percent;
@@ -1672,35 +1675,50 @@ async function checkUpdateProgress(){
    notify('Atualização: '+e.message,true);
  }
 }
-$('topUpdate').onclick=()=>{
- if(monitorState?.available)showUpdateDialog(monitorState);
- else checkUpdates(true);
-};
-$('updateApply').onclick=async()=>{
+async function beginUpdateDirect(){
  if(!monitorState?.available||!monitorState.latest||updateInstalling)return;
- if(!confirm('Baixar a versão v'+monitorState.latest+' do GitHub, verificar o SHA256, '+
-    'fechar o Mesh Analyzer e atualizar? As conexões de rádio serão desconectadas temporariamente.'))return;
- updateInstalling=true;
- $('updateApply').disabled=true;$('updateLater').disabled=true;
+ updateInstalling=true;currentUpdateNotice=false;
+ $('updateTitle').textContent='Atualizando para v'+monitorState.latest;
+ $('updateSummary').textContent='Baixando e verificando o pacote oficial do GitHub. Aguarde.';
+ $('updateNotes').hidden=true;
  $('updateProgress').hidden=false;$('updateProgress').value=0;
- $('updateProgressText').textContent='Preparando o download...';
+ $('updateProgressText').textContent='Preparando download seguro...';
+ $('updateApply').hidden=true;$('updateRelease').hidden=true;
+ $('updateLater').textContent='Cancelar download';$('updateLater').disabled=false;
+ $('updateDialog').classList.add('active');
  try{
   await api('/api/update/prepare',{version:monitorState.latest});
   checkUpdateProgress();
  }catch(e){
-  updateInstalling=false;$('updateApply').disabled=false;$('updateLater').disabled=false;
+  updateInstalling=false;$('updateLater').textContent='Fechar';
   $('updateProgressText').textContent='Não foi possível iniciar a atualização: '+e.message;
   notify('Atualização: '+e.message,true);
  }
-};
+}
+$('topUpdate').onclick=()=>monitorState?.available?beginUpdateDirect():checkUpdates(true);
+$('updateApply').onclick=()=>beginUpdateDirect();
 $('updateLater').onclick=async()=>{
- if(updateInstalling)return;
+ if(updateInstalling){
+  $('updateLater').disabled=true;
+  try{
+   await api('/api/update/cancel',{});
+   updateInstalling=false;clearTimeout(updatePoll);
+   $('updateDialog').classList.remove('active');
+   notify('Cancelamento solicitado. O pacote parcial será descartado.');
+  }catch(e){
+   $('updateLater').disabled=false;
+   $('updateProgressText').textContent='Cancelamento indisponível: '+e.message+
+     '. A verificação ou instalação já pode ter começado.';
+  }
+  return;
+ }
  $('updateDialog').classList.remove('active');
  showFirstRunDialogOnce();
  if(currentUpdateNotice){
   try{await api('/api/update/ack',{});}catch(e){}
  }
 };
+
 $('updateRelease').onclick=()=>{
  if(monitorState?.release_url)window.open(monitorState.release_url,'_blank','noopener,noreferrer');
 };
