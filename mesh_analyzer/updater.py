@@ -371,15 +371,19 @@ class UpdateManager:
             expected=json.loads(Path(plan).read_text(encoding="utf-8"))
             marker=Path(expected["runner_ready"])
             marker.unlink(missing_ok=True)
-            creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0)|getattr(subprocess,"DETACHED_PROCESS",0)
+            # Windows PowerShell can exit before executing -File when
+            # DETACHED_PROCESS is combined with a console-less launch.
+            # CREATE_NO_WINDOW alone is sufficient for this hidden runner.
+            creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0)
+            diagnostic=self.profile/"update-runner-output.log"
+            command=["powershell.exe","-NoLogo","-NoProfile","-NonInteractive",
+                     "-ExecutionPolicy","Bypass","-File",script,"-Plan",plan]
             try:
-                proc=subprocess.Popen(
-                    ["powershell.exe","-NoProfile","-NonInteractive",
-                     "-ExecutionPolicy","Bypass","-WindowStyle","Hidden",
-                     "-File",script,"-Plan",plan],
-                    cwd=str(self.profile),stdin=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
-                    creationflags=creationflags,close_fds=True)
+                with diagnostic.open("ab",buffering=0) as output:
+                    proc=subprocess.Popen(
+                        command,cwd=str(self.profile),stdin=subprocess.DEVNULL,
+                        stdout=output,stderr=subprocess.STDOUT,
+                        creationflags=creationflags,close_fds=True)
             except OSError as exc:
                 self._record_update_error("launcher",type(exc).__name__)
                 raise RuntimeError("Não foi possível iniciar o atualizador externo; consulte update.log.") from exc
@@ -404,7 +408,8 @@ class UpdateManager:
                 reason=("Processo externo encerrou com código "+str(code) if code is not None
                         else "Tempo esgotado aguardando confirmação do atualizador")
                 self._record_update_error("handshake",reason+
-                    "; marcador="+("presente" if marker.exists() else "ausente"))
+                    "; marcador="+("presente" if marker.exists() else "ausente")+
+                    "; runner_log="+str(diagnostic))
                 raise RuntimeError("Atualizador externo não confirmou inicialização: "+reason+
                                    ". Aplicação atual preservada; consulte update.log.")
 
