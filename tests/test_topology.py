@@ -110,6 +110,18 @@ class TopologyTests(unittest.TestCase):
         self.assertEqual(diag["drawable"],0)
         self.assertEqual(diag["missing_positions"],2)
 
+    def test_traffic_packet_direction_and_legacy_rx(self):
+        self.db.add_packet({"source_id":1,"packet_id":"tx1","source_packet_key":"tx:1:one",
+            "timestamp_ms":now_ms(),"from_node":100,"to_node":200,
+            "port":"NODEINFO_APP","direction":"tx"})
+        self.db.add_packet({"source_id":1,"packet_id":"rx1","source_packet_key":"rx:1:one",
+            "timestamp_ms":now_ms(),"from_node":200,"to_node":100,
+            "port":"NODEINFO_APP"})
+        packets=self.db.packet_rows()
+        self.assertEqual(len(packets),2)
+        self.assertEqual({(p["from_node"],p["to_node"],p["direction"]) for p in packets},
+                         {(100,200,"tx"),(200,100,"rx")})
+
     def test_telemetry_is_not_traceroute(self):
         self.ing.handle(1,{"from":100,"to":200,"id":10,
              "decoded":{"portnum":67,"route":[150],"telemetry":{"deviceMetrics":{"batteryLevel":67}}}})
