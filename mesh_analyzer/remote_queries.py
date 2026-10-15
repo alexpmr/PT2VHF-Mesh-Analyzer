@@ -78,16 +78,23 @@ class NodeQueries:
             self.last_sent[source_id] = now
         try:
             dest = "!%08x" % target
-            if kind == "traceroute":
-                outgoing = iface.sendTraceRoute(dest, channelIndex=channel)
-            else:
-                # A request is a real Meshtastic port request, not a text message.
-                # Only firmware supporting the corresponding request will answer.
-                from meshtastic.protobuf import portnums_pb2
-                enum = portnums_pb2.PortNum.Value(port_name(PORTS[kind]))
-                outgoing = iface.sendData(
-                    b"", destinationId=dest, portNum=enum,
-                    wantResponse=True, channelIndex=channel)
+            # Use protocol-defined protobuf request payloads. The SDK's
+            # sendTraceRoute requires hopLimit and can block for a timeout, so
+            # send RouteDiscovery directly through sendData instead.
+            from meshtastic.protobuf import portnums_pb2, mesh_pb2, telemetry_pb2
+            if kind == "nodeinfo":
+                payload = mesh_pb2.User()
+            elif kind == "position":
+                payload = mesh_pb2.Position()
+            elif kind == "telemetry":
+                payload = telemetry_pb2.Telemetry()
+                payload.device_metrics.CopyFrom(telemetry_pb2.DeviceMetrics())
+            elif kind == "traceroute":
+                payload = mesh_pb2.RouteDiscovery()
+            enum = portnums_pb2.PortNum.Value(port_name(PORTS[kind]))
+            outgoing = iface.sendData(
+                payload, destinationId=dest, portNum=enum,
+                wantResponse=True, channelIndex=channel)
             packet_id = outgoing.get("id") if isinstance(outgoing, dict) else getattr(outgoing, "id", None)
             with self.lock:
                 row["state"] = "awaiting_reply"
@@ -128,7 +135,11 @@ class NodeQueries:
             candidates = [r for r in eligible if request_id and number(r["packet_id"]) == request_id]
             if request_id and not candidates:
                 return
-            row = (candidates or eligible)[0]
+            if not candidates:
+                # Packets without an echoed request ID may be periodic
+                # broadcasts; do not present them as a confirmed reply.
+                return
+            row = candidates[0]
             row["state"] = "replied"
             row["received_ms"] = now
             row["correlation"] = "request_id" if candidates else "source_sender_port_time"
