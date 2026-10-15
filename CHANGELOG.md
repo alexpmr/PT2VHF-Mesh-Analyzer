@@ -1,3 +1,11 @@
+# v0.6.8 — Correções de atualização
+
+- Mensagens de erro do atualizador mais claras e úteis para diagnóstico.
+- Registro local de falha de handshake/abertura do instalador externo no update.log.
+- Diálogo de falha deixa de mostrar progresso completo e botão de cancelamento incoerente.
+- O fluxo continua sendo iniciado com um clique no indicador de versão; não há confirmação adicional do aplicativo no percurso bem-sucedido.
+- Requisitos de consultas remotas completas, ranking RF e exportação de diagnósticos continuam no backlog para validação independente.
+
 # Changelog — PT2VHF Mesh Analyzer
 
 ## v0.6.7 — 15/10/2026 — Instalação segura, conexões e popup de enlaces
