@@ -785,6 +785,60 @@ $('mapSource').onchange=()=>{
  try{localStorage.setItem('mesh.map.selected_source',mapSourceFilter);}catch(e){}
  renderMap();renderNodes();pulseNewPackets([]);
 };
+function linkPopupHtml(link,kind){
+ // A logical destination or traceroute does not prove a direct RF hop.
+ const logical=kind==='communication';
+ const aNum=logical?Number(link.from_node):Number(link.a);
+ const bNum=logical?Number(link.to_node):Number(link.b);
+ const left=nodes.find(n=>Number(n.node_num)===aNum);
+ const right=nodes.find(n=>Number(n.node_num)===bNum);
+ const quality=logical?(link.transport==='mqtt'?'Internet/MQTT · fluxo lógico':
+  'Comunicação lógica · caminho físico desconhecido'):
+  link.quality==='confirmed_direct_rf'?'RF direto comprovado':
+  String(link.quality||'').startsWith('neighbor')?'Vizinhança anunciada · não confirma RF direto':
+  String(link.quality||'').includes('mqtt')?'Internet/MQTT · não RF':
+  'Trecho de rota observado · RF direto não confirmado';
+ const source=(state.sources||[]).find(x=>String(x.id)===String(link.source_id));
+ const nodeLabel=(num,n)=>'<button type="button" data-link-node="'+num+
+  '" style="border:0;background:transparent;color:#83c4ff;text-decoration:underline;cursor:pointer">'+
+  esc(idName(num))+'</button> <small>'+esc(n?.node_id||('!'+num.toString(16).padStart(8,'0')))+'</small>';
+ let distance='Indisponível (posição histórica ou coordenadas ausentes)';
+ if(left&&right&&validPos(left)&&validPos(right)){
+  const when=Number(link.last_seen_ms);
+  if([left,right].every(n=>Number(n.position_ms)>0&&
+      Math.abs(Number(n.position_ms)-when)<24*3600000)){
+   const rad=Math.PI/180,dLat=(Number(right.latitude)-Number(left.latitude))*rad;
+   const dLon=(Number(right.longitude)-Number(left.longitude))*rad;
+   const hav=Math.sin(dLat/2)**2+
+     Math.cos(Number(left.latitude)*rad)*Math.cos(Number(right.latitude)*rad)*
+     Math.sin(dLon/2)**2;
+   distance=(6371.0088*2*Math.atan2(Math.sqrt(hav),Math.sqrt(Math.max(0,1-hav))))
+      .toFixed(1)+' km (posições; não alcance RF)';
+  }
+ }
+ const line=(label,value)=>'<div style="display:flex;gap:9px;justify-content:space-between;padding:5px 0;border-bottom:1px solid #364858">'+
+  '<span style="color:#bacbd6">'+esc(label)+'</span><b style="text-align:right">'+esc(String(value))+'</b></div>';
+ return '<div style="min-width:260px;max-width:390px;max-height:55vh;overflow:auto;color:#f0f4f7;background:#182735;padding:10px;border-radius:6px">'+
+  '<strong>Informações da relação</strong><p style="margin:9px 0">'+nodeLabel(aNum,left)+
+  (logical?' → ':' ↔ ')+nodeLabel(bNum,right)+'</p>'+
+  line('Classificação',quality)+line('Conexão',source?.name||'Conexão histórica #'+link.source_id)+
+  line('Primeiro registro',fmtDate(link.first_seen_ms))+
+  line('Último registro',fmtDate(link.last_seen_ms))+
+  line(logical?'Pacotes observados':'Observações',link.observations||0)+
+  line('Distância',distance)+
+  '<p style="font-size:11px;color:#b8c9d4">SNR, RSSI e saltos do enlace: não medidos por aresta neste agregado. Não atribuímos a esta relação métricas de pacotes multissalto.</p></div>';
+}
+function attachLinkPopup(layer,link,kind){
+ layer.bindPopup(linkPopupHtml(link,kind),{maxWidth:460,closeButton:true,autoPan:true});
+ layer.on('popupopen',()=>{
+   const root=layer.getPopup()?.getElement();
+   if(!root)return;
+   root.querySelectorAll('[data-link-node]').forEach(el=>el.addEventListener('click',()=>{
+     const n=nodes.find(v=>Number(v.node_num)===Number(el.dataset.linkNode));
+     if(n){map.closePopup();showNode(n);}
+   }));
+ });
+}
 function renderMap(){
  if(!map){initMap();if(!map)return;}
  nodeLayer.clearLayers();linkLayer.clearLayers();if(waypointLayer)waypointLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
@@ -824,6 +878,7 @@ function renderMap(){
       'Trecho de traceroute observado, RF direto não confirmado';
    line.bindTooltip(esc(idName(edge.a))+' ↔ '+esc(idName(edge.b))+': '+esc(descr)+
        ' · '+Number(edge.observations||1)+' observações');
+   attachLinkPopup(line,edge,'link');
    line.addTo(linkLayer);visible++;
   }
   // Each dotted line is a logical unicast; NOT evidence of one direct RF hop.
@@ -839,10 +894,12 @@ function renderMap(){
      '. Caminho físico não conhecido; NÃO comprova RF direto. '+
      (flow.transport==='mqtt'?'Internet/MQTT. ':'Recepção via fonte rádio. ')+
      Number(flow.observations||1)+' pacotes.';
-   L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],{
+   const flowLine=L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],{
      color:flow.transport==='mqtt'?'#9e97ce':'#b48aff',
-     weight:1.6,opacity:.7,dashArray:'1 9',interactive:true})
-     .bindTooltip(esc(label)).addTo(linkLayer);
+     weight:1.6,opacity:.7,dashArray:'1 9',interactive:true});
+   flowLine.bindTooltip(esc(label));
+   attachLinkPopup(flowLine,flow,'communication');
+   flowLine.addTo(linkLayer);
    visible++;
   }
  }
