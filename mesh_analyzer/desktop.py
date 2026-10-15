@@ -4,7 +4,28 @@ No browser fallback: the application must not silently open a browser window.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import sys
+
+
+def native_window_icon() -> Path | None:
+    """Find the actual Windows ICO used by pywebview WinForms.
+
+    The PE icon alone does not necessarily become the native WebView2 window icon.
+    PyInstaller --onefile extracts --add-data files under sys._MEIPASS.
+    """
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
+    icon = base / "branding" / "mesh-analyzer.ico"
+    if icon.is_file():
+        return icon
+    if getattr(sys, "frozen", False):
+        raise RuntimeError(
+            "Ícone nativo PT2VHF ausente do pacote Windows. "
+            "Reinstale uma versão que inclua branding/mesh-analyzer.ico."
+        )
+    # Source checkout: branding/build_icons.py may not have been run yet.
+    return None
 
 
 def open_desktop_window(url: str, profile: Path) -> None:
@@ -15,7 +36,6 @@ def open_desktop_window(url: str, profile: Path) -> None:
 
     # Keep the running WebView2 window grouped with the installed Start-menu
     # and desktop shortcuts, not with Python/Edge.
-    import os
     if os.name == "nt":
         try:
             import ctypes
@@ -38,8 +58,10 @@ def open_desktop_window(url: str, profile: Path) -> None:
     # Runs on the main thread; returns only after the last desktop window closes.
     # Windows 11 normally includes the Evergreen WebView2 Runtime.
     try:
+        icon_path = native_window_icon() if os.name == "nt" else None
         webview.start(gui="edgechromium", debug=False,
-                      private_mode=False, storage_path=str(profile))
+                      private_mode=False, storage_path=str(profile),
+                      icon=str(icon_path) if icon_path else None)
     except Exception as exc:
         raise RuntimeError(
             "Falha ao iniciar WebView2. Verifique o Microsoft Edge WebView2 Runtime."
