@@ -107,6 +107,14 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .nodeQueryGrid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:7px}
 .nodeQueryRow{padding:9px;background:#1d303e;border:1px solid #3d5566;border-radius:5px}.nodeQueryRow progress{width:100%;height:5px}
 @media(max-width:700px){.nodeDetailGrid,.nodeQueryGrid{grid-template-columns:1fr}}
+#messageNoConnectionDialog{position:fixed;inset:0;z-index:9906;display:none;
+ align-items:center;justify-content:center;padding:16px;background:#040a11d6}
+#messageNoConnectionDialog.open{display:flex}
+#messageNoConnectionDialog .noConnectionBox{width:min(470px,96vw);max-height:85vh;overflow:auto;
+ border-radius:11px;border:1px solid #6e8799;background:#1b2a36;padding:20px;box-shadow:0 22px 65px #000c}
+#messageNoConnectionDialog h2{margin:0 0 10px;color:#ffd27d;font-size:19px}
+#messageNoConnectionDialog p{line-height:1.6}
+#messageNoConnectionDialog .actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:9px;margin-top:18px}
 #firstRunDialog{position:fixed;inset:0;z-index:9905;display:none;align-items:center;justify-content:center;padding:16px;background:#040a11d6}
 #firstRunDialog.open{display:flex}
 #firstRunDialog .firstRunBox{width:min(510px,100%);background:#192c37;border:1px solid #708a99;border-radius:12px;box-shadow:0 20px 60px #000b;padding:23px}
@@ -261,6 +269,18 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.6.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
+<div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
+ aria-labelledby="messageNoConnectionTitle" aria-describedby="messageNoConnectionText">
+ <div class="noConnectionBox">
+  <h2 id="messageNoConnectionTitle">Rádio desconectado</h2>
+  <p>Não há conexão ativa com um rádio Meshtastic para enviar mensagens.</p>
+  <p id="messageNoConnectionText" class="muted">Conecte o rádio para poder transmitir.</p>
+  <div class="actions">
+   <button type="button" id="messageNoConnectionClose">Fechar</button>
+   <button type="button" class="primary" id="messageNoConnectionSettings">Ir para Conexões</button>
+  </div>
+ </div>
+</div>
 <div id="firstRunDialog" role="dialog" aria-modal="true" aria-labelledby="firstRunTitle" aria-describedby="firstRunMessage">
 <div class="firstRunBox">
 <h2 id="firstRunTitle">Configure sua primeira conexão</h2>
@@ -1276,7 +1296,38 @@ document.addEventListener('pointerdown',e=>{
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&$('nodeContextMenu')&&!$('nodeContextMenu').hidden){closeNodeContext();e.preventDefault();}
 });
-let messageSending=false,pendingChat=null;
+let messageSending=false,pendingChat=null,missingTxPreviousFocus=null;
+function closeNoConnectionDialog(restoreFocus=true){
+ const modal=$('messageNoConnectionDialog');
+ modal.classList.remove('open');
+ if(restoreFocus)(missingTxPreviousFocus||$('messageSend')).focus();
+ missingTxPreviousFocus=null;
+}
+function showNoConnectionDialog(){
+ missingTxPreviousFocus=document.activeElement;
+ $('messageNoConnectionText').textContent=txStatusReason()+
+   ' Abra Configurações → Conexões para conectar ou habilitar um rádio.';
+ $('messageNoConnectionDialog').classList.add('open');
+ $('messageNoConnectionSettings').focus();
+}
+$('messageNoConnectionClose').onclick=()=>closeNoConnectionDialog();
+$('messageNoConnectionSettings').onclick=()=>{
+ closeNoConnectionDialog(false);
+ setView('settings');
+ showSettings('sources');
+};
+$('messageNoConnectionDialog').addEventListener('keydown',e=>{
+ if(e.key==='Escape'){e.preventDefault();closeNoConnectionDialog();return;}
+ if(e.key==='Tab'){
+  const buttons=[$('messageNoConnectionClose'),$('messageNoConnectionSettings')];
+  const idx=buttons.indexOf(document.activeElement);
+  if(e.shiftKey&&idx===0){e.preventDefault();buttons[1].focus();}
+  else if(!e.shiftKey&&idx===1){e.preventDefault();buttons[0].focus();}
+ }
+});
+$('messageNoConnectionDialog').addEventListener('pointerdown',e=>{
+ if(e.target===$('messageNoConnectionDialog'))closeNoConnectionDialog();
+});
 function txRadioSources(){
  return (state.sources||[]).filter(x=>x.kind!=='mqtt'&&x.enabled&&
    state.connections?.[String(x.id)]?.status==='connected'&&
@@ -1340,19 +1391,21 @@ function renderChat(){
  $('messageSource').innerHTML=choices.map(x=>'<option value="'+x.id+'">'+esc(x.name)+' ('+esc(x.kind)+')</option>').join('')||
    '<option value="">Nenhum rádio TX disponível</option>';
  if(choices.some(x=>String(x.id)===previous))$('messageSource').value=previous;
- $('messageSend').disabled=!choices.length||messageSending;
+ // Allow the click even without a radio so the user can see why TX is unavailable.
+ $('messageSend').disabled=messageSending;
  $('messageSend').title=choices.length?'Enviar via rádio':'Indisponível: '+txStatusReason();
  $('messageTxStatus').textContent=messageSending?'◷ Enviando ao rádio local...':
    choices.length?'Rádio TX disponível. Entrega/leitura não comprovadas.':txStatusReason();
 }
 $('messageSend').onclick=async()=>{
  if(messageSending)return;
+ if(!txRadioSources().length){showNoConnectionDialog();return;}
  const original=$('messageText').value,text=original.trim();
  if(!text){notify('Digite a mensagem.',true);return;}
  const bytes=new TextEncoder().encode(text).length;
  if(bytes>220){notify('Limite 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
  const src=Number($('messageSource').value);
- if(!txRadioSources().some(x=>x.id===src)){notify(txStatusReason(),true);renderChat();return;}
+ if(!txRadioSources().some(x=>x.id===src)){showNoConnectionDialog();renderChat();return;}
  const target=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';
  const ch=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);
  messageSending=true;pendingChat={chat:currentChat,text,failed:false};renderChat();
@@ -1365,7 +1418,7 @@ $('messageSend').onclick=async()=>{
  finally{messageSending=false;renderChat();}
 };
 $('messageText').onkeydown=e=>{
- if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!$('messageSend').disabled)$('messageSend').click();}
+ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!messageSending)$('messageSend').click();}
 };
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
