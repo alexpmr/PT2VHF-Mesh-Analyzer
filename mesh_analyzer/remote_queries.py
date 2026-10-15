@@ -120,7 +120,8 @@ class NodeQueries:
                 "text_preview":"Consulta RF solicitada: "+kind
             })
             with self.manager._lock:
-                current=self.manager._states.get(source_id)
+                states=getattr(self.manager,"_states",None)
+                current=states.get(source_id) if isinstance(states,dict) else None
                 if current is not None:
                     current["tx_seq"]=current.get("tx_seq",0)+1
                     current["last_tx_ms"]=int(time.time()*1000)
