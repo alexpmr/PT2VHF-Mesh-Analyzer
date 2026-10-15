@@ -147,7 +147,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.9</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.10</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -2073,6 +2073,32 @@ function updateRadioConnectionIndicator(){
  pill.setAttribute('aria-label',(yes?'Rádio conectado. ':'Rádio desconectado. ')+
      (yes?connected.map(s=>s.name).join(', '):'Verifique Configurações → Conexões'));
 }
+let radioRestartBusy=false;
+$('radioConnectionStatus').setAttribute('tabindex','0');
+$('radioConnectionStatus').setAttribute('role','button');
+async function reconnectFromStatus(){
+ if(radioRestartBusy)return;
+ const radios=(state.sources||[]).filter(src=>src.kind!=='mqtt'&&src.enabled);
+ if(radios.length!==1){
+  setView('settings');showSettings('sources');
+  notify(radios.length?'Selecione a conexão que deseja reiniciar.':'Configure uma conexão de rádio para continuar.',!radios.length);
+  return;
+ }
+ radioRestartBusy=true;
+ const badge=$('radioConnectionStatus');
+ badge.dataset.status='checking';
+ $('radioConnectionText').textContent='Reconectando...';
+ try{
+  await api('/api/sources/reconnect',{id:radios[0].id});
+  notify('Reconexão iniciada para '+radios[0].name+'.');
+  await refreshAll();
+ }catch(e){notify('Reconexão: '+e.message,true);}
+ finally{radioRestartBusy=false;}
+}
+$('radioConnectionStatus').onclick=reconnectFromStatus;
+$('radioConnectionStatus').onkeydown=e=>{
+ if(e.key==='Enter'||e.key===' '){e.preventDefault();reconnectFromStatus();}
+};
 async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
  const slug=location.pathname.split('/').pop();
