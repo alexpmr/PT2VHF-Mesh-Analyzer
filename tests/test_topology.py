@@ -67,6 +67,49 @@ class TopologyTests(unittest.TestCase):
         self.assertTrue(self.ing.handle(1,packet))
         self.assertEqual(self.db.link_rows(),[])
 
+    def test_full_pipeline_archived_trace_sqlite_and_api(self):
+        from http.server import ThreadingHTTPServer
+        from mesh_analyzer.app import build_handler
+        from mesh_analyzer.transports import SourceManager
+        import threading,urllib.request
+        # Source positions must already exist to draw an edge.
+        for num,lat,lon in [(100,-15.80,-47.80),(200,-15.82,-47.82),(300,-15.84,-47.84)]:
+            self.db.upsert_node(num,1,timestamp_ms=now_ms(),observed=True,
+                                latitude=lat,longitude=lon)
+        packet={"from":300,"to":100,"id":990,"decoded":{
+                 "portnum":"TRACEROUTE_APP","route":[200]}}
+        self.assertTrue(self.ing.handle(1,packet))
+        self.assertEqual(self.db.topology_diagnostics()["drawable"],2)
+        mgr=SourceManager(self.db)
+        server=ThreadingHTTPServer(("127.0.0.1",0),
+            build_handler(self.db,mgr,"csrf","<html/>"))
+        worker=threading.Thread(target=server.serve_forever,daemon=True)
+        worker.start()
+        try:
+            base="http://127.0.0.1:"+str(server.server_address[1])
+            with urllib.request.urlopen(base+"/api/links") as rsp:
+                edges=json.load(rsp)["data"]
+            with urllib.request.urlopen(base+"/api/nodes") as rsp:
+                known=json.load(rsp)["data"]
+            lookup={n["node_num"]:n for n in known}
+            self.assertEqual(len(edges),2)
+            self.assertEqual({(e["a"],e["b"]) for e in edges},
+                             {(100,200),(200,300)})
+            self.assertTrue(all(lookup[e["a"]]["latitude"] is not None and
+                                lookup[e["b"]]["longitude"] is not None for e in edges))
+        finally:
+            server.shutdown();server.server_close();worker.join(timeout=2)
+            mgr.close()
+
+    def test_missing_position_explains_undrawable_edges(self):
+        packet={"from":300,"to":100,"id":991,"decoded":{
+                 "portnum":"TRACEROUTE_APP","route":[200]}}
+        self.ing.handle(1,packet)
+        diag=self.db.topology_diagnostics()
+        self.assertEqual(diag["stored"],2)
+        self.assertEqual(diag["drawable"],0)
+        self.assertEqual(diag["missing_positions"],2)
+
     def test_telemetry_is_not_traceroute(self):
         self.ing.handle(1,{"from":100,"to":200,"id":10,
              "decoded":{"portnum":67,"route":[150],"telemetry":{"deviceMetrics":{"batteryLevel":67}}}})
