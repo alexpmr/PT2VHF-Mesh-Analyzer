@@ -981,6 +981,32 @@ function nodeRadioStatus(n){
  return delta<3600000?'Observado na última hora':delta<86400000?'Último tráfego há '+age(n.last_seen_ms):
     'Sem tráfego recente · '+age(n.last_seen_ms);
 }
+const RF_QUERY_TYPES=[['nodeinfo','NodeInfo'],['position','Posição'],['telemetry','Telemetria'],['traceroute','Traceroute']];
+function activeRadioSource(){
+ const con=state.connections||{};
+ return (state.sources||[]).find(s=>s.kind!=='mqtt'&&con[String(s.id)]?.status==='connected'&&con[String(s.id)]?.tx_capable);
+}
+async function runNodeQuery(node,kind){
+ const s=activeRadioSource();
+ if(!s){notify('Nenhum rádio ativo para consulta. Abra Configurações > Conexões.',true);return;}
+ try{
+  const r=await api('/api/queries/send',{source_id:s.id,node,kind});
+  notify('Consulta '+kind+' transmitida. Aguardando resposta RF.');
+  if(nodeDetailSelected===node)await refreshNodeQueryStatus(node);
+ }catch(e){notify('Consulta RF: '+e.message,true);}
+}
+async function refreshNodeQueryStatus(node){
+ if(nodeDetailSelected!==node||!$('nodeDetailOverlay').classList.contains('open'))return;
+ try{
+  const r=await api('/api/queries?node='+encodeURIComponent(node));
+  const out=$('nodeQueryLive');if(!out)return;
+  const rows=r.data||[];
+  out.textContent=rows.length?rows.slice(0,12).map(q=>
+    q.kind+': '+q.state+' · '+fmtDate(q.created_ms)+
+    (q.response?' · '+JSON.stringify(q.response).slice(0,350):'')+
+    (q.error?' · '+q.error:'')).join('\n'):'Nenhuma consulta efetuada.';
+ }catch(e){}
+}
 const NODE_QUERY_LABELS=['Informações do nó','Posição','Energia','Traceroute',
  'Dispositivo','Ambiente','Qualidade do ar','Vizinhos'];
 function nodePopupHtml(n){
@@ -1029,10 +1055,10 @@ function nodePopupHtml(n){
    '<div class="nodeSection"><h3>Informações do nó</h3><div class="nodeDetailGrid">'+
    fields.map(x=>nodeInfoLine(...x)).join('')+'</div></div>'+
    '<div class="nodeSection"><h3>Consultas ao nó</h3>'+
-   '<p class="muted">O editor de consultas remotas ainda não está implementado; as ações abaixo não fazem TX. '+
-   'Abrir este painel nunca envia comandos ao rádio.</p><div class="actions">'+
-   NODE_QUERY_LABELS.map(l=>'<button type="button" disabled title="Consulta ativa ainda não suportada">'+esc(l)+'</button>').join('')+
-   '<button type="button" disabled title="Consulta ativa ainda não suportada">Tudo</button></div>'+
+   '<p class="muted">Consultas reais pelo rádio ativo; a transmissão não garante resposta. Telemetria depende do firmware remoto.</p><div class="actions">'+
+   RF_QUERY_TYPES.map(([k,l])=>'<button type="button" data-rf-query="'+k+'" '+(activeRadioSource()?'':'disabled')+'>'+esc(l)+'</button>').join('')+
+   '<button type="button" disabled title="Sem implementação segura nesta versão">Tudo (em breve)</button></div>'+ 
+   '<pre id="nodeQueryLive" style="white-space:pre-wrap;overflow-wrap:anywhere">Nenhuma consulta efetuada.</pre>'+
    '<div class="nodeQueryGrid">'+queries+'</div></div>'+
    '<div class="nodeSection"><h3>Últimos metadados recebidos</h3>'+
    '<p class="muted">Histórico recente disponível localmente. Nem todas as métricas podem ser obtidas dos pacotes.</p>'+
@@ -1049,6 +1075,8 @@ function showNode(n){
  $('nodeDetailTitle').textContent=(n.friendly_name||n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
  $('nodeDetailBody').innerHTML=nodePopupHtml(n);
  $('nodeDetailOverlay').classList.add('open');
+ $('nodeDetailBody').querySelectorAll('[data-rf-query]').forEach(b=>b.onclick=()=>runNodeQuery(n.node_num,b.dataset.rfQuery));
+ refreshNodeQueryStatus(n.node_num);
  $('nodeRename').onclick=async()=>{
   const desired=prompt('Nome amigável local para '+n.node_id+' (vazio para restaurar):',n.friendly_name||'');
   if(desired===null)return;
@@ -1329,14 +1357,15 @@ function openNodeContext(nodeNum,x,y){
       action('locate','Mostrar no mapa',validPos(n),'O nó não informou posição')+
       action('copy','Copiar Node ID')+
       '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
-      ['NodeInfo','Posição','Telemetria','Traceroute','Ping','Vizinhos'].map(a=>
-         action('future',a,false,'Consulta remota ainda não implementada; nenhum pacote RF será enviado')).join('');
+      RF_QUERY_TYPES.map(([k,l])=>action('query-'+k,l,!!activeRadioSource(),'Conecte um rádio com transmissão')).join('')+
+      action('future','Ping / Vizinhos',false,'Não há API validada para esta versão');
  menu.hidden=false;
  const width=menu.offsetWidth||250,height=menu.offsetHeight||340;
  menu.style.left=Math.max(6,Math.min(x,innerWidth-width-6))+'px';
  menu.style.top=Math.max(6,Math.min(y,innerHeight-height-6))+'px';
  menu.querySelectorAll('[data-node-action]').forEach(btn=>btn.onclick=async()=>{
    closeNodeContext();
+   if(btn.dataset.nodeAction.startsWith('query-')){await runNodeQuery(n.node_num,btn.dataset.nodeAction.slice(6));return;}
    switch(btn.dataset.nodeAction){
     case 'message':openDm(n.node_num);break;
     case 'detail':showNode(n);break;
@@ -2044,6 +2073,7 @@ setTimeout(async()=>{
 },1800);
 setTimeout(()=>checkUpdates(false),3500);
 setInterval(()=>checkUpdates(false),30000);
+setInterval(()=>{if(nodeDetailSelected!=null)refreshNodeQueryStatus(nodeDetailSelected);},3000);
 
 let windowReadySent=false;
 async function announceWindowReady(){
