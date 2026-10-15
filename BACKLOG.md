@@ -1,3 +1,11 @@
+## #42 — Retirar texto redundante da barra superior do Mapa (15/10/2026)
+
+- **Relato com captura:** remover o indicador textual **“Todas as conexões · N”** ao lado do seletor de Conexão na barra de controles do mapa. Quando uma conexão específica for selecionada, **também não mostrar** o texto lateral “Nome · status”.
+- **Onde:** `mesh_analyzer/ui.html`: retirar o elemento `<span id="mapSourceState">` na faixa `#playback`, a atribuição `$('mapSourceState').textContent` em `renderMap()` e o CSS dedicado a `#mapSourceState`.
+- **Manter:** o próprio seletor `Conexão:` / `Todas as conexões`, seleção/filtro `mapSourceFilter`, persistência, contador independente de conexões ativas no resumo e informações disponíveis em Configurações.
+- **Aceite:** zero/uma/várias conexões, status online/offline, Win11 WebView2, sem espaços desnecessários ou erros JS. Issue [#42](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/42).
+- **Status:** backlog registrado; aguarda implementação na próxima release, sem alteração nos binários da v0.6.3.
+
 # Backlog — PT2VHF Mesh Analyzer
 
 Esta é uma linha nova: não confundir com o projeto PT2VHF Traffic Analyzer v1.x.
