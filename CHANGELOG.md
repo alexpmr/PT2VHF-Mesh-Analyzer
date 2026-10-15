@@ -1,3 +1,12 @@
+# v0.6.9 — Layout e atividade multitransporte
+
+- Seletor de conexões do mapa exibe Conectado somente quando a fonte está ativa; fontes offline não mostram error.
+- Checkbox Conectar automaticamente ao iniciar alinhado ao texto.
+- Cabeçalho organizado em identificação, navegação e indicadores operacionais.
+- RX MQTT real participa da atividade agregada sem alegar recepção RF; suporte existente USB/BLE/TCP preservado.
+- Bolhas de mensagens com espaçamento mais compacto.
+- Reconexão forçada, failover, ranking RF e consultas remotas completas continuam pendentes de implementação e testes.
+
 # v0.6.8 — Correções de atualização
 
 - Mensagens de erro do atualizador mais claras e úteis para diagnóstico.
