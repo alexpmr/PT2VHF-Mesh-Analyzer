@@ -170,14 +170,14 @@ class NodeEnrichment:
             ).fetchall()
         return {(r["node_num"], r["kind"]): dict(r) for r in rows}
 
-    def _observed(self, now, max_age):
+    def _observed(self, source_id, now, max_age):
         # RX provenance is required: old NodeDB cache alone is not RF reachability.
         return self.db._rows("""SELECT n.*,ns.source_id,ns.observed AS radio_observed,
                     ns.last_seen_ms AS source_last_seen
           FROM nodes n JOIN node_sources ns ON ns.node_num=n.node_num
-          WHERE ns.observed=1 AND ns.last_seen_ms>=?
+          WHERE ns.source_id=? AND ns.observed=1 AND ns.last_seen_ms>=?
           ORDER BY ns.last_seen_ms DESC LIMIT 15000""",
-          (now-max_age,))
+          (source_id,now-max_age,))
 
     def _freshness(self, now, max_age):
         # Single bounded scan of the recent packet index for passive updates.
@@ -189,7 +189,7 @@ class NodeEnrichment:
                 for r in rows if r["port"] in PORT_KIND}
 
     def _candidates(self, source_id, supported, own, config, now):
-        observed = self._observed(now, config["recent_hours"]*3600000)
+        observed = self._observed(source_id, now, config["recent_hours"]*3600000)
         attempts = self._attempts(source_id)
         freshness = self._freshness(now, 365*86400000)
         result = []
@@ -216,8 +216,8 @@ class NodeEnrichment:
                     seen = max(seen, int(node["position_ms"] or 0))
                 ttl = config["ages_hours"][kind]*3600000
                 incomplete = not present
-                if present and kind != "traceroute" and (not seen or now-seen < ttl):
-                    continue  # Legacy records with unknown timestamp are not spammed.
+                if present and kind != "traceroute" and seen and now-seen < ttl:
+                    continue  # Fresh broadcasts already satisfy the target.
                 if kind == "traceroute" and seen and now-seen < ttl:
                     continue
                 previous = attempts.get((num, kind))
@@ -226,7 +226,8 @@ class NodeEnrichment:
                 result.append({"node": num, "kind": kind,
                                "name": node["long_name"] or node["short_name"] or node["node_id"],
                                "reason": "Informação ausente" if incomplete else
-                                         "Atualização vencida",
+                                         ("Data sem confirmação recente" if not seen else
+                                          "Atualização vencida"),
                                "last_seen_ms": node["source_last_seen"],
                                "previous": previous})
         # Missing info first, then newest observed node, with oldest attempts fairly recycled.
