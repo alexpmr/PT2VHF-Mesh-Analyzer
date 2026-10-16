@@ -38,7 +38,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #viewMessages{overflow:hidden}#messageLayout{display:grid;grid-template-columns:285px 1fr;flex:1;min-height:0}.contacts{border-right:1px solid var(--line);overflow:auto;background:#111c27}.contact{display:block;width:100%;padding:11px;text-align:left;border:0;border-bottom:1px solid #2b3b48;border-radius:0}.contact.selected{background:#30465c;border-left:3px solid var(--accent)}
 .chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px}.bubble{max-width:75%;padding:7px 10px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}.bubble small{display:block;text-align:right;color:#adbdc8;margin-top:4px;font-size:10px}
 .bubble .msgState{display:inline-block;padding-left:5px;font-size:13px}
-.msgState.accepted{color:#b5f3d0}.msgState.working{color:#efd1a2}.msgState.error{color:#f8afaf}
+.msgState.accepted,.msgState.delivered{color:#34c759}.msgState.working{color:#efd1a2}.msgState.error{color:#f8afaf}
 #messageTxStatus{padding:5px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
 #nodeContextMenu{position:fixed;z-index:8000;min-width:230px;max-width:min(300px,92vw);padding:7px;background:#172935;border:1px solid #59798a;box-shadow:0 18px 35px #0009;border-radius:9px}
 #nodeContextMenu[hidden]{display:none!important}#nodeContextMenu button{display:block;width:100%;text-align:left;padding:8px;border:0;background:transparent}#nodeContextMenu button:hover:not(:disabled){background:#30485a}#nodeContextMenu button:disabled{color:#8c99a2}.composer{display:flex;gap:7px;padding:10px;background:#152433;border-top:1px solid var(--line)}.composer input{flex:1;min-width:0}.composer select{max-width:180px}
@@ -148,7 +148,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.17</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.18</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -157,7 +157,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> relações observadas</div></section>
 <section class="view active" id="viewMap">
 <div id="playback">
-<label>Conexão: <select id="mapSource"><option value="">Todas as conexões</option></select></label>
+
 <button type="button" id="mapVisibilityBtn" aria-controls="mapVisibilityPanel" aria-expanded="false">Ver ▾</button>
 <div class="mapActions"><div class="mapSearchBox"><label for="mapSearchInput">⌕</label><input id="mapSearchInput" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nó no mapa por nome curto, longo ou ID" autocomplete="off"><button id="mapSearchClear" title="Limpar pesquisa" aria-label="Limpar pesquisa">×</button><span class="mapSearchCount" id="mapSearchCount">Todos</span><div id="mapSearchMatches" class="mapSearchMatches" hidden></div></div>
 <button id="mapFit">Enquadrar</button><button id="mapRefresh">Atualizar</button></div>
@@ -325,7 +325,7 @@ const norm=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLo
 const fmtDate=x=>x?new Date(Number(x)).toLocaleString('pt-BR'):'—';
 const age=x=>{if(!x)return 'Nunca';let m=Math.max(0,(Date.now()-Number(x))/60000);return m<60?Math.round(m)+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d';};
 let state={sources:[],connections:{},counts:{}},nodes=[],nodeSources=[],nodeHops=[],packets=[],messages=[],links=[],view='map',map=null,nodeLayer=null,linkLayer=null,waypointLayer=null,waypoints=[],communications=[],mapSourceFilter='',currentChat='channel:0',sourceEditing=null,lastMapBounds=null;
-try{mapSourceFilter=localStorage.getItem('mesh.map.selected_source')||'';}catch(e){}
+mapSourceFilter='';
 let firstRunDialogChecked=false,updateNoticeChecked=false;
 function rememberFirstRunShown(){try{sessionStorage.setItem('mesh.firstRunShown','yes');}catch(e){}}
 function previouslyShownThisSession(){try{return sessionStorage.getItem('mesh.firstRunShown')==='yes';}catch(e){return false;}}
@@ -793,22 +793,7 @@ function zoomToNewestTraceroute(){
  map.fitBounds(coords,{padding:[30,30],maxZoom:12});
  zoomRestore=setTimeout(()=>{zoomRestore=null;if(map)map.setView(center,level);},5000);
 }
-function refreshMapSourceOptions(){
- const el=$('mapSource'),signature=(state.sources||[]).map(src=>src.id+':'+src.name+':'+(state.connections?.[String(src.id)]?.status||'offline')).join('|');
- if(el.dataset.sources===signature)return;
- const saved=mapSourceFilter;el.innerHTML='<option value="">Todas as conexões</option>'+
-  (state.sources||[]).map(src=>'<option value="'+src.id+'">'+esc(src.name)+' ('+
-     esc(src.kind==='tcp'?'Wi-Fi/TCP':src.kind.toUpperCase())+
-     (state.connections?.[String(src.id)]?.status==='connected'?' · Conectado':'')+')</option>').join('');
- if(saved&&(state.sources||[]).some(src=>String(src.id)===saved)){el.value=saved;}
- else {el.value='';mapSourceFilter='';try{localStorage.removeItem('mesh.map.selected_source');}catch(e){}}
- el.dataset.sources=signature;
-}
-$('mapSource').onchange=()=>{
- mapSourceFilter=$('mapSource').value;
- try{localStorage.setItem('mesh.map.selected_source',mapSourceFilter);}catch(e){}
- renderMap();renderNodes();pulseNewPackets([]);
-};
+function refreshMapSourceOptions(){mapSourceFilter='';}
 function linkPopupHtml(link,kind){
  // A logical destination or traceroute does not prove a direct RF hop.
  const logical=kind==='communication';
@@ -866,7 +851,7 @@ function attachLinkPopup(layer,link,kind){
 function renderMap(){
  if(!map){initMap();if(!map)return;}
  nodeLayer.clearLayers();linkLayer.clearLayers();if(waypointLayer)waypointLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
- const source=mapSourceFilter;
+ const source='';
  const available=sourceMapNodes(),q=$('mapSearchInput').value;
  const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>n.node_num));
  $('mapSearchCount').textContent=q?allowed.size+' de '+available.length:available.length+' nós';
@@ -1568,10 +1553,12 @@ function txStatusReason(){
 }
 function messageStateHtml(m){
  if(m.direction!=='tx')return '';
+ if(['mesh_propagated','delivered','acknowledged'].includes(m.state))
+   return '<span class="msgState delivered" title="Entrega ou propagação confirmada; leitura não confirmada">✓✓</span>';
  if(m.state==='accepted_by_radio')
    return '<span class="msgState accepted" title="✓ Aceita pelo rádio local; entrega e leitura desconhecidas">✓</span>';
  if(m.state==='queued'||m.state==='sending')
-   return '<span class="msgState working" title="Aguardando envio">◷</span>';
+   return '<span class="msgState working" title="Tentando enviar">◷</span>';
  if(m.state==='rejected'||m.state==='failed')
    return '<span class="msgState error" title="Falha no envio">!</span>';
  return '';

@@ -1,3 +1,10 @@
+# v0.6.18 — Interface de conexões, barra do mapa e indicadores de mensagens
+
+- Incorporada PR #93 aprovada: formulário de novo cadastro só aparece automaticamente se nenhuma conexão estiver cadastrada; configuração manual sob demanda; Configuração Automática utiliza descoberta USB/Serial, BLE e mDNS e requer confirmação para ativar rádio.
+- Retirado seletor Conexão do Mapa, preservadas fontes e dados armazenados; Ver, Pesquisar, Enquadrar e Atualizar permanecem na mesma barra.
+- Indicadores de mensagens: relógio durante tentativa/espera; um check verde para envio aceito pelo rádio; dois checks verdes para estados de entrega/propagação explicitamente confirmados, se emitidos pelo backend. Mensagens privadas não apresentam leitura sem recibo real.
+- Não resolve ainda P0 #90/#91 nem atualização do Windows #69, diagnóstico #56 e NodeInfo #89.
+
 # v0.6.17 — Descoberta de rádios e diagnóstico de enlaces no mapa
 
 - **#72 / #31:** Configurações → Conexões ganha autodetecção assíncrona de candidatos por USB/Serial, Bluetooth LE e anúncios mDNS de serviços Meshtastic TCP. Nenhuma conexão é ativada automaticamente; os resultados são classificados explicitamente como *não verificados pelo protocolo*.
