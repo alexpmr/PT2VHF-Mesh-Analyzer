@@ -23,7 +23,8 @@ class NoRadioDialogTests(unittest.TestCase):
         code=UI.split("$('messageSend').onclick=async()=>{",1)[1].split("$('messageText').onkeydown",1)[0]
         self.assertLess(code.index("if(!txRadioSources().length){showNoConnectionDialog();return;}"),
                         code.index("const original=$('messageText').value"))
-        self.assertIn("if(!txRadioSources().some(x=>x.id===src)){showNoConnectionDialog();renderChat();return;}",code)
+        self.assertIn("if(!choices.length){showNoConnectionDialog();renderChat();return;}",code)
+        self.assertIn("if(choices.length>1)",code)
         self.assertIn("if(messageSending)return;",code)
 
     def test_draft_is_preserved_when_go_to_connections(self):
