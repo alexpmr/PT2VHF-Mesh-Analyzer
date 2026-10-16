@@ -20,7 +20,9 @@ class DiscoveryTests(unittest.TestCase):
         ports=[SimpleNamespace(device="COM7",description="USB Radio"),
                SimpleNamespace(device="COM7",description="USB Radio")]
         with patch("serial.tools.list_ports.comports",return_value=ports),patch(
-                  "bleak.BleakScanner.discover",side_effect=RuntimeError("adapter absent")):
+                  "bleak.BleakScanner.discover",side_effect=RuntimeError("adapter absent")),patch(
+                  "zeroconf.Zeroconf"),patch("zeroconf.ServiceBrowser"),patch(
+                  "mesh_analyzer.discovery.time.sleep"):
             scan._scan()
         result=scan.snapshot()
         self.assertFalse(result["running"])
