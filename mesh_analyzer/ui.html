@@ -24,12 +24,12 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
  box-shadow:0 0 0 2px #f26f7d33;flex-shrink:0}
 #radioConnectionStatus[data-status="connected"] .radioDot{background:#51d887;box-shadow:0 0 0 2px #51d88744}
 #radioConnectionStatus[data-status="checking"] .radioDot{background:#d6bd76;box-shadow:none}
-#summary{display:flex;gap:8px;flex-wrap:wrap;padding:8px 12px;background:#111c27;border-bottom:1px solid #293744;flex:0 0 auto}.metric{background:#1d2b38;border:1px solid var(--line);border-radius:7px;padding:5px 9px;color:var(--muted)}.metric b{color:var(--ink);font-size:15px;margin-right:4px}
+#summary{display:flex;gap:5px;flex-wrap:nowrap;padding:0;align-items:center;flex:0 0 auto}.metric{white-space:nowrap}.metric{background:#1d2b38;border:1px solid var(--line);border-radius:7px;padding:5px 9px;color:var(--muted)}.metric b{color:var(--ink);font-size:15px;margin-right:4px}
 .view{display:none;flex:1;min-height:0;min-width:0}.view.active{display:flex;flex-direction:column}
 #viewMap{position:relative;overflow:hidden}#map{flex:1;min-height:200px;width:100%;background:#162432}
-#playback{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding:6px 8px;background:#14202b;border-bottom:1px solid var(--line);flex:0 0 auto}
+#playback{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding:6px 8px;background:#14202b;border-bottom:1px solid var(--line);flex:0 0 auto}
 #playback>*{flex:0 0 auto}#playback label{display:flex;gap:4px;align-items:center}#mapSearchInput{width:175px;min-width:130px}#playback select{max-width:150px}
-.mapActions{display:flex;gap:5px;align-items:center;flex:0 0 auto;margin-left:auto}.mapSearchBox{display:flex;gap:4px;align-items:center}.mapSearchMatches{position:fixed;left:0;top:0;background:#172736;border:1px solid #526b7c;border-radius:7px;box-shadow:0 8px 20px #0009;width:min(400px,95vw);max-height:290px;overflow:auto;z-index:6000}.mapSearchMatches[hidden]{display:none!important}.mapSearchMatches button{width:100%;text-align:left;border-radius:0;border:0;border-bottom:1px solid var(--line);display:block;padding:10px}.mapSearchMatches small{color:var(--muted)}.mapSearchCount{font-size:11px;color:var(--muted)}
+.mapActions{display:flex;gap:5px;align-items:center;flex:0 0 auto;margin-left:auto}#mapSearchInput{width:clamp(125px,15vw,235px)}.mapSearchBox{display:flex;gap:4px;align-items:center}.mapSearchMatches{position:fixed;left:0;top:0;background:#172736;border:1px solid #526b7c;border-radius:7px;box-shadow:0 8px 20px #0009;width:min(400px,95vw);max-height:290px;overflow:auto;z-index:6000}.mapSearchMatches[hidden]{display:none!important}.mapSearchMatches button{width:100%;text-align:left;border-radius:0;border:0;border-bottom:1px solid var(--line);display:block;padding:10px}.mapSearchMatches small{color:var(--muted)}.mapSearchCount{font-size:11px;color:var(--muted)}
 
 #mapLegend{position:absolute;left:12px;bottom:12px;background:#17212bea;padding:8px;border:1px solid var(--line);z-index:450;border-radius:8px;font-size:11px}#mapLegend div+div{margin-top:3px}
 .panels{display:flex;flex-direction:column;gap:10px;padding:15px;min-height:0;overflow:auto}.toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:9px 12px;background:#14202b;border-bottom:1px solid var(--line)}.toolbar h2{margin:0 12px 0 0;font-size:15px}.toolbar .spacer{flex:1}
@@ -148,15 +148,17 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.18</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.19</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
 <div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
 <div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
-<section id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> relações observadas</div></section>
+
 <section class="view active" id="viewMap">
 <div id="playback">
+<div id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> relações observadas</div></div>
+
 
 <button type="button" id="mapVisibilityBtn" aria-controls="mapVisibilityPanel" aria-expanded="false">Ver ▾</button>
 <div class="mapActions"><div class="mapSearchBox"><label for="mapSearchInput">⌕</label><input id="mapSearchInput" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nó no mapa por nome curto, longo ou ID" autocomplete="off"><button id="mapSearchClear" title="Limpar pesquisa" aria-label="Limpar pesquisa">×</button><span class="mapSearchCount" id="mapSearchCount">Todos</span><div id="mapSearchMatches" class="mapSearchMatches" hidden></div></div>

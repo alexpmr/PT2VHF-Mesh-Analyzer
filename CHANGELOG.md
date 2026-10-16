@@ -1,3 +1,11 @@
+# v0.6.19 — Barra única do mapa, Mensagens e Dispositivo Wi-Fi
+
+- #95: une os cinco contadores principais e os controles do Mapa em uma linha, preserva os IDs e os eventos dos elementos.
+- #98: retira Conexão TX da barra de Mensagens e preserva o bloqueio de envio ambíguo quando vários rádios estão conectados.
+- #96: integra PR #97 para expandir automaticamente seção Wi-Fi e evidenciar o campo protegido, mantendo senha fora do browser.
+- Testes de integração de interface e pipeline Windows 11.
+- Não resolve ainda as falhas de updater #69, enlaces #90, RX #91 ou NodeInfo #89; testes físicos pendentes.
+
 # v0.6.18 — Interface de conexões, barra do mapa e indicadores de mensagens
 
 - Incorporada PR #93 aprovada: formulário de novo cadastro só aparece automaticamente se nenhuma conexão estiver cadastrada; configuração manual sob demanda; Configuração Automática utiliza descoberta USB/Serial, BLE e mDNS e requer confirmação para ativar rádio.
