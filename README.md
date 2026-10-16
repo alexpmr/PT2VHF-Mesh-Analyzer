@@ -1,16 +1,16 @@
-# PT2VHF Mesh Analyzer — v0.6.16
+# PT2VHF Mesh Analyzer — v0.6.17
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 11 x64 com banco próprio SQLite, fontes Meshtastic e análises locais. A arquitetura também permite evolução para Linux/macOS.
 
 ## Downloads — Windows 11 x64
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.16](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.16)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.17](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.17)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
-| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.16-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.16/PT2VHF-Mesh-Analyzer-v0.6.16-Setup-Win11-x64.exe)** |
-| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.16-Portable-Win11-x64.exe` | **[Baixar Portable EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.16/PT2VHF-Mesh-Analyzer-v0.6.16-Portable-Win11-x64.exe)** |
-| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.16/SHA256SUMS.txt) |
+| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.17-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.17/PT2VHF-Mesh-Analyzer-v0.6.17-Setup-Win11-x64.exe)** |
+| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.17-Portable-Win11-x64.exe` | **[Baixar Portable EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.17/PT2VHF-Mesh-Analyzer-v0.6.17-Portable-Win11-x64.exe)** |
+| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.17/SHA256SUMS.txt) |
 
 **Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
 [Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
@@ -20,7 +20,16 @@
 
 **Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable EXE pode ser executado diretamente, sem instalação. O ZIP permanece disponível por compatibilidade. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
 
-### Novidades da v0.6.16
+### Novidades da v0.6.17 — edição de validação
+
+- **Conexões:** novo autodetector sob demanda, com resultados USB/Serial, dispositivos BLE anunciando nomes relacionados a Meshtastic e serviços mDNS TCP anunciados na rede. Seleção preenche formulário sem ativar automaticamente o rádio. Candidatos não são conexões verificadas, e resultados dependem do hardware e da publicidade mDNS/BLE.
+- **Mapa:** informa explicitamente enlaces persistidos que não são desenhados por faltar coordenadas dos nós; não inventa RF direto ou retas entre extremos para suprir dados ausentes.
+- **Windows:** empacota a biblioteca zeroconf no instalador/Portable; API local protegida por CSRF para iniciar varredura. Nenhuma varredura de rede IP inteira nem solicitação RF é disparada pela descoberta.
+- **Testes:** regressões de descoberta, isolamentos CSRF, comportamento sem hardware e integração com o banco/mapa existente.
+
+**Backlog:** há dezenas de issues anteriores ainda abertas. Esta release é para validação em campo, NÃO significa que todas estejam encerradas. O atualizador e a exibição de traceroutes com nós sem posição continuam sujeitos à validação no computador do operador.
+
+### Novidades da v0.6.17
 
 - **Automações → Completar e atualizar informações dos nós:** funcionalidade implementada, inicialmente desligada, com seletores NodeInfo, Posição, Telemetria e Traceroute (conforme suporte da interface), fila de nós incompletos ou com dados vencidos, limites de consultas RF, simulação sem transmitir, execução manual e status.
 - **Baixo impacto na malha:** fila serializada com no máximo uma consulta aguardando resposta; default 6 transmissões por hora, 60 segundos entre TX, espera inicial para novatos, timeouts com recuo progressivo. Nós vistos apenas por MQTT, rádios offline e configuração de múltiplos rádios TX não geram consultas automáticas.

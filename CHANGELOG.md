@@ -1,3 +1,11 @@
+# v0.6.17 — Descoberta de rádios e diagnóstico de enlaces no mapa
+
+- **#72 / #31:** Configurações → Conexões ganha autodetecção assíncrona de candidatos por USB/Serial, Bluetooth LE e anúncios mDNS de serviços Meshtastic TCP. Nenhuma conexão é ativada automaticamente; os resultados são classificados explicitamente como *não verificados pelo protocolo*.
+- **#76:** mapa informa os trechos da topologia conhecidos no SQLite mas não desenhados por ausência de coordenadas. Continua a não converter traceroutes multissalto sem evidência em RF direto.
+- **Windows:** PyInstaller inclui zeroconf; API de descoberta separa GET de consulta do POST que inicia a busca (CSRF obrigatório).
+- **Testes:** regressões de descoberta com portas duplicadas e falha BLE, proteção CSRF da API e testes preexistentes. 
+- **Atenção:** esta é uma versão de campo; não fecha automaticamente as demais 63 issues abertas. A validação de topologia real, BLE e mDNS depende do ambiente do usuário.
+
 # v0.6.16 — Monitor TX/RX e aprimoramentos da topologia
 
 - Consultas RF do usuário e da automação gravadas como TX com origem do rádio local e destino individual do nó, packet ID e tipo; separação de RX na aba de tráfego e exportação CSV (#85).

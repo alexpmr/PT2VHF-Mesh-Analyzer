@@ -118,7 +118,7 @@ class ReleaseMonitor:
             if due:self.check(force=True)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None):
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -172,6 +172,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/waypoints":self._json({"success":True,"data":db.waypoint_rows()})
                 elif path == "/api/events":self._json({"success":True,"data":db.event_rows()})
                 elif path == "/api/ports":self._json({"success":True,"data":available_serial_ports()})
+                elif path == "/api/discovery":self._json({"success":True,"data":discovery.snapshot() if discovery else {"running":False,"items":[],"errors":["Serviço indisponível"]}})
                 elif path == "/api/db/health":
                     check=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get("check",["0"])[0]=="1"
                     self._json({"success":True,"data":db.health(check=check)})
@@ -254,6 +255,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     if obj["enabled"]:sources.connect(source_id)
                     else:sources.disconnect(source_id)
                     self._json({"success":True,"source":obj})
+                elif path == "/api/discovery/start":
+                    if not discovery:raise ValueError("Descoberta indisponível")
+                    self._json({"success":True,"data":discovery.start()})
                 elif path == "/api/sources/reconnect":
                     result=sources.restart(payload["id"])
                     self._json({"success":True,"data":result})
@@ -337,6 +341,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     updater=UpdateManager(data,updates)
     from .automations import NodeEnrichment
     automation=NodeEnrichment(db,drivers)
+    from .discovery import DeviceDiscovery
+    discovery=DeviceDiscovery()
     server=None
     done=threading.Event()
     try:
@@ -423,7 +429,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         threading.Thread(target=update_shutdown_coordinator,
                          name="update-clean-shutdown",daemon=True).start()
         server=ThreadingHTTPServer((host,int(port)),
-                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation))
+                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery))
         server.daemon_threads=True
         address="http://127.0.0.1:"+str(server.server_address[1])
         LOG.info("PT2VHF Mesh Analyzer v%s — %s",__version__,address)

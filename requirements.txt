@@ -2,6 +2,7 @@
 meshtastic>=2.5,<3
 pyserial>=3.5,<4
 bleak>=0.22,<2
+zeroconf>=0.131,<1  # Passive Meshtastic TCP service discovery on LAN
 paho-mqtt>=2,<3
 PyPubSub>=4,<5
 # Offline technical PDF generation
