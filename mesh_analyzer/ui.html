@@ -197,7 +197,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
 <aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></aside>
 </div></section>
-<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Conexão TX: <select id="messageSource"></select></label><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend" type="button">➤ Enviar</button></div></div></div></section>
+<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend" type="button">➤ Enviar</button></div></div></div></section>
 <section class="view" id="viewStats">
 <div class="toolbar statsToolbar"><h2>Estatísticas</h2><div class="spacer"></div>
 <label>Período: <select id="statsPeriod"><option value="1h">1 h</option><option value="6h">6 h</option><option value="24h" selected>24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all">Todo</option></select></label>
@@ -1599,10 +1599,7 @@ function renderChat(){
  }
  $('bubbles').innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
  $('bubbles').scrollTop=$('bubbles').scrollHeight;
- const choices=txRadioSources(),previous=$('messageSource').value;
- $('messageSource').innerHTML=choices.map(x=>'<option value="'+x.id+'">'+esc(x.name)+' ('+esc(x.kind)+')</option>').join('')||
-   '<option value="">Nenhum rádio TX disponível</option>';
- if(choices.some(x=>String(x.id)===previous))$('messageSource').value=previous;
+ const choices=txRadioSources();
  // Allow the click even without a radio so the user can see why TX is unavailable.
  $('messageSend').disabled=messageSending;
  $('messageSend').title=choices.length?'Enviar via rádio':'Indisponível: '+txStatusReason();
@@ -1616,8 +1613,10 @@ $('messageSend').onclick=async()=>{
  if(!text){notify('Digite a mensagem.',true);return;}
  const bytes=new TextEncoder().encode(text).length;
  if(bytes>220){notify('Limite 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
- const src=Number($('messageSource').value);
- if(!txRadioSources().some(x=>x.id===src)){showNoConnectionDialog();renderChat();return;}
+ const choices=txRadioSources();
+ if(!choices.length){showNoConnectionDialog();renderChat();return;}
+ if(choices.length>1){notify('Mais de um rádio TX disponível. Desative os demais em Configurações → Conexões antes de enviar.',true);return;}
+ const src=Number(choices[0].id);
  const target=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';
  const ch=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);
  messageSending=true;pendingChat={chat:currentChat,text,failed:false};renderChat();
