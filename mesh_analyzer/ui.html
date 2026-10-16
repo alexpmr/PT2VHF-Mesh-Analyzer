@@ -164,7 +164,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </div>
 <div id="map"><div style="padding:40px;color:#9bb1c3">Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.</div></div>
 <div id="terrainSlider" hidden><label>Corte: <strong id="terrainValue">0 m</strong></label><div><input id="terrainCut" type="range" min="0" max="3000" step="50" value="0"></div><label>Máx. (m) <input type="number" id="terrainMax" min="100" max="9000" value="3000" style="width:86px"></label><label>Opacidade <input type="range" id="terrainOpacity" min="20" max="100" value="65"></label></div>
-<div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>┄ <span style="color:#c6a2fa">Fluxo lógico (origem → destino; caminho RF desconhecido)</span></div><div id="mapTrafficActivity" role="status">Aguardando pacotes novos...</div><div>⋯ <span class="warn">Rota observada, enlace RF não comprovado</span></div><div id="mapTopologyStats">Topologia: aguardando...</div><div>Dados preservados no SQLite</div></div>
+<div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>┄ <span style="color:#c6a2fa">Fluxo lógico (origem → destino; caminho RF desconhecido)</span></div><div id="mapTrafficActivity" role="status">Aguardando pacotes novos...</div><div>⋯ <span class="warn">Rota observada, enlace RF não comprovado</span></div><div id="mapTopologyStats">Topologia: aguardando...</div><div id="mapMissingLinkInfo" class="muted" role="status" title="Enlaces conhecidos, mas sem coordenadas suficientes para desenhar a linha"></div><div>Dados preservados no SQLite</div></div>
 <div id="mapVisibilityPanel" role="group" aria-label="Exibição de objetos do mapa" hidden>
 <div class="verHead"><strong>VER</strong><div class="actions"><button type="button" id="mapShowAll">Selecionar tudo</button><button type="button" id="mapHideAll">Remover tudo</button></div></div>
 <label><input id="showMapNodes" type="checkbox" checked> Nós <small id="mapNodesCount">0</small></label>
@@ -987,6 +987,16 @@ function renderMap(){
     ' · linhas exibidas: '+visible+
     ' · sem geometria confiável: '+missing+
     ' · filtrados: '+hiddenBySearch;
+ const unavailable=activeLinks.filter(e=>{
+  if(!allowed.has(e.a)||!allowed.has(e.b))return false;
+  const a=nodes.find(n=>n.node_num===e.a),b=nodes.find(n=>n.node_num===e.b);
+  return !a||!b||!validPos(a)||!validPos(b);
+ });
+ $('mapMissingLinkInfo').textContent=unavailable.length?
+   unavailable.length+' trechos não desenhados por ausência de coordenadas: '+
+   unavailable.slice(0,6).map(e=>idName(e.a)+' ↔ '+idName(e.b)).join('; ')+
+   (unavailable.length>6?'…':''):'';
+
  
 }
 
