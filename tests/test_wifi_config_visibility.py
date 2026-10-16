@@ -3,7 +3,13 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from mesh_analyzer.device_config import editable_fields, prepare_all
-from tests.test_device_config import make_radio
+def make_radio():
+    try:
+        from meshtastic.protobuf import config_pb2
+    except ImportError:
+        from meshtastic import config_pb2
+    node=SimpleNamespace(localConfig=config_pb2.Config())
+    return SimpleNamespace(localNode=node)
 
 HTML=(Path(__file__).resolve().parents[1]/"mesh_analyzer"/"ui.html").read_text(encoding="utf-8")
 
