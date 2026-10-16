@@ -1950,7 +1950,7 @@ function showLora(){
     bluetooth:'Bluetooth',network:'Rede Wi-Fi/TCP',display:'Display',security:'Segurança'};
  const entries=Object.entries(loraData.editable_sections||{});
  for(const [group,fields] of entries){
-  const section=document.createElement('details');section.className='deviceSection';section.open=['device','lora'].includes(group);
+  const section=document.createElement('details');section.className='deviceSection';section.open=['device','lora','network'].includes(group);
   const summary=document.createElement('summary');summary.textContent=groupNames[group]||group;section.append(summary);
   const grid=document.createElement('div');grid.className='formGrid';
   for(const row of fields){
