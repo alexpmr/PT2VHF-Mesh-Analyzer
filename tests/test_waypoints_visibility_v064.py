@@ -91,7 +91,7 @@ class WaypointMapTests(unittest.TestCase):
         self.assertIn("w.source_id)===source",UI)
         self.assertIn("$('mapShowWaypointsSetting').checked",UI)
         self.assertIn("storeMapControls();renderMap();",UI)
-        self.assertIn('id="mapSource"',UI)
+        self.assertNotIn('id="mapSource"',UI)  # Removed by map toolbar redesign
 
 
 if __name__=="__main__":
