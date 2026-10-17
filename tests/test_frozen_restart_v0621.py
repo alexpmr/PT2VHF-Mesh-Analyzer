@@ -65,7 +65,15 @@ class FrozenRestartTests(unittest.TestCase):
                 old.wait(timeout=30)
                 deadline=time.monotonic()+50
                 while time.monotonic()<deadline and not notice.exists():time.sleep(.2)
-                self.assertTrue(notice.exists(),(root/'update.log').read_text(errors='replace'))
+                # unittest evaluates the failure-message argument even on success.
+                # PowerShell may still hold update.log open with exclusive sharing,
+                # so never read it unless the notice is actually missing.
+                if not notice.exists():
+                    try:
+                        details=(root/'update.log').read_text(encoding='utf-8',errors='replace')
+                    except OSError as exc:
+                        details=f'update.log unavailable: {exc}'
+                    self.fail('Updater did not write completion notice: '+details)
                 result=json.loads(notice.read_text(encoding='utf-8-sig'))
                 self.assertEqual(result['status'],'installed',result)
                 data=json.loads((root/'child.json').read_text())
