@@ -41,6 +41,12 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .msgState.accepted,.msgState.delivered{color:#34c759}.msgState.working{color:#efd1a2}.msgState.error{color:#f8afaf}
 #messageTxStatus{padding:5px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
 #nodeContextMenu{position:fixed;z-index:8000;min-width:230px;max-width:min(300px,92vw);padding:7px;background:#172935;border:1px solid #59798a;box-shadow:0 18px 35px #0009;border-radius:9px}
+#nodesRows tr[data-node]{cursor:pointer}
+#nodesRows tr.nodeSelected,#nodesRows tr[data-node][aria-selected="true"]{background:#315567!important;box-shadow:inset 4px 0 #e4b800}
+#nodesRows tr[data-node]:focus-visible{outline:2px solid #e4b800;outline-offset:-2px}
+#nodesBulkLine{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:6px 12px;border-bottom:1px solid var(--line);font-size:12px}
+#nodesBulkLine[hidden]{display:none!important}
+#nodesBulkStatus{color:var(--muted)}
 #nodeContextMenu[hidden]{display:none!important}#nodeContextMenu button{display:block;width:100%;text-align:left;padding:8px;border:0;background:transparent}#nodeContextMenu button:hover:not(:disabled){background:#30485a}#nodeContextMenu button:disabled{color:#8c99a2}.composer{display:flex;gap:7px;padding:10px;background:#152433;border-top:1px solid var(--line)}.composer input{flex:1;min-width:0}.composer select{max-width:180px}
 .settingsTabs{display:flex;gap:6px;padding:10px 15px 0;border-bottom:1px solid var(--line);background:#152433}.settingsTab{border-bottom:0;border-radius:6px 6px 0 0;font-weight:700}.settingsTab.active{background:var(--accent);color:#121a1f}.settingsPanel{display:none;overflow:auto;padding:15px;gap:12px;flex-direction:column}.settingsPanel.active{display:flex}.formGrid{display:grid;grid-template-columns:repeat(2,minmax(190px,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-weight:600;color:#bdcedd}.field input,.field select{width:100%}.span2{grid-column:1/-1}.sourceList{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}.sourceCard{padding:12px;background:#1a2b38;border:1px solid var(--line);border-radius:8px}.sourceCard b{display:block}.sourceCard p{font-size:12px;color:var(--muted);margin:4px 0}.sourceActions{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}.ok{color:#67e1a2}.bad{color:#ff9999}.warn{color:#f4ce73}
 .statGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.stat{background:#1c2b38;border:1px solid var(--line);border-radius:8px;padding:13px}.stat b{display:block;font-size:23px;margin-bottom:5px}.stat span{color:var(--muted)}
@@ -148,7 +154,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.22</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.23</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -183,12 +189,12 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </div>
 </section>
 <section class="view" id="viewNodes"><div class="toolbar" id="nodesToolbar">
-<h2>Nós</h2><span id="nodesCounter" class="muted"></span><div class="spacer"></div>
+<h2>Nós</h2><span id="nodesCounter" class="muted"></span><span id="nodesSelectionCount" class="muted" aria-live="polite"></span><div class="spacer"></div>
 <span class="muted" id="nodeDistanceStatus" title="Referência automática: rádio conectado, nunca nó escolhido manualmente.">Distância: aguardando rádio local</span>
 <input id="nodesFilter" placeholder="nome, ID, hardware..." aria-label="Pesquisar nós" style="width:200px">
 <button id="nodesClear" title="Limpar pesquisa">×</button><button id="nodesColumns">Colunas</button><button id="nodesReload">Atualizar</button>
 <div id="nodeColumnPanel"></div></div>
-<div class="tableWrap"><table class="dataTable"><thead><tr id="nodesHeader"></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
+<div id="nodesBulkLine" hidden><b>Consultas RF em lote</b><span id="nodesBulkStatus" role="status" aria-live="polite"></span><button type="button" id="nodesBulkCancel">Cancelar consultas pendentes</button><details id="nodesBulkResults" hidden><summary>Resultados por nó</summary><div id="nodesBulkResultRows"></div></details></div><div class="tableWrap"><table class="dataTable"><thead><tr id="nodesHeader"></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
 <section class="view" id="viewTraffic">
 <div class="toolbar"><h2>Tráfego ao vivo</h2><span class="ok">● AO VIVO</span>
 
@@ -288,7 +294,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.22</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.23</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.8.</p></div></div></section>
@@ -1415,6 +1421,150 @@ function localRadioReference(){
  const node=nodes.find(x=>x.node_num===num);
  return node&&validPos(node)?node:null;
 }
+
+const nodeSelectedIds=new Set();
+let nodeSelectAnchor=null,nodeVisibleOrder=[],activeNodeBulk=null;
+const NODE_BULK_GAP_MS=60000, NODE_BULK_HOURLY_CAP=6, NODE_BULK_WAIT_MS=1500, NODE_BULK_REPLY_MS=35000;
+// Pure selection operation; range uses the current filtered/sorted order.
+function nodeSelectionNext(selected,ordered,clicked,anchor,ctrl=false,shift=false){
+ const visible=ordered.map(Number),valid=new Set(visible),id=Number(clicked);
+ const prior=new Set([...selected].map(Number));
+ if(shift&&valid.has(Number(anchor))&&valid.has(id)){
+  const start=visible.indexOf(Number(anchor)),end=visible.indexOf(id);
+  const next=ctrl?prior:new Set();
+  for(let i=Math.min(start,end);i<=Math.max(start,end);i++)next.add(visible[i]);
+  return [...next];
+ }
+ if(ctrl){if(prior.has(id))prior.delete(id);else prior.add(id);return [...prior];}
+ return [id];
+}
+function updateNodeSelectionVisual(){
+ const visible=new Set(nodeVisibleOrder);
+ const selected=[...nodeSelectedIds].filter(id=>nodes.some(n=>Number(n.node_num)===id));
+ const outside=selected.filter(id=>!visible.has(id)).length;
+ $('nodesSelectionCount').textContent=selected.length?
+  '· '+selected.length+' selecionado(s)'+(outside?' ('+outside+' fora do filtro)':'')+' · clique direito para consultar em lote':'';
+ $('nodesRows').querySelectorAll('[data-node]').forEach(el=>{
+  const picked=nodeSelectedIds.has(Number(el.dataset.node));
+  el.classList.toggle('nodeSelected',picked);
+  el.setAttribute('aria-selected',String(picked));
+ });
+}
+function selectNodeRow(node,ev){
+ const id=Number(node),ctrl=!!(ev.ctrlKey||ev.metaKey),shift=!!ev.shiftKey;
+ const selected=nodeSelectionNext(nodeSelectedIds,nodeVisibleOrder,id,nodeSelectAnchor,ctrl,shift);
+ nodeSelectedIds.clear();selected.forEach(n=>nodeSelectedIds.add(n));
+ if(!shift||nodeSelectAnchor===null||!nodeVisibleOrder.includes(nodeSelectAnchor))nodeSelectAnchor=id;
+ updateNodeSelectionVisual();
+}
+function selectAllFilteredNodes(){
+ nodeSelectedIds.clear();
+ nodeVisibleOrder.forEach(id=>nodeSelectedIds.add(id));
+ nodeSelectAnchor=nodeVisibleOrder[0]??null;
+ updateNodeSelectionVisual();
+}
+function activeBulkRadioSource(){
+ const radios=(state.sources||[]).filter(s=>s.kind!=='mqtt'&&s.enabled&&
+   state.connections?.[String(s.id)]?.status==='connected'&&
+   state.connections[String(s.id)].tx_capable===true);
+ return radios.length===1?radios[0]:null;
+}
+function updateNodeBulkProgress(){
+ if(!activeNodeBulk)return;
+ const job=activeNodeBulk;
+ const total=job.targets.length,done=job.results.length;
+ $('nodesBulkLine').hidden=false;
+ $('nodesBulkStatus').textContent=
+  RF_QUERY_TYPES.find(([k])=>k===job.kind)?.[1]+': '+done+'/'+total+' concluídas'+
+  (job.current?' · '+idName(job.current)+' aguardando resposta':'')+
+  ' · '+job.results.filter(x=>x.state==='replied').length+' respostas'+
+  ' · '+job.results.filter(x=>x.state==='timeout').length+' timeouts'+
+  ' · '+job.results.filter(x=>x.state==='error').length+' falhas'+
+  (job.cancelled?' · cancelamento solicitado':'');
+ $('nodesBulkCancel').disabled=job.cancelled||done>=total;
+ $('nodesBulkResults').hidden=done===0;
+ $('nodesBulkResultRows').innerHTML=job.results.map(r=>'<div>'+
+   esc(idName(r.node))+' — '+esc(({replied:'Resposta recebida',timeout:'Timeout',
+     disconnected:'Desconectado',error:'Falha'})[r.state]||r.state)+
+   (r.error?' · '+esc(r.error):'')+'</div>').join('');
+}
+const bulkSleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function waitBulkReply(job,node,requestId){
+ const deadline=Date.now()+NODE_BULK_REPLY_MS;
+ while(Date.now()<deadline){
+  await bulkSleep(NODE_BULK_WAIT_MS);
+  try{
+   const response=await api('/api/queries?node='+encodeURIComponent(node));
+   const row=(response.data||[]).find(q=>q.request_id===requestId);
+   if(row&&['replied','timeout','error','disconnected'].includes(row.state))
+    return {node,state:row.state,error:row.error||''};
+  }catch(error){return {node,state:'error',error:'Falha ao verificar resposta: '+error.message};}
+ }
+ return {node,state:'error',error:'Estado não confirmado após prazo de espera'};
+}
+async function startNodeBulk(kind,targetIds){
+ if(activeNodeBulk){notify('Já existe um lote RF em andamento.',true);return;}
+ const source=activeBulkRadioSource();
+ if(!source){notify('Consultas em lote exigem exatamente um rádio TX conectado.',true);return;}
+ if(!RF_QUERY_TYPES.some(([k])=>k===kind))return;
+ const own=Number(state.connections[String(source.id)]?.local_node_num);
+ const targets=[...new Set(targetIds.map(Number))].filter(id=>Number.isInteger(id)&&id>0&&id<0xffffffff&&id!==own);
+ if(!targets.length){notify('Nenhum nó remoto válido selecionado.',true);return;}
+ if(!confirm('Consultar '+targets.length+' nós por '+kind+' usando '+source.name+'?\n\n'+
+    'As transmissões serão sequenciais, separadas por pelo menos 60 segundos. '+
+    'Cada resposta pode levar até 30 segundos. Cancelar impedirá apenas os envios ainda não feitos.'))return;
+ const job={kind,sourceId:source.id,targets,results:[],cancelled:false,current:null};
+ activeNodeBulk=job;updateNodeBulkProgress();
+ let lastSent=0;
+ const sentTimes=[];
+ try{
+  for(const node of targets){
+   if(job.cancelled)break;
+   while(lastSent&&Date.now()-lastSent<NODE_BULK_GAP_MS&&!job.cancelled)
+    await bulkSleep(Math.min(1000,NODE_BULK_GAP_MS-(Date.now()-lastSent)));
+   if(job.cancelled)break;
+   // Prevent bulk actions from saturating a LoRa network: six requests per hour.
+   sentTimes.splice(0,sentTimes.length,...sentTimes.filter(t=>Date.now()-t<3600000));
+   while(sentTimes.length>=NODE_BULK_HOURLY_CAP&&!job.cancelled){
+    $('nodesBulkStatus').textContent='Limite RF: 6 consultas/hora. Próximo envio em '+
+      Math.ceil(Math.max(0,3600000-(Date.now()-sentTimes[0]))/60000)+' min; cancelar é permitido.';
+    await bulkSleep(1000);
+    sentTimes.splice(0,sentTimes.length,...sentTimes.filter(t=>Date.now()-t<3600000));
+   }
+   if(job.cancelled)break;
+   if(Number(activeBulkRadioSource()?.id)!==Number(job.sourceId)){
+    job.results.push({node,state:'error',error:'Conexão TX alterada/desconectada'});
+    job.cancelled=true;break;
+   }
+   job.current=node;updateNodeBulkProgress();
+   try{
+    const response=await api('/api/queries/send',{source_id:job.sourceId,node,kind});
+    lastSent=Date.now();sentTimes.push(lastSent);
+    const requestId=response.data?.request_id;
+    if(!requestId)throw new Error('Backend não informou ID da consulta');
+    job.results.push(await waitBulkReply(job,node,requestId));
+   }catch(error){
+    job.results.push({node,state:'error',error:error.message});
+    // A failed local TX could still have transmitted; preserve RF spacing and budget.
+    lastSent=Date.now();sentTimes.push(lastSent);
+   }
+   job.current=null;updateNodeBulkProgress();
+  }
+  const failures=job.results.filter(r=>r.state!=='replied');
+  const summary='Lote '+kind+': '+job.results.length+'/'+targets.length+
+   ' processadas, '+job.results.filter(r=>r.state==='replied').length+
+   ' respostas, '+failures.length+' sem confirmação'+
+   (job.cancelled?' (cancelado)':'')+'.';
+  updateNodeBulkProgress();
+  $('nodesBulkStatus').textContent=summary;
+  notify(summary,failures.length>0);
+ }finally{
+  $('nodesBulkCancel').disabled=true;
+  activeNodeBulk=null;
+ }
+}
+$('nodesBulkCancel').onclick=()=>{if(activeNodeBulk){activeNodeBulk.cancelled=true;updateNodeBulkProgress();}};
+
 function renderNodes(){
  const ref=localRadioReference();
  const radioCount=(state.sources||[]).filter(src=>src.kind!=='mqtt'&&state.connections?.[String(src.id)]?.status==='connected').length;
@@ -1429,11 +1579,27 @@ function renderNodes(){
  $('nodesHeader').innerHTML=visible.map(([k,label])=>'<th data-nodesort="'+k+'" role="button" tabindex="0">'+esc(label)+(k===nodeSort?(nodeSortAsc?' ▲':' ▼'):'')+'</th>').join('');
  list.sort((a,b)=>{const av=nodeValue(a,nodeSort),bv=nodeValue(b,nodeSort);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;
   const cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'pt-BR',{numeric:true});return nodeSortAsc?cmp:-cmp;});
- $('nodesRows').innerHTML=list.map(n=>'<tr data-node="'+n.node_num+'">'+visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>').join('')||'<tr><td>Nenhum nó conhecido.</td></tr>';
+ nodeVisibleOrder=list.map(n=>Number(n.node_num));
+ const existing=new Set(nodes.map(n=>Number(n.node_num)));
+ [...nodeSelectedIds].forEach(id=>{if(!existing.has(id))nodeSelectedIds.delete(id);});
+ $('nodesRows').innerHTML=list.map(n=>'<tr data-node="'+n.node_num+'" tabindex="0" aria-selected="false">'+
+   visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>').join('')||
+   '<tr><td>Nenhum nó conhecido.</td></tr>';
  $('nodesRows').querySelectorAll('[data-node]').forEach(el=>{
-   el.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(el.dataset.node));if(n)showNode(n);};
-   el.oncontextmenu=ev=>{ev.preventDefault();openNodeContext(Number(el.dataset.node),ev.clientX,ev.clientY);};
+   const id=Number(el.dataset.node);
+   el.onclick=ev=>selectNodeRow(id,ev);
+   el.ondblclick=()=>{const n=nodes.find(x=>Number(x.node_num)===id);if(n)showNode(n);};
+   el.onkeydown=ev=>{
+    if(ev.key==='Enter'){ev.preventDefault();const n=nodes.find(x=>Number(x.node_num)===id);if(n)showNode(n);}
+    if(ev.key===' '){ev.preventDefault();selectNodeRow(id,ev);}
+   };
+   el.oncontextmenu=ev=>{
+    ev.preventDefault();
+    if(!nodeSelectedIds.has(id)){nodeSelectedIds.clear();nodeSelectedIds.add(id);nodeSelectAnchor=id;updateNodeSelectionVisual();}
+    openNodeContext(id,ev.clientX,ev.clientY);
+   };
  });
+ updateNodeSelectionVisual();
 }
 $('nodesHeader').onclick=e=>{const th=e.target.closest('[data-nodesort]');if(!th)return;const key=th.dataset.nodesort;nodeSortAsc=nodeSort===key?!nodeSortAsc:(key==='distance'||key==='long_name');nodeSort=key;localStorage.setItem('mesh.nodes.sort',JSON.stringify({col:nodeSort,asc:nodeSortAsc}));renderNodes();};
 $('nodesHeader').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-nodesort]')){e.preventDefault();e.target.click();}};
@@ -1444,8 +1610,12 @@ $('nodesColumns').onclick=()=>{const p=$('nodeColumnPanel');if(p.style.display==
 };
 $('nodesClear').onclick=()=>{$('nodesFilter').value='';renderNodes();$('nodesFilter').focus();};
 $('nodesFilter').oninput=renderNodes;$('nodesReload').onclick=refreshAll;
-
-$('nodesFilter').oninput=renderNodes;$('nodesReload').onclick=refreshAll;
+document.addEventListener('keydown',ev=>{
+ if(view!=='nodes'||!(ev.ctrlKey||ev.metaKey)||ev.key.toLowerCase()!=='a'||ev.altKey)return;
+ const el=document.activeElement;
+ if(el&&(el.matches('input,textarea,[contenteditable="true"]')||el.isContentEditable))return;
+ ev.preventDefault();selectAllFilteredNodes();
+});
 
 let pausedTraffic=false, selectedPacketId=null,trafficFilterSignature='';
 function filteredTraffic(){
@@ -1517,29 +1687,48 @@ async function deleteNodeFromRadioAndDatabase(n){
 }
 function openNodeContext(nodeNum,x,y){
  const n=nodes.find(v=>Number(v.node_num)===Number(nodeNum));if(!n)return;
+ const selected=(view==='nodes'&&nodeSelectedIds.has(Number(nodeNum)))?
+    [...nodeSelectedIds].filter(id=>nodes.some(row=>Number(row.node_num)===id)):[Number(nodeNum)];
+ const multi=selected.length>1;
  const menu=$('nodeContextMenu');
  const action=(key,title,enabled=true,note='')=>
     '<button type="button" role="menuitem" data-node-action="'+key+'" '+
     (enabled?'':'disabled title="'+esc(note)+'"')+'>'+esc(title)+
     (enabled?'':' · Indisponível')+'</button>';
- menu.innerHTML='<div class="ctxName">'+esc(idName(n.node_num))+
-      ' <small>'+esc(n.node_id)+'</small></div>'+
-      action('message','Enviar mensagem privada')+
-      action('detail','Informações completas')+
-      action('locate','Mostrar no mapa',validPos(n),'O nó não informou posição')+
-      action('copy','Copiar Node ID')+
-      action('delete','Apagar nó do banco e do rádio')+
-      '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
-      RF_QUERY_TYPES.map(([k,l])=>action('query-'+k,l,!!activeRadioSource(),'Conecte um rádio com transmissão')).join('')+
-      action('future','Ping / Vizinhos',false,'Não há API validada para esta versão');
+ menu.innerHTML='<div class="ctxName">'+
+  (multi?esc(selected.length+' nós selecionados'):esc(idName(n.node_num))+
+       ' <small>'+esc(n.node_id)+'</small>')+'</div>'+
+  (multi?
+   '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas em lote: fila RF, 60 s entre TX e timeout individual de 30 s. Não executa exclusão em massa.</div>'+
+   RF_QUERY_TYPES.map(([k,l])=>action('bulk-'+k,'Consultar '+l+' ('+selected.length+' nós)',!!activeBulkRadioSource(),
+     'Conecte exatamente um rádio TX')).join('')+
+   action('copy-bulk','Copiar Node IDs ('+selected.length+')'):
+   action('message','Enviar mensagem privada')+
+   action('detail','Informações completas')+
+   action('locate','Mostrar no mapa',validPos(n),'O nó não informou posição')+
+   action('copy','Copiar Node ID')+
+   action('delete','Apagar nó do banco e do rádio')+
+   '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
+   RF_QUERY_TYPES.map(([k,l])=>action('query-'+k,l,!!activeRadioSource(),'Conecte um rádio com transmissão')).join('')+
+   action('future','Ping / Vizinhos',false,'Não há API validada para esta versão'));
  menu.hidden=false;
  const width=menu.offsetWidth||250,height=menu.offsetHeight||340;
  menu.style.left=Math.max(6,Math.min(x,innerWidth-width-6))+'px';
  menu.style.top=Math.max(6,Math.min(y,innerHeight-height-6))+'px';
  menu.querySelectorAll('[data-node-action]').forEach(btn=>btn.onclick=async()=>{
    closeNodeContext();
-   if(btn.dataset.nodeAction.startsWith('query-')){await runNodeQuery(n.node_num,btn.dataset.nodeAction.slice(6));return;}
+   if(btn.dataset.nodeAction.startsWith('bulk-')){
+     await startNodeBulk(btn.dataset.nodeAction.slice(5),selected);return;
+   }
+   if(btn.dataset.nodeAction.startsWith('query-')){
+     await runNodeQuery(n.node_num,btn.dataset.nodeAction.slice(6));return;
+   }
    switch(btn.dataset.nodeAction){
+    case 'copy-bulk':try{
+      await navigator.clipboard.writeText(selected.map(id=>
+       nodes.find(v=>Number(v.node_num)===id)?.node_id||'!'+id.toString(16).padStart(8,'0')).join('\n'));
+      notify(selected.length+' Node IDs copiados.');
+     }catch(e){notify('Falha ao copiar Node IDs.',true);}break;
     case 'delete':await deleteNodeFromRadioAndDatabase(n);break;
     case 'message':openDm(n.node_num);break;
     case 'detail':showNode(n);break;
