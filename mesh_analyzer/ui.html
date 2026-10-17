@@ -179,6 +179,41 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
  .sourceAutoLabel{display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;width:max-content;max-width:100%;cursor:pointer}.sourceAutoLabel input{width:auto!important;flex:0 0 auto;margin:0}
 #nav{order:2}header .brand{order:1;width:100%}.activityGroup{order:3}#radioConnectionStatus{order:3}#topUpdate{order:3;margin-left:auto}header{gap:8px}
 header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;flex:1 1 auto;min-width:0}.activityGroup{order:3;flex:0 0 auto}#radioConnectionStatus{order:3;flex:0 0 auto}#topUpdate{order:3;flex:0 0 auto;margin-left:auto}@media(max-width:850px){#nav{flex-basis:100%;order:2}header{gap:6px}#topUpdate{margin-left:auto}}
+
+/* Theme overrides come last so legacy hardcoded colors do not shadow tokens. */
+html[data-theme] button:not(.active):not(.danger),
+html[data-theme] select,html[data-theme] input:not([type=checkbox]):not([type=radio]):not([type=color]),
+html[data-theme] textarea{background:var(--control)!important;color:var(--ink)!important;border-color:var(--line)!important}
+html[data-theme] button:not(.active):hover:not(:disabled){background:var(--hover)!important}
+html[data-theme] .navbtn.active,html[data-theme] .settingsTab.active,html[data-theme] .subtab.active{background:var(--accent)!important;color:#171a20!important}
+html[data-theme] #playback,html[data-theme] .toolbar,html[data-theme] .settingsTabs,
+html[data-theme] .subtabs,html[data-theme] .composer{background:var(--panel)!important}
+html[data-theme] .card,html[data-theme] .metric,html[data-theme] .statsCard,html[data-theme] .stat,
+html[data-theme] .sourceCard,html[data-theme] .chatHeader,html[data-theme] .contacts,
+html[data-theme] .mapSearchMatches,html[data-theme] #mapVisibilityPanel,
+html[data-theme] #nodeContextMenu,html[data-theme] #nodeColumnPanel,html[data-theme] #mapLegend,
+html[data-theme] .modalContent,html[data-theme] .dialogContent{background:var(--card)!important;color:var(--ink)}
+html[data-theme] .contact,html[data-theme] .bubble{background:var(--card);color:var(--ink)}
+html[data-theme] .dataTable th{background:var(--head)!important;color:var(--ink)!important}
+html[data-theme] .dataTable tr:hover td{background:var(--hover)!important}
+html[data-theme] #nodesRows tr.nodeSelected td{background:var(--active-row)!important}
+html[data-theme] #nodeContextMenu button{color:var(--ink)!important}
+html[data-theme] #nodeContextMenu button:hover{background:var(--hover)!important}
+html[data-theme] .field label,html[data-theme] .statsCard h3,html[data-theme] .card h3{color:var(--ink)}
+html[data-theme] .bubble small,html[data-theme] .muted{color:var(--muted)!important}
+html[data-theme] #mapLegend{border-color:var(--line)}
+html[data-theme="light"] #mapLegend{background:#fffffff0!important}
+html[data-theme="light"] .contacts .contact.selected{background:#d4e7f7!important;color:#173e5e}
+html[data-theme="light"] .bubble.tx{background:#ccebd9!important;color:#13432e}
+html[data-theme="light"] .badge{background:#e7e9ed!important;color:#293545}
+html[data-theme="light"] .danger{background:#ffe1e3!important;color:#941d22!important}
+html[data-theme="light"] .warn{color:#8c6100!important}
+html[data-theme="light"] .ok{color:#147542!important}
+html[data-theme="light"] .bad{color:#ad2525!important}
+html[data-theme="light"] .brand-tagline{color:#226c3e}
+html[data-theme="light"] .brand-vhf{color:#107c38}
+html[data-theme="light"] .sourceCard p{color:var(--muted)}
+html[data-theme="light"] #radioConnectionStatus[data-status="connected"]{background:#d9f2e1!important;color:#086535!important}
 </style>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
