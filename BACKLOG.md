@@ -1,3 +1,7 @@
+## v0.6.21 — #103 / #106
+
+Correções de ambiente PyInstaller, espera do bootloader, destino/log do Setup e estilo dos trechos RF. Testes automatizados locais e ciclo congelado Windows no CI. Aceite físico ainda pendente; não fechar issues por compilação. Instalação manual da v0.6.21 necessária para passar a usar o runner corrigido em atualizações futuras. #102 e #105 continuam pendentes.
+
 ## v0.6.20 — Consultas RF (#104)
 
 Implementado timeout uniforme de 30 s contado após envio pelo SDK, com relógio monotônico, recuperação sem polling, proteção de duplicatas em envio e invalidação ao trocar interface. Testes automatizados cobrem os quatro tipos. Aceite físico pendente. #102 (exclusão em dois destinos), #103 (updater) e #105 (seleção/bulk) permanecem abertas, não implementadas nesta release.

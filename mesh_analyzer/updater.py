@@ -70,12 +70,31 @@ try {
         } catch { $same = $true }
         if ($same) { throw 'Original application still running after 90 seconds' }
     }
+    # The app PID is the onefile child. Its bootloader parent may still be
+    # cleaning temporary resources and holding the executable open.
+    $processName = [IO.Path]::GetFileNameWithoutExtension([string]$p.executable)
+    $releaseDeadline = [DateTime]::UtcNow.AddSeconds(90)
+    do {
+        $holders = @(Get-Process -Name $processName -ErrorAction SilentlyContinue | Where-Object {
+            $_.Path -and [string]::Equals([IO.Path]::GetFullPath($_.Path),
+                [IO.Path]::GetFullPath([string]$p.executable), [StringComparison]::OrdinalIgnoreCase)
+        })
+        if (-not $holders.Count) { break }
+        Start-Sleep -Milliseconds 250
+    } while ([DateTime]::UtcNow -lt $releaseDeadline)
+    if ($holders.Count) { throw 'Executable still held by original onefile processes' }
+    # A fresh onefile instance must not reuse the old application's _MEI folder.
+    $env:PYINSTALLER_RESET_ENVIRONMENT = '1'
+    WriteLog 'Restart environment reset enabled for independent PyInstaller instance'
     if ([string]$p.mode -eq 'setup') {
         WriteLog ('PHASE setup-started path=' + [string]$p.package)
         # SILENT shows Inno's installation progress, without a second confirmation.
         # VERYSILENT concealed the entire installer and looked like nothing happened.
-        $args = @('/SILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-')
-        $proc = Start-Process -FilePath ([string]$p.package) -ArgumentList $args -Wait -PassThru
+        $installDir = [IO.Path]::GetDirectoryName([string]$p.executable)
+        $setupLog = Join-Path ([IO.Path]::GetDirectoryName($log)) 'update-setup.log'
+        $setupArgs = @('/SILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',
+            ('/DIR="' + $installDir + '"'), ('/LOG="' + $setupLog + '"'))
+        $proc = Start-Process -FilePath ([string]$p.package) -ArgumentList $setupArgs -Wait -PassThru
         WriteLog ('PHASE setup-finished exit=' + $proc.ExitCode)
         if ($proc.ExitCode -ne 0) { throw ('Setup failed: exit code ' + $proc.ExitCode) }
     } elseif ([string]$p.mode -eq 'portable') {
@@ -383,7 +402,8 @@ class UpdateManager:
                     proc=subprocess.Popen(
                         command,cwd=str(self.profile),stdin=subprocess.DEVNULL,
                         stdout=output,stderr=subprocess.STDOUT,
-                        creationflags=creationflags,close_fds=True)
+                        creationflags=creationflags,close_fds=True,
+                        env={**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"})
             except OSError as exc:
                 self._record_update_error("launcher",type(exc).__name__)
                 raise RuntimeError("Não foi possível iniciar o atualizador externo; consulte update.log.") from exc

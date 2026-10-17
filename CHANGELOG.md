@@ -1,3 +1,13 @@
+# v0.6.21 — Reinício independente e estilo dos trechos RF
+
+- #103: runner reinicializa o ambiente PyInstaller antes do relançamento, evitando reutilizar temporários da instância encerrada; aguarda também o bootloader que ainda pode manter o EXE aberto.
+- Setup recebe diretório explícito da instalação atual e grava update-setup.log para separar falha de instalação de falha de relançamento.
+- #106: trechos RF de traceroute e vizinhança usam cor/espessura RF configuradas (padrão amarelo contínuo); popup preserva o grau de evidência. Ranking de RF direto não foi ampliado.
+- Fluxo lógico duplicado não sobrepõe trecho topológico já desenhado no mesmo par/fonte/transporte. Fluxos sem caminho identificado continuam pontilhados; MQTT permanece distinto.
+- Novos testes executam as funções JavaScript reais e um ciclo Windows com EXE onefile de teste, substituição Portable, PowerShell real e health check após reinício. Esse teste usa fixture sem rádio/WebView2.
+- Instalar esta versão manualmente: o salto a partir da v0.6.20 ainda é executado pelo runner antigo. O novo runner passa a valer nas atualizações iniciadas pela v0.6.21.
+- Causa de ambiente herdado identificada no código; não afirmar resolução universal do erro de campo sem teste no computador afetado. Validação física de Setup/WebView2/radio permanece pendente.
+
 # v0.6.20 — Consultas RF com timeout de 30 segundos
 
 - #104: NodeInfo, Posição, Telemetria e Traceroute passam a usar prazo de 30 segundos após retorno do envio pelo SDK, medido por relógio monotônico.
