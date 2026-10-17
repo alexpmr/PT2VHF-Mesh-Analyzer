@@ -94,7 +94,7 @@ console.log(JSON.stringify({single,ctrl,toggle,range,addRange,selectAll,run1,amb
         self.assertIn("await waitBulkReply(job,node,requestId)", HTML)
         self.assertIn("if(job.cancelled)break", HTML)
         self.assertIn("job.cancelled=true", HTML)
-        self.assertIn("Não executa exclusão em massa", HTML)
+        self.assertIn("deleteSelectedNodesBulk(selected)", HTML)
         self.assertIn("NODE_BULK_HOURLY_CAP=6", HTML)
         self.assertIn("nodesBulkResultRows", HTML)
         self.assertIn("job.results.map", HTML)
