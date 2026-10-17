@@ -25,7 +25,7 @@ class Win10CompatibilityTests(unittest.TestCase):
                          "PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.zip")
 
     def test_ci_keeps_legacy_packages_for_v0625_updaters(self):
-        workflow = (ROOT / ".github" / "workflows" / "windows.yml").read_text()
+        workflow = (ROOT / ".github" / "workflows" / "windows.yml").read_text(encoding="utf-8")
         self.assertIn("Compilar EXE Windows 10/11 x64", workflow)
         self.assertIn("MajorSubsystemVersion <= 10", workflow)
         self.assertIn("Portable-Win11-x64.zip", workflow)
