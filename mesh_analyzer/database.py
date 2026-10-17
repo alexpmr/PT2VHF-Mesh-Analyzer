@@ -338,7 +338,7 @@ class Database:
             self._db.execute("DELETE FROM sources WHERE id=?", (int(source_id),))
 
     SYSTEM_DEFAULTS = {"open_browser_on_start": False, "allow_lan_access": False,
-                       "update_minutes": 15}
+                       "update_minutes": 15, "theme": "dark"}
 
     def ui_preferences(self):
         """Validated persisted map presentation options, independent of browser."""
@@ -407,6 +407,8 @@ class Database:
         data["allow_lan_access"] = False
         n = data["update_minutes"]
         data["update_minutes"] = n if type(n) is int and 5 <= n <= 1440 else 15
+        if data["theme"] not in ("dark", "gray", "light"):
+            data["theme"] = "dark"
         return data
 
     def set_system_settings(self, changes):
@@ -421,6 +423,9 @@ class Database:
             raise ValueError("Opção do navegador deve ser sim ou não")
         if "update_minutes" in changes and (type(changes["update_minutes"]) is not int or not 5 <= changes["update_minutes"] <= 1440):
             raise ValueError("Intervalo de atualização: 5 a 1440 minutos")
+        if "theme" in changes and (not isinstance(changes["theme"], str) or
+                                   changes["theme"] not in ("dark", "gray", "light")):
+            raise ValueError("Tema deve ser Escuro, Cinza ou Claro")
         updated = self.system_settings()
         updated.update(changes)
         updated["allow_lan_access"] = False
