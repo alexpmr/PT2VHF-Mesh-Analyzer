@@ -1,31 +1,31 @@
-# PT2VHF Mesh Analyzer — v0.6.28
+# PT2VHF Mesh Analyzer — v0.6.29
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ (x64)** e **Windows 11 (x64)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
 ## Downloads — Windows 10 / Windows 11 (64 bits)
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.28](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.28)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.29](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.29)**
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.28-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.28/PT2VHF-Mesh-Analyzer-v0.6.28-Setup-Win10-Win11-x64.exe) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.28-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.28/PT2VHF-Mesh-Analyzer-v0.6.28-Portable-Win10-Win11-x64.exe) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.28-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.28/PT2VHF-Mesh-Analyzer-v0.6.28-Portable-Win10-Win11-x64.zip) |
-| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.28/SHA256SUMS.txt) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.29-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.29/PT2VHF-Mesh-Analyzer-v0.6.29-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.29-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.29/PT2VHF-Mesh-Analyzer-v0.6.29-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.29-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.29/PT2VHF-Mesh-Analyzer-v0.6.29-Portable-Win10-Win11-x64.zip) |
+| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.29/SHA256SUMS.txt) |
 
 **Links automáticos (última versão):**
 [Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
 [Portable Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe) ·
 [Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.28 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.29 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
 
-### Novidades da v0.6.28
+### Novidades da v0.6.29
 
-- Ícones SVG customizados no mapa para os 13 papéis de nó: Client, Router, Client Base, Repeater, Tracker, Sensor e demais variantes, com legenda recolhível.
-- O ícone usa a `role` informada pelo dispositivo na consulta inicial e nas respostas NodeInfo, incluindo `CLIENT = 0`. Papel ausente tem símbolo próprio, sem adivinhação pelo nome.
-- Recuperação única de roles ausentes a partir de pacotes já salvos, sem alterar atividade ou posição dos nós. Contorno verde/âmbar preserva indicação de atividade.
-- Mantidos cliques, menu contextual, enlaces e compatibilidade Windows 10 1809+/Windows 11 x64. Atualização interna do Portable permanece em investigação.
+- Atualizador Portable: reinício direto com ambiente isolado do runtime PyInstaller anterior; preserva pasta de dados e porta personalizadas.
+- Confirmação pela versão, identificação da tentativa e interface pronta; diagnóstico distingue HTTP indisponível de interface ainda não pronta. Avisos de falha mostram data e versão atualmente executada.
+- Pipeline testa o EXE Portable real, com nome versionado, caminho com espaços, ambiente _MEI inválido, perfil persistido e confirmação de prontidão pela API. Este teste usa modo headless e não substitui aceite visual no computador afetado.
+- Para obter o novo atualizador, instale esta versão manualmente: uma tentativa iniciada por versão antiga ainda usa o atualizador antigo. O próximo ciclo automático precisa de validação em campo (#103).
 
 ## Política de downloads
 

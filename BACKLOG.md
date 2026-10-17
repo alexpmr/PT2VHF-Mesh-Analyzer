@@ -1,3 +1,11 @@
+## v0.6.29 — Reinício do Portable e confirmação pós-atualização (#103)
+
+- Remove estado privado PyInstaller herdado no processo externo e antes do relançamento; usa ProcessStartInfo com UseShellExecute=false e reset explícito do runtime.
+- Mantém perfil e porta na linha de comando; confirmação /health exige versão, nonce da tentativa e interface pronta. Janela de inicialização de 180 s com último estado HTTP diagnosticado.
+- Aviso de falha persistido informa data e versão atualmente executada, sem declarar instalação manual defeituosa nem apagar evidência.
+- Teste Windows pós-build com EXE real, nome versionado, pasta/perfil com espaços, ambiente temporário inválido, substituição, backup e preservação do nó salvo; UI readiness simulada via API em modo headless. Mantido teste onefile com encerramento do bootloader anterior.
+- Não foi reproduzida a causa exata no PC afetado; ausência de logs e versões de origem/destino impede concluir causa única. Aceite físico Portable N→N+1 e WebView2 permanece pendente. Bootstrap manual necessário para versões com runner antigo. Ícone Windows #77 e botão verde #118 continuam fora deste escopo.
+
 ## v0.6.28 — Ícones por role do dispositivo
 
 - Mapa com 13 ícones SVG customizados, papel desconhecido explícito e legenda recolhível. Atividade continua no contorno verde/âmbar; cliques e menu contextual preservados.

@@ -34,7 +34,7 @@ console.log(JSON.stringify(result));'''
         self.assertIsNotNone(r['flowMqtt']['dashArray'])
 
     def test_runner_resets_before_launch_and_waits_for_bootloader(self):
-        self.assertLess(RUNNER_PS.index("$env:PYINSTALLER_RESET_ENVIRONMENT = '1'"),RUNNER_PS.index("$child = Start-Process"))
+        self.assertLess(RUNNER_PS.index("$env:PYINSTALLER_RESET_ENVIRONMENT = '1'"),RUNNER_PS.index("$child = [System.Diagnostics.Process]::Start"))
         self.assertIn('Executable still held by original onefile processes',RUNNER_PS)
         self.assertIn("('/DIR=\"' + $installDir",RUNNER_PS)
         self.assertIn('update-setup.log',RUNNER_PS)

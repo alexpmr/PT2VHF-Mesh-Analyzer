@@ -66,6 +66,12 @@ jobs:
           $archive = & python -c "import zipfile; from pathlib import Path; from PyInstaller.archive.readers import CArchiveReader; a=CArchiveReader('dist/PT2VHF-Mesh-Analyzer.exe'); print('1' if any('branding/mesh-analyzer.ico' in key.replace('\\','/') for key in a.toc.keys()) else '0')"
           if ($archive.Trim() -ne '1') { throw 'ICO nativo nao empacotado no EXE PyInstaller' }
           python -c "import pefile; p=pefile.PE('dist/PT2VHF-Mesh-Analyzer.exe'); ids=[i.id for i in p.DIRECTORY_ENTRY_RESOURCE.entries]; assert 3 in ids and 14 in ids, 'EXE sem ícones Windows'; assert p.FILE_HEADER.Machine == 0x8664, 'Arquitetura não é AMD64'; assert p.OPTIONAL_HEADER.MajorSubsystemVersion <= 10, 'PE exige sistema superior ao Windows 10'; print('PE AMD64, subsystem Windows 10+, ICON e GROUP_ICON OK')"
+      - name: Testar atualizador com EXE Portable real
+        shell: pwsh
+        run: |
+          $env:MESH_PACKAGED_EXE = (Resolve-Path 'dist/PT2VHF-Mesh-Analyzer.exe').Path
+          python -m unittest discover -s tests -p test_portable_runtime_v0629.py -v
+          if ($LASTEXITCODE -ne 0) { throw 'Falha no reinicio do Portable real' }
       - name: Criar ZIP portable e hash
         shell: pwsh
         run: |

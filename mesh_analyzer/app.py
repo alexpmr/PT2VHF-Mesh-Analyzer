@@ -154,7 +154,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self.send_header("Content-Security-Policy","frame-ancestors 'none'")
                     self.send_header("Cache-Control","no-cache")
                     self.send_header("Content-Length",str(len(content)));self.end_headers();self.wfile.write(content)
-                elif path == "/health":self._json({"success":True,"version":__version__,"database":"ok","ui_ready":bool(ready_event and ready_event.is_set())})
+                elif path == "/health":self._json({"success":True,"version":__version__,"database":"ok","update_nonce":os.environ.get("PT2VHF_UPDATE_NONCE",""),"ui_ready":bool(ready_event and ready_event.is_set())})
                 elif path == "/api/state":self._json({"success":True,"version":__version__,"sources":db.sources(),"connections":sources.snapshot(),"counts":db.stats(),"retention":db.retention(),"system":db.system_settings()})
                 elif path == "/api/nodes":self._json({"success":True,"data":db.node_rows()})
                 elif path == "/api/nodes/hops":self._json({"success":True,"data":db.node_hop_rows()})
@@ -438,6 +438,9 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                                   build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery))
         server.daemon_threads=True
         address="http://127.0.0.1:"+str(server.server_address[1])
+        updater.health_url=address+"/health"
+        updater.restart_arguments=['--data-dir',str(data),'--port',str(server.server_address[1]),'--no-browser']
+        if not desktop:updater.restart_arguments.append('--headless')
         LOG.info("PT2VHF Mesh Analyzer v%s — %s",__version__,address)
         db.log("Aplicação iniciada v"+__version__)
         def janitor():
