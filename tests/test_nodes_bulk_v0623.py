@@ -23,7 +23,8 @@ class NodeBulkUIRegression(unittest.TestCase):
 const elements={
  nodesRows:{querySelectorAll:()=>[]}, nodesSelectionCount:{textContent:''},
  nodesBulkLine:{hidden:true},nodesBulkStatus:{textContent:''},
- nodesBulkCancel:{disabled:false}
+ nodesBulkCancel:{disabled:false},
+ nodesBulkResults:{hidden:true},nodesBulkResultRows:{innerHTML:''}
 };
 const $=id=>elements[id];
 const nodes=[1,2,3,4,5].map(node_num=>({node_num}));
