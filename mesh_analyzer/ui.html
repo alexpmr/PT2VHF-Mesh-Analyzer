@@ -7,7 +7,33 @@
 <link rel="icon" type="image/png" href="__PT2VHF_MESH_LOGO__">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
 <style>
-:root{color-scheme:dark;--bg:#0e1621;--nav:#17212b;--panel:#14202b;--card:#1c2b38;--line:#304353;--ink:#edf3f8;--muted:#a3b7c6;--accent:#e4b800;--blue:#7fcaf0}
+:root{color-scheme:dark;--bg:#202126;--nav:#24252b;--panel:#25262c;--card:#2c2d34;--line:#505158;--ink:#f2f3f6;--muted:#c2c4cc;--accent:#e4b800;--blue:#8fd4ff;--control:#303138;--hover:#43444c;--head:#34353b;--active-row:#42444d}
+:root[data-theme="gray"]{color-scheme:dark;--bg:#333438;--nav:#3a3b40;--panel:#3d3e43;--card:#46474d;--line:#696b72;--ink:#fbfbfd;--muted:#d0d0d5;--accent:#f0ca42;--blue:#a4dcff;--control:#4c4d53;--hover:#57595f;--head:#4a4b53;--active-row:#52545b}
+:root[data-theme="light"]{color-scheme:light;--bg:#f4f5f7;--nav:#e6e9ef;--panel:#eef0f4;--card:#ffffff;--line:#c1c7d1;--ink:#1c2735;--muted:#4d5d6d;--accent:#c39400;--blue:#08669f;--control:#fff;--hover:#e0e6ee;--head:#dce2ea;--active-row:#d3e4f4}
+button,select,input,textarea{background:var(--control)!important;color:var(--ink);border-color:var(--line)}
+button:hover:not(:disabled){background:var(--hover)!important}
+#playback,.toolbar,.settingsTabs,.subtabs,.composer{background:var(--panel)}
+.card,.metric,.statsCard,.stat,.sourceCard,.bubble,.chatHeader,.contacts,.mapSearchMatches,#mapVisibilityPanel,#nodeContextMenu,#nodeColumnPanel,.contact,#mapLegend{background:var(--card);color:var(--ink)}
+.dataTable th{background:var(--head);color:var(--ink)}.dataTable td{border-bottom-color:var(--line)}
+.dataTable tr:hover td,#nodeContextMenu button:hover:not(:disabled){background:var(--hover)!important}
+#nodesRows tr.nodeSelected td,#nodesRows tr[aria-selected="true"] td{background:var(--active-row)!important}
+.field label,.statsCard h3,.card h3{color:var(--ink)}
+:root[data-theme="light"] .bubble.tx{background:#d6efe3;color:#193d31}
+:root[data-theme="gray"] .bubble.tx{background:#315b4c}
+:root[data-theme="light"] .notice{background:#fff4dc;color:#62470d;border-color:#c39840}
+:root[data-theme="light"] #radioConnectionStatus[data-status="connected"]{background:#d7f5e4;color:#126a3b}
+:root[data-theme="light"] #radioConnectionStatus[data-status="checking"]{background:#e1e9f0;color:#33506a}
+:root[data-theme="light"] .ok{color:#137444}
+:root[data-theme="light"] .bad{color:#ad242a}
+:root[data-theme="light"] .warn{color:#876000}
+:root[data-theme="light"] .muted{color:var(--muted)}
+:root[data-theme="light"] .badge{background:#e6eaf0}
+:root[data-theme="light"] .danger{background:#ffdde0;color:#842029}
+:root[data-theme="light"] .brand small,:root[data-theme="light"] .brand-tagline{color:#33694b}
+:root[data-theme="light"] .brand-vhf{color:#13894d}
+:root[data-theme="light"] #nodeContextMenu button:disabled{color:#657180}
+:root[data-theme="light"] #mapVisibilityPanel,#mapVisibilityPanel label{color:var(--ink)}
+:root[data-theme="light"] #toast{background:#26394a;color:#fff}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:var(--bg);color:var(--ink);font:13px system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 #app{height:100%;display:flex;flex-direction:column;min-height:0}header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--nav);border-bottom:1px solid var(--line);flex-wrap:wrap;flex:0 0 auto}
 .brand{display:flex;align-items:center;gap:8px;white-space:nowrap}.brand h1{margin:0;font-size:22px;line-height:1.14}.brand small{font-size:12px;color:#a6bdc9}.brand-version{font:inherit;color:var(--ink)}.logo{width:58px;height:58px;object-fit:contain;display:block;flex-shrink:0;filter:drop-shadow(0 0 7px #52ed7930)}
@@ -153,11 +179,53 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
  .sourceAutoLabel{display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;width:max-content;max-width:100%;cursor:pointer}.sourceAutoLabel input{width:auto!important;flex:0 0 auto;margin:0}
 #nav{order:2}header .brand{order:1;width:100%}.activityGroup{order:3}#radioConnectionStatus{order:3}#topUpdate{order:3;margin-left:auto}header{gap:8px}
 header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;flex:1 1 auto;min-width:0}.activityGroup{order:3;flex:0 0 auto}#radioConnectionStatus{order:3;flex:0 0 auto}#topUpdate{order:3;flex:0 0 auto;margin-left:auto}@media(max-width:850px){#nav{flex-basis:100%;order:2}header{gap:6px}#topUpdate{margin-left:auto}}
+
+/* Theme overrides come last so legacy hardcoded colors do not shadow tokens. */
+html[data-theme] button:not(.active):not(.danger),
+html[data-theme] select,html[data-theme] input:not([type=checkbox]):not([type=radio]):not([type=color]),
+html[data-theme] textarea{background:var(--control)!important;color:var(--ink)!important;border-color:var(--line)!important}
+html[data-theme] button:not(.active):hover:not(:disabled){background:var(--hover)!important}
+html[data-theme] .navbtn.active,html[data-theme] .settingsTab.active,html[data-theme] .subtab.active{background:var(--accent)!important;color:#171a20!important}
+html[data-theme] #playback,html[data-theme] .toolbar,html[data-theme] .settingsTabs,
+html[data-theme] .subtabs,html[data-theme] .composer{background:var(--panel)!important}
+html[data-theme] .card,html[data-theme] .metric,html[data-theme] .statsCard,html[data-theme] .stat,
+html[data-theme] .sourceCard,html[data-theme] .chatHeader,html[data-theme] .contacts,
+html[data-theme] .mapSearchMatches,html[data-theme] #mapVisibilityPanel,
+html[data-theme] #nodeContextMenu,html[data-theme] #nodeColumnPanel,html[data-theme] #mapLegend,
+html[data-theme] .modalContent,html[data-theme] .dialogContent{background:var(--card)!important;color:var(--ink)}
+html[data-theme] .contact,html[data-theme] .bubble{background:var(--card);color:var(--ink)}
+html[data-theme] .dataTable th{background:var(--head)!important;color:var(--ink)!important}
+html[data-theme] .dataTable tr:hover td{background:var(--hover)!important}
+html[data-theme] #nodesRows tr.nodeSelected td{background:var(--active-row)!important}
+html[data-theme] #nodeContextMenu button{color:var(--ink)!important}
+html[data-theme] #nodeContextMenu button:hover{background:var(--hover)!important}
+html[data-theme] .field label,html[data-theme] .statsCard h3,html[data-theme] .card h3{color:var(--ink)}
+html[data-theme] .bubble small,html[data-theme] .muted{color:var(--muted)!important}
+html[data-theme] #mapLegend{border-color:var(--line)}
+html[data-theme="light"] #mapLegend{background:#fffffff0!important}
+html[data-theme="light"] .contacts .contact.selected{background:#d4e7f7!important;color:#173e5e}
+html[data-theme="light"] .bubble.tx{background:#ccebd9!important;color:#13432e}
+html[data-theme="light"] .badge{background:#e7e9ed!important;color:#293545}
+html[data-theme="light"] .danger{background:#ffe1e3!important;color:#941d22!important}
+html[data-theme="light"] .warn{color:#8c6100!important}
+html[data-theme="light"] .ok{color:#147542!important}
+html[data-theme="light"] .bad{color:#ad2525!important}
+html[data-theme="light"] .brand-tagline{color:#226c3e}
+html[data-theme="light"] .brand-vhf{color:#107c38}
+html[data-theme="light"] .sourceCard p{color:var(--muted)}
+html[data-theme="light"] #radioConnectionStatus[data-status="connected"]{background:#d9f2e1!important;color:#086535!important}
 </style>
+<script>
+/* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
+try {
+ const selected=localStorage.getItem('mesh.ui.theme');
+ document.documentElement.dataset.theme=['dark','gray','light'].includes(selected)?selected:'dark';
+} catch(e){document.documentElement.dataset.theme='dark';}
+</script>
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.24</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.25</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -211,7 +279,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contacts" id="contacts"></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend" type="button">➤ Enviar</button></div></div></div></section>
 <section class="view" id="viewStats">
 <div class="toolbar statsToolbar"><h2>Estatísticas</h2><div class="spacer"></div>
-<label>Período: <select id="statsPeriod"><option value="1h">1 h</option><option value="6h">6 h</option><option value="24h" selected>24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all">Todo</option></select></label>
+<label>Período: <select id="statsPeriod"><option value="1h">1 h</option><option value="6h">6 h</option><option value="24h">24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all" selected>Todo</option></select></label>
 <label>Nó: <select id="statsNode"><option value="">Todos</option></select></label>
 
 <button id="statsReload">Atualizar tudo</button><small id="statsUpdated" class="muted"></small><button id="statsPDF">Relatório / PDF</button><button id="statsCSV">Exportar CSV</button></div>
@@ -274,6 +342,11 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <div class="card"><h3>Atividade em tempo real no mapa</h3><div class="mapConfigGrid"><div class="field"><label for="mapAnimateNodes">Animar atividade dos nós</label><input id="mapAnimateNodes" type="checkbox" checked></div><div class="field"><label for="mapHighlightSource">Realçar origem/resposta</label><input id="mapHighlightSource" type="checkbox" checked></div><div class="field"><label for="mapHighlightRelay">Realçar retransmissor observado</label><input id="mapHighlightRelay" type="checkbox" checked></div><div class="field"><label for="mapPulseSeconds">Duração do realce</label><select id="mapPulseSeconds"><option value="1">1 s</option><option value="2" selected>2 s</option><option value="3">3 s</option><option value="5">5 s</option></select></div><div class="field"><label for="mapAnimationSpeed">Velocidade da animação</label><select id="mapAnimationSpeed"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></div></div><p class="muted">A duração e a velocidade da animação são configuradas aqui, não no menu principal.</p></div>
 </section>
 <section class="settingsPanel" id="settingsSystem">
+<div class="card"><h3>Aparência</h3>
+ <div class="field"><label for="systemTheme">Tema da interface</label>
+ <select id="systemTheme" aria-label="Tema da interface"><option value="dark">Escuro (#202126)</option><option value="gray">Cinza (#333438)</option><option value="light">Claro</option></select></div>
+ <p class="muted">A alteração é exibida imediatamente. Use Salvar preferências do Sistema para mantê-la.</p>
+</div>
 <div class="card"><h3>Inicialização</h3>
   <label><input id="systemOpenBrowser" type="checkbox"> Abrir uma página web no navegador ao iniciar</label>
   <p class="muted">Desativado por padrão. A janela própria do PT2VHF Mesh Analyzer abre sempre, mesmo sem navegador.</p>
@@ -297,7 +370,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.24</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.25</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.8.</p></div></div></section>
@@ -541,7 +614,7 @@ $('saveAllSettings').onclick=async()=>{
       throw Error('Intervalo: 5–1440 minutos');
      const result=await api('/api/system/settings',{
        open_browser_on_start:$('systemOpenBrowser').checked,
-       update_minutes:minutes,allow_lan_access:false});
+       update_minutes:minutes,allow_lan_access:false,theme:$('systemTheme').value});
      state.system=result.settings;
     }else if(group==='retention'){
      const data={};document.querySelectorAll('[data-retention]').forEach(
@@ -2260,17 +2333,61 @@ function syncStatFilters(){
  const n=$('statsNode'),old=n.value;const nodesig=nodes.map(x=>x.node_num+':'+x.long_name).join('|');
  if(n.dataset.sig!==nodesig){n.innerHTML='<option value="">Todos</option>'+nodes.map(x=>'<option value="'+x.node_num+'">'+esc(x.short_name||x.long_name||x.node_id)+'</option>').join('');n.value=old;n.dataset.sig=nodesig;}
 }
-$('statsPDF').onclick=async()=>{
+function pdfExportFilename(){
+ return 'PT2VHF_Mesh_Analyzer_Relatorio_'+new Date().toISOString().slice(0,16).replaceAll(':','-')+'.pdf';
+}
+function pdfBlobToBase64(blob){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onerror=()=>reject(new Error('Não foi possível preparar PDF para o diálogo nativo.'));
+  reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');
+  reader.readAsDataURL(blob);
+ });
+}
+async function exportReportPdf(){
+ if($('statsPDF').disabled)return;
+ $('statsPDF').disabled=true;
  try{
- $('statsPDF').disabled=true;notify('Gerando PDF técnico a partir do SQLite...');
- const res=await fetch('/api/report/pdf',{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(statsFilters())});
- if(!res.ok){let err=await res.json();throw Error(err.error||'Falha PDF');}
- const blob=await res.blob();if(blob.type!=='application/pdf')throw Error('Resposta não é PDF');
- const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;
- a.download='PT2VHF_Mesh_Analyzer_Relatorio_'+new Date().toISOString().slice(0,16).replaceAll(':','-')+'.pdf';a.click();
- setTimeout(()=>URL.revokeObjectURL(url),5000);notify('Relatório PDF gerado.');
- }catch(e){notify('PDF: '+e.message,true);}finally{$('statsPDF').disabled=false;}
-};
+  notify('Gerando relatório técnico PDF a partir do SQLite...');
+  const res=await fetch('/api/report/pdf',{
+   method:'POST',
+   headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},
+   body:JSON.stringify(statsFilters())
+  });
+  if(!res.ok){
+   let errorMessage='Erro HTTP '+res.status;
+   try{const data=await res.json();errorMessage=data.error||errorMessage;}catch(e){}
+   throw new Error(errorMessage);
+  }
+  if(!(res.headers.get('Content-Type')||'').toLowerCase().includes('application/pdf'))
+   throw new Error('Servidor não retornou um PDF.');
+  const blob=await res.blob();
+  if(blob.size<100||blob.size>16000000)throw new Error('PDF vazio ou maior que 16 MB.');
+  const filename=pdfExportFilename();
+  if(window.pywebview&&window.pywebview.api&&
+     typeof window.pywebview.api.save_pdf==='function'){
+   const payload=await pdfBlobToBase64(blob);
+   const result=await window.pywebview.api.save_pdf(payload,filename);
+   if(result?.saved===true)notify('PDF salvo: '+result.filename);
+   else notify('Salvamento do PDF cancelado.');
+  }else{
+   const url=URL.createObjectURL(blob),link=document.createElement('a');
+   try{
+    link.href=url;link.download=filename;link.style.display='none';
+    document.body.appendChild(link);
+    link.click();
+    notify('Download do relatório solicitado. Verifique a pasta de downloads.');
+   }finally{
+    link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+   }
+  }
+ }catch(e){
+  notify('Erro ao gerar/salvar PDF: '+e.message,true);
+ }finally{
+  $('statsPDF').disabled=false;
+ }
+}
+$('statsPDF').onclick=exportReportPdf;
 $('statsCSV').onclick=()=>{
  if(!statData){notify('Atualize Estatísticas primeiro.',true);return;}
  const rows=[['Categoria','Item','Contagem']];
@@ -2477,10 +2594,26 @@ $('loraExport').onclick=()=>{
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 let monitorState=null,sysLoaded=false,checkingManually=false;
+const THEMES=['dark','gray','light'];
+function applySystemTheme(theme,persistCache=true){
+ const selected=THEMES.includes(theme)?theme:'dark';
+ document.documentElement.dataset.theme=selected;
+ if(persistCache)try{localStorage.setItem('mesh.ui.theme',selected);}catch(e){}
+}
+$('systemTheme').addEventListener('change',()=>{
+ applySystemTheme($('systemTheme').value);
+ markSettingsDirty('system');
+});
 function renderSystem(){
- const cfg=state.system||{open_browser_on_start:false,allow_lan_access:false,update_minutes:15};
- if(!sysLoaded){$('systemOpenBrowser').checked=Boolean(cfg.open_browser_on_start);
-  $('systemAllowLan').checked=false;$('updateInterval').value=Number(cfg.update_minutes)||15;sysLoaded=true;}
+ const cfg=state.system||{open_browser_on_start:false,allow_lan_access:false,update_minutes:15,theme:'dark'};
+ if(!sysLoaded){
+  $('systemOpenBrowser').checked=Boolean(cfg.open_browser_on_start);
+  $('systemAllowLan').checked=false;
+  $('updateInterval').value=Number(cfg.update_minutes)||15;
+  $('systemTheme').value=THEMES.includes(cfg.theme)?cfg.theme:'dark';
+  applySystemTheme($('systemTheme').value);
+  sysLoaded=true;
+ }
  $('systemStatus').textContent='Preferências persistidas no perfil da aplicação. Acesso LAN permanece bloqueado.';
 }
 $('systemSave').onclick=async()=>{
@@ -2489,7 +2622,7 @@ $('systemSave').onclick=async()=>{
  try{
   const result=await api('/api/system/settings',{
     open_browser_on_start:$('systemOpenBrowser').checked,
-    update_minutes:minutes,allow_lan_access:false
+    update_minutes:minutes,allow_lan_access:false,theme:$('systemTheme').value
   });
   state.system=result.settings;sysLoaded=false;renderSystem();savedSettingsGroup('system');
   notify('Configurações salvas no SQLite. Checagem a cada '+minutes+' minutos.');
@@ -2733,7 +2866,10 @@ $('radioConnectionStatus').onclick=reconnectFromStatus;
 $('radioConnectionStatus').onkeydown=e=>{
  if(e.key==='Enter'||e.key===' '){e.preventDefault();reconnectFromStatus();}
 };
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();
+if(!window._themeFromSQLite && state.system && !settingsPending.has('system')){
+ sysLoaded=false;renderSystem();window._themeFromSQLite=true;
+}nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
  const slug=location.pathname.split('/').pop();
  if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;
