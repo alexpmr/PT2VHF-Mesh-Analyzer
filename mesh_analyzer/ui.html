@@ -1041,23 +1041,32 @@ function renderMap(){
   }
  }
  lastMapBounds=coords.length?L.latLngBounds(coords):null;
- const estimatedMissing=activeLinks.filter(e=>
-     !nodes.some(n=>n.node_num===e.a&&validPos(n))||
-     !nodes.some(n=>n.node_num===e.b&&validPos(n))).length;
- $('mapTopologyStats').textContent='Trechos conhecidos: '+activeLinks.length+
-    ' · fluxos lógicos: '+activeCommunications.length+
-    ' · linhas exibidas: '+visible+
-    ' · sem geometria confiável: '+missing+
-    ' · filtrados: '+hiddenBySearch;
+
+ const totalKnown=links.length+communications.length;
+ const candidates=activeLinks.length+activeCommunications.length;
+ $('mapTopologyStats').textContent='Relações armazenadas: '+totalKnown+
+   ' · elegíveis no período: '+candidates+' (trechos: '+activeLinks.length+
+   '; fluxos: '+activeCommunications.length+') · linhas desenhadas: '+visible;
+ const reasons=[];
+ if(!$('showMapLinks').checked&&candidates)reasons.push('Ver → Enlaces desligado: '+candidates);
+ const outside=totalKnown-candidates;
+ if(outside)reasons.push('fora do período/observações mínimas: '+outside);
+ if(hiddenBySearch)reasons.push('filtrados pela pesquisa: '+hiddenBySearch);
+ if(missingNode)reasons.push('pontas não cadastradas: '+missingNode);
+ if(missingCoordinates)reasons.push('pontas sem coordenadas: '+missingCoordinates);
+ if(staleGeometry)reasons.push('coordenadas incompatíveis com o horário do fluxo: '+staleGeometry);
+ if(skippedDuplicates)reasons.push('fluxos já representados: '+skippedDuplicates);
  const unavailable=activeLinks.filter(e=>{
-  if(!allowed.has(e.a)||!allowed.has(e.b))return false;
-  const a=nodes.find(n=>n.node_num===e.a),b=nodes.find(n=>n.node_num===e.b);
-  return !a||!b||!validPos(a)||!validPos(b);
+   if(!allowed.has(Number(e.a))||!allowed.has(Number(e.b)))return false;
+   const a=nodeById.get(Number(e.a)),b=nodeById.get(Number(e.b));
+   return !a||!b||!validPos(a)||!validPos(b);
  });
- $('mapMissingLinkInfo').textContent=unavailable.length?
-   unavailable.length+' trechos não desenhados por ausência de coordenadas: '+
-   unavailable.slice(0,6).map(e=>idName(e.a)+' ↔ '+idName(e.b)).join('; ')+
-   (unavailable.length>6?'…':''):'';
+ const examples=unavailable.slice(0,4).map(e=>idName(Number(e.a))+' ↔ '+idName(Number(e.b))).join('; ');
+ $('mapMissingLinkInfo').textContent=
+  (reasons.length?'Motivos: '+reasons.join(' · ')+'. ':'')+
+  (examples?'Trechos sem geometria: '+examples+(unavailable.length>4?'…':'')+'. ':'')+
+  (candidates&&!visible?'Nenhuma linha desenhada: veja os motivos acima.':'');
+
 
  
 }
