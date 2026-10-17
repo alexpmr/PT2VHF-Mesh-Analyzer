@@ -92,4 +92,6 @@ console.log(JSON.stringify({single,ctrl,toggle,range,addRange,selectAll,run1,amb
         self.assertIn("if(job.cancelled)break", HTML)
         self.assertIn("job.cancelled=true", HTML)
         self.assertIn("Não executa exclusão em massa", HTML)
-        self.assertIn("Exige", "Exige")  # Explicit no-op avoids premature HW success claims.
+        self.assertIn("NODE_BULK_HOURLY_CAP=6", HTML)
+        self.assertIn("nodesBulkResultRows", HTML)
+        self.assertIn("job.results.map", HTML)
