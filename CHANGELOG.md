@@ -1,3 +1,10 @@
+# v0.6.23 — Seleção múltipla de nós e consultas RF em lote (#105)
+
+- Clique simples seleciona sem abrir, clique duplo abre detalhes; Ctrl e Shift selecionam nós individuais ou intervalos; Ctrl+A seleciona os nós do filtro atual.
+- Menu contextual da seleção múltipla permite NodeInfo, Posição, Telemetria e Traceroute, com confirmação explícita e exatamente um rádio TX habilitado. Exclusão permanece individual, sem opção destrutiva em massa.
+- Fila serializada com intervalo mínimo de 60 s, limite interno de 6 consultas/hora no lote, verificação do estado da resposta antes do próximo TX, timeout de backend de 30 s, resultados por nó e cancelamento dos envios futuros.
+- Testes regressivos Node.js/CI para seleção, menu e envio RF simulado sem hardware. Validação física, atualizador Windows real e demais issues ainda pendentes. Não declarar backlog completo saneado.
+
 # v0.6.22 — Apagar nó no rádio e no banco; padrão visual RF
 
 - #102: menu contextual compartilhado e janela de detalhes ganham Apagar nó do banco e do rádio, com confirmação nominal e seleção inequívoca de um rádio direto conectado.
