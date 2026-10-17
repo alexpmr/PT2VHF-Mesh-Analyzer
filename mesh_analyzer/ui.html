@@ -924,7 +924,8 @@ function renderMap(){
  nodeLayer.clearLayers();linkLayer.clearLayers();if(waypointLayer)waypointLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
  const source='';
  const available=sourceMapNodes(),q=$('mapSearchInput').value;
- const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>n.node_num));
+ const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>Number(n.node_num)));
+ const nodeById=new Map(nodes.map(n=>[Number(n.node_num),n]));
  $('mapSearchCount').textContent=q?allowed.size+' de '+available.length:available.length+' nós';
  const intervals={all:0,'1h':3600000,'12h':43200000,'24h':86400000,'7d':604800000,'30d':2592000000};
  const win=intervals[$('mapWindow').value]||0;
@@ -941,13 +942,14 @@ function renderMap(){
  $('mapNodesCount').textContent=allowed.size;
  $('mapLinksCount').textContent=activeLinks.length+activeCommunications.length;
  $('mapWaypointsCount').textContent=eligibleWaypoints.length;
- let visible=0,missing=0,hiddenBySearch=0;
+ let visible=0,missing=0,hiddenBySearch=0,missingNode=0,missingCoordinates=0,staleGeometry=0,skippedDuplicates=0;
  const drawnTopology=new Set();
  if($('showMapLinks').checked){
   for(const edge of activeLinks){
-   if(!allowed.has(edge.a)||!allowed.has(edge.b)){hiddenBySearch++;continue;}
-   const a=nodes.find(n=>n.node_num===edge.a),b=nodes.find(n=>n.node_num===edge.b);
-   if(!a||!b||!validPos(a)||!validPos(b)){missing++;continue;}
+   if(!allowed.has(Number(edge.a))||!allowed.has(Number(edge.b))){hiddenBySearch++;continue;}
+   const a=nodeById.get(Number(edge.a)),b=nodeById.get(Number(edge.b));
+   if(!a||!b){missing++;missingNode++;continue;}
+   if(!validPos(a)||!validPos(b)){missing++;missingCoordinates++;continue;}
    const quality=String(edge.quality||'');
    const confirmed=quality==='confirmed_direct_rf';
    const mqtt=quality.includes('mqtt')||quality.includes('non_rf');
@@ -965,14 +967,15 @@ function renderMap(){
   }
   // Each dotted line is a logical unicast; NOT evidence of one direct RF hop.
   for(const flow of activeCommunications){
-   if(isTopologyFlowDuplicate(flow,drawnTopology))continue;
-   const a=nodes.find(n=>n.node_num===flow.from_node);
-   const b=nodes.find(n=>n.node_num===flow.to_node);
+   if(isTopologyFlowDuplicate(flow,drawnTopology)){skippedDuplicates++;continue;}
+   const a=nodeById.get(Number(flow.from_node));
+   const b=nodeById.get(Number(flow.to_node));
    if(q.trim()&&!((a&&matches(a,q))||(b&&matches(b,q)))){hiddenBySearch++;continue;}
-   if(!a||!b||!validPos(a)||!validPos(b)){missing++;continue;}
+   if(!a||!b){missing++;missingNode++;continue;}
+   if(!validPos(a)||!validPos(b)){missing++;missingCoordinates++;continue;}
    const stalePos=[a,b].some(n=>Number(n.position_ms)>0&&
         Math.abs(Number(n.position_ms)-Number(flow.last_seen_ms))>24*3600*1000);
-   if(stalePos){missing++;continue;}
+   if(stalePos){missing++;staleGeometry++;continue;}
    const label='Fluxo lógico observado: '+idName(flow.from_node)+' → '+idName(flow.to_node)+
      '. Caminho físico não conhecido; NÃO comprova RF direto. '+
      (flow.transport==='mqtt'?'Internet/MQTT. ':'Recepção via fonte rádio. ')+
