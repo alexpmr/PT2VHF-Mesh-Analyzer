@@ -1,3 +1,12 @@
+## v0.6.24 — Feedback da v0.6.23 e correções implementadas na candidata
+
+- Seleção múltipla e atualizador aprovados pelo usuário na v0.6.23.
+- #105: excluir em bulk com confirmação individual do rádio, preservar banco em falhas e histórico; consultas bulk agora são enfileiradas mesmo quando já existe um lote em andamento.
+- #108: opção Enlaces ligada somente para perfis sem escolha anterior; alterações de Ver persistidas.
+- #109/#110: radar sem exibição quando OFF, invalidação de downloads antigos, slider maior/tempo real.
+- #90: várias relações constam no mapa, mas linhas não aparecem; detalhar motivo e corrigir comparação de IDs. Aceite com dados reais/screenshot ainda pendente.
+- Não considerar todo o backlog saneado sem a validação física.
+
 ## v0.6.23 — Implementação candidata da issue #105
 
 - Seleção da aba Nós: clique simples, duplo clique, Ctrl, Shift e Ctrl+A sobre nós filtrados; seleção e contexto de múltiplos nós persistem entre atualizações da interface.
