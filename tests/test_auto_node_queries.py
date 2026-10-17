@@ -77,7 +77,7 @@ class EnrichmentTests(unittest.TestCase):
         base="http://127.0.0.1:"+str(server.server_address[1])
         try:
             with urllib.request.urlopen(base+"/api/automation") as rsp:
-                self.assertFalse(json.load(rsp)["config"]["enabled"])
+                self.assertTrue(json.load(rsp)["config"]["enabled"])
             data=json.dumps({"enabled":True}).encode()
             request=urllib.request.Request(base+"/api/automation/settings",
                 data=data,headers={"Content-Type":"application/json"},method="POST")
@@ -93,12 +93,25 @@ class EnrichmentTests(unittest.TestCase):
             server.server_close()
             thread.join(timeout=2)
 
-    def test_disabled_by_default_and_no_accidental_rf(self):
+    def test_enabled_default_can_be_disabled_without_rf(self):
+        self.assertTrue(self.service.config()["enabled"])
+        self.assertTrue(all(self.service.config()["types"].values()))
+        self.service.save({"enabled":False})
         self.assertFalse(self.service.config()["enabled"])
         result = self.service.tick()
         self.assertFalse(result["sent"])
         self.assertEqual(self.sources.queries.sent, [])
         self.assertTrue(self.service.tick(dry_run=True)["queue"])
+
+    def test_default_migration_runs_once_then_respects_manual_disable(self):
+        self.assertTrue(self.service.config()['enabled'])
+        self.assertTrue(all(self.service.config()['types'].values()))
+        self.service.save({'enabled':False,'types':{'traceroute':False}})
+        restored=NodeEnrichment(self.db,self.sources)
+        self.assertFalse(restored.config()['enabled'])
+        self.assertFalse(restored.config()['types']['traceroute'])
+        self.assertEqual(restored.config()['max_per_hour'],6)
+        self.assertEqual(restored.config()['min_gap_seconds'],60)
 
     def test_activation_sends_one_and_tracks_reply(self):
         self.service.save({"enabled": True, "max_per_hour": 6})
@@ -185,7 +198,7 @@ class EnrichmentTests(unittest.TestCase):
         self.assertEqual(self.db._rows("SELECT COUNT(*) AS c FROM auto_query_transmissions")[0]["c"],1)
 
     def test_unanswered_rf_is_backed_off_without_immediate_retry(self):
-        self.service.save({"enabled": True, "types": {"position": False, "telemetry": False}})
+        self.service.save({"enabled": True, "types": {"position": False, "telemetry": False,"traceroute":False}})
         self.assertTrue(self.service.tick()["sent"])
         with patch("mesh_analyzer.automations.time.time",return_value=time.time()+100):
             result = self.service.tick()
@@ -199,7 +212,7 @@ class EnrichmentTests(unittest.TestCase):
                     {"types": {"bad": True}}, {"enabled": "yes"}):
             with self.assertRaises(ValueError):
                 self.service.save(bad)
-        self.assertFalse(self.service.config()["enabled"])
+        self.assertTrue(self.service.config()["enabled"])
 
     def test_unknown_age_data_is_eligible_for_freshness_refresh(self):
         self.db.upsert_node(200,self.sid,timestamp_ms=self.now-1000,observed=True,

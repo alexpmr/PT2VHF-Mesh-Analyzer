@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class Win10CompatibilityTests(unittest.TestCase):
     def test_version_and_minimum_windows_build(self):
-        self.assertEqual(__version__, "0.6.26")
+        self.assertRegex(__version__, r"^0\.6\.\d+$")
         self.assertEqual((ROOT / "VERSION").read_text().strip(), __version__)
         installer = (ROOT / "windows" / "installer.iss").read_text()
         self.assertIn('MinVersion=10.0.17763', installer)
@@ -20,9 +20,9 @@ class Win10CompatibilityTests(unittest.TestCase):
     def test_new_updater_names(self):
         names = release_assets(__version__)
         self.assertEqual(names["setup"],
-                         "PT2VHF-Mesh-Analyzer-v0.6.26-Setup-Win10-Win11-x64.exe")
+                         f"PT2VHF-Mesh-Analyzer-v{__version__}-Setup-Win10-Win11-x64.exe")
         self.assertEqual(names["portable"],
-                         "PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.zip")
+                         f"PT2VHF-Mesh-Analyzer-v{__version__}-Portable-Win10-Win11-x64.zip")
 
     def test_ci_keeps_legacy_packages_for_v0625_updaters(self):
         workflow = (ROOT / ".github" / "workflows" / "windows.yml").read_text(encoding="utf-8")

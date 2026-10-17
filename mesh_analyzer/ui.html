@@ -225,7 +225,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.26</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.27</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -234,7 +234,7 @@ try {
 
 <section class="view active" id="viewMap">
 <div id="playback">
-<div id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summarySources">0</b> conexões ativas</div><div class="metric"><b id="summaryLinks">0</b> relações observadas</div></div>
+<div id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summaryLinks">0</b> relações observadas</div></div>
 
 
 <button type="button" id="mapVisibilityBtn" aria-controls="mapVisibilityPanel" aria-expanded="false">Ver ▾</button>
@@ -300,7 +300,7 @@ try {
 </div>
 <h4>Consultas permitidas</h4>
 <div class="formGrid" id="autoQueryToggles"></div>
-<p class="muted">NodeInfo, posição e telemetria são recomendados. Traceroute aumenta o tráfego e fica desativado por padrão. Vizinhos e ping serão utilizados somente quando o aplicativo e o firmware fornecerem consultas reais compatíveis.</p>
+<p class="muted">NodeInfo, posição e telemetria são recomendados. As consultas compatíveis ficam selecionadas e a automação ativa por padrão, com limites de transmissão. Vizinhos e ping serão utilizados somente quando o aplicativo e o firmware fornecerem consultas reais compatíveis.</p>
 <div class="actions"><button type="submit">Salvar automação</button>
 <button type="button" id="autoPreview">Simular fila (sem TX)</button>
 <button type="button" id="autoRun">Executar uma consulta agora</button>
@@ -370,7 +370,7 @@ try {
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.26</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.27</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.8.</p></div></div></section>
@@ -2057,7 +2057,7 @@ function messageStateHtml(m){
  if(m.state==='queued'||m.state==='sending')
    return '<span class="msgState working" title="Tentando enviar">◷</span>';
  if(m.state==='rejected'||m.state==='failed')
-   return '<span class="msgState error" title="Falha no envio">!</span>';
+   return '<span class="msgState error" title="Falha ou propagação não confirmada pela rede">!</span>';
  return '';
 }
 function renderChat(){
@@ -2869,7 +2869,7 @@ $('radioConnectionStatus').onkeydown=e=>{
 async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();
 if(!window._themeFromSQLite && state.system && !settingsPending.has('system')){
  sysLoaded=false;renderSystem();window._themeFromSQLite=true;
-}nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);$('summarySources').textContent=connections.length;renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
+}nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}
 resetSourceForm();if(location.pathname.startsWith('/estatisticas/')){
  const slug=location.pathname.split('/').pop();
  if(statTabs.some(x=>x[0]===slug))currentStatTab=slug;

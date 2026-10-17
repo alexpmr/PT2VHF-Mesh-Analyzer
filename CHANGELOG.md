@@ -1,3 +1,12 @@
+# v0.6.27 — Confirmações de mensagens e padrões de automação
+
+- Mensagens: envio com wantAck também nos canais; tratamento de ACK/NAK correlacionado por conexão, packet ID e origem. ACK implícito confirma propagação, ACK do destinatário privado confirma entrega; nenhum confirma leitura humana.
+- Um check verde ao aceitar pelo rádio; dois com propagação/entrega confirmada; relógio durante tentativa; vermelho em NAK ou após 180 s sem confirmação. Callback adiantado ao INSERT é armazenado até persistência; callbacks de interface substituída são ignorados.
+- Automações ativas por padrão, com todos os tipos selecionados; migração única mantém cotas e intervalos e preserva alterações posteriores do usuário. Ping/Vizinhos permanecem indisponíveis até suporte real da API/firmware; não há transmissão fictícia.
+- Retirado contador redundante X conexões ativas da faixa superior. Preservados radar, seleção/exclusão em lote, temas, PDF e período Todo das versões recentes.
+- Mantida distribuição Windows 10 1809+/Windows 11 x64, WebView2 como pré-requisito e aliases compatíveis com clientes antigos.
+- Testes de isolamento de fonte/ID/emissor, ACK antecipado, NAK, expiração e persistência da escolha do usuário. Hardware e ACK de diferentes firmwares ainda requerem validação de campo.
+
 # v0.6.26 — Windows 10 (1809+) / Windows 11 x64
 
 - Setup e Portable combinados para Windows 10 x64 (build 17763/1809+) e Windows 11 x64.

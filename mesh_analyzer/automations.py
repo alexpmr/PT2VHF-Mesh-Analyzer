@@ -1,4 +1,4 @@
-"""Opt-in, rate-limited RF enrichment of incomplete Meshtastic node records.
+"""User-enabled by default, rate-limited RF enrichment of incomplete Meshtastic node records.
 
 The scheduler never infers missing attributes, retransmits to MQTT, or claims
 ACK/transmission is a remote response. One request may be outstanding at a time.
@@ -11,9 +11,9 @@ import time
 
 KINDS = ("nodeinfo", "position", "telemetry", "traceroute", "neighbors", "ping")
 DEFAULTS = {
-    "enabled": False,
+    "enabled": True,
     "types": {"nodeinfo": True, "position": True, "telemetry": True,
-              "traceroute": False, "neighbors": False, "ping": False},
+              "traceroute": True, "neighbors": True, "ping": True},
     "evaluate_minutes": 15,
     "max_per_hour": 6,
     "min_gap_seconds": 60,
@@ -57,6 +57,17 @@ class NodeEnrichment:
                               ON auto_query_transmissions(sent_ms)""")
             db._db.execute("INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)",
                            ("node_enrichment", json.dumps(DEFAULTS)))
+
+        # Apply the user's new defaults once, then preserve later explicit choices.
+        with db._lock,db._db:
+            if not db._db.execute("SELECT 1 FROM settings WHERE key='enrichment_defaults_v0627'").fetchone():
+                row=db._db.execute("SELECT value FROM settings WHERE key='node_enrichment'").fetchone()
+                try:config=json.loads(row[0]) if row else {}
+                except (ValueError,TypeError):config={}
+                if not isinstance(config,dict):config={}
+                config.update(enabled=True,types=dict(DEFAULTS['types']))
+                db._db.execute("UPDATE settings SET value=? WHERE key='node_enrichment'",(json.dumps(config),))
+                db._db.execute("INSERT INTO settings(key,value) VALUES('enrichment_defaults_v0627','1')")
 
     def config(self):
         with self.db._lock:

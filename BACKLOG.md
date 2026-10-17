@@ -1,3 +1,7 @@
+## v0.6.27 — Continuação: mensagens, automações e cabeçalho
+
+Implementada correlação de ACK/NAK de texto, incluindo broadcasts, com timeout e sem inferir leitura. Automações ativas com tipos selecionados por migração única; suporte real continua restrito às capacidades do rádio. Contador redundante de conexões removido. Preservadas mudanças v0.6.23–v0.6.26 (seleção/lote/radar/temas/PDF/Win10). Aceite físico de mensagens e firmwares pendente. Atualizador automático foi confirmado sem erro pelo usuário em 16/10/2026; preservar diagnóstico de eventuais regressões.
+
 ## v0.6.26 — Compatibilidade Windows 10/11
 
 - Ajustar pipeline de build, Setup Inno com mínimo Windows 10 1809 x64 e Portable Win10/11.

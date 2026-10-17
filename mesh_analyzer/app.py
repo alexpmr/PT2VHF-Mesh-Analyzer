@@ -165,7 +165,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     source=query.get("source_id",[None])[0]
                     self._json({"success":True,"data":db.topology_diagnostics(source)})
                 elif path == "/api/packets":self._json({"success":True,"data":db.packet_rows()})
-                elif path == "/api/messages":self._json({"success":True,"data":db.message_rows()})
+                elif path == "/api/messages":
+                    sources.message_receipts.expire()
+                    self._json({"success":True,"data":db.message_rows()})
                 elif path == "/api/links":self._json({"success":True,"data":db.link_rows()})
                 elif path == "/api/communications":
                     self._json({"success":True,"data":db.communication_rows()})

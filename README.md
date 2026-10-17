@@ -1,64 +1,31 @@
-# PT2VHF Mesh Analyzer — v0.6.26
+# PT2VHF Mesh Analyzer — v0.6.27
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ (x64)** e **Windows 11 (x64)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
 ## Downloads — Windows 10 / Windows 11 (64 bits)
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.26](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.26)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.27](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.27)**
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.26-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.26/PT2VHF-Mesh-Analyzer-v0.6.26-Setup-Win10-Win11-x64.exe) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.26/PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.exe) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.26/PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.zip) |
-| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.26/SHA256SUMS.txt) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.27-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.27/PT2VHF-Mesh-Analyzer-v0.6.27-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.27-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.27/PT2VHF-Mesh-Analyzer-v0.6.27-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.27-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.27/PT2VHF-Mesh-Analyzer-v0.6.27-Portable-Win10-Win11-x64.zip) |
+| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.27/SHA256SUMS.txt) |
 
 **Links automáticos (última versão):**
 [Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
 [Portable Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe) ·
 [Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.26 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.27 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
 
-### Novidades da v0.6.26 — compatibilidade Windows 10/11
+### Novidades da v0.6.27
 
-- Instalador Inno Setup com mínimo Windows 10 build 17763 e arquitetura x64; mantém instalação por usuário e atualização automática.
-- Executável Python 3.12/PyInstaller empacotado como um único binário para Windows 10/11, sem dependência exclusiva de Windows 11.
-- Fluxo de CI, release, hashes, documentação e fonte identificados como **Win10-Win11-x64**.
-- Compatibilidade retroativa com atualizadores antigos por aliases `Win11-x64` nos mesmos assets.
-- Testes CI validam arquitetura PE, plataforma mínima declarada, nomes de pacotes e continuidade dos URLs do atualizador; **aceite final requer teste de instalação, abertura e conexões em Windows 10 físico/VM**, não disponível no runner Windows Server 2022.
-
-### Novidades da v0.6.25 (candidata, sujeita a testes)
-
-- **Sistema → Tema (#112):** seleção entre Escuro (cor base `#202126`), Cinza (`#333438`) e Claro; aplicação sem reiniciar, preferência canônica persistida no SQLite e cache inicial para reduzir flash de tema na abertura; o mapa-base não é alterado.
-- **Estatísticas → Período (#114):** opção **Todo** selecionada por padrão em Visão Geral e demais subabas, inclusive na geração de PDF.
-- **Estatísticas → Relatório PDF (#113):** geração do PDF pelo SQLite, WebView2 com diálogo nativo **Salvar como** e gravação validada; navegador utiliza download de Blob anexado ao DOM com mensagens de status fiéis.
-- **Regressões:** testes do backend PDF e endpoint HTTP, integridade PDF, SaveDialog do aplicativo com cancelamento, persistência/validação dos temas e padrão de período.
-- **Escopo:** estes itens resolvem as pendências recentes; questões ainda abertas no backlog e aceite de campo devem continuar rastreados.
-
-### Novidades da v0.6.24
-- Exclusão múltipla: selecionar de 2 a 100 nós, abrir menu de contexto e escolher apagar nós do rádio e do banco. Confirmação dupla, comandos sequenciais ao rádio local, confirmação por nó e remoção do cadastro SQLite apenas após ACK, histórico preservado, cancelamento dos próximos e relatório de falhas.
-- Consultas RF simultâneas: novos lotes entram em fila FIFO sem bloquear; espaçamento de ao menos 60 segundos e limite de 6 consultas por hora compartilhados entre os lotes, com cancelamento dos pendentes.
-- Ver → Enlaces: ativado por padrão sem preferência anterior e alterações de Ver salvas automaticamente. Opções previamente desligadas de propósito continuam preservadas.
-- Radar: opção desativada é respeitada na inicialização, download antigo não reativa a camada, opacidade em slider maior com percentual e atualização instantânea sem novo download.
-- Mapa: diagnóstico de relações registradas versus linhas desenhadas, com causas por filtro, coordenadas, nós ausentes ou inconsistência temporal; corrige busca de IDs numericamente.
-- A release precisa ainda de validação com equipamento Meshtastic real; não representa todo o backlog encerrado.
-
-
-### Novidades da v0.6.23 (candidata, sujeita à aprovação dos testes)
-
-- **Aba Nós (#105):** um clique seleciona; duplo clique abre detalhes; Ctrl/clique adiciona ou remove, Shift seleciona intervalo conforme filtro e ordenação, Ctrl+A seleciona todos os nós filtrados.
-- **Consultas em lote:** menu de contexto com NodeInfo, Posição, Telemetria e Traceroute para os nós selecionados. Uma fonte TX inequívoca, confirmação prévia, fila serializada, no mínimo 60 segundos entre envios e limite de 6 solicitações/hora neste lote; cada pedido espera resposta ou timeout individual de 30 segundos (mais margem de polling), preservando histórico e sem exclusão coletiva.
-- **Acompanhamento:** progresso, cancelamento dos envios ainda pendentes e resultados discriminados por nó. O lote só prossegue enquanto o aplicativo permanece em execução.
-- **Testes:** regressões JavaScript executam lógica efetiva da seleção e fila em Node.js; pipeline Windows segue responsável pela integração e empacotamento.
-- **Atenção:** v0.6.23 *não equivale ao encerramento integral do backlog*. Teste com rádio Meshtastic real, atualização no PC afetado (#103) e outras issues não resolvidas continuam pendentes.
-
-### Novidades da v0.6.22
-
-- **Apagar nó do banco e do rádio** no menu de botão direito e na janela de detalhes. Exige confirmação, conexão direta e confirmação do comando pelo rádio antes de remover o cadastro local. O histórico é preservado; nó ativo pode reaparecer. Não apaga o próprio rádio.
-- Relações recebidas por RF, inclusive fluxos de caminho desconhecido, usam amarelo contínuo por padrão. O popup informa o grau de evidência; o ranking de enlaces diretos mantém os mesmos critérios.
-- Atualizador com reinício independente do PyInstaller mantido da v0.6.21. Quem já instalou manualmente a v0.6.21 pode testar o próximo ciclo automático; versões anteriores ainda usam o runner antigo.
-- Exclusão é **individual** nesta versão; seleção múltipla e operações em lote continuam no backlog. Testes físicos de remoção no rádio e atualização completa no PC do usuário ainda pendentes.
+- Mensagens com relógio durante tentativa, um check verde ao aceitar no rádio, dois checks verdes com confirmação real de propagação/entrega e indicador vermelho para falha ou ausência de confirmação após 180 s. Checks não indicam leitura humana.
+- Automações ativas por padrão, com tipos selecionados, limites de transmissão preservados e respeito às capacidades do firmware. A migração é feita uma vez; configurações salvas depois disso são preservadas. Ping e Vizinhos aguardam API compatível.
+- Removido X conexões ativas da faixa superior. Mantidos seleção/exclusão em lote, radar, temas, PDF e período Todo das versões recentes.
+- Pacotes Windows 10 1809+/Windows 11 x64, com aliases Win11 para atualização de clientes antigos. Testes físicos de ACK e de rádio ainda necessários.
 
 ## Política de downloads
 
@@ -77,7 +44,7 @@ Somente a release estável mais recente permanece disponível. Após publicar e 
 - Releitura de fontes persistentes e tentativa de reconexão; indicadores por fonte e contagem RX na sessão.
 - Interface web escutando **apenas em 127.0.0.1** por segurança; escrita protegida por token CSRF, sem credenciais na resposta de API; banco no perfil do usuário.
 
-## Instalação Windows 11 — código-fonte (disponível neste ZIP)
+## Instalação Windows 10/11 — código-fonte (disponível neste ZIP)
 
 1. Instale **Python 3.12** (64 bits), incluindo `py` no sistema.
 2. Extraia este pacote em uma pasta de sua preferência.
@@ -112,7 +79,7 @@ O GitHub Actions de `.github/workflows/windows.yml` compila o EXE, o ZIP portát
 - Variável opcional de teste: `PT2VHF_MESH_DATA`.
 - Nunca coloque o SQLite, arquivo `.env` ou credenciais no repositório. Senhas MQTT são gravadas localmente no SQLite; **não há criptografia de credenciais em repouso na v0.6.0**. Evite computadores compartilhados e restrinja as permissões ao usuário do sistema.
 
-## Limites honestos da v0.6.0
+## Limitações conhecidas
 
 - O **visual e as abas** foram recriados a partir do padrão Traffic Analyzer; a v0.6.0 **não é uma cópia funcional completa** da v1.62.1. Funcionalidades de dashboard avançado ainda não implementadas em paridade, bots PING/CLIMA, integrações geográficas/APRS, rankings RF diretos comprovados, consulta ativa NodeInfo e cobertura especializada permanecem pendentes.
 - **Hardware físico ainda não foi testado.** USB e TCP utilizam interfaces oficiais Meshtastic Python. BLE requer identificador apropriado e suporte da plataforma/firmware; conectar diversos BLE simultâneos pode depender do hardware e do SO. MQTT armazena envelopes Meshtastic; payloads criptografados sem chaves conhecidas não são decodificados, e MQTT **não transmite** RF.

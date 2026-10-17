@@ -242,6 +242,8 @@ class SourceManager:
         self.queries=NodeQueries(self)
         from .node_deletion import NodeDeletion
         self.node_deletion=NodeDeletion(self)
+        from .message_receipts import MessageReceipts
+        self.message_receipts=MessageReceipts(db)
 
     def _set(self,id,state,error=""):
         with self._lock:
@@ -274,6 +276,7 @@ class SourceManager:
         if source_id is None:return
         try:
             self.queries.observe(source_id,packet or {})
+            self.message_receipts.observe(source_id,packet or {})
             info=getattr(interface,"myInfo",None)
             radio_info=info if isinstance(info,dict) else {}
             own=number(radio_info.get("my_node_num") or radio_info.get("myNodeNum") or
@@ -543,9 +546,18 @@ class SourceManager:
         recipient="^all" if to_node in (None,"","^all","broadcast") else (f"!{int(to_node) & 0xffffffff:08x}" if str(to_node).isdigit() else str(to_node))
         if recipient!="^all" and not (len(recipient)==9 and recipient[0]=="!" and all(c in "0123456789abcdefABCDEF" for c in recipient[1:])):
             raise ValueError("Destino privado inválido")
-        data=iface.sendText(text,destinationId=recipient,wantAck=(recipient!="^all"),channelIndex=channel)
+        buffered=[]; receipt_lock=threading.RLock(); persisted=[False]
+        def onAckNak(packet):
+            with self._lock:
+                if self._interfaces.get(id) is not iface:return
+            with receipt_lock:
+                if persisted[0]:self.message_receipts.observe(id,packet)
+                else:buffered.append(packet)
+        data=iface.sendText(text,destinationId=recipient,wantAck=True,channelIndex=channel,onResponse=onAckNak)
         packet_id=str(data.get("id") if isinstance(data,dict) else getattr(data,"id",""))
-        local_num=number(getattr(iface,"myInfo",None) and getattr(iface.myInfo,"my_node_num",None))
+        info=getattr(iface,"myInfo",None)
+        local_num=number(info.get("my_node_num",info.get("myNodeNum")) if isinstance(info,dict)
+                         else getattr(info,"my_node_num",None)) or number(getattr(getattr(iface,"localNode",None),"nodeNum",None))
         pktkey="tx:"+str(id)+":"+packet_id+":"+str(now_ms())
         with self._lock:
             state=self._states.get(id)
@@ -554,6 +566,10 @@ class SourceManager:
                 state["last_tx_ms"]=now_ms()
         self.db.add_message({"source_id":id,"packet_key":pktkey,"packet_id":packet_id,"timestamp_ms":now_ms(),
            "from_node":local_num,"to_node":number(recipient),"channel":channel,"direction":"tx","text":text,"state":"accepted_by_radio"})
+        with receipt_lock:
+            persisted[0]=True
+            for reply in buffered:self.message_receipts.observe(id,reply)
+            buffered.clear()
         return {"success":True,"packet_id":packet_id,"state":"accepted_by_radio",
                 "note":"Envio aceito pela interface. Isto não confirma entrega nem leitura pelo destinatário."}
 

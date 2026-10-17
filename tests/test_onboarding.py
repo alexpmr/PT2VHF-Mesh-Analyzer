@@ -30,7 +30,7 @@ class FirstConnectionTests(unittest.TestCase):
         self.assertIn("dismissFirstRunDialog();\n setView('settings');\n showSettings('sources');", HTML)
         self.assertIn("$('sourceName').focus();", HTML)
         self.assertNotIn('id="connectedStatus"', HTML)
-        self.assertIn('<b id="summarySources">0</b> conexões ativas', HTML)
+        self.assertNotIn('id="summarySources"', HTML)
 
     def test_setting_routes_and_version_are_consistent(self):
         self.assertIn('settingsPaths={sources:\'conexoes\'', HTML)
