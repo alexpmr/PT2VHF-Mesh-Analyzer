@@ -1,3 +1,11 @@
+# v0.6.25 — Temas, PDF e período Todo
+
+- Configurações → Sistema: temas Escuro (`#202126`), Cinza (`#333438`) e Claro, escolha imediata e persistência no SQLite (#112).
+- Estatísticas: **Todo** selecionado no filtro de período inicial, usado também no relatório (#114).
+- Relatório PDF: integração com diálogo de salvamento nativo em WebView2 e download padrão na Web; status apenas após gravação confirmada no aplicativo, cancelamento tratado (#113).
+- Testes de regressão de geração PDF sem rádio, endpoint HTTP, SaveDialog simulado e configurações.
+- Testes de campo no Windows e pendências anteriores do backlog continuam acompanhados.
+
 # v0.6.24 — Exclusão bulk, fila de consultas RF, enlaces e radar
 
 - Exclusão múltipla do NodeDB do rádio local e catálogo SQLite: confirmação dupla, ACK individual, tratamento de falhas parciais e cancelamento dos itens não enviados (#105).
