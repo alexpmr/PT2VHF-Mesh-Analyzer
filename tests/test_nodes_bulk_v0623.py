@@ -34,6 +34,7 @@ const state={sources:[{id:8,name:'Radio',kind:'serial',enabled:true}],
  connections:{'8':{status:'connected',tx_capable:true,local_node_num:99}}};
 let sent=[],notice=[],view='nodes';
 const idName=n=>String(n);
+const esc=n=>String(n);
 const notify=(msg,error)=>notice.push({msg,error});
 const confirm=()=>true;
 const api=async(path,data)=>{
