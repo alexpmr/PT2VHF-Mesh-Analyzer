@@ -1,3 +1,10 @@
+## v0.6.25 — Escopo abordado
+
+- #112: seleção de tema da interface Escuro/Cinza/Claro com persistência.
+- #113: corrigir exportação PDF em Windows/WebView2 e browser; testar backend, HTTP e download.
+- #114: iniciar Estatísticas com período Todo.
+- Não considerar backlog histórico integralmente saneado sem testes e aceite específicos. Revisitar #90 e exclusão em lote #105 em hardware real.
+
 ## v0.6.24 — Feedback da v0.6.23 e correções implementadas na candidata
 
 - Seleção múltipla e atualizador aprovados pelo usuário na v0.6.23.
