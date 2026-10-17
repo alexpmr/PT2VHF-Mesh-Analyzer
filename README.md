@@ -1,16 +1,16 @@
-# PT2VHF Mesh Analyzer — v0.6.22
+# PT2VHF Mesh Analyzer — v0.6.23
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 11 x64 com banco próprio SQLite, fontes Meshtastic e análises locais. A arquitetura também permite evolução para Linux/macOS.
 
 ## Downloads — Windows 11 x64
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.22](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.22)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.23](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.23)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
-| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.22-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.22/PT2VHF-Mesh-Analyzer-v0.6.22-Setup-Win11-x64.exe)** |
-| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.22-Portable-Win11-x64.exe` | **[Baixar Portable EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.22/PT2VHF-Mesh-Analyzer-v0.6.22-Portable-Win11-x64.exe)** |
-| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.22/SHA256SUMS.txt) |
+| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.23-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.23/PT2VHF-Mesh-Analyzer-v0.6.23-Setup-Win11-x64.exe)** |
+| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.23-Portable-Win11-x64.exe` | **[Baixar Portable EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.23/PT2VHF-Mesh-Analyzer-v0.6.23-Portable-Win11-x64.exe)** |
+| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.23/SHA256SUMS.txt) |
 
 **Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
 [Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
@@ -19,6 +19,14 @@
 [Todas as releases](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases)
 
 **Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable EXE pode ser executado diretamente, sem instalação. O ZIP permanece disponível por compatibilidade. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
+
+### Novidades da v0.6.23 (candidata, sujeita à aprovação dos testes)
+
+- **Aba Nós (#105):** um clique seleciona; duplo clique abre detalhes; Ctrl/clique adiciona ou remove, Shift seleciona intervalo conforme filtro e ordenação, Ctrl+A seleciona todos os nós filtrados.
+- **Consultas em lote:** menu de contexto com NodeInfo, Posição, Telemetria e Traceroute para os nós selecionados. Uma fonte TX inequívoca, confirmação prévia, fila serializada, no mínimo 60 segundos entre envios e limite de 6 solicitações/hora neste lote; cada pedido espera resposta ou timeout individual de 30 segundos (mais margem de polling), preservando histórico e sem exclusão coletiva.
+- **Acompanhamento:** progresso, cancelamento dos envios ainda pendentes e resultados discriminados por nó. O lote só prossegue enquanto o aplicativo permanece em execução.
+- **Testes:** regressões JavaScript executam lógica efetiva da seleção e fila em Node.js; pipeline Windows segue responsável pela integração e empacotamento.
+- **Atenção:** v0.6.23 *não equivale ao encerramento integral do backlog*. Teste com rádio Meshtastic real, atualização no PC afetado (#103) e outras issues não resolvidas continuam pendentes.
 
 ### Novidades da v0.6.22
 
