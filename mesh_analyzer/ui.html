@@ -452,6 +452,21 @@ function applyMapBrightness(){
  if(currentTiles&&currentTiles.getContainer())currentTiles.getContainer().style.filter=
    'brightness('+Number($('mapBrightness').value||100)+'%)';
 }
+let mapVisibilitySaveTimer=null,mapVisibilitySaveSequence=0;
+function persistVisibleMapPreferences(){
+ if(!window._preferencesLoaded)return;
+ const seq=++mapVisibilitySaveSequence;
+ clearTimeout(mapVisibilitySaveTimer);
+ mapVisibilitySaveTimer=setTimeout(async()=>{
+  if(seq!==mapVisibilitySaveSequence)return;
+  try{
+   await api('/api/preferences/map',mapPreferenceSnapshot());
+   if(seq===mapVisibilitySaveSequence)savedSettingsGroup('map');
+  }catch(e){
+   notify('Erro ao salvar visibilidade do mapa: '+e.message,true);
+  }
+ },350);
+}
 function storeMapControls(){
  const values={};
  for(const id of MAP_IDS){const el=$(id);if(el)values[id]=el.type==='checkbox'?el.checked:el.value;}
@@ -761,8 +776,8 @@ for(const id of ['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terra
     $('terrainCut').max=n;if(Number($('terrainCut').value)>n)$('terrainCut').value=n;
   }
   $('terrainValue').textContent=$('terrainCut').value+' m';saveMapSettings();
-  if(id==='mapRadar')updateRadar();
-  else if(id==='mapRadarOpacity')applyRadarOpacity();
+  if(id==='mapRadar'){updateRadar();persistVisibleMapPreferences();}
+  else if(id==='mapRadarOpacity'){applyRadarOpacity();persistVisibleMapPreferences();}
   else if(id==='mapHillshade')updateHillshade();
   else {clearTimeout(terrainRefresh);terrainRefresh=setTimeout(updateTerrain,150);}
  });
@@ -1355,10 +1370,10 @@ $('nodeDetailHeader').addEventListener('pointerup',()=>{detailDrag=null;});
 function positionSuggestions(){const pop=$('mapSearchMatches'),el=$('mapSearchInput');if(pop.hidden)return;const r=el.getBoundingClientRect(),w=pop.getBoundingClientRect().width;pop.style.left=Math.max(5,Math.min(r.left,window.innerWidth-w-6))+'px';pop.style.top=(r.bottom+5)+'px';}
 function suggest(){const q=$('mapSearchInput').value;const pop=$('mapSearchMatches');if(!q.trim()){pop.hidden=true;pop.innerHTML='';return;}const rows=sourceMapNodes().filter(n=>matches(n,q)).slice(0,15);pop.innerHTML=rows.map(n=>`<button data-num="${n.node_num}"><b>${esc(n.long_name||n.node_id)}</b><br><small>${esc(n.short_name)} · ${esc(n.node_id)} · ${validPos(n)?'Com posição':'Sem localização'}</small></button>`).join('')||'<div style="padding:12px">Nenhum nó encontrado</div>';pop.hidden=false;positionSuggestions();pop.querySelectorAll('button[data-num]').forEach(b=>b.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(b.dataset.num));pop.hidden=true;showNode(n);});}
 $('mapSearchInput').addEventListener('input',()=>{renderMap();suggest();});$('mapSearchInput').addEventListener('keydown',ev=>{if(ev.key==='Escape'){$('mapSearchInput').value='';renderMap();suggest();}if(ev.key==='Enter'){const rows=sourceMapNodes().filter(n=>matches(n,$('mapSearchInput').value));if(rows.length===1){showNode(rows[0]);$('mapSearchMatches').hidden=true;}}});$('mapSearchClear').onclick=()=>{$('mapSearchInput').value='';renderMap();suggest();$('mapSearchInput').focus();};
-$('mapType').onchange=()=>{setTiles();storeMapControls();};$('showMapNodes').onchange=()=>{$('mapShowNodesSetting').checked=$('showMapNodes').checked;storeMapControls();renderMap();};
-$('showMapLinks').onchange=()=>{$('mapShowLinksSetting').checked=$('showMapLinks').checked;storeMapControls();renderMap();};
-$('showMapWaypoints').onchange=()=>{$('mapShowWaypointsSetting').checked=$('showMapWaypoints').checked;storeMapControls();renderMap();};
-$('showMapAnimate').onchange=()=>{$('mapAnimateNodes').checked=$('showMapAnimate').checked;storeMapControls();};
+$('mapType').onchange=()=>{setTiles();storeMapControls();};$('showMapNodes').onchange=()=>{$('mapShowNodesSetting').checked=$('showMapNodes').checked;storeMapControls();persistVisibleMapPreferences();renderMap();};
+$('showMapLinks').onchange=()=>{$('mapShowLinksSetting').checked=$('showMapLinks').checked;storeMapControls();persistVisibleMapPreferences();renderMap();};
+$('showMapWaypoints').onchange=()=>{$('mapShowWaypointsSetting').checked=$('showMapWaypoints').checked;storeMapControls();persistVisibleMapPreferences();renderMap();};
+$('showMapAnimate').onchange=()=>{$('mapAnimateNodes').checked=$('showMapAnimate').checked;storeMapControls();persistVisibleMapPreferences();};
 function placeVisibilityPanel(){
  const box=$('mapVisibilityBtn').getBoundingClientRect(),panel=$('mapVisibilityPanel');
  const w=panel.offsetWidth||300,h=panel.offsetHeight||340;
@@ -1378,7 +1393,7 @@ function setAllMapObjects(enabled){
  $('mapShowWaypointsSetting').checked=enabled;
  $('mapAnimateNodes').checked=enabled;
  $('mapShowNamesSetting').checked=enabled;
- storeMapControls();saveMapSettings();
+ storeMapControls();saveMapSettings();persistVisibleMapPreferences();
  updateRadar();updateHillshade();updateTerrain();renderMap();
 }
 $('mapShowAll').onclick=()=>setAllMapObjects(true);
@@ -1393,7 +1408,7 @@ document.addEventListener('keydown',ev=>{
  }
 });
 window.addEventListener('resize',()=>{if(!$('mapVisibilityPanel').hidden)placeVisibilityPanel();});
-$('showNames').onchange=()=>{$('mapShowNamesSetting').checked=$('showNames').checked;storeMapControls();renderMap();};$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
+$('showNames').onchange=()=>{$('mapShowNamesSetting').checked=$('showNames').checked;storeMapControls();persistVisibleMapPreferences();renderMap();};$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
 $('playback').addEventListener('scroll',positionSuggestions,{passive:true});
 
 
