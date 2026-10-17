@@ -77,7 +77,9 @@ jobs:
           # Preserve the legacy Win11 package names for the in-app updater shipped in v0.6.25.
           Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.exe" "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe" -Force
           Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.zip" "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" -Force
-          Compress-Archive -Path 'mesh_analyzer','tests','scripts','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt','branding' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip" -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe' -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip' -Force
+          Compress-Archive -Path 'mesh_analyzer','tests','scripts','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','Iniciar_Windows_10_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt','branding' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip" -Force
           Get-FileHash 'dist/PT2VHF-Mesh-Analyzer.exe' -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  PT2VHF-Mesh-Analyzer.exe" } | Out-File 'dist/SHA256SUMS.txt' -Encoding ascii
       - name: Instalar Inno Setup
         shell: pwsh
@@ -91,6 +93,7 @@ jobs:
           if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip')) { throw 'Portable ausente' }
           Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe' "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win10-Win11-x64.exe" -Force
           Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe' "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win11-x64.exe" -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe' 'dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe' -Force
           Get-ChildItem dist -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash)  $($_.Name)" } | Set-Content dist/SHA256SUMS.txt -Encoding ascii
       - uses: actions/upload-artifact@v4
         with:
@@ -118,6 +121,9 @@ jobs:
           $assets = @(
             'dist/PT2VHF-Mesh-Analyzer.exe',
             'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe',
+            'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe',
+            'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip',
+            'dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe',
             "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.exe",
             'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip',
             'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe',
