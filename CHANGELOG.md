@@ -1,3 +1,12 @@
+# v0.6.22 — Apagar nó no rádio e no banco; padrão visual RF
+
+- #102: menu contextual compartilhado e janela de detalhes ganham Apagar nó do banco e do rádio, com confirmação nominal e seleção inequívoca de um rádio direto conectado.
+- Envia remove_by_nodenum ao próprio rádio conectado, com sessão administrativa e ACK/NAK correlacionado por ID do comando e emissor local. Somente após confirmação sem erro remove o cadastro SQLite e caches do SDK. Timeout de 30 s, desconexão e rejeição preservam o cadastro; falha posterior do banco informa estado parcial.
+- Protege rádio próprio e IDs reservados; MQTT não pode executar exclusão. Mensagens, pacotes, posições e enlaces históricos permanecem no banco. Nó ativo pode reaparecer por novas recepções. Remoção física nos firmwares em uso ainda exige teste de bancada.
+- #106: também fluxos lógicos recebidos por rádio usam cor/espessura RF configuradas, amarelo contínuo por padrão. Popup e ranking continuam diferenciando caminho desconhecido, rota e RF direto comprovado; MQTT permanece pontilhado.
+- Novos testes: ACK/NAK, erro padrão do protobuf, emissor/ID incorretos, timeout, confirmação explícita, IDs protegidos, MQTT, concorrência, preservação do histórico, redescoberta, falha parcial do banco e endpoint com CSRF.
+- Mantida retenção automática de somente uma release completa. Seleção múltipla/duplo clique e operações em lote (#105) continuam pendentes nesta versão; a exclusão implementada aqui é individual.
+
 # v0.6.21 — Reinício independente e estilo dos trechos RF
 
 - #103: runner reinicializa o ambiente PyInstaller antes do relançamento, evitando reutilizar temporários da instância encerrada; aguarda também o bootloader que ainda pode manter o EXE aberto.

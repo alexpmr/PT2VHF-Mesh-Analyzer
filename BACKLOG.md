@@ -1,3 +1,7 @@
+## v0.6.22 — Exclusão individual e estilo dos fluxos RF
+
+#102 implementada em menu contextual e detalhes, com confirmação nominal, comando ao rádio local, ACK/NAK correlacionado, timeout e preservação de histórico. Aceite físico pendente. #106 padroniza também communications.transport=radio em amarelo contínuo sem alterar evidência/ranking. #105 seleção múltipla e lote segue pendente. Não declarar remoção física universal sem teste de firmware.
+
 ## v0.6.21 — #103 / #106
 
 Correções de ambiente PyInstaller, espera do bootloader, destino/log do Setup e estilo dos trechos RF. Testes automatizados locais e ciclo congelado Windows no CI. Aceite físico ainda pendente; não fechar issues por compilação. Instalação manual da v0.6.21 necessária para passar a usar o runner corrigido em atualizações futuras. #102 e #105 continuam pendentes.

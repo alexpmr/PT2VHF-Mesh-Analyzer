@@ -11,7 +11,7 @@ class ReleaseTests(unittest.TestCase):
     def test_rf_styles_and_transport_isolation(self):
         functions=HTML[HTML.index('function topologyLineStyle('):HTML.index('function renderMap(){')]
         js=functions+'''\nconst s=q=>topologyLineStyle({quality:q},'#ffff00',2,'#ff3322',3);
-const result={rf:['confirmed_direct_rf','observed_route_unverified_rf','neighbor_reported_unverified_rf'].map(s),
+const result={flowRadio:communicationLineStyle({transport:'radio'},'#ffff00',2,'#ff3322',3),flowMqtt:communicationLineStyle({transport:'mqtt'},'#ffff00',2,'#ff3322',3),rf:['confirmed_direct_rf','observed_route_unverified_rf','neighbor_reported_unverified_rf'].map(s),
  mqtt:s('observed_route_mqtt_non_rf'), unknown:s('unknown'),
  reverse:topologyPairKey(1,2,3,'radio')===topologyPairKey(2,1,3,'radio'),
  source:topologyPairKey(1,2,3,'radio')!==topologyPairKey(1,2,4,'radio'),
@@ -28,6 +28,10 @@ console.log(JSON.stringify(result));'''
         self.assertIsNotNone(r['unknown']['dashArray'])
         self.assertTrue(r['reverse'] and r['source'] and r['transport'])
         self.assertTrue(r['duplicate'] and r['keepInternet'])
+        self.assertEqual(r['flowRadio']['color'],'#ffff00')
+        self.assertIsNone(r['flowRadio']['dashArray'])
+        self.assertEqual(r['flowMqtt']['color'],'#ff3322')
+        self.assertIsNotNone(r['flowMqtt']['dashArray'])
 
     def test_runner_resets_before_launch_and_waits_for_bootloader(self):
         self.assertLess(RUNNER_PS.index("$env:PYINSTALLER_RESET_ENVIRONMENT = '1'"),RUNNER_PS.index("$child = Start-Process"))

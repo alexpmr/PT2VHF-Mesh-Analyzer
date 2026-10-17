@@ -148,7 +148,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.21</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.22</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -166,7 +166,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </div>
 <div id="map"><div style="padding:40px;color:#9bb1c3">Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.</div></div>
 <div id="terrainSlider" hidden><label>Corte: <strong id="terrainValue">0 m</strong></label><div><input id="terrainCut" type="range" min="0" max="3000" step="50" value="0"></div><label>Máx. (m) <input type="number" id="terrainMax" min="100" max="9000" value="3000" style="width:86px"></label><label>Opacidade <input type="range" id="terrainOpacity" min="20" max="100" value="65"></label></div>
-<div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>┄ <span style="color:#c6a2fa">Fluxo lógico (origem → destino; caminho RF desconhecido)</span></div><div id="mapTrafficActivity" role="status">Aguardando pacotes novos...</div><div><span style="display:inline-block;width:20px;border-top:2px solid #ffff00"></span> Trecho RF (confirmação no popup)</div><div id="mapTopologyStats">Topologia: aguardando...</div><div id="mapMissingLinkInfo" class="muted" role="status" title="Enlaces conhecidos, mas sem coordenadas suficientes para desenhar a linha"></div><div>Dados preservados no SQLite</div></div>
+<div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>Amarelo contínuo: recepção por rádio; pode haver intermediários.</div><div id="mapTrafficActivity" role="status">Aguardando pacotes novos...</div><div><span style="display:inline-block;width:20px;border-top:2px solid #ffff00"></span> Trecho RF (confirmação no popup)</div><div id="mapTopologyStats">Topologia: aguardando...</div><div id="mapMissingLinkInfo" class="muted" role="status" title="Enlaces conhecidos, mas sem coordenadas suficientes para desenhar a linha"></div><div>Dados preservados no SQLite</div></div>
 <div id="mapVisibilityPanel" role="group" aria-label="Exibição de objetos do mapa" hidden>
 <div class="verHead"><strong>VER</strong><div class="actions"><button type="button" id="mapShowAll">Selecionar tudo</button><button type="button" id="mapHideAll">Remover tudo</button></div></div>
 <label><input id="showMapNodes" type="checkbox" checked> Nós <small id="mapNodesCount">0</small></label>
@@ -260,7 +260,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </section>
 <section class="settingsPanel" id="settingsRetention"><div class="card"><h3>Retenção individual dos dados</h3><p class="muted">Configuração persistente do banco SQLite. <b>"Nunca" é o padrão</b>: nada é apagado automaticamente. Um prazo remove registros anteriores à idade definida; a limpeza executa a cada hora ou pelo botão abaixo.</p><form id="retentionForm"><div class="formGrid" id="retentionFields"></div><div class="actions" style="margin-top:15px"><button type="submit">Salvar retenções</button><button type="button" class="danger" id="retentionCleanup">Executar limpeza agora</button></div></form></div></section>
 <section class="settingsPanel" id="settingsMap">
-<div class="card"><h3>Mapa e topologia</h3><div class="mapConfigGrid"><div class="field"><label for="mapWindow">Janela de observação</label><select id="mapWindow"><option value="all">Todos</option><option value="1h">1 h</option><option value="12h">12 h</option><option value="24h">24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option></select></div><div class="field"><label for="mapMinObservations">Mínimo de observações</label><input id="mapMinObservations" type="number" min="1" max="99999" value="1"></div><div class="field"><label for="mapType">Mapa-base</label><select id="mapType"><option value="osm">OSM / Ruas</option><option value="topo">Topográfico</option><option value="satellite">Satélite</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div><div class="field"><label for="mapBrightness">Brilho (%)</label><input id="mapBrightness" type="range" min="20" max="150" value="100"></div><div class="field"><label for="mapTerrainMaxSetting">Máximo do slider de relevo (m)</label><input id="mapTerrainMaxSetting" type="number" min="100" max="9000" value="3000"></div><div class="field"><label for="mapRfColor">Cor dos trechos RF</label><input id="mapRfColor" type="color" value="#ffff00"></div><div class="field"><label for="mapRfWidth">Espessura dos trechos RF (px)</label><input id="mapRfWidth" type="range" min="1" max="12" value="2"></div><div class="field"><label for="mapInternetColor">Cor MQTT / não RF</label><input id="mapInternetColor" type="color" value="#ff3322"></div><div class="field"><label for="mapInternetWidth">Espessura MQTT / não RF (px)</label><input id="mapInternetWidth" type="range" min="1" max="12" value="3"></div><div class="field"><label for="mapShowLinksSetting">Mostrar linhas</label><input id="mapShowLinksSetting" type="checkbox" checked></div><div class="field"><label for="mapShowNodesSetting">Mostrar nós</label><input id="mapShowNodesSetting" type="checkbox" checked></div><div class="field"><label for="mapShowWaypointsSetting">Mostrar waypoints</label><input id="mapShowWaypointsSetting" type="checkbox" checked></div><div class="field"><label for="mapHeatmap">Mapa de calor</label><input id="mapHeatmap" type="checkbox"></div><div class="field"><label for="mapShowNamesSetting">Mostrar nomes curtos</label><input id="mapShowNamesSetting" type="checkbox"></div><div class="field"><label for="mapIdentifiedOnly">Mostrar somente identificados</label><input id="mapIdentifiedOnly" type="checkbox"></div><div class="field"><label for="mapAutoZoom">Auto Zoom durante traceroutes</label><input id="mapAutoZoom" type="checkbox"></div></div><div class="actions"><button id="mapRestoreColors">Restaurar cores e espessuras</button><p class="muted">Trechos RF usam linha contínua; o popup diferencia RF direto comprovado, traceroute e vizinhança anunciada. Fluxos sem caminho conhecido permanecem pontilhados.</p></div></div>
+<div class="card"><h3>Mapa e topologia</h3><div class="mapConfigGrid"><div class="field"><label for="mapWindow">Janela de observação</label><select id="mapWindow"><option value="all">Todos</option><option value="1h">1 h</option><option value="12h">12 h</option><option value="24h">24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option></select></div><div class="field"><label for="mapMinObservations">Mínimo de observações</label><input id="mapMinObservations" type="number" min="1" max="99999" value="1"></div><div class="field"><label for="mapType">Mapa-base</label><select id="mapType"><option value="osm">OSM / Ruas</option><option value="topo">Topográfico</option><option value="satellite">Satélite</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div><div class="field"><label for="mapBrightness">Brilho (%)</label><input id="mapBrightness" type="range" min="20" max="150" value="100"></div><div class="field"><label for="mapTerrainMaxSetting">Máximo do slider de relevo (m)</label><input id="mapTerrainMaxSetting" type="number" min="100" max="9000" value="3000"></div><div class="field"><label for="mapRfColor">Cor dos trechos RF</label><input id="mapRfColor" type="color" value="#ffff00"></div><div class="field"><label for="mapRfWidth">Espessura dos trechos RF (px)</label><input id="mapRfWidth" type="range" min="1" max="12" value="2"></div><div class="field"><label for="mapInternetColor">Cor MQTT / não RF</label><input id="mapInternetColor" type="color" value="#ff3322"></div><div class="field"><label for="mapInternetWidth">Espessura MQTT / não RF (px)</label><input id="mapInternetWidth" type="range" min="1" max="12" value="3"></div><div class="field"><label for="mapShowLinksSetting">Mostrar linhas</label><input id="mapShowLinksSetting" type="checkbox" checked></div><div class="field"><label for="mapShowNodesSetting">Mostrar nós</label><input id="mapShowNodesSetting" type="checkbox" checked></div><div class="field"><label for="mapShowWaypointsSetting">Mostrar waypoints</label><input id="mapShowWaypointsSetting" type="checkbox" checked></div><div class="field"><label for="mapHeatmap">Mapa de calor</label><input id="mapHeatmap" type="checkbox"></div><div class="field"><label for="mapShowNamesSetting">Mostrar nomes curtos</label><input id="mapShowNamesSetting" type="checkbox"></div><div class="field"><label for="mapIdentifiedOnly">Mostrar somente identificados</label><input id="mapIdentifiedOnly" type="checkbox"></div><div class="field"><label for="mapAutoZoom">Auto Zoom durante traceroutes</label><input id="mapAutoZoom" type="checkbox"></div></div><div class="actions"><button id="mapRestoreColors">Restaurar cores e espessuras</button><p class="muted">Relações recebidas por rádio usam linha contínua; o popup diferencia RF direto comprovado, rota e fluxo com caminho desconhecido. MQTT/Internet permanece pontilhado.</p></div></div>
 <div class="card"><h3>Temas sonoros</h3><p class="muted">Sons sintetizados localmente para eventos reais; não inventar retransmissões nem ACKs.</p><div class="mapConfigGrid"><div class="field"><label for="soundEnabled">Ativar sonificação da malha</label><input id="soundEnabled" type="checkbox"></div><div class="field"><label for="soundTheme">Tema</label><select id="soundTheme"><option value="arcade">Fliperama anos 70</option><option value="soft">Discreto</option></select></div><div class="field"><label for="soundVolume">Volume (%)</label><input id="soundVolume" type="range" min="0" max="100" value="40"></div><div class="field"><label for="soundDensity">Densidade sonora</label><select id="soundDensity"><option value="low">Baixa</option><option value="normal" selected>Normal</option><option value="high">Alta</option></select></div><div class="field"><label for="soundMinInterval">Intervalo mínimo (ms)</label><input id="soundMinInterval" type="range" min="40" max="1000" step="20" value="120"></div><div class="field"><label for="soundMaxVoices">Máximo simultâneo</label><input id="soundMaxVoices" type="number" min="1" max="12" value="4"></div><div class="field"><label for="soundRouting">Sons de roteamento e traceroute</label><input id="soundRouting" type="checkbox" checked></div><div class="field"><label for="soundMessages">Sons de mensagens</label><input id="soundMessages" type="checkbox" checked></div><div class="field"><label for="soundAlerts">Sons de alertas e falhas</label><input id="soundAlerts" type="checkbox" checked></div><div class="field"><label for="soundStereo">Estéreo espacial</label><input id="soundStereo" type="checkbox"></div></div><button id="soundTest">Testar tema</button></div>
 <div class="card"><h3>Atividade em tempo real no mapa</h3><div class="mapConfigGrid"><div class="field"><label for="mapAnimateNodes">Animar atividade dos nós</label><input id="mapAnimateNodes" type="checkbox" checked></div><div class="field"><label for="mapHighlightSource">Realçar origem/resposta</label><input id="mapHighlightSource" type="checkbox" checked></div><div class="field"><label for="mapHighlightRelay">Realçar retransmissor observado</label><input id="mapHighlightRelay" type="checkbox" checked></div><div class="field"><label for="mapPulseSeconds">Duração do realce</label><select id="mapPulseSeconds"><option value="1">1 s</option><option value="2" selected>2 s</option><option value="3">3 s</option><option value="5">5 s</option></select></div><div class="field"><label for="mapAnimationSpeed">Velocidade da animação</label><select id="mapAnimationSpeed"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></div></div><p class="muted">A duração e a velocidade da animação são configuradas aqui, não no menu principal.</p></div>
 </section>
@@ -288,7 +288,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.21</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.22</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.8.</p></div></div></section>
@@ -865,6 +865,11 @@ function topologyPairKey(a,b,source,transport){
 function isTopologyFlowDuplicate(flow,drawnTopology){
  return drawnTopology.has(topologyPairKey(flow.from_node,flow.to_node,flow.source_id,flow.transport));
 }
+function communicationLineStyle(flow,rfColor,rfWidth,internetColor,internetWidth){
+ return {color:flow.transport==='mqtt'?internetColor:rfColor,
+  weight:flow.transport==='mqtt'?Number(internetWidth):Number(rfWidth),
+  opacity:.85,dashArray:flow.transport==='mqtt'?'1 9':null,interactive:true};
+}
 function renderMap(){
  if(!map){initMap();if(!map)return;}
  nodeLayer.clearLayers();linkLayer.clearLayers();if(waypointLayer)waypointLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
@@ -923,9 +928,9 @@ function renderMap(){
      '. Caminho físico não conhecido; NÃO comprova RF direto. '+
      (flow.transport==='mqtt'?'Internet/MQTT. ':'Recepção via fonte rádio. ')+
      Number(flow.observations||1)+' pacotes.';
-   const flowLine=L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],{
-     color:flow.transport==='mqtt'?'#9e97ce':'#b48aff',
-     weight:1.6,opacity:.7,dashArray:'1 9',interactive:true});
+   const flowLine=L.polyline([[a.latitude,a.longitude],[b.latitude,b.longitude]],
+     communicationLineStyle(flow,$('mapRfColor').value,$('mapRfWidth').value,
+       $('mapInternetColor').value,$('mapInternetWidth').value));
    flowLine.bindTooltip(esc(label));
    attachLinkPopup(flowLine,flow,'communication');
    flowLine.addTo(linkLayer);
@@ -1208,6 +1213,7 @@ function nodePopupHtml(n){
    '<p class="muted">Histórico recente disponível localmente. Nem todas as métricas podem ser obtidas dos pacotes.</p>'+
    '<div class="nodeDetailGrid">'+metadata+'</div></div>'+
    '<div class="nodeSection"><button id="nodeDetailDM" type="button">Mensagem privada</button>'+
+   '<button type="button" data-delete-node="'+n.node_num+'">Apagar nó do banco e do rádio</button>'+
    '<button id="nodeDetailLocate" type="button" '+(!validPos(n)?'disabled':'')+'>Centralizar no mapa</button></div>';
 }
 function closeNodeDetails(){
@@ -1240,6 +1246,11 @@ function showNode(n){
   if(map)map.setView([n.latitude,n.longitude],Math.max(map.getZoom(),13));
  };
 }
+$('nodeDetailBody').addEventListener('click',e=>{
+ const button=e.target.closest('[data-delete-node]');if(!button)return;
+ const node=nodes.find(n=>Number(n.node_num)===Number(button.dataset.deleteNode));
+ if(node)deleteNodeFromRadioAndDatabase(node);
+});
 $('nodeDetailClose').onclick=closeNodeDetails;
 $('nodeDetailOverlay').addEventListener('click',e=>{
  if(e.target===$('nodeDetailOverlay'))closeNodeDetails();
@@ -1483,6 +1494,27 @@ function openDm(id){currentChat='node:'+id;setView('messages');renderChat();}
 function closeNodeContext(){
  const menu=$('nodeContextMenu');if(menu)menu.hidden=true;
 }
+let deletingNode=false;
+async function deleteNodeFromRadioAndDatabase(n){
+ if(deletingNode){notify('Já existe uma exclusão em andamento.',true);return;}
+ const radios=(state.sources||[]).filter(s=>['serial','ble','tcp'].includes(s.kind)&&
+   state.connections?.[String(s.id)]?.status==='connected');
+ if(radios.length!==1){notify('Mantenha exatamente um rádio conectado para apagar o nó nos dois destinos.',true);return;}
+ const src=radios[0];
+ const ownIds=Object.values(state.connections||{}).map(c=>Number(c.local_node_num));
+ if(ownIds.includes(Number(n.node_num))){notify('Não é permitido apagar o próprio rádio.',true);return;}
+ if(!confirm('Apagar '+idName(n.node_num)+' ('+n.node_id+')?\n\nRemover do NodeDB do rádio '+src.name+' e do cadastro do banco local.\nO histórico será preservado. Um nó ativo pode reaparecer ao ser recebido novamente.'))return;
+ deletingNode=true;
+ notify('Solicitando exclusão ao rádio; aguardando confirmação por até 30 segundos...');
+ try{
+  const r=await api('/api/nodes/delete',{source_id:src.id,node_num:n.node_num,confirmed:true});
+  if(!r.radio_confirmed)throw new Error('Remoção no rádio não confirmada');
+  closeNodeDetails();
+  await refreshAll();
+  notify('Rádio confirmou a remoção; cadastro local apagado. Histórico preservado.');
+ }catch(e){notify('Apagar nó: '+e.message,true);}
+ finally{deletingNode=false;}
+}
 function openNodeContext(nodeNum,x,y){
  const n=nodes.find(v=>Number(v.node_num)===Number(nodeNum));if(!n)return;
  const menu=$('nodeContextMenu');
@@ -1496,6 +1528,7 @@ function openNodeContext(nodeNum,x,y){
       action('detail','Informações completas')+
       action('locate','Mostrar no mapa',validPos(n),'O nó não informou posição')+
       action('copy','Copiar Node ID')+
+      action('delete','Apagar nó do banco e do rádio')+
       '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
       RF_QUERY_TYPES.map(([k,l])=>action('query-'+k,l,!!activeRadioSource(),'Conecte um rádio com transmissão')).join('')+
       action('future','Ping / Vizinhos',false,'Não há API validada para esta versão');
@@ -1507,6 +1540,7 @@ function openNodeContext(nodeNum,x,y){
    closeNodeContext();
    if(btn.dataset.nodeAction.startsWith('query-')){await runNodeQuery(n.node_num,btn.dataset.nodeAction.slice(6));return;}
    switch(btn.dataset.nodeAction){
+    case 'delete':await deleteNodeFromRadioAndDatabase(n);break;
     case 'message':openDm(n.node_num);break;
     case 'detail':showNode(n);break;
     case 'locate':setView('map');initMap();if(map&&validPos(n))map.setView([n.latitude,n.longitude],13);break;

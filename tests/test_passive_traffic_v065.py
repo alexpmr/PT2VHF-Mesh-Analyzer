@@ -96,7 +96,7 @@ class PassiveTrafficTests(unittest.TestCase):
         self.assertIn("api('/api/communications')",HTML)
         self.assertIn("activeCommunications=communications.filter",HTML)
         self.assertIn("Caminho físico não conhecido; NÃO comprova RF direto",HTML)
-        self.assertIn("dashArray:'1 9'",HTML)
+        self.assertIn("dashArray:flow.transport==='mqtt'?'1 9':null",HTML)
         self.assertIn("Number(p.id)>lastAnimatedPacketId",HTML)
         segment=HTML[HTML.index("function pulseNewPackets(current){"):HTML.index("function sourceMapNodes(){")]
         self.assertNotIn("mapHighlightSource",segment)

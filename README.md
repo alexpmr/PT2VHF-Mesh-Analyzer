@@ -1,16 +1,16 @@
-# PT2VHF Mesh Analyzer — v0.6.21
+# PT2VHF Mesh Analyzer — v0.6.22
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 11 x64 com banco próprio SQLite, fontes Meshtastic e análises locais. A arquitetura também permite evolução para Linux/macOS.
 
 ## Downloads — Windows 11 x64
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.21](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.21)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.22](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.22)**
 
 | Download | Arquivo disponível | Link direto |
 |---|---|---|
-| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.21-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.21/PT2VHF-Mesh-Analyzer-v0.6.21-Setup-Win11-x64.exe)** |
-| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.21-Portable-Win11-x64.exe` | **[Baixar Portable EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.21/PT2VHF-Mesh-Analyzer-v0.6.21-Portable-Win11-x64.exe)** |
-| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.21/SHA256SUMS.txt) |
+| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.22-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.22/PT2VHF-Mesh-Analyzer-v0.6.22-Setup-Win11-x64.exe)** |
+| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.22-Portable-Win11-x64.exe` | **[Baixar Portable EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.22/PT2VHF-Mesh-Analyzer-v0.6.22-Portable-Win11-x64.exe)** |
+| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.22/SHA256SUMS.txt) |
 
 **Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
 [Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
@@ -20,12 +20,12 @@
 
 **Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable EXE pode ser executado diretamente, sem instalação. O ZIP permanece disponível por compatibilidade. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
 
-### Novidades da v0.6.21
+### Novidades da v0.6.22
 
-- Reinício com ambiente PyInstaller independente e espera pelo bootloader anterior; Setup mantém diretório atual e grava log próprio.
-- Trechos RF identificados usam amarelo contínuo por padrão, com tipo/evidência no popup. Remove sobreposição de fluxo lógico duplicado, sem promover traceroutes ao ranking RF direto.
-- Testes de JavaScript real e ciclo Windows de substituição/reinício de EXE onefile de teste. Hardware e WebView2 reais ainda requerem validação.
-- **Instale manualmente esta versão.** O atualizador antigo continua sendo usado na passagem da v0.6.20 para a v0.6.21; o runner corrigido será usado a partir desta instalação.
+- **Apagar nó do banco e do rádio** no menu de botão direito e na janela de detalhes. Exige confirmação, conexão direta e confirmação do comando pelo rádio antes de remover o cadastro local. O histórico é preservado; nó ativo pode reaparecer. Não apaga o próprio rádio.
+- Relações recebidas por RF, inclusive fluxos de caminho desconhecido, usam amarelo contínuo por padrão. O popup informa o grau de evidência; o ranking de enlaces diretos mantém os mesmos critérios.
+- Atualizador com reinício independente do PyInstaller mantido da v0.6.21. Quem já instalou manualmente a v0.6.21 pode testar o próximo ciclo automático; versões anteriores ainda usam o runner antigo.
+- Exclusão é **individual** nesta versão; seleção múltipla e operações em lote continuam no backlog. Testes físicos de remoção no rádio e atualização completa no PC do usuário ainda pendentes.
 
 ## Política de downloads
 

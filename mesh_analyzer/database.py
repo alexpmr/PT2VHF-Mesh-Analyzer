@@ -509,6 +509,16 @@ class Database:
                 observed=MAX(observed,excluded.observed)""",
                 (int(source_id),num,ts,ts,int(bool(observed))))
 
+    def delete_node_catalog(self, node_num):
+        """Delete catalog only; retain packets, messages, positions and topology."""
+        num = int(node_num)
+        if not 0 < num < 0xffffffff:
+            raise ValueError("Node ID inválido")
+        with self._lock, self._db:
+            self._db.execute("DELETE FROM node_sources WHERE node_num=?", (num,))
+            deleted = self._db.execute("DELETE FROM nodes WHERE node_num=?", (num,)).rowcount
+        return bool(deleted)
+
     def set_node_friendly_name(self, node_num, friendly_name):
         """Persistent local nickname: never changes the Meshtastic Node ID."""
         num = int(node_num)

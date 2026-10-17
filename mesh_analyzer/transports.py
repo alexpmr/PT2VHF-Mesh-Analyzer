@@ -240,6 +240,8 @@ class SourceManager:
         self._subscribed=False
         from .remote_queries import NodeQueries
         self.queries=NodeQueries(self)
+        from .node_deletion import NodeDeletion
+        self.node_deletion=NodeDeletion(self)
 
     def _set(self,id,state,error=""):
         with self._lock:

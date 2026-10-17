@@ -271,6 +271,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json({"success":True,"retention":result})
                 elif path == "/api/db/backup":
                     self._json({"success":True,"backup":db.backup()})
+                elif path == "/api/nodes/delete":
+                    self._json(sources.node_deletion.delete(payload.get("source_id"),
+                        payload.get("node_num"), payload.get("confirmed")))
                 elif path == "/api/nodes/friendly":
                     self._json({"success":True,"node":db.set_node_friendly_name(
                         payload.get("node_num"),payload.get("friendly_name",""))})
