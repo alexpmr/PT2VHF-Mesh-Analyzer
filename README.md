@@ -1,24 +1,32 @@
-# PT2VHF Mesh Analyzer — v0.6.25
+# PT2VHF Mesh Analyzer — v0.6.26
 
-**Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 11 x64 com banco próprio SQLite, fontes Meshtastic e análises locais. A arquitetura também permite evolução para Linux/macOS.
+**Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ (x64)** e **Windows 11 (x64)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
-## Downloads — Windows 11 x64
+## Downloads — Windows 10 / Windows 11 (64 bits)
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.25](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.25)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.26](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.26)**
 
-| Download | Arquivo disponível | Link direto |
+| Download | Nome do arquivo | Link |
 |---|---|---|
-| **Instalador (recomendado)** | `PT2VHF-Mesh-Analyzer-v0.6.25-Setup-Win11-x64.exe` | **[Baixar instalador EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.25/PT2VHF-Mesh-Analyzer-v0.6.25-Setup-Win11-x64.exe)** |
-| **Versão portátil** | `PT2VHF-Mesh-Analyzer-v0.6.25-Portable-Win11-x64.exe` | **[Baixar Portable EXE](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.25/PT2VHF-Mesh-Analyzer-v0.6.25-Portable-Win11-x64.exe)** |
-| **Verificação SHA256** | `SHA256SUMS.txt` | [Baixar hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.25/SHA256SUMS.txt) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.26-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.26/PT2VHF-Mesh-Analyzer-v0.6.26-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.26/PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.26/PT2VHF-Mesh-Analyzer-v0.6.26-Portable-Win10-Win11-x64.zip) |
+| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.26/SHA256SUMS.txt) |
 
-**Atalhos para a última versão (atualizados automaticamente pelo GitHub):**
-[Setup mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe) ·
-[Portable mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe) ·
-[SHA256 mais recente](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt) ·
-[Todas as releases](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases)
+**Links automáticos (última versão):**
+[Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
+[Portable Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe) ·
+[Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos:** Windows 11 64 bits. O Setup instala o programa; o Portable EXE pode ser executado diretamente, sem instalação. O ZIP permanece disponível por compatibilidade. Para conferir a integridade, compare o SHA256 do arquivo baixado com o valor em `SHA256SUMS.txt` da mesma versão. O Windows pode apresentar o SmartScreen para programas sem assinatura digital.
+**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.26 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+
+### Novidades da v0.6.26 — compatibilidade Windows 10/11
+
+- Instalador Inno Setup com mínimo Windows 10 build 17763 e arquitetura x64; mantém instalação por usuário e atualização automática.
+- Executável Python 3.12/PyInstaller empacotado como um único binário para Windows 10/11, sem dependência exclusiva de Windows 11.
+- Fluxo de CI, release, hashes, documentação e fonte identificados como **Win10-Win11-x64**.
+- Compatibilidade retroativa com atualizadores antigos por aliases `Win11-x64` nos mesmos assets.
+- Testes CI validam arquitetura PE, plataforma mínima declarada, nomes de pacotes e continuidade dos URLs do atualizador; **aceite final requer teste de instalação, abertura e conexões em Windows 10 físico/VM**, não disponível no runner Windows Server 2022.
 
 ### Novidades da v0.6.25 (candidata, sujeita a testes)
 
