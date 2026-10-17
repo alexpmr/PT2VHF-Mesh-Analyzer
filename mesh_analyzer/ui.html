@@ -2298,17 +2298,61 @@ function syncStatFilters(){
  const n=$('statsNode'),old=n.value;const nodesig=nodes.map(x=>x.node_num+':'+x.long_name).join('|');
  if(n.dataset.sig!==nodesig){n.innerHTML='<option value="">Todos</option>'+nodes.map(x=>'<option value="'+x.node_num+'">'+esc(x.short_name||x.long_name||x.node_id)+'</option>').join('');n.value=old;n.dataset.sig=nodesig;}
 }
-$('statsPDF').onclick=async()=>{
+function pdfExportFilename(){
+ return 'PT2VHF_Mesh_Analyzer_Relatorio_'+new Date().toISOString().slice(0,16).replaceAll(':','-')+'.pdf';
+}
+function pdfBlobToBase64(blob){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onerror=()=>reject(new Error('Não foi possível preparar PDF para o diálogo nativo.'));
+  reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');
+  reader.readAsDataURL(blob);
+ });
+}
+async function exportReportPdf(){
+ if($('statsPDF').disabled)return;
+ $('statsPDF').disabled=true;
  try{
- $('statsPDF').disabled=true;notify('Gerando PDF técnico a partir do SQLite...');
- const res=await fetch('/api/report/pdf',{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(statsFilters())});
- if(!res.ok){let err=await res.json();throw Error(err.error||'Falha PDF');}
- const blob=await res.blob();if(blob.type!=='application/pdf')throw Error('Resposta não é PDF');
- const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;
- a.download='PT2VHF_Mesh_Analyzer_Relatorio_'+new Date().toISOString().slice(0,16).replaceAll(':','-')+'.pdf';a.click();
- setTimeout(()=>URL.revokeObjectURL(url),5000);notify('Relatório PDF gerado.');
- }catch(e){notify('PDF: '+e.message,true);}finally{$('statsPDF').disabled=false;}
-};
+  notify('Gerando relatório técnico PDF a partir do SQLite...');
+  const res=await fetch('/api/report/pdf',{
+   method:'POST',
+   headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},
+   body:JSON.stringify(statsFilters())
+  });
+  if(!res.ok){
+   let errorMessage='Erro HTTP '+res.status;
+   try{const data=await res.json();errorMessage=data.error||errorMessage;}catch(e){}
+   throw new Error(errorMessage);
+  }
+  if(!(res.headers.get('Content-Type')||'').toLowerCase().includes('application/pdf'))
+   throw new Error('Servidor não retornou um PDF.');
+  const blob=await res.blob();
+  if(blob.size<100||blob.size>16000000)throw new Error('PDF vazio ou maior que 16 MB.');
+  const filename=pdfExportFilename();
+  if(window.pywebview&&window.pywebview.api&&
+     typeof window.pywebview.api.save_pdf==='function'){
+   const payload=await pdfBlobToBase64(blob);
+   const result=await window.pywebview.api.save_pdf(payload,filename);
+   if(result?.saved===true)notify('PDF salvo: '+result.filename);
+   else notify('Salvamento do PDF cancelado.');
+  }else{
+   const url=URL.createObjectURL(blob),link=document.createElement('a');
+   try{
+    link.href=url;link.download=filename;link.style.display='none';
+    document.body.appendChild(link);
+    link.click();
+    notify('Download do relatório solicitado. Verifique a pasta de downloads.');
+   }finally{
+    link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+   }
+  }
+ }catch(e){
+  notify('Erro ao gerar/salvar PDF: '+e.message,true);
+ }finally{
+  $('statsPDF').disabled=false;
+ }
+}
+$('statsPDF').onclick=exportReportPdf;
 $('statsCSV').onclick=()=>{
  if(!statData){notify('Atualize Estatísticas primeiro.',true);return;}
  const rows=[['Categoria','Item','Contagem']];
