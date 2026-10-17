@@ -1,3 +1,12 @@
+# v0.6.24 — Exclusão bulk, fila de consultas RF, enlaces e radar
+
+- Exclusão múltipla do NodeDB do rádio local e catálogo SQLite: confirmação dupla, ACK individual, tratamento de falhas parciais e cancelamento dos itens não enviados (#105).
+- Novas consultas em lote são enfileiradas durante lotes existentes; fila FIFO com limite de RF compartilhado, progresso e resultados por nó (#105).
+- Ver → Enlaces inicial ligado para perfis novos, com preferências explícitas preservadas e alterações salvas em SQLite (#108).
+- Radar OFF respeitado durante inicialização e após downloads assíncronos; slider de opacidade ampliado e controle instantâneo (#109, #110).
+- Mapa com diagnóstico de vínculos conhecidos, filtrados e desenhados, mais normalização de IDs de nós (#90).
+- Pipeline de regressão Windows e verificações simuladas; testes físicos de exclusão e visualização em campo ainda necessários.
+
 # v0.6.23 — Seleção múltipla de nós e consultas RF em lote (#105)
 
 - Clique simples seleciona sem abrir, clique duplo abre detalhes; Ctrl e Shift selecionam nós individuais ou intervalos; Ctrl+A seleciona os nós do filtro atual.
