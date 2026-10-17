@@ -1,3 +1,10 @@
+# v0.6.28 — Ícones por role do dispositivo
+
+- Mapa com 13 ícones SVG customizados, papel desconhecido explícito e legenda recolhível. Atividade continua no contorno verde/âmbar; cliques e menu contextual preservados.
+- `role` importada do NodeDB do device e das respostas NodeInfo em dicionário/protobuf, incluindo CLIENT numérico zero. Metadados parciais não apagam papel conhecido.
+- Recuperação única de roles ausentes nos pacotes históricos, sem criar nós nem alterar last_seen ou posições.
+- Testes de roles oficiais, consulta inicial, NodeInfo ao vivo, recuperação e SVGs reais. Validação física no rádio permanece necessária. Atualizador interno do Portable continua pendente (#103).
+
 # v0.6.27 — Confirmações de mensagens e padrões de automação
 
 - Mensagens: envio com wantAck também nos canais; tratamento de ACK/NAK correlacionado por conexão, packet ID e origem. ACK implícito confirma propagação, ACK do destinatário privado confirma entrega; nenhum confirma leitura humana.

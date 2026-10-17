@@ -9,6 +9,7 @@ import time
 from typing import Any
 
 from .database import Database, now_ms
+from .node_roles import normalize_role, decoded_user
 from .topology import extract_topology
 
 
@@ -116,7 +117,7 @@ class PacketIngestor:
                 if num is None: continue
                 position=position_from_decoded({"position":pos})
                 values={"long_name":user.get("longName") or user.get("long_name"),"short_name":user.get("shortName") or user.get("short_name"),
-                        "hw_model":user.get("hwModel") or user.get("hw_model"),"snr":n.get("snr")}
+                        "hw_model":user.get("hwModel") or user.get("hw_model"),"role":normalize_role(user.get("role",n.get("role"))),"snr":n.get("snr")}
                 if position:values.update(latitude=position[0],longitude=position[1],altitude=position[2])
                 # Radio-provided cached NodeDB is NOT live evidence. Preserve the
                 # recorded lastHeard; unknown means never heard in this session.
@@ -175,11 +176,10 @@ class PacketIngestor:
         if from_num is not None:
             self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,snr=packet.get("rxSnr",packet.get("rx_snr")))
         if port in ("NODEINFO_APP","4") and from_num is not None:
-            user=decoded.get("user") if isinstance(decoded.get("user"),dict) else {}
-            if not user and isinstance(decoded.get("nodeInfo"),dict):user=decoded["nodeInfo"].get("user") or {}
+            user=decoded_user(decoded)
             if isinstance(user,dict):
                 self.db.upsert_node(from_num,source_id,timestamp_ms=ts,observed=True,long_name=user.get("longName") or user.get("long_name"),
-                                    short_name=user.get("shortName") or user.get("short_name"),hw_model=user.get("hwModel") or user.get("hw_model"))
+                                    short_name=user.get("shortName") or user.get("short_name"),hw_model=user.get("hwModel") or user.get("hw_model"),role=normalize_role(user.get("role")))
         if port in ("WAYPOINT_APP","8"):
             try:
                 wp=waypoint_from_decoded(decoded)

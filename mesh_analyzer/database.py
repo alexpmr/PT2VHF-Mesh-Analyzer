@@ -616,6 +616,29 @@ class Database:
           ) WHERE rank=1 ORDER BY timestamp_ms DESC LIMIT ?""",
           (max(1,min(int(limit),25000)),))
 
+    def recover_node_roles(self):
+        """Backfill only missing roles from stored NodeInfo; never alter RX times."""
+        from .node_roles import decoded_user,normalize_role
+        with self._lock,self._db:
+            if self._db.execute("SELECT 1 FROM settings WHERE key='role_backfill_v0628'").fetchone():return 0
+            rows=self._db.execute("""SELECT p.from_node,p.raw_json FROM packets p JOIN nodes n
+                ON n.node_num=p.from_node WHERE (n.role IS NULL OR n.role='')
+                AND p.port IN ('NODEINFO_APP','4') ORDER BY p.timestamp_ms DESC,p.id DESC LIMIT 20000""").fetchall()
+            seen=set();updated=0
+            for row in rows:
+                num=row['from_node']
+                if num in seen:continue
+                try:
+                    packet=json.loads(row['raw_json'] or '{}')
+                    decoded=packet.get('decoded') or {}
+                    role=normalize_role(decoded_user(decoded).get('role')) if isinstance(decoded,dict) else None
+                except (ValueError,TypeError,AttributeError):continue
+                if role is None:continue
+                self._db.execute("UPDATE nodes SET role=? WHERE node_num=? AND (role IS NULL OR role='')",(role,num))
+                updated+=1;seen.add(num)
+            self._db.execute("INSERT INTO settings(key,value) VALUES('role_backfill_v0628','1')")
+        return updated
+
     def node_rows(self, limit=5000):
         rows=self._rows("SELECT * FROM nodes ORDER BY last_seen_ms DESC LIMIT ?",(min(int(limit),15000),))
         for r in rows: r["aliases"]=json.loads(r["aliases"] or "[]")

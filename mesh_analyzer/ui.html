@@ -214,6 +214,11 @@ html[data-theme="light"] .brand-tagline{color:#226c3e}
 html[data-theme="light"] .brand-vhf{color:#107c38}
 html[data-theme="light"] .sourceCard p{color:var(--muted)}
 html[data-theme="light"] #radioConnectionStatus[data-status="connected"]{background:#d9f2e1!important;color:#086535!important}
+.mesh-role-marker{background:transparent!important;border:0!important;line-height:0}
+.mesh-role-marker svg{display:block;filter:drop-shadow(0 2px 3px #0008)}
+.mesh-role-marker:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%}
+.roleLegend{margin:6px 0}.roleLegend summary{cursor:pointer}.roleLegendItem{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.roleLegendItem svg{width:24px;height:24px;flex:none}#nodeRoleLegend{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;max-height:185px;overflow:auto;margin-top:6px}
 </style>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
@@ -225,7 +230,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.27</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.28</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -243,7 +248,7 @@ try {
 </div>
 <div id="map"><div style="padding:40px;color:#9bb1c3">Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.</div></div>
 <div id="terrainSlider" hidden><label>Corte: <strong id="terrainValue">0 m</strong></label><div><input id="terrainCut" type="range" min="0" max="3000" step="50" value="0"></div><label>Máx. (m) <input type="number" id="terrainMax" min="100" max="9000" value="3000" style="width:86px"></label><label>Opacidade <input type="range" id="terrainOpacity" min="20" max="100" value="65"></label></div>
-<div id="mapLegend"><div>● <span class="ok">Nó com posição</span></div><div>Amarelo contínuo: recepção por rádio; pode haver intermediários.</div><div id="mapTrafficActivity" role="status">Aguardando pacotes novos...</div><div><span style="display:inline-block;width:20px;border-top:2px solid #ffff00"></span> Trecho RF (confirmação no popup)</div><div id="mapTopologyStats">Topologia: aguardando...</div><div id="mapMissingLinkInfo" class="muted" role="status" title="Enlaces conhecidos, mas sem coordenadas suficientes para desenhar a linha"></div><div>Dados preservados no SQLite</div></div>
+<div id="mapLegend"><div><span style="color:#2ecc71">●</span> Atividade recente · <span style="color:#e9a94d">●</span> Histórico</div><details class="roleLegend"><summary>Ícones por papel do nó</summary><div id="nodeRoleLegend"></div></details><div>Amarelo contínuo: recepção por rádio; pode haver intermediários.</div><div id="mapTrafficActivity" role="status">Aguardando pacotes novos...</div><div><span style="display:inline-block;width:20px;border-top:2px solid #ffff00"></span> Trecho RF (confirmação no popup)</div><div id="mapTopologyStats">Topologia: aguardando...</div><div id="mapMissingLinkInfo" class="muted" role="status" title="Enlaces conhecidos, mas sem coordenadas suficientes para desenhar a linha"></div><div>Dados preservados no SQLite</div></div>
 <div id="mapVisibilityPanel" role="group" aria-label="Exibição de objetos do mapa" hidden>
 <div class="verHead"><strong>VER</strong><div class="actions"><button type="button" id="mapShowAll">Selecionar tudo</button><button type="button" id="mapHideAll">Remover tudo</button></div></div>
 <label><input id="showMapNodes" type="checkbox" checked> Nós <small id="mapNodesCount">0</small></label>
@@ -370,7 +375,7 @@ try {
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.27</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.28</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.8.</p></div></div></section>
@@ -1007,7 +1012,49 @@ function communicationLineStyle(flow,rfColor,rfWidth,internetColor,internetWidth
   weight:flow.transport==='mqtt'?Number(internetWidth):Number(rfWidth),
   opacity:.85,dashArray:flow.transport==='mqtt'?'1 9':null,interactive:true};
 }
+// Custom inline SVG glyphs: no external icon/font service is required.
+const NODE_ROLE_META=[
+ ['CLIENT','Client','<rect x="8" y="6" width="9" height="15" rx="2"/><path d="M10 6V2m1 8h3m-3 4h3m-3 4h1"/>'],
+ ['CLIENT_MUTE','Client Mute','<rect x="4" y="6" width="9" height="15" rx="2"/><path d="M6 6V2m1 8h3m6 2 5 6m0-6-5 6"/>'],
+ ['ROUTER','Router','<path d="m6 21 6-15 6 15M8 17h8M10 12h4M12 3v3M7 3c-3 2-3 5 0 7m10-7c3 2 3 5 0 7"/>'],
+ ['ROUTER_CLIENT','Router Client','<path d="m3 20 5-13 5 13M5 16h6M8 4v3M4 4c-2 1-2 4 0 5m8-5c2 1 2 4 0 5"/><rect x="15" y="10" width="6" height="11" rx="1"/><path d="M17 10V6m0 8h2"/>'],
+ ['REPEATER','Repeater','<path d="M3 8h17l-4-4m4 12H3l4 4M4 8l4-4m12 12-4 4M7 12h10"/>'],
+ ['TRACKER','Tracker','<path d="M19 9c0 5-7 12-7 12S5 14 5 9a7 7 0 1 1 14 0Z"/><circle cx="12" cy="9" r="2.5"/>'],
+ ['SENSOR','Sensor','<path d="M9 14V5a3 3 0 0 1 6 0v9a5 5 0 1 1-6 0Zm3-8v11m6-11h3m-3 4h2"/><circle cx="12" cy="18" r="1"/>'],
+ ['TAK','TAK','<path d="m12 3 3 6 6 3-6 3-3 6-3-6-6-3 6-3Z"/><path d="M12 8v8m-4-4h8"/>'],
+ ['CLIENT_HIDDEN','Client Hidden','<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Zm2 9L20 3"/><circle cx="12" cy="12" r="3"/>'],
+ ['LOST_AND_FOUND','Lost & Found','<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M10 6v5m0 2v1"/>'],
+ ['TAK_TRACKER','TAK Tracker','<path d="M19 9c0 5-7 12-7 12S5 14 5 9a7 7 0 1 1 14 0Z"/><path d="m12 5 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z"/>'],
+ ['ROUTER_LATE','Router Late','<path d="m3 20 5-13 5 13M5 16h6M8 3v4M4 4c-2 1-2 4 0 5m8-5c2 1 2 4 0 5"/><circle cx="18" cy="16" r="5"/><path d="M18 13v3l2 1"/>'],
+ ['CLIENT_BASE','Client Base','<path d="m2 12 10-8 10 8M5 10v11h14V10M12 4V1M9 14h6m-3-2v7"/>']
+];
+function nodeRoleMeta(value){
+ let key=typeof value==='number'&&Number.isInteger(value)?NODE_ROLE_META[value]?.[0]:null;
+ if(typeof value==='string'){
+  const text=value.trim();
+  key=/^\d+$/.test(text)?NODE_ROLE_META[Number(text)]?.[0]:text.toUpperCase().replace(/[\s-]+/g,'_');
+ }
+ return NODE_ROLE_META.find(row=>row[0]===key)||['UNKNOWN','Papel não informado','<path d="m12 2 10 10-10 10L2 12Z"/><path d="M9 8a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3v1"/>'];
+}
+function nodeRoleSvg(role,statusColor){
+ const meta=nodeRoleMeta(role);
+ return '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">'+
+ '<circle cx="17" cy="17" r="15" fill="#142533" stroke="'+statusColor+'" stroke-width="2.5"/>'+
+ '<g transform="translate(5 5)" fill="none" stroke="#f0f5f8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+meta[2]+'</g></svg>';
+}
+function nodeRoleIcon(n){
+ const meta=nodeRoleMeta(n.role),recent=Number(n.last_seen_ms)>0&&Date.now()-Number(n.last_seen_ms)<7200000;
+ return L.divIcon({className:'mesh-role-marker',html:nodeRoleSvg(n.role,recent?'#2ecc71':'#e9a94d'),
+  iconSize:[34,34],iconAnchor:[17,17],tooltipAnchor:[0,-18]});
+}
+function renderNodeRoleLegend(){
+ const el=$('nodeRoleLegend');if(!el)return;
+ el.innerHTML=NODE_ROLE_META.map(([role,label])=>'<div class="roleLegendItem">'+nodeRoleSvg(role,'#8ea6b5')+'<span>'+label+'</span></div>').join('')+
+ '<div class="roleLegendItem">'+nodeRoleSvg(null,'#8ea6b5')+'<span>Não informado</span></div>';
+}
+
 function renderMap(){
+ renderNodeRoleLegend();
  if(!map){initMap();if(!map)return;}
  nodeLayer.clearLayers();linkLayer.clearLayers();if(waypointLayer)waypointLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
  const source='';
@@ -1104,9 +1151,9 @@ function renderMap(){
    if(!allowed.has(n.node_num)||!validPos(n))continue;
    if($('mapIdentifiedOnly').checked&&!n.long_name&&!n.short_name)continue;
    const point=[n.latitude,n.longitude];
-   const marker=L.circleMarker(point,{radius:7,color:'#ffffff',
-     fillColor:Date.now()-n.last_seen_ms<7200000?'#2ecc71':'#e9a94d',fillOpacity:.95,weight:1});
-   marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id),{
+   const marker=L.marker(point,{icon:nodeRoleIcon(n),keyboard:true,riseOnHover:true,
+     alt:(n.short_name||n.long_name||n.node_id)+' · '+nodeRoleMeta(n.role)[1]});
+   marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id)+' · '+esc(nodeRoleMeta(n.role)[1]),{
      permanent:$('showNames').checked,direction:'top'});
    marker.on('click',()=>showNode(n));
    marker.on('contextmenu',e=>{L.DomEvent.stop(e);openNodeContext(n.node_num,e.originalEvent.clientX,e.originalEvent.clientY);});

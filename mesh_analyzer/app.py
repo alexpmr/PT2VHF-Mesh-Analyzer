@@ -340,6 +340,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     """A private loopback backend serves the desktop WebView2 window."""
     data=profile_dir()
     db=Database(database or (data/"mesh-analyzer.sqlite3"))
+    db.recover_node_roles()
     drivers=SourceManager(db)
     updates=ReleaseMonitor(db)
     from .updater import UpdateManager

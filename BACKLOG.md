@@ -1,3 +1,10 @@
+## v0.6.28 — Ícones por role do dispositivo
+
+- Mapa com 13 ícones SVG customizados, papel desconhecido explícito e legenda recolhível. Atividade continua no contorno verde/âmbar; cliques e menu contextual preservados.
+- `role` importada do NodeDB do device e das respostas NodeInfo em dicionário/protobuf, incluindo CLIENT numérico zero. Metadados parciais não apagam papel conhecido.
+- Recuperação única de roles ausentes nos pacotes históricos, sem criar nós nem alterar last_seen ou posições.
+- Testes de roles oficiais, consulta inicial, NodeInfo ao vivo, recuperação e SVGs reais. Validação física no rádio permanece necessária. Atualizador interno do Portable continua pendente (#103).
+
 ## v0.6.27 — Continuação: mensagens, automações e cabeçalho
 
 Implementada correlação de ACK/NAK de texto, incluindo broadcasts, com timeout e sem inferir leitura. Automações ativas com tipos selecionados por migração única; suporte real continua restrito às capacidades do rádio. Contador redundante de conexões removido. Preservadas mudanças v0.6.23–v0.6.26 (seleção/lote/radar/temas/PDF/Win10). Aceite físico de mensagens e firmwares pendente. Atualizador automático foi confirmado sem erro pelo usuário em 16/10/2026; preservar diagnóstico de eventuais regressões.
