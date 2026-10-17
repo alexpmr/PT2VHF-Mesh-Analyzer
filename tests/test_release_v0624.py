@@ -82,6 +82,54 @@ const fetch=async()=>{callCount++;return new Promise(resolve=>{requestResolve=re
         self.assertEqual(r["percentage"],"30%")
         self.assertEqual(r["callCount"],1)
 
+
+    def test_concurrent_rf_batches_are_queued_fifo(self):
+        start=HTML.index("const nodeSelectedIds=new Set();")
+        end=HTML.index("function renderNodes(){",start)
+        script=HTML[start:end].replace("NODE_BULK_GAP_MS=60000","NODE_BULK_GAP_MS=3").replace(
+            "NODE_BULK_WAIT_MS=1500","NODE_BULK_WAIT_MS=1")
+        code=r"""
+const els={nodesRows:{querySelectorAll:()=>[]},nodesSelectionCount:{textContent:''},
+nodesBulkLine:{hidden:true},nodesBulkStatus:{textContent:''},nodesBulkResults:{hidden:true},
+nodesBulkResultRows:{innerHTML:''},nodesBulkCancel:{disabled:true}};
+const $=id=>els[id],esc=x=>String(x),idName=x=>String(x),confirm=()=>true;
+const RF_QUERY_TYPES=[['nodeinfo','NodeInfo'],['telemetry','Telemetria'],
+ ['position','Posição'],['traceroute','Traceroute']];
+let nodes=[],state={sources:[{id:4,name:'Radio',enabled:true,kind:'serial'}],
+ connections:{'4':{status:'connected',tx_capable:true,local_node_num:999}}},
+ notices=[],deletingNode=false,activeNodeDeleteBulk=null;
+const notify=msg=>notices.push(msg);
+const calls=[];
+const api=async(path,payload)=>{
+ if(path==='/api/queries/send'){
+  calls.push(payload.kind+':'+payload.node);
+  return {data:{request_id:'req-'+payload.kind+'-'+payload.node}};
+ }
+ if(path.startsWith('/api/queries?node=')){
+  const num=Number(path.split('=')[1]);
+  const kind=calls[calls.length-1].split(':')[0];
+  return {data:[{request_id:'req-'+kind+'-'+num,state:'replied'}]};
+ }
+ throw Error(path);
+};
+""" + script + r"""
+(async()=>{
+ const first=startNodeBulk('nodeinfo',[1,2]);
+ const second=startNodeBulk('telemetry',[3]);
+ const third=startNodeBulk('position',[4]);
+ const queued=pendingNodeBulkJobs.length;
+ await Promise.all([first,second,third]);
+ console.log(JSON.stringify({queued,calls,notices,remaining:pendingNodeBulkJobs.length,
+   locked:drainingNodeBulkJobs}));
+})().catch(e=>{console.error(e);process.exitCode=1;});
+"""
+        result=node_json(code)
+        self.assertEqual(result["queued"],2)
+        self.assertEqual(result["calls"],["nodeinfo:1","nodeinfo:2","telemetry:3","position:4"])
+        self.assertEqual(result["remaining"],0)
+        self.assertFalse(result["locked"])
+        self.assertTrue(any("adicionada à fila" in n for n in result["notices"]))
+
     def test_map_regressions_and_preferences(self):
         self.assertIn("width:200px;min-width:180px",HTML)
         self.assertIn("addEventListener('input',applyRadarOpacity)",HTML)
