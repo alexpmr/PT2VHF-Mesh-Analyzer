@@ -106,7 +106,7 @@ def open_desktop_window(url: str, profile: Path) -> None:
         raise RuntimeError("Não foi possível criar a janela desktop.")
     pdf_bridge.window = window
     # Runs on the main thread; returns only after the last desktop window closes.
-    # Windows 11 normally includes the Evergreen WebView2 Runtime.
+    # Windows 10 1809+ requires Microsoft Edge WebView2 Runtime (Evergreen), if absent.
     try:
         icon_path = native_window_icon() if os.name == "nt" else None
         webview.start(gui="edgechromium", debug=False,
