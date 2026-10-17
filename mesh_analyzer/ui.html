@@ -194,7 +194,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <input id="nodesFilter" placeholder="nome, ID, hardware..." aria-label="Pesquisar nós" style="width:200px">
 <button id="nodesClear" title="Limpar pesquisa">×</button><button id="nodesColumns">Colunas</button><button id="nodesReload">Atualizar</button>
 <div id="nodeColumnPanel"></div></div>
-<div id="nodesBulkLine" hidden><b>Consultas RF em lote</b><span id="nodesBulkStatus" role="status" aria-live="polite"></span><button type="button" id="nodesBulkCancel">Cancelar consultas pendentes</button></div><div class="tableWrap"><table class="dataTable"><thead><tr id="nodesHeader"></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
+<div id="nodesBulkLine" hidden><b>Consultas RF em lote</b><span id="nodesBulkStatus" role="status" aria-live="polite"></span><button type="button" id="nodesBulkCancel">Cancelar consultas pendentes</button><details id="nodesBulkResults" hidden><summary>Resultados por nó</summary><div id="nodesBulkResultRows"></div></details></div><div class="tableWrap"><table class="dataTable"><thead><tr id="nodesHeader"></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
 <section class="view" id="viewTraffic">
 <div class="toolbar"><h2>Tráfego ao vivo</h2><span class="ok">● AO VIVO</span>
 
@@ -1424,7 +1424,7 @@ function localRadioReference(){
 
 const nodeSelectedIds=new Set();
 let nodeSelectAnchor=null,nodeVisibleOrder=[],activeNodeBulk=null;
-const NODE_BULK_GAP_MS=60000, NODE_BULK_WAIT_MS=1500, NODE_BULK_REPLY_MS=35000;
+const NODE_BULK_GAP_MS=60000, NODE_BULK_HOURLY_CAP=6, NODE_BULK_WAIT_MS=1500, NODE_BULK_REPLY_MS=35000;
 // Pure selection operation; range uses the current filtered/sorted order.
 function nodeSelectionNext(selected,ordered,clicked,anchor,ctrl=false,shift=false){
  const visible=ordered.map(Number),valid=new Set(visible),id=Number(clicked);
@@ -1482,6 +1482,11 @@ function updateNodeBulkProgress(){
   ' · '+job.results.filter(x=>x.state==='error').length+' falhas'+
   (job.cancelled?' · cancelamento solicitado':'');
  $('nodesBulkCancel').disabled=job.cancelled||done>=total;
+ $('nodesBulkResults').hidden=done===0;
+ $('nodesBulkResultRows').innerHTML=job.results.map(r=>'<div>'+
+   esc(idName(r.node))+' — '+esc(({replied:'Resposta recebida',timeout:'Timeout',
+     disconnected:'Desconectado',error:'Falha'})[r.state]||r.state)+
+   (r.error?' · '+esc(r.error):'')+'</div>').join('');
 }
 const bulkSleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function waitBulkReply(job,node,requestId){
@@ -1511,11 +1516,21 @@ async function startNodeBulk(kind,targetIds){
  const job={kind,sourceId:source.id,targets,results:[],cancelled:false,current:null};
  activeNodeBulk=job;updateNodeBulkProgress();
  let lastSent=0;
+ const sentTimes=[];
  try{
   for(const node of targets){
    if(job.cancelled)break;
    while(lastSent&&Date.now()-lastSent<NODE_BULK_GAP_MS&&!job.cancelled)
     await bulkSleep(Math.min(1000,NODE_BULK_GAP_MS-(Date.now()-lastSent)));
+   if(job.cancelled)break;
+   // Prevent bulk actions from saturating a LoRa network: six requests per hour.
+   sentTimes.splice(0,sentTimes.length,...sentTimes.filter(t=>Date.now()-t<3600000));
+   while(sentTimes.length>=NODE_BULK_HOURLY_CAP&&!job.cancelled){
+    $('nodesBulkStatus').textContent='Limite RF: 6 consultas/hora. Próximo envio em '+
+      Math.ceil(Math.max(0,3600000-(Date.now()-sentTimes[0]))/60000)+' min; cancelar é permitido.';
+    await bulkSleep(1000);
+    sentTimes.splice(0,sentTimes.length,...sentTimes.filter(t=>Date.now()-t<3600000));
+   }
    if(job.cancelled)break;
    if(Number(activeBulkRadioSource()?.id)!==Number(job.sourceId)){
     job.results.push({node,state:'error',error:'Conexão TX alterada/desconectada'});
@@ -1524,14 +1539,14 @@ async function startNodeBulk(kind,targetIds){
    job.current=node;updateNodeBulkProgress();
    try{
     const response=await api('/api/queries/send',{source_id:job.sourceId,node,kind});
-    lastSent=Date.now();
+    lastSent=Date.now();sentTimes.push(lastSent);
     const requestId=response.data?.request_id;
     if(!requestId)throw new Error('Backend não informou ID da consulta');
     job.results.push(await waitBulkReply(job,node,requestId));
    }catch(error){
     job.results.push({node,state:'error',error:error.message});
-    // A failed local TX could still have transmitted; preserve RF spacing.
-    lastSent=Date.now();
+    // A failed local TX could still have transmitted; preserve RF spacing and budget.
+    lastSent=Date.now();sentTimes.push(lastSent);
    }
    job.current=null;updateNodeBulkProgress();
   }
@@ -1540,6 +1555,7 @@ async function startNodeBulk(kind,targetIds){
    ' processadas, '+job.results.filter(r=>r.state==='replied').length+
    ' respostas, '+failures.length+' sem confirmação'+
    (job.cancelled?' (cancelado)':'')+'.';
+  updateNodeBulkProgress();
   $('nodesBulkStatus').textContent=summary;
   notify(summary,failures.length>0);
  }finally{
