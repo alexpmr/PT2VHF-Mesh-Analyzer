@@ -1,3 +1,10 @@
+## v0.6.23 — Implementação candidata da issue #105
+
+- Seleção da aba Nós: clique simples, duplo clique, Ctrl, Shift e Ctrl+A sobre nós filtrados; seleção e contexto de múltiplos nós persistem entre atualizações da interface.
+- Consultas em lote: NodeInfo/Posição/Telemetria/Traceroute com fila TX conservadora (60 s mínimo; 6/h neste lote), resposta individual/timeout, cancelamento dos próximos envios e relatório por nó. Nenhuma exclusão em massa.
+- **Pendente de aceite:** pipeline Windows, testes físicos USB/BLE/TCP, observação de duty cycle conforme configuração regional, reinício automático do atualizador #103 e validação da remoção #102 em rádio real.
+- Outras issues do backlog não são encerradas automaticamente pela publicação da v0.6.23.
+
 ## v0.6.22 — Exclusão individual e estilo dos fluxos RF
 
 #102 implementada em menu contextual e detalhes, com confirmação nominal, comando ao rádio local, ACK/NAK correlacionado, timeout e preservação de histórico. Aceite físico pendente. #106 padroniza também communications.transport=radio em amarelo contínuo sem alterar evidência/ranking. #105 seleção múltipla e lote segue pendente. Não declarar remoção física universal sem teste de firmware.
