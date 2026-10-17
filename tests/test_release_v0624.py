@@ -23,6 +23,7 @@ const els={nodesBulkLine:{hidden:true},nodesBulkResults:{hidden:true},
 const $=name=>els[name],esc=x=>String(x),idName=x=>'node-'+x;
 const nodeSelectedIds=new Set([11,12]);
 let activeNodeDeleteBulk=null,activeNodeBulk=null,deletingNode=false;
+const pendingNodeBulkJobs=[];
 const state={sources:[{id:4,name:'Radio',kind:'serial',enabled:true}],
  connections:{'4':{status:'connected',local_node_num:3}}};
 const confirm=()=>true,prompt=()=> 'APAGAR';
@@ -128,7 +129,7 @@ const api=async(path,payload)=>{
         self.assertEqual(result["calls"],["nodeinfo:1","nodeinfo:2","telemetry:3","position:4"])
         self.assertEqual(result["remaining"],0)
         self.assertFalse(result["locked"])
-        self.assertTrue(any("adicionada à fila" in n for n in result["notices"]))
+        self.assertTrue(any("fila (" in n for n in result["notices"]))
 
     def test_map_regressions_and_preferences(self):
         self.assertIn("width:200px;min-width:180px",HTML)
