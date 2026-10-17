@@ -1,3 +1,10 @@
+## v0.6.26 — Compatibilidade Windows 10/11
+
+- Ajustar pipeline de build, Setup Inno com mínimo Windows 10 1809 x64 e Portable Win10/11.
+- Verificar geração, nomes dos assets e atualização automática de clientes antigos usando aliases Win11-x64.
+- Testes automatizados de regressão, release e PE no CI; **pendente** aceite em Win10 real com WebView2 Runtime e drivers de rádio.
+- Outros itens do backlog permanecem com suas issues independentes, sem fechamento automático.
+
 ## v0.6.25 — Escopo abordado
 
 - #112: seleção de tema da interface Escuro/Cinza/Claro com persistência.

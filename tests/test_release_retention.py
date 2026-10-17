@@ -6,8 +6,12 @@ class RetentionTests(unittest.TestCase):
     def setUp(self):
         self.latest = {'id':21, 'tag_name':'v0.6.21', 'draft':False, 'prerelease':False,
             'assets':[{'name':name, 'state':'uploaded', 'size':12} for name in (
+                'PT2VHF-Mesh-Analyzer-v0.6.21-Setup-Win10-Win11-x64.exe',
+                'PT2VHF-Mesh-Analyzer-v0.6.21-Portable-Win10-Win11-x64.exe',
+                'PT2VHF-Mesh-Analyzer-v0.6.21-Portable-Win10-Win11-x64.zip',
                 'PT2VHF-Mesh-Analyzer-v0.6.21-Setup-Win11-x64.exe',
-                'PT2VHF-Mesh-Analyzer-v0.6.21-Portable-Win11-x64.exe', 'SHA256SUMS.txt')]}
+                'PT2VHF-Mesh-Analyzer-v0.6.21-Portable-Win11-x64.zip',
+                'SHA256SUMS.txt')]}
 
     def test_only_older_published_stable_releases_are_removed(self):
         releases=[self.latest, {'id':20,'tag_name':'v0.6.20'},

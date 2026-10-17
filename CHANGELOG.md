@@ -1,3 +1,13 @@
+# v0.6.26 — Windows 10 (1809+) / Windows 11 x64
+
+- Setup e Portable combinados para Windows 10 x64 (build 17763/1809+) e Windows 11 x64.
+- MinVersion=10.0.17763 no instalador Inno Setup; arquitetura AMD64 obrigatória.
+- Build PyInstaller e verificação de cabeçalho PE x64/subsystem; pipeline do GitHub Actions ainda executa em Windows Server 2022, então a abertura real em Windows 10 requer aceite físico/VM.
+- Novos nomes Win10-Win11-x64 em releases, atualizador, hash e links do README.
+- Aliases Win11-x64 na mesma release garantem atualização via aplicativo para clientes instalados v0.6.25 e anteriores.
+- WebView2 Runtime é pré-requisito em Windows 10/11, podendo necessitar instalação separada.
+- Conservadas configurações e dados SQLite existentes. Nenhuma migração destrutiva.
+
 # v0.6.25 — Temas, PDF e período Todo
 
 - Configurações → Sistema: temas Escuro (`#202126`), Cinza (`#333438`) e Claro, escolha imediata e persistência no SQLite (#112).

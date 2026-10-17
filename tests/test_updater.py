@@ -14,8 +14,8 @@ from mesh_analyzer.updater import (
 class UpdateTests(unittest.TestCase):
     def test_exact_release_assets_and_urls(self):
         items=release_assets("0.5.0")
-        self.assertEqual(items["setup"],"PT2VHF-Mesh-Analyzer-v0.5.0-Setup-Win11-x64.exe")
-        self.assertEqual(items["portable"],"PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win11-x64.zip")
+        self.assertEqual(items["setup"],"PT2VHF-Mesh-Analyzer-v0.5.0-Setup-Win10-Win11-x64.exe")
+        self.assertEqual(items["portable"],"PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win10-Win11-x64.zip")
         good=RELEASE_BASE+"v0.5.0/"+items["setup"]
         self.assertEqual(approved_asset_url(good,"0.5.0",items["setup"]),good)
         for bad in [good.replace("alexpmr","attacker"),
@@ -29,8 +29,8 @@ class UpdateTests(unittest.TestCase):
     def test_checksum_rejects_missing_mismatch_and_partial_files(self):
         data=b"portable-image-fixture"
         checksum=hashlib.sha256(data).hexdigest()
-        doc=checksum+"  PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win11-x64.zip\n"
-        name="PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win11-x64.zip"
+        doc=checksum+"  PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win10-Win11-x64.zip\n"
+        name="PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win10-Win11-x64.zip"
         self.assertEqual(parse_checksums(doc,name),checksum)
         with self.assertRaises(ValueError):
             parse_checksums(doc,name+".exe")

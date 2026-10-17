@@ -1,4 +1,4 @@
-name: Build PT2VHF Mesh Analyzer Windows 11
+name: Build PT2VHF Mesh Analyzer Windows 10/11 x64
 on:
   push:
     branches: [main]
@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 jobs:
-  package-win11:
+  package-win10-win11:
     runs-on: windows-2022
     timeout-minutes: 45
     steps:
@@ -58,23 +58,28 @@ jobs:
             $parseErrors | ForEach-Object { Write-Host $_ }
             throw 'Script do instalador com sintaxe PowerShell invalida'
           }
-      - name: Compilar EXE Windows 11 x64
+      - name: Compilar EXE Windows 10/11 x64
         shell: pwsh
         run: |
           python -m PyInstaller --noconfirm --clean --onefile --windowed --name PT2VHF-Mesh-Analyzer --icon branding/mesh-analyzer.ico --add-data 'branding/mesh_analyzer_logo.png.b64;branding' --add-data 'branding/mesh-analyzer.ico;branding' --add-data 'mesh_analyzer/ui.html;mesh_analyzer' --collect-submodules meshtastic --collect-submodules bleak --collect-submodules zeroconf --collect-submodules paho --collect-submodules pubsub --collect-all webview --hidden-import serial.tools.list_ports launch.py
           if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer.exe')) { throw 'EXE ausente' }
           $archive = & python -c "import zipfile; from pathlib import Path; from PyInstaller.archive.readers import CArchiveReader; a=CArchiveReader('dist/PT2VHF-Mesh-Analyzer.exe'); print('1' if any('branding/mesh-analyzer.ico' in key.replace('\\','/') for key in a.toc.keys()) else '0')"
           if ($archive.Trim() -ne '1') { throw 'ICO nativo nao empacotado no EXE PyInstaller' }
-          python -c "import pefile; p=pefile.PE('dist/PT2VHF-Mesh-Analyzer.exe'); ids=[i.id for i in p.DIRECTORY_ENTRY_RESOURCE.entries]; assert 3 in ids and 14 in ids, 'EXE sem ícones Windows'; print('PE ICON e GROUP_ICON encontrados')"
+          python -c "import pefile; p=pefile.PE('dist/PT2VHF-Mesh-Analyzer.exe'); ids=[i.id for i in p.DIRECTORY_ENTRY_RESOURCE.entries]; assert 3 in ids and 14 in ids, 'EXE sem ícones Windows'; assert p.FILE_HEADER.Machine == 0x8664, 'Arquitetura não é AMD64'; assert p.OPTIONAL_HEADER.MajorSubsystemVersion <= 10, 'PE exige sistema superior ao Windows 10'; print('PE AMD64, subsystem Windows 10+, ICON e GROUP_ICON OK')"
       - name: Criar ZIP portable e hash
         shell: pwsh
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
-          Copy-Item 'dist/PT2VHF-Mesh-Analyzer.exe' "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe" -Force
-          Copy-Item 'dist/PT2VHF-Mesh-Analyzer.exe' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe' -Force
-          Compress-Archive -Path 'dist/PT2VHF-Mesh-Analyzer.exe' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" -Force
-          Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip' -Force
-          Compress-Archive -Path 'mesh_analyzer','tests','scripts','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt','branding' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip" -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer.exe' "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.exe" -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer.exe' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe' -Force
+          Compress-Archive -Path 'dist/PT2VHF-Mesh-Analyzer.exe' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.zip" -Force
+          Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.zip" 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip' -Force
+          # Preserve the legacy Win11 package names for the in-app updater shipped in v0.6.25.
+          Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.exe" "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe" -Force
+          Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.zip" "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe' -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip' -Force
+          Compress-Archive -Path 'mesh_analyzer','tests','scripts','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','Iniciar_Windows_10_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt','branding' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip" -Force
           Get-FileHash 'dist/PT2VHF-Mesh-Analyzer.exe' -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  PT2VHF-Mesh-Analyzer.exe" } | Out-File 'dist/SHA256SUMS.txt' -Encoding ascii
       - name: Instalar Inno Setup
         shell: pwsh
@@ -84,14 +89,20 @@ jobs:
         run: |
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' 'windows\installer.iss'
           $version = (Get-Content VERSION -Raw).Trim()
-          if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe')) { throw 'Setup ausente' }
-          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe' "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win11-x64.exe" -Force
+          if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe')) { throw 'Setup ausente' }
+          if (!(Test-Path 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip')) { throw 'Portable ausente' }
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe' "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win10-Win11-x64.exe" -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe' "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win11-x64.exe" -Force
+          Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe' 'dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe' -Force
           Get-ChildItem dist -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' } | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash)  $($_.Name)" } | Set-Content dist/SHA256SUMS.txt -Encoding ascii
       - uses: actions/upload-artifact@v4
         with:
-          name: PT2VHF-Mesh-Analyzer-Windows11
+          name: PT2VHF-Mesh-Analyzer-Windows10-Windows11
           path: |
             dist/PT2VHF-Mesh-Analyzer.exe
+            dist/*-Portable-Win10-Win11-x64.exe
+            dist/*-Portable-Win10-Win11-x64.zip
+            dist/*-Setup-Win10-Win11-x64.exe
             dist/*-Portable-Win11-x64.exe
             dist/*-Portable-Win11-x64.zip
             dist/*-Setup-Win11-x64.exe
@@ -109,12 +120,19 @@ jobs:
           $repository = $env:GITHUB_REPOSITORY
           $assets = @(
             'dist/PT2VHF-Mesh-Analyzer.exe',
+            'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe',
             'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe',
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe",
             'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip',
             'dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe',
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip",
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.exe",
+            'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip',
+            'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe',
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.zip",
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win10-Win11-x64.exe",
+            # Legacy aliases required by v0.6.25 and older automatic updater clients.
             "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win11-x64.exe",
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe",
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip",
             "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip",
             'dist/SHA256SUMS.txt'
           )

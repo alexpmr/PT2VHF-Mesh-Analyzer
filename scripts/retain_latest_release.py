@@ -20,8 +20,13 @@ def removal_plan(latest, releases, expected_tag):
         raise ValueError('Current latest release does not match the build version')
     if latest.get('draft') or latest.get('prerelease'):
         raise ValueError('Protected release must be published and stable')
-    required = {f'PT2VHF-Mesh-Analyzer-{expected_tag}-Setup-Win11-x64.exe',
-                f'PT2VHF-Mesh-Analyzer-{expected_tag}-Portable-Win11-x64.exe',
+    # New universal Windows 10/11 packages plus legacy names ensure
+    # older v0.6.25 clients can auto-update without losing their known assets.
+    required = {f'PT2VHF-Mesh-Analyzer-{expected_tag}-Setup-Win10-Win11-x64.exe',
+                f'PT2VHF-Mesh-Analyzer-{expected_tag}-Portable-Win10-Win11-x64.exe',
+                f'PT2VHF-Mesh-Analyzer-{expected_tag}-Portable-Win10-Win11-x64.zip',
+                f'PT2VHF-Mesh-Analyzer-{expected_tag}-Setup-Win11-x64.exe',
+                f'PT2VHF-Mesh-Analyzer-{expected_tag}-Portable-Win11-x64.zip',
                 'SHA256SUMS.txt'}
     uploaded = {a['name'] for a in latest.get('assets', [])
                 if a.get('state') == 'uploaded' and a.get('size', 0) > 0}

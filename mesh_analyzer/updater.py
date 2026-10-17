@@ -178,8 +178,8 @@ def release_assets(tag):
         raise ValueError("Versão remota inválida")
     stem = "PT2VHF-Mesh-Analyzer-v" + tag
     return {
-        "setup": f"{stem}-Setup-Win11-x64.exe",
-        "portable": f"{stem}-Portable-Win11-x64.zip",
+        "setup": f"{stem}-Setup-Win10-Win11-x64.exe",
+        "portable": f"{stem}-Portable-Win10-Win11-x64.zip",
     }
 
 
