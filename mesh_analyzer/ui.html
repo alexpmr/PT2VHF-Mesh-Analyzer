@@ -145,6 +145,9 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 #mapVisibilityPanel label small{font-size:11px;color:var(--muted);margin-left:auto}
 #mapVisibilityPanel .verSection{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--muted);padding:9px 2px 5px;margin-top:5px;border-top:1px solid var(--line)}
 #mapVisibilityPanel input[type=range]{max-width:110px;vertical-align:middle}
+#mapVisibilityPanel .radarOpacityControl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:default}
+#mapVisibilityPanel #mapRadarOpacity{width:200px;min-width:180px;max-width:100%;flex:1 1 190px;height:28px;accent-color:var(--accent);cursor:pointer}
+#mapVisibilityPanel #mapRadarOpacityValue{min-width:38px;text-align:right;font-variant-numeric:tabular-nums}
 #mapVisibilityPanel #radarStatus{font-size:11px;color:var(--muted);padding:0 4px 6px;white-space:normal}
 #mapVisibilityBtn[aria-expanded="true"]{border-color:#edc93c;color:#f6de80}
  .sourceAutoLabel{display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;width:max-content;max-width:100%;cursor:pointer}.sourceAutoLabel input{width:auto!important;flex:0 0 auto;margin:0}
@@ -154,7 +157,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.23</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.24</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -181,8 +184,8 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <label><input id="showMapAnimate" type="checkbox" checked> Animar tráfego</label>
 <div class="verSection">CAMADAS E SOBREPOSIÇÕES</div>
 <label><input id="showNames" type="checkbox"> Mostrar nomes curtos</label>
-<label><input id="mapRadar" type="checkbox" checked> Radar meteorológico</label>
-<label>Opacidade do radar <input id="mapRadarOpacity" type="range" min="10" max="100" value="65"></label>
+<label><input id="mapRadar" type="checkbox"> Radar meteorológico</label>
+<label class="radarOpacityControl" for="mapRadarOpacity">Opacidade do radar <input id="mapRadarOpacity" type="range" min="10" max="100" value="65" aria-label="Opacidade do radar"><output id="mapRadarOpacityValue" for="mapRadarOpacity">65%</output></label>
 <div id="radarStatus" role="status">Aguardando radar...</div>
 <label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label>
 <label><input id="mapTerrain" type="checkbox"> Relevo com corte</label>
@@ -194,7 +197,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <input id="nodesFilter" placeholder="nome, ID, hardware..." aria-label="Pesquisar nós" style="width:200px">
 <button id="nodesClear" title="Limpar pesquisa">×</button><button id="nodesColumns">Colunas</button><button id="nodesReload">Atualizar</button>
 <div id="nodeColumnPanel"></div></div>
-<div id="nodesBulkLine" hidden><b>Consultas RF em lote</b><span id="nodesBulkStatus" role="status" aria-live="polite"></span><button type="button" id="nodesBulkCancel">Cancelar consultas pendentes</button><details id="nodesBulkResults" hidden><summary>Resultados por nó</summary><div id="nodesBulkResultRows"></div></details></div><div class="tableWrap"><table class="dataTable"><thead><tr id="nodesHeader"></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
+<div id="nodesBulkLine" hidden><b>Operações em lote</b><span id="nodesBulkStatus" role="status" aria-live="polite"></span><button type="button" id="nodesBulkCancel">Cancelar consultas pendentes</button><details id="nodesBulkResults" hidden><summary>Resultados por nó</summary><div id="nodesBulkResultRows"></div></details></div><div class="tableWrap"><table class="dataTable"><thead><tr id="nodesHeader"></tr></thead><tbody id="nodesRows"></tbody></table></div></section>
 <section class="view" id="viewTraffic">
 <div class="toolbar"><h2>Tráfego ao vivo</h2><span class="ok">● AO VIVO</span>
 
@@ -294,7 +297,7 @@ header{flex-wrap:wrap}header .brand{order:1;width:100%}#nav{order:2;width:auto;f
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.23</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.24</b> — Windows 11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.8.</p></div></div></section>
@@ -422,6 +425,7 @@ setTiles();}
 let currentTiles=null,heatLayer=null,previousTopoLastSeen=0,zoomRestore=null;
 
 let radarLayer=null,shadeLayer=null,terrainLayer=null,lastRadarPath='',radarTimer=null;
+let radarRequestGeneration=0,radarAbort=null,mapPreferencesReady=false;
 function setTiles(){
  if(!map)return;
  if(currentTiles)map.removeLayer(currentTiles);
@@ -448,9 +452,26 @@ function applyMapBrightness(){
  if(currentTiles&&currentTiles.getContainer())currentTiles.getContainer().style.filter=
    'brightness('+Number($('mapBrightness').value||100)+'%)';
 }
+let mapVisibilitySaveTimer=null,mapVisibilitySaveSequence=0;
+function persistVisibleMapPreferences(){
+ if(!window._preferencesLoaded)return;
+ const seq=++mapVisibilitySaveSequence;
+ clearTimeout(mapVisibilitySaveTimer);
+ mapVisibilitySaveTimer=setTimeout(async()=>{
+  if(seq!==mapVisibilitySaveSequence)return;
+  try{
+   await api('/api/preferences/map',mapPreferenceSnapshot());
+   if(seq===mapVisibilitySaveSequence)savedSettingsGroup('map');
+  }catch(e){
+   notify('Erro ao salvar visibilidade do mapa: '+e.message,true);
+  }
+ },350);
+}
 function storeMapControls(){
  const values={};
  for(const id of MAP_IDS){const el=$(id);if(el)values[id]=el.type==='checkbox'?el.checked:el.value;}
+ // Keep the user's explicit visibility choices across restarts even before Settings > Save.
+ try{localStorage.setItem('mesh.map.controls',JSON.stringify(values));}catch(e){}
  markSettingsDirty('map');
 }
 
@@ -483,7 +504,13 @@ async function loadSavedMapPreferences(){
     const el=$(id);if(!el)continue;
     if(el.type==='checkbox')el.checked=Boolean(value);else el.value=String(value);
    }
-   $('showMapLinks').checked=$('mapShowLinksSetting').checked;
+   // Links default ON for profiles without any saved preference. An explicit false
+   // from either legacy/new setting is respected; never overwrite an intentional choice.
+   if(Object.prototype.hasOwnProperty.call(prefs,'mapShowLinksSetting'))
+    $('showMapLinks').checked=$('mapShowLinksSetting').checked;
+   else if(Object.prototype.hasOwnProperty.call(prefs,'showMapLinks'))
+    $('mapShowLinksSetting').checked=$('showMapLinks').checked;
+   else $('showMapLinks').checked=$('mapShowLinksSetting').checked;
    $('showMapNodes').checked=$('mapShowNodesSetting').checked;
    $('showMapWaypoints').checked=$('mapShowWaypointsSetting').checked;
    $('showMapAnimate').checked=$('mapAnimateNodes').checked;
@@ -492,7 +519,12 @@ async function loadSavedMapPreferences(){
   }
   if(map){setTiles();renderMap();}
  }catch(e){notify('Preferências não carregadas: '+e.message,true);}
- finally{window._preferencesLoaded=true;}
+ finally{
+  // Do not request/display radar tiles until persisted preferences are resolved.
+  window._preferencesLoaded=true;mapPreferencesReady=true;
+  $('mapRadarOpacityValue').textContent=$('mapRadarOpacity').value+'%';
+  updateRadar();
+ }
 }
 $('saveAllSettings').onclick=async()=>{
  if(settingsSaving||!settingsPending.size)return;
@@ -637,25 +669,48 @@ function saveMapSettings(){
  const value={};for(const id of ids){const el=$(id);value[id]=el.type==='checkbox'?el.checked:el.value;}
  markSettingsDirty('map');
 }
+function applyRadarOpacity(){
+ const value=Math.min(100,Math.max(10,Number($('mapRadarOpacity').value)||65));
+ $('mapRadarOpacityValue').textContent=value+'%';
+ if(radarLayer&&$('mapRadar').checked)radarLayer.setOpacity(value/100);
+}
 async function updateRadar(){
- if(!map||!$('mapRadar').checked){if(radarLayer){map?.removeLayer(radarLayer);radarLayer=null;}return;}
+ const generation=++radarRequestGeneration;
+ if(radarAbort){radarAbort.abort();radarAbort=null;}
+ // Disabled radar always wins, including when an older fetch completes late.
+ if(!mapPreferencesReady||!map||!$('mapRadar').checked){
+  if(radarLayer&&map){map.removeLayer(radarLayer);radarLayer=null;}
+  lastRadarPath='';
+  $('radarStatus').textContent=mapPreferencesReady?'Radar desligado.':'Carregando preferências do radar...';
+  return;
+ }
  $('radarStatus').textContent='Radar: consultando imagens...';
+ const ctrl=new AbortController();radarAbort=ctrl;
+ const timeout=setTimeout(()=>ctrl.abort(),6500);
  try{
- const ctrl=new AbortController();const timeout=setTimeout(()=>ctrl.abort(),6500);
- let response;try{response=await fetch('https://api.rainviewer.com/public/weather-maps.json',{signal:ctrl.signal,cache:'no-cache'});}finally{clearTimeout(timeout);}
- if(!response.ok)throw Error('HTTP '+response.status);
- const info=await response.json();const frames=info.radar?.past||[];const frame=frames.at(-1)||info.radar?.nowcast?.[0];
- if(!frame?.path||!info.host)throw Error('Quadro de radar indisponível');
- const url=info.host+frame.path+'/256/{z}/{x}/{y}/2/1_1.png';
- if(frame.path!==lastRadarPath){
-  if(radarLayer)map.removeLayer(radarLayer);
-  radarLayer=L.tileLayer(url,{minZoom:0,maxNativeZoom:7,maxZoom:18,opacity:Number($('mapRadarOpacity').value)/100,attribution:'Radar © RainViewer'}).addTo(map);
-  lastRadarPath=frame.path;
- }else if(radarLayer)radarLayer.setOpacity(Number($('mapRadarOpacity').value)/100);
- const clock=new Date(Number(frame.time)*1000);
- $('radarStatus').textContent='Radar: '+clock.toLocaleTimeString('pt-BR');
- }catch(e){$('radarStatus').textContent='Radar indisponível: '+e.message;
-  if(radarLayer){map.removeLayer(radarLayer);radarLayer=null;}
+  const response=await fetch('https://api.rainviewer.com/public/weather-maps.json',
+                             {signal:ctrl.signal,cache:'no-cache'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const info=await response.json(),frames=info.radar?.past||[];
+  if(generation!==radarRequestGeneration||!$('mapRadar').checked||!mapPreferencesReady)return;
+  const frame=frames.at(-1)||info.radar?.nowcast?.[0];
+  if(!frame?.path||!info.host)throw Error('Quadro de radar indisponível');
+  const url=info.host+frame.path+'/256/{z}/{x}/{y}/2/1_1.png';
+  if(frame.path!==lastRadarPath||!radarLayer){
+   if(radarLayer)map.removeLayer(radarLayer);
+   radarLayer=L.tileLayer(url,{minZoom:0,maxNativeZoom:7,maxZoom:18,
+     opacity:Number($('mapRadarOpacity').value)/100,attribution:'Radar © RainViewer'}).addTo(map);
+   lastRadarPath=frame.path;
+  }else applyRadarOpacity();
+  $('radarStatus').textContent='Radar: '+new Date(Number(frame.time)*1000).toLocaleTimeString('pt-BR');
+ }catch(e){
+  if(generation!==radarRequestGeneration||!$('mapRadar').checked)return;
+  $('radarStatus').textContent='Radar indisponível: '+e.message;
+  if(radarLayer&&map){map.removeLayer(radarLayer);radarLayer=null;}
+  lastRadarPath='';
+ }finally{
+  clearTimeout(timeout);
+  if(radarAbort===ctrl)radarAbort=null;
  }
 }
 function updateHillshade(){
@@ -710,6 +765,8 @@ function updateTerrain(){
 }
 readMapSettings();loadMapControls();initMapControls();loadSavedMapPreferences();
 $('terrainCut').max=$('terrainMax').value;
+applyRadarOpacity();
+$('mapRadarOpacity').addEventListener('input',applyRadarOpacity);
 let terrainRefresh=null;
 for(const id of ['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terrainCut','terrainMax','terrainOpacity']){
  $(id).addEventListener('change',()=>{
@@ -719,7 +776,8 @@ for(const id of ['mapRadar','mapRadarOpacity','mapHillshade','mapTerrain','terra
     $('terrainCut').max=n;if(Number($('terrainCut').value)>n)$('terrainCut').value=n;
   }
   $('terrainValue').textContent=$('terrainCut').value+' m';saveMapSettings();
-  if(id.startsWith('mapRadar'))updateRadar();
+  if(id==='mapRadar'){updateRadar();persistVisibleMapPreferences();}
+  else if(id==='mapRadarOpacity'){applyRadarOpacity();persistVisibleMapPreferences();}
   else if(id==='mapHillshade')updateHillshade();
   else {clearTimeout(terrainRefresh);terrainRefresh=setTimeout(updateTerrain,150);}
  });
@@ -881,7 +939,8 @@ function renderMap(){
  nodeLayer.clearLayers();linkLayer.clearLayers();if(waypointLayer)waypointLayer.clearLayers();if(heatLayer)heatLayer.clearLayers();
  const source='';
  const available=sourceMapNodes(),q=$('mapSearchInput').value;
- const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>n.node_num));
+ const allowed=new Set(available.filter(n=>matches(n,q)).map(n=>Number(n.node_num)));
+ const nodeById=new Map(nodes.map(n=>[Number(n.node_num),n]));
  $('mapSearchCount').textContent=q?allowed.size+' de '+available.length:available.length+' nós';
  const intervals={all:0,'1h':3600000,'12h':43200000,'24h':86400000,'7d':604800000,'30d':2592000000};
  const win=intervals[$('mapWindow').value]||0;
@@ -898,13 +957,14 @@ function renderMap(){
  $('mapNodesCount').textContent=allowed.size;
  $('mapLinksCount').textContent=activeLinks.length+activeCommunications.length;
  $('mapWaypointsCount').textContent=eligibleWaypoints.length;
- let visible=0,missing=0,hiddenBySearch=0;
+ let visible=0,missing=0,hiddenBySearch=0,missingNode=0,missingCoordinates=0,staleGeometry=0,skippedDuplicates=0;
  const drawnTopology=new Set();
  if($('showMapLinks').checked){
   for(const edge of activeLinks){
-   if(!allowed.has(edge.a)||!allowed.has(edge.b)){hiddenBySearch++;continue;}
-   const a=nodes.find(n=>n.node_num===edge.a),b=nodes.find(n=>n.node_num===edge.b);
-   if(!a||!b||!validPos(a)||!validPos(b)){missing++;continue;}
+   if(!allowed.has(Number(edge.a))||!allowed.has(Number(edge.b))){hiddenBySearch++;continue;}
+   const a=nodeById.get(Number(edge.a)),b=nodeById.get(Number(edge.b));
+   if(!a||!b){missing++;missingNode++;continue;}
+   if(!validPos(a)||!validPos(b)){missing++;missingCoordinates++;continue;}
    const quality=String(edge.quality||'');
    const confirmed=quality==='confirmed_direct_rf';
    const mqtt=quality.includes('mqtt')||quality.includes('non_rf');
@@ -922,14 +982,15 @@ function renderMap(){
   }
   // Each dotted line is a logical unicast; NOT evidence of one direct RF hop.
   for(const flow of activeCommunications){
-   if(isTopologyFlowDuplicate(flow,drawnTopology))continue;
-   const a=nodes.find(n=>n.node_num===flow.from_node);
-   const b=nodes.find(n=>n.node_num===flow.to_node);
+   if(isTopologyFlowDuplicate(flow,drawnTopology)){skippedDuplicates++;continue;}
+   const a=nodeById.get(Number(flow.from_node));
+   const b=nodeById.get(Number(flow.to_node));
    if(q.trim()&&!((a&&matches(a,q))||(b&&matches(b,q)))){hiddenBySearch++;continue;}
-   if(!a||!b||!validPos(a)||!validPos(b)){missing++;continue;}
+   if(!a||!b){missing++;missingNode++;continue;}
+   if(!validPos(a)||!validPos(b)){missing++;missingCoordinates++;continue;}
    const stalePos=[a,b].some(n=>Number(n.position_ms)>0&&
         Math.abs(Number(n.position_ms)-Number(flow.last_seen_ms))>24*3600*1000);
-   if(stalePos){missing++;continue;}
+   if(stalePos){missing++;staleGeometry++;continue;}
    const label='Fluxo lógico observado: '+idName(flow.from_node)+' → '+idName(flow.to_node)+
      '. Caminho físico não conhecido; NÃO comprova RF direto. '+
      (flow.transport==='mqtt'?'Internet/MQTT. ':'Recepção via fonte rádio. ')+
@@ -995,23 +1056,32 @@ function renderMap(){
   }
  }
  lastMapBounds=coords.length?L.latLngBounds(coords):null;
- const estimatedMissing=activeLinks.filter(e=>
-     !nodes.some(n=>n.node_num===e.a&&validPos(n))||
-     !nodes.some(n=>n.node_num===e.b&&validPos(n))).length;
- $('mapTopologyStats').textContent='Trechos conhecidos: '+activeLinks.length+
-    ' · fluxos lógicos: '+activeCommunications.length+
-    ' · linhas exibidas: '+visible+
-    ' · sem geometria confiável: '+missing+
-    ' · filtrados: '+hiddenBySearch;
+
+ const totalKnown=links.length+communications.length;
+ const candidates=activeLinks.length+activeCommunications.length;
+ $('mapTopologyStats').textContent='Relações armazenadas: '+totalKnown+
+   ' · elegíveis no período: '+candidates+' (trechos: '+activeLinks.length+
+   '; fluxos: '+activeCommunications.length+') · linhas desenhadas: '+visible;
+ const reasons=[];
+ if(!$('showMapLinks').checked&&candidates)reasons.push('Ver → Enlaces desligado: '+candidates);
+ const outside=totalKnown-candidates;
+ if(outside)reasons.push('fora do período/observações mínimas: '+outside);
+ if(hiddenBySearch)reasons.push('filtrados pela pesquisa: '+hiddenBySearch);
+ if(missingNode)reasons.push('pontas não cadastradas: '+missingNode);
+ if(missingCoordinates)reasons.push('pontas sem coordenadas: '+missingCoordinates);
+ if(staleGeometry)reasons.push('coordenadas incompatíveis com o horário do fluxo: '+staleGeometry);
+ if(skippedDuplicates)reasons.push('fluxos já representados: '+skippedDuplicates);
  const unavailable=activeLinks.filter(e=>{
-  if(!allowed.has(e.a)||!allowed.has(e.b))return false;
-  const a=nodes.find(n=>n.node_num===e.a),b=nodes.find(n=>n.node_num===e.b);
-  return !a||!b||!validPos(a)||!validPos(b);
+   if(!allowed.has(Number(e.a))||!allowed.has(Number(e.b)))return false;
+   const a=nodeById.get(Number(e.a)),b=nodeById.get(Number(e.b));
+   return !a||!b||!validPos(a)||!validPos(b);
  });
- $('mapMissingLinkInfo').textContent=unavailable.length?
-   unavailable.length+' trechos não desenhados por ausência de coordenadas: '+
-   unavailable.slice(0,6).map(e=>idName(e.a)+' ↔ '+idName(e.b)).join('; ')+
-   (unavailable.length>6?'…':''):'';
+ const examples=unavailable.slice(0,4).map(e=>idName(Number(e.a))+' ↔ '+idName(Number(e.b))).join('; ');
+ $('mapMissingLinkInfo').textContent=
+  (reasons.length?'Motivos: '+reasons.join(' · ')+'. ':'')+
+  (examples?'Trechos sem geometria: '+examples+(unavailable.length>4?'…':'')+'. ':'')+
+  (candidates&&!visible?'Nenhuma linha desenhada: veja os motivos acima.':'');
+
 
  
 }
@@ -1300,10 +1370,10 @@ $('nodeDetailHeader').addEventListener('pointerup',()=>{detailDrag=null;});
 function positionSuggestions(){const pop=$('mapSearchMatches'),el=$('mapSearchInput');if(pop.hidden)return;const r=el.getBoundingClientRect(),w=pop.getBoundingClientRect().width;pop.style.left=Math.max(5,Math.min(r.left,window.innerWidth-w-6))+'px';pop.style.top=(r.bottom+5)+'px';}
 function suggest(){const q=$('mapSearchInput').value;const pop=$('mapSearchMatches');if(!q.trim()){pop.hidden=true;pop.innerHTML='';return;}const rows=sourceMapNodes().filter(n=>matches(n,q)).slice(0,15);pop.innerHTML=rows.map(n=>`<button data-num="${n.node_num}"><b>${esc(n.long_name||n.node_id)}</b><br><small>${esc(n.short_name)} · ${esc(n.node_id)} · ${validPos(n)?'Com posição':'Sem localização'}</small></button>`).join('')||'<div style="padding:12px">Nenhum nó encontrado</div>';pop.hidden=false;positionSuggestions();pop.querySelectorAll('button[data-num]').forEach(b=>b.onclick=()=>{const n=nodes.find(x=>x.node_num===Number(b.dataset.num));pop.hidden=true;showNode(n);});}
 $('mapSearchInput').addEventListener('input',()=>{renderMap();suggest();});$('mapSearchInput').addEventListener('keydown',ev=>{if(ev.key==='Escape'){$('mapSearchInput').value='';renderMap();suggest();}if(ev.key==='Enter'){const rows=sourceMapNodes().filter(n=>matches(n,$('mapSearchInput').value));if(rows.length===1){showNode(rows[0]);$('mapSearchMatches').hidden=true;}}});$('mapSearchClear').onclick=()=>{$('mapSearchInput').value='';renderMap();suggest();$('mapSearchInput').focus();};
-$('mapType').onchange=()=>{setTiles();storeMapControls();};$('showMapNodes').onchange=()=>{$('mapShowNodesSetting').checked=$('showMapNodes').checked;storeMapControls();renderMap();};
-$('showMapLinks').onchange=()=>{$('mapShowLinksSetting').checked=$('showMapLinks').checked;storeMapControls();renderMap();};
-$('showMapWaypoints').onchange=()=>{$('mapShowWaypointsSetting').checked=$('showMapWaypoints').checked;storeMapControls();renderMap();};
-$('showMapAnimate').onchange=()=>{$('mapAnimateNodes').checked=$('showMapAnimate').checked;storeMapControls();};
+$('mapType').onchange=()=>{setTiles();storeMapControls();};$('showMapNodes').onchange=()=>{$('mapShowNodesSetting').checked=$('showMapNodes').checked;storeMapControls();persistVisibleMapPreferences();renderMap();};
+$('showMapLinks').onchange=()=>{$('mapShowLinksSetting').checked=$('showMapLinks').checked;storeMapControls();persistVisibleMapPreferences();renderMap();};
+$('showMapWaypoints').onchange=()=>{$('mapShowWaypointsSetting').checked=$('showMapWaypoints').checked;storeMapControls();persistVisibleMapPreferences();renderMap();};
+$('showMapAnimate').onchange=()=>{$('mapAnimateNodes').checked=$('showMapAnimate').checked;storeMapControls();persistVisibleMapPreferences();};
 function placeVisibilityPanel(){
  const box=$('mapVisibilityBtn').getBoundingClientRect(),panel=$('mapVisibilityPanel');
  const w=panel.offsetWidth||300,h=panel.offsetHeight||340;
@@ -1323,7 +1393,7 @@ function setAllMapObjects(enabled){
  $('mapShowWaypointsSetting').checked=enabled;
  $('mapAnimateNodes').checked=enabled;
  $('mapShowNamesSetting').checked=enabled;
- storeMapControls();saveMapSettings();
+ storeMapControls();saveMapSettings();persistVisibleMapPreferences();
  updateRadar();updateHillshade();updateTerrain();renderMap();
 }
 $('mapShowAll').onclick=()=>setAllMapObjects(true);
@@ -1338,7 +1408,7 @@ document.addEventListener('keydown',ev=>{
  }
 });
 window.addEventListener('resize',()=>{if(!$('mapVisibilityPanel').hidden)placeVisibilityPanel();});
-$('showNames').onchange=()=>{$('mapShowNamesSetting').checked=$('showNames').checked;storeMapControls();renderMap();};$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
+$('showNames').onchange=()=>{$('mapShowNamesSetting').checked=$('showNames').checked;storeMapControls();persistVisibleMapPreferences();renderMap();};$('mapRefresh').onclick=refreshAll;$('mapFit').onclick=()=>{if(map&&lastMapBounds)map.fitBounds(lastMapBounds,{padding:[25,25],maxZoom:14});};
 $('playback').addEventListener('scroll',positionSuggestions,{passive:true});
 
 
@@ -1424,6 +1494,9 @@ function localRadioReference(){
 
 const nodeSelectedIds=new Set();
 let nodeSelectAnchor=null,nodeVisibleOrder=[],activeNodeBulk=null;
+const pendingNodeBulkJobs=[];
+let drainingNodeBulkJobs=false,nodeBulkLastSentMs=0;
+const nodeBulkTxHistory=[];
 const NODE_BULK_GAP_MS=60000, NODE_BULK_HOURLY_CAP=6, NODE_BULK_WAIT_MS=1500, NODE_BULK_REPLY_MS=35000;
 // Pure selection operation; range uses the current filtered/sorted order.
 function nodeSelectionNext(selected,ordered,clicked,anchor,ctrl=false,shift=false){
@@ -1473,6 +1546,7 @@ function updateNodeBulkProgress(){
  if(!activeNodeBulk)return;
  const job=activeNodeBulk;
  const total=job.targets.length,done=job.results.length;
+ const queued=pendingNodeBulkJobs.length;
  $('nodesBulkLine').hidden=false;
  $('nodesBulkStatus').textContent=
   RF_QUERY_TYPES.find(([k])=>k===job.kind)?.[1]+': '+done+'/'+total+' concluídas'+
@@ -1480,8 +1554,9 @@ function updateNodeBulkProgress(){
   ' · '+job.results.filter(x=>x.state==='replied').length+' respostas'+
   ' · '+job.results.filter(x=>x.state==='timeout').length+' timeouts'+
   ' · '+job.results.filter(x=>x.state==='error').length+' falhas'+
-  (job.cancelled?' · cancelamento solicitado':'');
- $('nodesBulkCancel').disabled=job.cancelled||done>=total;
+  (job.cancelled?' · cancelamento solicitado':'')+
+  (queued?' · '+queued+' lote(s) na fila':'');
+ $('nodesBulkCancel').disabled=job.cancelled&&queued===0;
  $('nodesBulkResults').hidden=done===0;
  $('nodesBulkResultRows').innerHTML=job.results.map(r=>'<div>'+
    esc(idName(r.node))+' — '+esc(({replied:'Resposta recebida',timeout:'Timeout',
@@ -1503,67 +1578,102 @@ async function waitBulkReply(job,node,requestId){
  return {node,state:'error',error:'Estado não confirmado após prazo de espera'};
 }
 async function startNodeBulk(kind,targetIds){
- if(activeNodeBulk){notify('Já existe um lote RF em andamento.',true);return;}
+ if(deletingNode||activeNodeDeleteBulk){notify('Exclusão de nós em andamento; aguarde para consultar.',true);return;}
  const source=activeBulkRadioSource();
  if(!source){notify('Consultas em lote exigem exatamente um rádio TX conectado.',true);return;}
  if(!RF_QUERY_TYPES.some(([k])=>k===kind))return;
  const own=Number(state.connections[String(source.id)]?.local_node_num);
- const targets=[...new Set(targetIds.map(Number))].filter(id=>Number.isInteger(id)&&id>0&&id<0xffffffff&&id!==own);
+ const targets=[...new Set(targetIds.map(Number))].filter(id=>
+   Number.isSafeInteger(id)&&id>0&&id<0xffffffff&&id!==own);
  if(!targets.length){notify('Nenhum nó remoto válido selecionado.',true);return;}
- if(!confirm('Consultar '+targets.length+' nós por '+kind+' usando '+source.name+'?\n\n'+
-    'As transmissões serão sequenciais, separadas por pelo menos 60 segundos. '+
-    'Cada resposta pode levar até 30 segundos. Cancelar impedirá apenas os envios ainda não feitos.'))return;
- const job={kind,sourceId:source.id,targets,results:[],cancelled:false,current:null};
- activeNodeBulk=job;updateNodeBulkProgress();
- let lastSent=0;
- const sentTimes=[];
+ if(pendingNodeBulkJobs.length>=20){
+  notify('Fila de consultas cheia (20 lotes). Aguarde ou cancele os pendentes.',true);return;
+ }
+ if(!confirm('Enfileirar consulta '+kind+' para '+targets.length+' nós usando '+source.name+'?\n\n'+
+  'Os lotes são processados na ordem, sem sobrepor transmissões: ao menos 60 s entre envios e até 6 consultas/hora. '+
+  'Cada resposta tem timeout de 30 s. Cancelar interrompe somente os envios pendentes.'))return;
+ const job={kind,sourceId:source.id,targets,results:[],cancelled:false,current:null,resolve:null};
+ const completion=new Promise(resolve=>{job.resolve=resolve;});
+ pendingNodeBulkJobs.push(job);
+ if(activeNodeBulk)updateNodeBulkProgress();
+ notify('Consulta '+kind+' para '+targets.length+' nós '+(activeNodeBulk?'adicionada à fila ('+pendingNodeBulkJobs.length+' aguardando).':'iniciada pela fila.') );
+ void drainNodeBulkJobs();
+ return completion;
+}
+async function drainNodeBulkJobs(){
+ if(drainingNodeBulkJobs)return;
+ drainingNodeBulkJobs=true;
  try{
-  for(const node of targets){
-   if(job.cancelled)break;
-   while(lastSent&&Date.now()-lastSent<NODE_BULK_GAP_MS&&!job.cancelled)
-    await bulkSleep(Math.min(1000,NODE_BULK_GAP_MS-(Date.now()-lastSent)));
-   if(job.cancelled)break;
-   // Prevent bulk actions from saturating a LoRa network: six requests per hour.
-   sentTimes.splice(0,sentTimes.length,...sentTimes.filter(t=>Date.now()-t<3600000));
-   while(sentTimes.length>=NODE_BULK_HOURLY_CAP&&!job.cancelled){
-    $('nodesBulkStatus').textContent='Limite RF: 6 consultas/hora. Próximo envio em '+
-      Math.ceil(Math.max(0,3600000-(Date.now()-sentTimes[0]))/60000)+' min; cancelar é permitido.';
-    await bulkSleep(1000);
-    sentTimes.splice(0,sentTimes.length,...sentTimes.filter(t=>Date.now()-t<3600000));
-   }
-   if(job.cancelled)break;
-   if(Number(activeBulkRadioSource()?.id)!==Number(job.sourceId)){
-    job.results.push({node,state:'error',error:'Conexão TX alterada/desconectada'});
-    job.cancelled=true;break;
-   }
-   job.current=node;updateNodeBulkProgress();
+  while(pendingNodeBulkJobs.length){
+   const job=pendingNodeBulkJobs.shift();
+   if(job.cancelled){job.resolve([]);continue;}
+   activeNodeBulk=job;updateNodeBulkProgress();
    try{
-    const response=await api('/api/queries/send',{source_id:job.sourceId,node,kind});
-    lastSent=Date.now();sentTimes.push(lastSent);
-    const requestId=response.data?.request_id;
-    if(!requestId)throw new Error('Backend não informou ID da consulta');
-    job.results.push(await waitBulkReply(job,node,requestId));
-   }catch(error){
-    job.results.push({node,state:'error',error:error.message});
-    // A failed local TX could still have transmitted; preserve RF spacing and budget.
-    lastSent=Date.now();sentTimes.push(lastSent);
+    await executeNodeBulk(job);
+   }catch(e){
+    notify('Lote '+job.kind+': '+e.message,true);
+   }finally{
+    job.resolve(job.results);
+    activeNodeBulk=null;
    }
-   job.current=null;updateNodeBulkProgress();
   }
-  const failures=job.results.filter(r=>r.state!=='replied');
-  const summary='Lote '+kind+': '+job.results.length+'/'+targets.length+
-   ' processadas, '+job.results.filter(r=>r.state==='replied').length+
-   ' respostas, '+failures.length+' sem confirmação'+
-   (job.cancelled?' (cancelado)':'')+'.';
-  updateNodeBulkProgress();
-  $('nodesBulkStatus').textContent=summary;
-  notify(summary,failures.length>0);
  }finally{
+  drainingNodeBulkJobs=false;
   $('nodesBulkCancel').disabled=true;
-  activeNodeBulk=null;
  }
 }
-$('nodesBulkCancel').onclick=()=>{if(activeNodeBulk){activeNodeBulk.cancelled=true;updateNodeBulkProgress();}};
+async function executeNodeBulk(job){
+ const {kind,targets}=job;
+ for(const node of targets){
+  if(job.cancelled)break;
+  while(nodeBulkLastSentMs&&Date.now()-nodeBulkLastSentMs<NODE_BULK_GAP_MS&&!job.cancelled){
+   await bulkSleep(Math.min(1000,NODE_BULK_GAP_MS-(Date.now()-nodeBulkLastSentMs)));
+  }
+  if(job.cancelled)break;
+  // The hourly RF budget belongs to the radio queue, NOT to each individual bulk job.
+  nodeBulkTxHistory.splice(0,nodeBulkTxHistory.length,...nodeBulkTxHistory.filter(t=>Date.now()-t<3600000));
+  while(nodeBulkTxHistory.length>=NODE_BULK_HOURLY_CAP&&!job.cancelled){
+   $('nodesBulkStatus').textContent='Limite RF: 6 consultas/hora. Próximo TX em '+
+     Math.ceil(Math.max(0,3600000-(Date.now()-nodeBulkTxHistory[0]))/60000)+
+     ' min · '+pendingNodeBulkJobs.length+' lote(s) aguardando · cancelamento disponível.';
+   await bulkSleep(1000);
+   nodeBulkTxHistory.splice(0,nodeBulkTxHistory.length,...nodeBulkTxHistory.filter(t=>Date.now()-t<3600000));
+  }
+  if(job.cancelled)break;
+  if(Number(activeBulkRadioSource()?.id)!==Number(job.sourceId)){
+   job.results.push({node,state:'error',error:'Conexão TX alterada/desconectada'});
+   job.cancelled=true;break;
+  }
+  job.current=node;updateNodeBulkProgress();
+  try{
+   const response=await api('/api/queries/send',{source_id:job.sourceId,node,kind});
+   nodeBulkLastSentMs=Date.now();nodeBulkTxHistory.push(nodeBulkLastSentMs);
+   const requestId=response.data?.request_id;
+   if(!requestId)throw new Error('Backend não informou ID da consulta');
+   job.results.push(await waitBulkReply(job,node,requestId));
+  }catch(error){
+   job.results.push({node,state:'error',error:error.message});
+   // Failed calls may still have transmitted, so conservatively count RF time.
+   nodeBulkLastSentMs=Date.now();nodeBulkTxHistory.push(nodeBulkLastSentMs);
+  }
+  job.current=null;updateNodeBulkProgress();
+ }
+ const successes=job.results.filter(r=>r.state==='replied').length;
+ const failures=job.results.filter(r=>r.state!=='replied').length;
+ const summary='Lote '+kind+': '+job.results.length+'/'+targets.length+
+   ' processadas, '+successes+' respostas, '+failures+' sem confirmação'+
+   (job.cancelled?' (cancelado)':'')+
+   (pendingNodeBulkJobs.length?' · '+pendingNodeBulkJobs.length+' lote(s) na fila':'')+'.';
+ updateNodeBulkProgress();
+ $('nodesBulkStatus').textContent=summary;
+ notify(summary,failures>0);
+}
+$('nodesBulkCancel').onclick=()=>{
+ if(activeNodeBulk){activeNodeBulk.cancelled=true;updateNodeBulkProgress();}
+ for(const job of pendingNodeBulkJobs){job.cancelled=true;job.resolve([]);}
+ pendingNodeBulkJobs.length=0;
+ if(activeNodeDeleteBulk){activeNodeDeleteBulk.cancelled=true;updateNodeDeleteBulkProgress();}
+};
 
 function renderNodes(){
  const ref=localRadioReference();
@@ -1664,7 +1774,77 @@ function openDm(id){currentChat='node:'+id;setView('messages');renderChat();}
 function closeNodeContext(){
  const menu=$('nodeContextMenu');if(menu)menu.hidden=true;
 }
-let deletingNode=false;
+let deletingNode=false,activeNodeDeleteBulk=null;
+const nodeDeleteValidTargets=(targets,ownIds)=>[...new Set(targets.map(Number))].filter(id=>
+ Number.isSafeInteger(id)&&id>=4&&id<0xffffffff&&!ownIds.includes(id));
+function updateNodeDeleteBulkProgress(){
+ const job=activeNodeDeleteBulk;if(!job)return;
+ const done=job.results.length,total=job.targets.length;
+ $('nodesBulkLine').hidden=false;
+ $('nodesBulkResults').hidden=done===0;
+ $('nodesBulkStatus').textContent='Exclusão do NodeDB: '+done+'/'+total+' · '+ 
+   job.results.filter(x=>x.state==='ok').length+' confirmados'+
+   ' · '+job.results.filter(x=>x.state!=='ok').length+' erros'+
+   (job.current?' · aguardando rádio: '+idName(job.current):'')+
+   (job.cancelled?' · cancelamento solicitado':'');
+ $('nodesBulkResultRows').innerHTML=job.results.map(r=>'<div>'+
+   esc(r.label)+' — '+esc(r.state==='ok'?'Rádio confirmou; cadastro local removido':r.error)+'</div>').join('');
+ $('nodesBulkCancel').disabled=job.cancelled||done===total;
+}
+async function deleteSelectedNodesBulk(targetIds){
+ if(deletingNode||activeNodeBulk||activeNodeDeleteBulk||pendingNodeBulkJobs.length){
+  notify('Existe outra operação de nós em andamento.',true);return;
+ }
+ const radios=(state.sources||[]).filter(s=>['serial','ble','tcp'].includes(s.kind)&&
+  s.enabled&&state.connections?.[String(s.id)]?.status==='connected');
+ if(radios.length!==1){notify('Conecte exatamente um rádio direto antes de excluir nós.',true);return;}
+ const src=radios[0],ownIds=Object.values(state.connections||{}).map(s=>Number(s.local_node_num));
+ const unique=[...new Set(targetIds.map(Number))];
+ const targets=nodeDeleteValidTargets(unique,ownIds);
+ if(targets.length!==unique.length){notify('A seleção contém IDs reservados ou o próprio rádio. Exclusão bloqueada.',true);return;}
+ if(targets.length<2||targets.length>100){notify('Selecione de 2 a 100 nós remotos para exclusão em lote.',true);return;}
+ const labels=new Map(targets.map(id=>[id,idName(id)+' (!'+id.toString(16).padStart(8,'0')+')']));
+ const preview=targets.slice(0,15).map(id=>'• '+labels.get(id)).join('\n');
+ const message='APAGAR '+targets.length+' nós do NodeDB do rádio '+src.name+
+  ' e do cadastro SQLite local?\n\n'+preview+(targets.length>15?'\n... e mais '+(targets.length-15):'')+
+  '\n\nO histórico permanece. Cada nó exige confirmação do rádio (até 30 s). Cancelar interrompe somente os próximos itens.';
+ if(!confirm(message))return;
+ if(prompt('Operação destrutiva em lote. Digite APAGAR para confirmar '+targets.length+' nós:','')!=='APAGAR'){
+  notify('Exclusão em lote cancelada: confirmação não fornecida.');return;
+ }
+ const job={targets,results:[],current:null,cancelled:false,sourceId:src.id};
+ deletingNode=true;activeNodeDeleteBulk=job;updateNodeDeleteBulkProgress();
+ try{
+  for(const node of targets){
+   if(job.cancelled)break;
+   const still=(state.sources||[]).filter(s=>['serial','ble','tcp'].includes(s.kind)&&
+     s.enabled&&state.connections?.[String(s.id)]?.status==='connected');
+   if(still.length!==1||Number(still[0].id)!==Number(job.sourceId)){
+    job.results.push({node,label:labels.get(node),state:'error',error:'Conexão alterada; banco preservado'});
+    job.cancelled=true;updateNodeDeleteBulkProgress();break;
+   }
+   job.current=node;updateNodeDeleteBulkProgress();
+   try{
+    const result=await api('/api/nodes/delete',{source_id:job.sourceId,node_num:node,confirmed:true});
+    if(result.radio_confirmed!==true||result.success!==true)
+     throw Error('Rádio não confirmou a remoção; banco preservado');
+    job.results.push({node,label:labels.get(node),state:'ok'});
+    nodeSelectedIds.delete(node);
+   }catch(e){
+    job.results.push({node,label:labels.get(node),state:'error',error:e.message});
+   }
+   job.current=null;updateNodeDeleteBulkProgress();
+  }
+  const successes=job.results.filter(r=>r.state==='ok').length;
+  const summary='Exclusão: '+successes+'/'+targets.length+' nós confirmados'+
+    ', '+job.results.filter(r=>r.state==='error').length+' falhas'+
+    (job.cancelled?' (interrompida)':'')+'. Histórico preservado.';
+  await refreshAll();updateNodeDeleteBulkProgress();
+  $('nodesBulkStatus').textContent=summary;notify(summary,successes!==targets.length);
+ }finally{
+  deletingNode=false;activeNodeDeleteBulk=null;$('nodesBulkCancel').disabled=true;
+ }
+}
 async function deleteNodeFromRadioAndDatabase(n){
  if(deletingNode){notify('Já existe uma exclusão em andamento.',true);return;}
  const radios=(state.sources||[]).filter(s=>['serial','ble','tcp'].includes(s.kind)&&
@@ -1699,9 +1879,13 @@ function openNodeContext(nodeNum,x,y){
   (multi?esc(selected.length+' nós selecionados'):esc(idName(n.node_num))+
        ' <small>'+esc(n.node_id)+'</small>')+'</div>'+
   (multi?
-   '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas em lote: fila RF, 60 s entre TX e timeout individual de 30 s. Não executa exclusão em massa.</div>'+
+   '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas RF enfileiradas; exclusão múltipla requer confirmação adicional por segurança.</div>'+
    RF_QUERY_TYPES.map(([k,l])=>action('bulk-'+k,'Consultar '+l+' ('+selected.length+' nós)',!!activeBulkRadioSource(),
      'Conecte exatamente um rádio TX')).join('')+
+   action('delete-bulk','Apagar '+selected.length+' nós do rádio e banco',!deletingNode&&!activeNodeBulk&&!pendingNodeBulkJobs.length&&
+     !!(state.sources||[]).find(s=>['serial','ble','tcp'].includes(s.kind)&&
+       s.enabled&&state.connections?.[String(s.id)]?.status==='connected'),
+     'Conecte um rádio direto e aguarde operações anteriores')+
    action('copy-bulk','Copiar Node IDs ('+selected.length+')'):
    action('message','Enviar mensagem privada')+
    action('detail','Informações completas')+
@@ -1724,6 +1908,7 @@ function openNodeContext(nodeNum,x,y){
      await runNodeQuery(n.node_num,btn.dataset.nodeAction.slice(6));return;
    }
    switch(btn.dataset.nodeAction){
+    case 'delete-bulk':await deleteSelectedNodesBulk(selected);break;
     case 'copy-bulk':try{
       await navigator.clipboard.writeText(selected.map(id=>
        nodes.find(v=>Number(v.node_num)===id)?.node_id||'!'+id.toString(16).padStart(8,'0')).join('\n'));
