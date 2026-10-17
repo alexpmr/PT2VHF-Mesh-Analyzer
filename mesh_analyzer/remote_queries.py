@@ -8,6 +8,8 @@ import uuid
 from .transports import number, port_name
 
 PORTS = {"nodeinfo": 4, "position": 3, "telemetry": 67, "traceroute": 70}
+QUERY_TIMEOUT_SECONDS = 30
+
 RESPONSE_PORTS = {4: "nodeinfo", 3: "position", 67: "telemetry", 70: "traceroute"}
 
 
@@ -17,6 +19,8 @@ class NodeQueries:
         self.lock = threading.RLock()
         self.pending = {}
         self.last_sent = {}
+        self.deadlines = {}
+        self.interfaces = {}
 
     def capabilities(self, source_id):
         try:
@@ -64,17 +68,19 @@ class NodeQueries:
         now = time.monotonic()
         key = (source_id, target, kind)
         with self.lock:
+            self._expire()
             for req in self.pending.values():
-                if (req["source_id"], req["target"], req["kind"]) == key and req["state"] == "awaiting_reply":
+                if (req["source_id"], req["target"], req["kind"]) == key and req["state"] in ("sending", "awaiting_reply"):
                     raise ValueError("Já existe consulta deste tipo aguardando resposta")
             if now - self.last_sent.get(source_id, 0) < 3:
                 raise ValueError("Aguarde 3 segundos entre consultas RF")
             rid = uuid.uuid4().hex
             row = {"request_id": rid, "source_id": source_id, "target": target,
                    "kind": kind, "state": "sending", "created_ms": int(time.time()*1000),
-                   "deadline_ms": int(time.time()*1000)+45000, "packet_id": None,
+                   "deadline_ms": None, "packet_id": None,
                    "response": None, "error": None}
             self.pending[rid] = row
+            self.interfaces[rid] = iface
             self.last_sent[source_id] = now
         try:
             dest = "!%08x" % target
@@ -95,6 +101,8 @@ class NodeQueries:
             outgoing = iface.sendData(
                 payload, destinationId=dest, portNum=enum,
                 wantResponse=True, channelIndex=channel)
+            sent_monotonic = time.monotonic()
+            sent_ms = int(time.time()*1000)
             packet_id = outgoing.get("id") if isinstance(outgoing, dict) else getattr(outgoing, "id", None)
             # Outbound requests are not delivered back through the RX callback.
             # Record separately with real local/destination IDs, never broadcast.
@@ -128,6 +136,8 @@ class NodeQueries:
             with self.lock:
                 row["state"] = "awaiting_reply"
                 row["packet_id"] = packet_id
+                row["deadline_ms"] = sent_ms + QUERY_TIMEOUT_SECONDS*1000
+                self.deadlines[rid] = sent_monotonic + QUERY_TIMEOUT_SECONDS
             self.manager.db.log("Consulta RF %s enviada ao nó %s (%s)" % (kind, dest, rid[:10]),
                                 source_id=source_id)
         except Exception as exc:
@@ -154,6 +164,7 @@ class NodeQueries:
         request_id = number(decoded.get("requestId") or decoded.get("request_id"))
         now = int(time.time()*1000)
         with self.lock:
+            self._expire()
             eligible = [r for r in self.pending.values()
                         if r["source_id"] == source_id and r["target"] == sender
                         and r["kind"] == kind and r["state"] == "awaiting_reply"]
@@ -203,15 +214,26 @@ class NodeQueries:
                     "status": "Rota com saltos informados" if ids("route", "routeTowards") or ids("routeBack", "route_back") else "Nenhum salto intermediário informado",
                 }
 
+    def _expire(self):
+        """Caller holds lock; deadlines cannot be extended by wall-clock changes."""
+        now = time.monotonic()
+        for rid, row in self.pending.items():
+            if row["state"] != "awaiting_reply":
+                continue
+            if now >= self.deadlines.get(rid, float("inf")):
+                row["state"] = "timeout"
+                row["error"] = "Tempo de resposta excedido (30 s). Você pode tentar novamente."
+            else:
+                with self.manager._lock:
+                    current = self.manager._interfaces.get(row["source_id"])
+                if current is not self.interfaces.get(rid):
+                    row["state"] = "disconnected"
+                    row["error"] = "Rádio desconectado ou conexão substituída. Você pode tentar novamente."
+
     def status(self, target=None):
-        now = int(time.time()*1000)
         target = number(target)
         with self.lock:
-            for row in self.pending.values():
-                if row["state"] == "awaiting_reply" and now > row["deadline_ms"]:
-                    row["state"] = "timeout"
-                if row["state"] == "awaiting_reply" and not self.capabilities(row["source_id"])["ready"]:
-                    row["state"] = "disconnected"
+            self._expire()
             rows = [dict(r) for r in self.pending.values()
                     if target is None or r["target"] == target]
         return sorted(rows, key=lambda r: r["created_ms"], reverse=True)[:100]

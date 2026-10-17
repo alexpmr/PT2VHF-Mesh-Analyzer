@@ -128,7 +128,7 @@ class PassiveTrafficTests(unittest.TestCase):
             ready.write_text(json.dumps({"nonce":"nonce-fixture","status":"ready"}),encoding="utf-8")
             return Mock(poll=lambda:None)
         with patch("mesh_analyzer.updater.subprocess.Popen",side_effect=launched):
-            with patch("mesh_analyzer.updater.os.name","nt"):
+            with patch("mesh_analyzer.updater.os.name","nt"), patch("mesh_analyzer.updater.Path", type(plan)):
                 self.assertEqual(mgr.launch()["phase"],"installing")
         self.assertIn("runner_ready",RUNNER_PS)
         self.assertIn("Detached updater ready",RUNNER_PS)
@@ -146,7 +146,7 @@ class PassiveTrafficTests(unittest.TestCase):
         mgr._phase="verified"
         process=Mock(poll=lambda:None)
         with patch("mesh_analyzer.updater.subprocess.Popen",return_value=process):
-            with patch("mesh_analyzer.updater.os.name","nt"):
+            with patch("mesh_analyzer.updater.os.name","nt"), patch("mesh_analyzer.updater.Path", type(plan)):
                 with patch("mesh_analyzer.updater.time.monotonic",side_effect=[0,13]):
                     with self.assertRaisesRegex(RuntimeError,"não confirmou"):
                         mgr.launch()

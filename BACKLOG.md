@@ -1,3 +1,7 @@
+## v0.6.20 — Consultas RF (#104)
+
+Implementado timeout uniforme de 30 s contado após envio pelo SDK, com relógio monotônico, recuperação sem polling, proteção de duplicatas em envio e invalidação ao trocar interface. Testes automatizados cobrem os quatro tipos. Aceite físico pendente. #102 (exclusão em dois destinos), #103 (updater) e #105 (seleção/bulk) permanecem abertas, não implementadas nesta release.
+
 ## P1 — Rota de 3 nós desaparece parcialmente após minutos (15/10/2026)
 
 - **Relato v0.6.7:** usuário viu caminho com três nós e, após alguns minutos, um nó/trecho sumiu da visualização, sobrando apenas duas estações. **Issue [#53](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/53)**, vinculada à [#22](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/issues/22). Confirmar se desapareceu o **marcador** ou um dos dois **segmentos** da rota.

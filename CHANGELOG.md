@@ -1,3 +1,12 @@
+# v0.6.20 — Consultas RF com timeout de 30 segundos
+
+- #104: NodeInfo, Posição, Telemetria e Traceroute passam a usar prazo de 30 segundos após retorno do envio pelo SDK, medido por relógio monotônico.
+- A expiração é verificada também antes de nova consulta e antes de correlacionar resposta, sem depender da abertura do painel de status. Consultas expiradas liberam nova tentativa.
+- Consultas em transmissão também impedem duplicatas. Desconexão ou substituição da interface finaliza pedidos antigos; respostas tardias não reativam pedido expirado.
+- Testes de limite exato, retentativa sem polling, envio lento, resposta tardia, troca de conexão e alteração do relógio do sistema.
+- Esta versão não implementa exclusão de nó no rádio/banco (#102) nem seleção e consultas em lote (#105). Falha de instalação/reinício pelo atualizador (#103) permanece em investigação; usar instalação manual se necessário.
+- Validação em rádio físico e ciclo de atualização Windows ainda pendentes.
+
 # v0.6.19 — Barra única do mapa, Mensagens e Dispositivo Wi-Fi
 
 - #95: une os cinco contadores principais e os controles do Mapa em uma linha, preserva os IDs e os eventos dos elementos.
