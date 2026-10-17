@@ -1,5 +1,5 @@
 #define AppName "PT2VHF Mesh Analyzer"
-#define AppVersion "0.6.25"
+#define AppVersion "0.6.26"
 [Setup]
 AppId={{8AB1D4E5-9A9C-46DC-8C24-5D89A6D98701}
 AppName={#AppName}
@@ -8,10 +8,12 @@ AppPublisher=Alex, PT2VHF
 DefaultDirName={localappdata}\Programs\PT2VHF Mesh Analyzer
 DefaultGroupName=PT2VHF Mesh Analyzer
 OutputDir=..\dist
-OutputBaseFilename=PT2VHF-Mesh-Analyzer-Setup-Win11-x64
+OutputBaseFilename=PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
+; Windows 10 1809 (build 17763) / Windows 11 x64. Inno compiler should reject older systems.
+MinVersion=10.0.17763
 ArchitecturesAllowed=x64compatible
 UninstallDisplayIcon={app}\branding\mesh-analyzer.ico
 WizardStyle=modern
