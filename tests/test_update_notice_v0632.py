@@ -64,6 +64,7 @@ class PostUpdateStateTests(unittest.TestCase):
         end=ps.index("WriteNotice 'installed'",start)
         region=ps[start:end]
         self.assertIn("update_nonce -eq [string]$p.launch_nonce",region)
+        self.assertIn("([string]$p.launch_nonce -ne '') -and",region)
         self.assertIn("$response.version -eq [string]$p.version",region)
         self.assertIn("$response.ui_ready -eq $true",region)
         self.assertIn("$healthy = $true",region)
