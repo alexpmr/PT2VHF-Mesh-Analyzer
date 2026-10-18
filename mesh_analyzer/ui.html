@@ -253,6 +253,24 @@ html[data-theme] #autoSaveButton:hover:not(:disabled){
 html[data-theme] #autoSaveButton:focus-visible{
  outline:3px solid var(--blue);outline-offset:2px;
 }
+/* Sobre: same visual language as the user's reference, compact on desktop. */
+.aboutContact{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
+ background:#101e1b;border:1px solid #185b42;border-radius:12px;padding:20px;color:#e9f2f3}
+.aboutContent{max-width:72ch;min-width:0}
+.aboutEyebrow{display:block;color:#56bfff;font-size:11px;font-weight:800;letter-spacing:.4px}
+.aboutContact h2{font-size:18px;margin:8px 0 12px}
+.aboutContact p{line-height:1.7;margin:0 0 12px}
+.aboutActions{display:flex;flex-direction:column;align-items:stretch;gap:10px;flex:0 0 230px;text-align:center;padding-top:20px}
+.aboutActions a{display:block;padding:12px;border:1px solid var(--line);border-radius:8px;font-weight:700;
+ text-decoration:none;white-space:nowrap;color:#fff;background:#24313c}
+.aboutActions .aboutWhatsapp{background:#42aaff;color:#091c32;border-color:#42aaff}
+.aboutActions a:hover{filter:brightness(1.15)}
+.aboutActions a:focus-visible{outline:3px solid #80cffc;outline-offset:3px}
+:root[data-theme="light"] .aboutContact{background:#eaf6ef;color:#1b2d30;border-color:#78ae92}
+:root[data-theme="light"] .aboutActions .aboutEmail{background:#fff;color:#24313c}
+:root[data-theme="gray"] .aboutContact{background:#252e2b}
+@media(max-width:710px){.aboutContact{flex-direction:column;padding:14px;gap:8px}
+.aboutActions{width:100%;padding-top:4px;flex:0 0 auto}.aboutActions a{white-space:normal}}
 </style>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
@@ -266,7 +284,7 @@ try {
 <div id="app">
 <header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.32</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
-<button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
+<button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
 <div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
 <div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
@@ -421,6 +439,20 @@ try {
 <section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.32</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
+<section class="view" id="viewAbout"><div class="panels">
+<div class="aboutContact">
+  <div class="aboutContent"><strong class="aboutEyebrow">DÚVIDAS, DIFICULDADES OU SUGESTÕES?</strong>
+  <h2>Fale comigo</h2>
+  <p>Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.</p>
+  <strong>Alex</strong></div>
+  <div class="aboutActions">
+    <a href="https://wa.me/5561984023634" target="_blank" rel="noopener noreferrer" class="aboutWhatsapp">WhatsApp: 61 98402-3634</a>
+    <a href="mailto:alexpmr@gmail.com" class="aboutEmail">alexpmr@gmail.com</a>
+  </div>
+</div>
+<div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
+<p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
+</div></section>
 <section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.8.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
@@ -485,7 +517,7 @@ $('firstRunDialog').addEventListener('keydown',event=>{
 });
 function notify(txt,isError=false){const t=$('toast');t.textContent=txt;t.style.display='block';t.style.borderColor=isError?'#f48c8c':'#679ab8';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.style.display='none',5600);}
 async function api(path,body){const o=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(body)};const r=await fetch(path,o);const d=await r.json();if(!r.ok||d.success===false)throw Error(d.error||d.message||'HTTP '+r.status);return d;}
-const viewPaths={map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes/conexoes',help:'/ajuda'};
+const viewPaths={map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes/conexoes',help:'/ajuda',about:'/sobre'};
 function setView(next,updateUrl=true){
  view=next;
  document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));
@@ -500,7 +532,7 @@ function setView(next,updateUrl=true){
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
- Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map');
+ Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help'],['/sobre','about']])[location.pathname]||'map');
 const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
 const TRAFFIC_LABELS={
  TELEMETRY_APP:'Telemetria',POSITION_APP:'Posição',NODEINFO_APP:'Informações do nó',
