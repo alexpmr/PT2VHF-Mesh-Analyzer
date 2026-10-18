@@ -2243,23 +2243,33 @@ function renderChat(updateConversation=true){
  const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:lastByKey(b)-lastByKey(a)||a.localeCompare(b));
  const query=norm($('messageNodeSearch').value.trim());
  const nodeById=new Map(nodes.map(n=>[Number(n.node_num),n]));
+ const favorites=new Set(nodes.filter(n=>n.is_favorite===true).map(n=>'node:'+n.node_num));
+ const pinned=['channel:0',...list.filter(k=>favorites.has(k)).sort((a,b)=>nameOf(a).localeCompare(nameOf(b)))];
  const visible=list.filter(key=>{
-   if(!key.startsWith('node:'))return true; // Keep channels always accessible.
+   if(pinned.includes(key))return false;
+   if(!key.startsWith('node:'))return true;
    const num=Number(key.slice(5)),node=nodeById.get(num);
    return node?chatNodeMatches(node,query):!query;
  });
- const matched=visible.filter(key=>key.startsWith('node:')).length;
+ const matched=visible.filter(key=>key.startsWith('node:')).length+
+     pinned.filter(key=>key.startsWith('node:')&&chatNodeMatches(nodeById.get(Number(key.slice(5)))||{},query)).length;
  $('messageNodeSearchCount').textContent=query?
    matched+' nó(s) encontrado(s)':'Nós conhecidos: '+matched;
  $('messageNodeSearchClear').disabled=!$('messageNodeSearch').value;
- $('contacts').innerHTML=visible.map(key=>{
+ const contactMarkup=(key)=>{
   const latest=messages.filter(m=>chatKey(m)===key).at(-1);
   return '<button type="button" class="contact '+(key===currentChat?'selected':'')+
-    '" data-chat="'+esc(key)+'">'+esc(nameOf(key))+
+    (key==='channel:0'?' primary':favorites.has(key)?' favorite':'')+
+    '" data-chat="'+esc(key)+'">'+(favorites.has(key)?'★ ':'')+esc(nameOf(key))+
     (latest?'<small style="display:block;color:var(--muted)">'+esc(latest.text.slice(0,55))+'</small>':'')+
     '</button>';
- }).join('')+(query&&!matched?'<div class="muted" style="padding:12px">Nenhum nó encontrado.</div>':'');
- $('contacts').querySelectorAll('[data-chat]').forEach(el=>{
+ };
+ $('contactPinned').innerHTML=contactMarkup('channel:0')+
+   (pinned.length>1?'<div class="pinnedSectionLabel">★ Favoritos do rádio</div>'+
+     pinned.slice(1).map(contactMarkup).join(''):'');
+ $('contacts').innerHTML=visible.map(contactMarkup).join('')+
+  (query&&!matched?'<div class="muted" style="padding:12px">Nenhum nó encontrado.</div>':'');
+ document.querySelectorAll('#contacts [data-chat],#contactPinned [data-chat]').forEach(el=>{
    el.onclick=()=>{currentChat=el.dataset.chat;renderChat();};
    if(el.dataset.chat.startsWith('node:')){
      el.addEventListener('contextmenu',e=>{e.preventDefault();openNodeContext(Number(el.dataset.chat.slice(5)),e.clientX,e.clientY);});
@@ -2269,17 +2279,23 @@ function renderChat(updateConversation=true){
  $('chatHeader').textContent=currentChat.startsWith('node:')?
    'Privado · '+nameOf(currentChat):nameOf(currentChat);
  const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);
- let html=filtered.map(m=>'<div class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
+ visibleMessageRows=filtered;
+ let html=filtered.map((m,i)=>'<div tabindex="0" role="button" aria-label="Mensagem; abrir ações" data-msg-index="'+i+'" class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
    esc(m.text)+'</div><small>'+esc(new Date(m.timestamp_ms).toLocaleTimeString('pt-BR'))+
    (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
    messageStateHtml(m)+'</small></div>').join('');
  if(pendingChat?.chat===currentChat){
-  html+='<div class="bubble tx"><div>'+esc(pendingChat.text)+'</div><small>'+
+  html+='<div tabindex="0" role="button" aria-label="Mensagem pendente; abrir ações" data-msg-index="pending" class="bubble tx"><div>'+esc(pendingChat.text)+'</div><small>'+
      (pendingChat.failed?'Falha':'Enviando')+
      (pendingChat.failed?'<span class="msgState error">!</span>':
        '<span class="msgState working" title="Aguardando rádio">◷</span>')+'</small></div>';
  }
  $('bubbles').innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
+ $('bubbles').querySelectorAll('[data-msg-index]').forEach(el=>{
+  el.onclick=e=>openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,false);
+  el.oncontextmenu=e=>{e.preventDefault();openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,true);};
+  el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openMessageActions(el.dataset.msgIndex,0,0,false);}};
+ });
  $('bubbles').scrollTop=$('bubbles').scrollHeight;
  const choices=txRadioSources();
  // Allow the click even without a radio so the user can see why TX is unavailable.
@@ -2292,31 +2308,103 @@ $('messageNodeSearch').addEventListener('input',()=>renderChat(false));
 $('messageNodeSearchClear').onclick=()=>{
  $('messageNodeSearch').value='';renderChat(false);$('messageNodeSearch').focus();
 };
-$('messageSend').onclick=async()=>{
+let visibleMessageRows=[],replyMessage=null,actionMessage=null;
+const messageBytes=text=>new TextEncoder().encode(String(text)).length;
+function updateMessageBytes(){
+ const used=messageBytes($('messageText').value);
+ $('messageByteCount').textContent=used+'/220 bytes';
+ $('messageByteCount').classList.toggle('overlimit',used>220);
+}
+const emojiList=['😀','😂','😊','🥰','😍','👍','👍🏽','❤️','💛','🎉','👏','🙏','📡','📻','🌦️','⚡','🔋','🛰️','🇧🇷','✅'];
+$('messageEmojiPicker').innerHTML=emojiList.map((emoji,i)=>
+ '<button type="button" data-emoji="'+i+'" aria-label="Inserir emoji '+esc(emoji)+'">'+esc(emoji)+'</button>').join('');
+$('messageEmojiButton').onclick=()=>{
+ $('messageEmojiPicker').hidden=!$('messageEmojiPicker').hidden;
+};
+$('messageEmojiPicker').querySelectorAll('[data-emoji]').forEach(el=>{
+ el.onclick=()=>{
+  const field=$('messageText'),start=field.selectionStart,end=field.selectionEnd,
+   emoji=emojiList[Number(el.dataset.emoji)];
+  field.value=field.value.slice(0,start)+emoji+field.value.slice(end);
+  field.focus();field.setSelectionRange(start+emoji.length,start+emoji.length);
+  $('messageEmojiPicker').hidden=true;updateMessageBytes();
+ };
+});
+$('messageText').addEventListener('input',updateMessageBytes);
+function chooseReply(msg){
+ replyMessage={chat:currentChat,id:msg.id??null,packet_id:msg.packet_id??null,
+  text:msg.text,author:msg.direction==='tx'?'Você':idName(msg.from_node)};
+ $('messageReplyLabel').textContent='Responder a '+replyMessage.author+': '+replyMessage.text.slice(0,95);
+ $('messageReplyPreview').hidden=false;
+ $('messageText').focus();
+}
+$('messageReplyCancel').onclick=()=>{
+ replyMessage=null;$('messageReplyPreview').hidden=true;
+};
+function replyText(text){
+ if(!replyMessage)return text;
+ const quote='↪ '+replyMessage.author+': '+replyMessage.text.replace(/\s+/g,' ').slice(0,60)+'\n';
+ return quote+text;
+}
+function closeMessageActions(){$('messageBubbleActions').hidden=true;actionMessage=null;}
+function openMessageActions(index,x,y,rightClick){
+ const msg=index==='pending'?pendingChat:visibleMessageRows[Number(index)];
+ if(!msg||index==='pending'&&pendingChat?.chat!==currentChat)return;
+ actionMessage={...msg,chat:currentChat};
+ const retryable=(index==='pending'&&msg.failed===true)||
+   (msg.direction==='tx'&&['failed','rejected','timeout'].includes(msg.state));
+ $('messageRetryAction').hidden=!retryable;
+ $('messageReplyAction').hidden=index==='pending'||rightClick&&retryable;
+ const menu=$('messageBubbleActions');menu.hidden=false;
+ menu.style.left=Math.max(4,Math.min(window.innerWidth-190,Number(x)||100))+'px';
+ menu.style.top=Math.max(4,Math.min(window.innerHeight-90,Number(y)||130))+'px';
+}
+$('messageReplyAction').onclick=()=>{
+ if(actionMessage)chooseReply(actionMessage);
+ closeMessageActions();
+};
+$('messageRetryAction').onclick=async()=>{
+ const msg=actionMessage;closeMessageActions();
+ if(!msg||!confirm('Reenviar mensagem? A ausência de confirmação não garante que o destinatário não recebeu. Pode gerar uma duplicata.'))return;
+ await sendChatMessage(msg.text,msg.chat,true);
+};
+document.addEventListener('pointerdown',e=>{
+ if(!$('messageBubbleActions').hidden&&!e.target.closest('.messageBubbleActions')&&!e.target.closest('[data-msg-index]'))
+  closeMessageActions();
+ if(!$('messageEmojiPicker').hidden&&!e.target.closest('#messageEmojiPicker')&&!e.target.closest('#messageEmojiButton'))
+  $('messageEmojiPicker').hidden=true;
+});
+async function sendChatMessage(raw,chat,isRetry=false){
  if(messageSending)return;
- if(!txRadioSources().length){showNoConnectionDialog();return;}
- const original=$('messageText').value,text=original.trim();
+ const text=isRetry?String(raw).trim():replyText(String(raw).trim());
  if(!text){notify('Digite a mensagem.',true);return;}
- const bytes=new TextEncoder().encode(text).length;
- if(bytes>220){notify('Limite 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
+ const bytes=messageBytes(text);
+ if(bytes>220){notify('Limite de 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
  const choices=txRadioSources();
- if(!choices.length){showNoConnectionDialog();renderChat();return;}
- if(choices.length>1){notify('Mais de um rádio TX disponível. Desative os demais em Configurações → Conexões antes de enviar.',true);return;}
- const src=Number(choices[0].id);
- const target=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';
- const ch=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);
- messageSending=true;pendingChat={chat:currentChat,text,failed:false};renderChat();
+ if(!choices.length){showNoConnectionDialog();return;}
+ if(choices.length>1){notify('Mais de um rádio TX conectado. Escolha apenas um em Conexões.',true);return;}
+ const source=Number(choices[0].id);
+ const target=chat.startsWith('node:')?Number(chat.slice(5)):'^all';
+ const channel=chat.startsWith('channel:')?Number(chat.slice(8)):Number($('messageChannel').value);
+ messageSending=true;
+ pendingChat={chat,text,failed:false};
+ renderChat();
  try{
-  await api('/api/messages/send',{source_id:src,to_node:target,text,channel:ch});
-  $('messageText').value='';pendingChat=null;
+  await api('/api/messages/send',{source_id:source,to_node:target,text,channel});
+  if(!isRetry){$('messageText').value='';replyMessage=null;$('messageReplyPreview').hidden=true;updateMessageBytes();}
+  pendingChat=null;
   notify('✓ Aceita pelo rádio local. Entrega e leitura não confirmadas.');
   await refreshAll();
- }catch(e){pendingChat={chat:currentChat,text,failed:true};notify('Falha TX: '+e.message,true);}
- finally{messageSending=false;renderChat();}
-};
+ }catch(e){
+  pendingChat={chat,text,failed:true,direction:'tx'};
+  notify('Falha TX: '+e.message,true);
+ }finally{messageSending=false;renderChat();}
+}
+$('messageSend').onclick=()=>sendChatMessage($('messageText').value,currentChat);
 $('messageText').onkeydown=e=>{
  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!messageSending)$('messageSend').click();}
 };
+updateMessageBytes();
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
