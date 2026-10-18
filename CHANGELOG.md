@@ -1,3 +1,11 @@
+# v0.6.30 — Legenda recolhível e pesquisa/menções em Mensagens
+
+- #119 Mapa: legenda compacta no canto inferior esquerdo, recolhida por padrão, acessível por teclado e com detalhes da topologia recolhíveis. Os indicadores continuam atualizando em plano de fundo sem abrir o painel.
+- #120 Mensagens: autocomplete acionado por @ insere somente nome longo literal, sem @ e sem trocar espaços por underscores; substitui somente a expressão selecionada, preserva texto adjacente e verifica limite UTF-8.
+- #121 Mensagens: campo Pesquisar nó..., filtragem local progressiva de nome longo, curto, amigável, aliases e Node ID; preserva canais, conversa aberta e nós offline.
+- Regressões confirmam estados de checks de mensagens e indicador de atualização verde quando a versão é a mais recente (#57, #118).
+- Backlog histórico permanece rastreado; não confundir teste simulado/CI com aceitação de rádio físico.
+
 # v0.6.29 — Reinício do Portable e confirmação pós-atualização (#103)
 
 - Remove estado privado PyInstaller herdado no processo externo e antes do relançamento; usa ProcessStartInfo com UseShellExecute=false e reset explícito do runtime.

@@ -1,3 +1,11 @@
+## v0.6.30 — Interface Mapa e Mensagens
+
+- #119: trocar legenda fixa grande por mini-legenda recolhível e conteúdo detalhado expansível.
+- #120: autocomplete @ mantém sugestões mas insere nome longo sem @ e sem underscores.
+- #121: filtrar a lista de nós em Mensagens enquanto digita, preservar canais e conversa selecionada.
+- #118: indicador verde de versão atual já presente; validar regressão visual.
+- Demais issues abertas exigem análise e testes separados, incluindo RF real, topologia e automações. Não declarar backlog global saneado.
+
 ## v0.6.29 — Reinício do Portable e confirmação pós-atualização (#103)
 
 - Remove estado privado PyInstaller herdado no processo externo e antes do relançamento; usa ProcessStartInfo com UseShellExecute=false e reset explícito do runtime.
