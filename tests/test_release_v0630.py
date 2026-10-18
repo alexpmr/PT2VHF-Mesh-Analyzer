@@ -83,7 +83,7 @@ console.log(JSON.stringify(data));
 
     def test_recipient_live_filter_case_accent_and_keep_channels(self):
         source="""
-const norm=x=>String(x??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+const norm=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const esc=x=>String(x??'');
 const elements={messageNodeSearch:{value:''},messageNodeSearchCount:{textContent:''},
   messageNodeSearchClear:{disabled:false},contacts:{innerHTML:'',querySelectorAll:()=>[]}};
@@ -117,7 +117,8 @@ console.log(JSON.stringify(output));
         self.assertEqual(results[0]["count"],"1 nó(s) encontrado(s)")
 
     def test_previous_features_preserved(self):
-        self.assertIn("#topUpdate.latest{background:#164a36",HTML)
+        self.assertIn("html[data-theme] #topUpdate.latest",HTML)
+        self.assertIn("background:#164a36!important",HTML)
         self.assertIn("btn.classList.add('latest')",HTML)
         self.assertIn("msgState ack",HTML) if "msgState ack" in HTML else self.assertIn("msgState",HTML)
         self.assertIn("mapRadarOpacity",HTML)
