@@ -22,13 +22,12 @@ class NativeBridgeSafetyTests(unittest.TestCase):
         bridge._window=ExplosiveNativeWindow()
         self.assertFalse(hasattr(bridge, "window"))
         self.assertTrue(hasattr(bridge, "_window"))
-        # Exercise pywebview's reflective scanner, not only simple attribute names.
-        # A public window field would traverse native COM and fail.
-        from webview.util import get_functions
-        exposed=get_functions(bridge)
-        self.assertIn("save_pdf", exposed)
-        self.assertTrue(all(not key.startswith("window") and
-                            not key.startswith("_window") for key in exposed))
+        # pywebview enumerates public members recursively when exposing JS API.
+        # Verify that the only public entry point is the expected callable.
+        # Do not rely on unstable private pywebview.util module functions.
+        exposed=[name for name in dir(bridge) if not name.startswith("_")]
+        self.assertEqual(exposed, ["save_pdf"])
+        self.assertTrue(callable(getattr(bridge, "save_pdf")))
 
     def test_desktop_window_reference_is_private(self):
         content=(Path(__file__).parents[1]/"mesh_analyzer"/"desktop.py").read_text(encoding="utf-8")
