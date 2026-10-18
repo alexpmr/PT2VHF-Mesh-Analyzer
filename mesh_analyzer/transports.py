@@ -318,6 +318,57 @@ class SourceManager:
         for src in self.db.sources(public=False):
             if src["enabled"]:self.connect(src["id"])
 
+    def sync_favorites_from_radio(self,source_id):
+        """Import only explicit favorite flags from the connected radio NodeDB."""
+        with self._lock:
+            iface=self._interfaces.get(int(source_id))
+        if iface is None:return 0
+        entries=getattr(iface,"nodesByNum",None)
+        if not isinstance(entries,dict):return 0
+        changed=0
+        for key,n in list(entries.items()):
+            if not isinstance(n,dict):continue
+            value=n.get("isFavorite",n.get("is_favorite"))
+            num=number(n.get("num",key))
+            if type(value) is bool and num and self.db.set_node_favorite_from_radio(source_id,num,value):
+                changed+=1
+        return changed
+
+    def set_favorite(self,source_id,node_num,is_favorite):
+        """Request a NodeDB favorite change on ONE connected local Meshtastic radio.
+
+        A successful SDK call is only command submission. Never claim the
+        radio has confirmed the favorite until the NodeDB itself reports it.
+        """
+        if type(is_favorite) is not bool:
+            raise ValueError("Escolha Favoritar ou Desfavoritar")
+        sid=number(source_id)
+        num=number(node_num)
+        if not sid or not num or not (0<num<0xffffffff):
+            raise ValueError("Fonte ou número do nó inválido")
+        source=self.db.source(sid)
+        if not source or not source.get("enabled") or source.get("kind") not in ("serial","tcp","ble"):
+            raise ValueError("Favoritos exigem rádio Meshtastic local conectado (USB, TCP ou BLE)")
+        with self._lock:
+            iface=self._interfaces.get(sid)
+            status=self._states.get(sid,{}).get("status")
+        if iface is None or status!="connected":
+            raise RuntimeError("Rádio desconectado; nenhuma alteração foi enviada")
+        local=getattr(iface,"localNode",None)
+        method=getattr(local,"setFavorite" if is_favorite else "removeFavorite",None)
+        if not callable(method):
+            raise RuntimeError("Firmware/SDK deste rádio não oferece comando de favoritos")
+        method(num)
+        # Read back without fabricating ACK, even if local admin command returned.
+        self.sync_favorites_from_radio(sid)
+        entries=getattr(iface,"nodesByNum",None)
+        current=entries.get(num) if isinstance(entries,dict) else None
+        flag=current.get("isFavorite",current.get("is_favorite")) if isinstance(current,dict) else None
+        confirmed=type(flag) is bool and flag==is_favorite
+        return {"success":True,"source_id":sid,"node_num":num,
+                "requested_favorite":is_favorite,"confirmed":confirmed,
+                "status":"confirmed" if confirmed else "awaiting_nodedb"}
+
     def connect(self,id):
         id=int(id)
         source=self.db.source(id)
@@ -388,12 +439,18 @@ class SourceManager:
                     else:raise RuntimeError("Transporte desconhecido")
                     with self._lock:self._interfaces[id]=iface
                     self.ingest.seed_from_interface(id,iface)
+                    self.sync_favorites_from_radio(id)
                     self._set(id,"connected")
                     self.db.log("Conexão estabelecida com fonte "+str(id),source_id=id)
+                    next_favorite_sync=time.monotonic()+15
                     while not self._stop.wait(1):
                         with self._lock:
                             if self._interfaces.get(id) is not iface:break
                         if not (self.db.source(id) or {}).get("enabled"):break
+                        if time.monotonic()>=next_favorite_sync:
+                            try:self.sync_favorites_from_radio(id)
+                            except Exception:pass
+                            next_favorite_sync=time.monotonic()+15
             except Exception as exc:
                 self._set(id,"error",str(exc))
                 self.db.log("Falha em fonte "+str(id)+": "+type(exc).__name__,"error",id)
