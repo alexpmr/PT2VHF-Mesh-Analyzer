@@ -6,6 +6,8 @@
 - #130: responder com citação textual em canal/DM; reply_id nativo ainda não garantido.
 - #131: reenvio manual com aviso de duplicação e nova tentativa de TX. Falhas em sessão não necessariamente estão persistidas, investigar histórico de rejeições.
 - #132: Canal primário fixo e favoritos do rádio em seção fixa.
+- #136: aba Nós agora mostra estrela por rádio e permite Favoritar/Desfavoritar; o SDK oficial recebe o comando, mas a estrela só fica confirmada com o NodeDB. Aceite físico pendente.
+- #137: Traceroute iniciado no mapa ainda não apresenta painel próprio de resultado; registrado para correção dedicada, não incluído nesta entrega.
 - #79: importação read-only do NodeDB por origem implementada; escrita bidirecional/atualização sem reconexão depende de SDK e rádio real.
 - Há muitas outras issues históricas abertas; não as fechar automaticamente nem alegar backlog integralmente sanado.
 
