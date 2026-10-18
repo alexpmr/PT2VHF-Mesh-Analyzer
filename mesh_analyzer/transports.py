@@ -126,6 +126,12 @@ class PacketIngestor:
                     seen=int(float(raw_seen));seen=seen*1000 if 0<seen<10_000_000_000 else seen
                 except (TypeError,ValueError):seen=0
                 self.db.upsert_node(num,source_id,timestamp_ms=seen,**values)
+                # Only trust explicit boolean values received in the radio NodeDB.
+                # Missing flags mean unknown, NOT false.
+                favorite=n.get("isFavorite",n.get("is_favorite",
+                         user.get("isFavorite",user.get("is_favorite"))))
+                if type(favorite) is bool:
+                    self.db.set_node_favorite_from_radio(source_id,num,favorite)
         except Exception:
             self.db.log("Não foi possível importar o catálogo inicial do rádio", "warning",source_id)
 
