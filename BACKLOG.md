@@ -1,3 +1,9 @@
+## v0.6.31 — Atualizador e ponte PDF/WebView2
+
+- #103: logs de 17/10/2026 apontam regressão do `PDFExportBridge` público no `js_api`, levando pywebview a inspecionar propriedades nativas recursivamente. Alterado para atributo `_window` não exportado.
+- #103: health check com versão/nonce/UI agora tem precedência sobre saída de PID transitório do PyInstaller; saída 0 sozinha é inconclusiva.
+- Validar uma atualização real pelo app e exportar PDF no aplicativo Windows 10/11 após patch. Manter issue aberta até aceite.
+
 ## v0.6.30 — Interface Mapa e Mensagens
 
 - #119: trocar legenda fixa grande por mini-legenda recolhível e conteúdo detalhado expansível.
