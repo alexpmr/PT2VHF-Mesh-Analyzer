@@ -1,3 +1,11 @@
+# v0.6.32 — Validar atualização automática com execução real
+
+- Regressão Windows: fixture PyInstaller com launcher finalizando exit 0 e processo sucessor lançando serviço HTTP com atraso e nonce único; confirma conclusão por /health sem confundir bootloader com GUI.
+- Segurança: nonce não vazio e exato é obrigatório para aceitar /health; versão e ui_ready também exigidos.
+- Estado da atualização: falha histórica da confirmação e versão já executada passa a ser aviso **reinício não confirmado**, sem declarar falha de instalação.
+- Testes de estados failed/installed/unverified, migração visual e dismiss. Mantidas correções WebView2 de v0.6.31.
+- Homologação do atualizador completo em Win10/Win11 com rádio real ainda depende de aceite de campo (#103).
+
 # v0.6.31 — Correção da reinicialização WebView2 e confirmação do atualizador
 
 - #103: diagnóstico fundamentado nos quatro logs reais v0.6.30. Inno Setup terminou com exit=0; nova instância foi iniciada, mas o monitor registrou `Updated application exited early: 0`.
