@@ -22,7 +22,7 @@ class DesktopRegressionTests(unittest.TestCase):
         self.assertIn("setView('settings');",UI)
         self.assertIn("showSettings('sources');",UI)
         self.assertIn("$('messageSend').disabled=messageSending;",UI)
-        self.assertIn("if(!txRadioSources().length){showNoConnectionDialog();return;}",UI)
+        self.assertIn("if(!choices.length){showNoConnectionDialog();return;}",UI)
         between=UI.split("function showNoConnectionDialog(){",1)[1].split("function txRadioSources(){",1)[0]
         self.assertNotIn("$('messageText').value=''",between)
 

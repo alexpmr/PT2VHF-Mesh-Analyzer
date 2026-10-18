@@ -253,6 +253,55 @@ html[data-theme] #autoSaveButton:hover:not(:disabled){
 html[data-theme] #autoSaveButton:focus-visible{
  outline:3px solid var(--blue);outline-offset:2px;
 }
+/* Sobre: same visual language as the user's reference, compact on desktop. */
+.aboutContact{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
+ background:#101e1b;border:1px solid #185b42;border-radius:12px;padding:20px;color:#e9f2f3}
+.aboutContent{max-width:72ch;min-width:0}
+.aboutEyebrow{display:block;color:#56bfff;font-size:11px;font-weight:800;letter-spacing:.4px}
+.aboutContact h2{font-size:18px;margin:8px 0 12px}
+.aboutContact p{line-height:1.7;margin:0 0 12px}
+.aboutActions{display:flex;flex-direction:column;align-items:stretch;gap:10px;flex:0 0 230px;text-align:center;padding-top:20px}
+.aboutActions a{display:block;padding:12px;border:1px solid var(--line);border-radius:8px;font-weight:700;
+ text-decoration:none;white-space:nowrap;color:#fff;background:#24313c}
+.aboutActions .aboutWhatsapp{background:#42aaff;color:#091c32;border-color:#42aaff}
+.aboutActions a:hover{filter:brightness(1.15)}
+.aboutActions a:focus-visible{outline:3px solid #80cffc;outline-offset:3px}
+:root[data-theme="light"] .aboutContact{background:#eaf6ef;color:#1b2d30;border-color:#78ae92}
+:root[data-theme="light"] .aboutActions .aboutEmail{background:#fff;color:#24313c}
+:root[data-theme="gray"] .aboutContact{background:#252e2b}
+@media(max-width:710px){.aboutContact{flex-direction:column;padding:14px;gap:8px}
+.aboutActions{width:100%;padding-top:4px;flex:0 0 auto}.aboutActions a{white-space:normal}}
+
+/* Messaging: pin primary + radio favorites without losing the scrollable contact search. */
+#contactPinned{flex:0 0 auto;border-bottom:1px solid var(--line);max-height:42vh;overflow-y:auto}
+#contactPinned .contact{display:block;width:100%;text-align:left}
+#contactPinned .pinnedSectionLabel{padding:7px 10px 4px;font-size:11px;font-weight:700;color:var(--muted)}
+#contactPinned .contact.favorite{border-left:3px solid #e2ba35}
+#contactPinned .contact.primary{font-weight:800;border-left:3px solid var(--blue)}
+.messageByteCount{font-size:10px;color:var(--muted);align-self:center;white-space:nowrap}
+.messageByteCount.overlimit{color:#f07f7f;font-weight:800}
+#messageText{flex:1 1 auto;min-width:60px;resize:vertical;min-height:44px;max-height:140px;font:inherit}
+#messageEmojiButton{font-size:19px;min-width:34px}
+.messageEmojiPicker{position:absolute;bottom:100%;left:7px;background:var(--card);color:var(--ink);
+ border:1px solid var(--line);box-shadow:0 8px 22px #0006;display:flex;flex-wrap:wrap;gap:3px;
+ width:min(320px,90vw);padding:8px;border-radius:9px;z-index:1600}
+.messageEmojiPicker[hidden],.messageBubbleActions[hidden],.messageReplyPreview[hidden]{display:none!important}
+.messageEmojiPicker button{font-size:21px;min-width:38px}
+.messageReplyPreview{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ border-left:4px solid var(--accent);background:var(--panel);padding:7px 10px}
+#messageReplyLabel{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
+.messageBubbleActions{position:fixed;z-index:6000;background:var(--card);color:var(--ink);
+ border:1px solid var(--line);border-radius:7px;padding:5px;box-shadow:0 7px 20px #0006}
+.messageBubbleActions button{display:block;width:100%;text-align:left}
+.bubble[data-msg-index]{cursor:pointer}
+.bubble[data-msg-index]:focus-visible{outline:2px solid var(--accent)}
+
+/* Source-confirmed Meshtastic NodeDB favorites: never signal success while pending. */
+.nodeFavoriteToggle{min-width:30px;font-size:20px!important;font-weight:800;line-height:1;
+ padding:5px 8px!important;border:1px solid var(--line);background:var(--control)!important;color:var(--muted)!important}
+.nodeFavoriteToggle.isFavorite{color:#ffd447!important}
+.nodeFavoriteToggle:not(:disabled):hover{background:var(--hover)!important}
+.nodeFavoriteToggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
@@ -264,9 +313,9 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.32</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.33</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
-<button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button>
+<button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
 <div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
 <div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
@@ -324,7 +373,14 @@ try {
 <input id="messageNodeSearch" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nós para mensagem privada" autocomplete="off">
 <button type="button" id="messageNodeSearchClear" aria-label="Limpar pesquisa de nós" title="Limpar pesquisa">×</button>
 <span id="messageNodeSearchCount" role="status" aria-live="polite"></span>
-</div><div class="contacts" id="contacts"></div></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend" type="button">➤ Enviar</button></div></div></div></section>
+</div><div class="contactPinned" id="contactPinned" aria-label="Canal primário e favoritos"></div><div class="contacts" id="contacts"></div></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div id="messageReplyPreview" class="messageReplyPreview" hidden><span id="messageReplyLabel"></span><button type="button" id="messageReplyCancel" title="Cancelar resposta">×</button></div>
+<div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div>
+<button id="messageEmojiButton" type="button" title="Inserir emoji" aria-label="Inserir emoji">☺</button>
+<div id="messageEmojiPicker" class="messageEmojiPicker" hidden></div>
+<textarea id="messageText" rows="2" placeholder="Digite uma mensagem RF (até 220 bytes UTF-8)" maxlength="220"></textarea>
+<div id="messageByteCount" role="status" class="messageByteCount">0/220 bytes</div>
+<button id="messageSend" type="button">➤ Enviar</button></div>
+<div id="messageBubbleActions" class="messageBubbleActions" hidden><button type="button" id="messageReplyAction">Responder</button><button type="button" id="messageRetryAction" hidden>Reenviar</button></div></div></div></section>
 <section class="view" id="viewStats">
 <div class="toolbar statsToolbar"><h2>Estatísticas</h2><div class="spacer"></div>
 <label>Período: <select id="statsPeriod"><option value="1h">1 h</option><option value="6h">6 h</option><option value="24h">24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all" selected>Todo</option></select></label>
@@ -418,10 +474,24 @@ try {
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.32</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.33</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.8.</p></div></div></section>
+<section class="view" id="viewAbout"><div class="panels">
+<div class="aboutContact">
+  <div class="aboutContent"><strong class="aboutEyebrow">DÚVIDAS, DIFICULDADES OU SUGESTÕES?</strong>
+  <h2>Fale comigo</h2>
+  <p>Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.</p>
+  <strong>Alex</strong></div>
+  <div class="aboutActions">
+    <a href="https://wa.me/5561984023634" target="_blank" rel="noopener noreferrer" class="aboutWhatsapp">WhatsApp: 61 98402-3634</a>
+    <a href="mailto:alexpmr@gmail.com" class="aboutEmail">alexpmr@gmail.com</a>
+  </div>
+</div>
+<div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
+<p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
+</div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.33.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -485,7 +555,7 @@ $('firstRunDialog').addEventListener('keydown',event=>{
 });
 function notify(txt,isError=false){const t=$('toast');t.textContent=txt;t.style.display='block';t.style.borderColor=isError?'#f48c8c':'#679ab8';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.style.display='none',5600);}
 async function api(path,body){const o=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(body)};const r=await fetch(path,o);const d=await r.json();if(!r.ok||d.success===false)throw Error(d.error||d.message||'HTTP '+r.status);return d;}
-const viewPaths={map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes/conexoes',help:'/ajuda'};
+const viewPaths={map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes/conexoes',help:'/ajuda',about:'/sobre'};
 function setView(next,updateUrl=true){
  view=next;
  document.querySelectorAll('.view').forEach(n=>n.classList.toggle('active',n.id==='view'+next[0].toUpperCase()+next.slice(1)));
@@ -500,7 +570,7 @@ function setView(next,updateUrl=true){
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
- Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help']])[location.pathname]||'map');
+ Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help'],['/sobre','about']])[location.pathname]||'map');
 const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
 const TRAFFIC_LABELS={
  TELEMETRY_APP:'Telemetria',POSITION_APP:'Posição',NODEINFO_APP:'Informações do nó',
@@ -1624,6 +1694,39 @@ $('messageText').addEventListener('keydown',e=>{
  if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();e.stopImmediatePropagation();insertMention(mentionIndex);}
 },true);
 
+const pendingFavoriteNodes=new Set();
+function favoriteRadio(){
+ const radios=(state.sources||[]).filter(s=>['serial','ble','tcp'].includes(s.kind)&&s.enabled&&
+  state.connections?.[String(s.id)]?.status==='connected'&&state.connections[String(s.id)].tx_capable);
+ if(radios.length===1)return radios[0];
+ if(radios.length>1)return radios.find(s=>String(s.id)===String(mapSourceFilter))||null;
+ return null;
+}
+function favoriteNodeState(node){
+ const source=favoriteRadio(),sid=Number(source?.id||0);
+ const known=sid>0&&Array.isArray(node.favorite_known_source_ids)&&
+  node.favorite_known_source_ids.some(x=>Number(x)===sid);
+ const value=known&&Array.isArray(node.favorite_source_ids)&&
+  node.favorite_source_ids.some(x=>Number(x)===sid);
+ return {source,known,favorite:Boolean(value)};
+}
+async function setFavoriteForNode(node,wantFavorite){
+ const id=Number(node.node_num),source=favoriteRadio();
+ if(!source){notify('Conecte e selecione um único rádio local para alterar favoritos.',true);return;}
+ if(pendingFavoriteNodes.has(id))return;
+ pendingFavoriteNodes.add(id);
+ renderNodes();
+ try{
+  const result=await api('/api/nodes/favorite',{source_id:source.id,node_num:id,is_favorite:Boolean(wantFavorite)});
+  if(result.confirmed===true){
+   notify((wantFavorite?'Favorito':'Não favorito')+' confirmado pelo NodeDB: '+idName(id));
+  }else{
+   notify('Comando enviado ao rádio. Aguardando confirmação do NodeDB para atualizar a estrela.');
+  }
+  await refreshAll();
+ }catch(e){notify('Favoritos do rádio: '+e.message,true);}
+ finally{pendingFavoriteNodes.delete(id);renderNodes();}
+}
 const nodeCols=[['long_name','Nome longo'],['short_name','Nome curto'],['role','Role'],['hw_model','Hardware'],['hops','Saltos'],['battery','Bateria'],['voltage','Tensão'],['distance','Distância'],['snr','SNR'],['last_seen_ms','Última interação'],['position_ms','Última posição'],['node_id','Node ID']];
 let selectedNodeCols=new Set(nodeCols.slice(0,11).map(x=>x[0])),nodeSort='distance',nodeSortAsc=true;
 try{const c=JSON.parse(localStorage.getItem('mesh.nodes.columns')||'null');if(Array.isArray(c)&&c.length)selectedNodeCols=new Set(c);}catch(e){}
@@ -1863,24 +1966,45 @@ function renderNodes(){
  const list=nodes.filter(n=>matches(n,q)||[n.hw_model,hardwareName(n.hw_model),n.role].some(x=>norm(x).includes(q)));
  $('nodesCounter').textContent=list.length+' de '+nodes.length+' nós';
  const visible=nodeCols.filter(x=>selectedNodeCols.has(x[0]));
- $('nodesHeader').innerHTML=visible.map(([k,label])=>'<th data-nodesort="'+k+'" role="button" tabindex="0">'+esc(label)+(k===nodeSort?(nodeSortAsc?' ▲':' ▼'):'')+'</th>').join('');
+ $('nodesHeader').innerHTML='<th title="Favoritos do rádio conectado">★</th>'+
+  visible.map(([k,label])=>'<th data-nodesort="'+k+'" role="button" tabindex="0">'+esc(label)+(k===nodeSort?(nodeSortAsc?' ▲':' ▼'):'')+'</th>').join('');
  list.sort((a,b)=>{const av=nodeValue(a,nodeSort),bv=nodeValue(b,nodeSort);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;
   const cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'pt-BR',{numeric:true});return nodeSortAsc?cmp:-cmp;});
  nodeVisibleOrder=list.map(n=>Number(n.node_num));
  const existing=new Set(nodes.map(n=>Number(n.node_num)));
  [...nodeSelectedIds].forEach(id=>{if(!existing.has(id))nodeSelectedIds.delete(id);});
- $('nodesRows').innerHTML=list.map(n=>'<tr data-node="'+n.node_num+'" tabindex="0" aria-selected="false">'+
-   visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>').join('')||
-   '<tr><td>Nenhum nó conhecido.</td></tr>';
+ $('nodesRows').innerHTML=list.map(n=>{
+  const fav=favoriteNodeState(n),busy=pendingFavoriteNodes.has(Number(n.node_num));
+  const text=busy?'⋯':!fav.known?'◇':fav.favorite?'★':'☆';
+  const label=busy?'Aguardando rádio':!fav.source?'Conecte rádio para consultar favoritos':
+   !fav.known?'Favorito ainda não informado pelo NodeDB':
+   fav.favorite?'Desfavoritar no rádio':'Favoritar no rádio';
+  return '<tr data-node="'+n.node_num+'" tabindex="0" aria-selected="false">'+
+    '<td><button type="button" class="nodeFavoriteToggle '+(fav.favorite?'isFavorite':'')+
+     '" data-favorite-toggle="'+n.node_num+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+
+     ((busy||!fav.source)?'disabled':'')+'>'+text+'</button></td>'+
+    visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>';
+ }).join('')||'<tr><td colspan="'+(visible.length+1)+'">Nenhum nó conhecido.</td></tr>';
+ $('nodesRows').querySelectorAll('[data-favorite-toggle]').forEach(button=>{
+  button.onclick=ev=>{
+   ev.preventDefault();ev.stopPropagation();
+   const n=nodes.find(n=>Number(n.node_num)===Number(button.dataset.favoriteToggle));
+   if(n)setFavoriteForNode(n,!favoriteNodeState(n).favorite);
+  };
+  button.ondblclick=ev=>{ev.preventDefault();ev.stopPropagation();};
+ });
  $('nodesRows').querySelectorAll('[data-node]').forEach(el=>{
    const id=Number(el.dataset.node);
    el.onclick=ev=>selectNodeRow(id,ev);
-   el.ondblclick=()=>{const n=nodes.find(x=>Number(x.node_num)===id);if(n)showNode(n);};
+   el.ondblclick=ev=>{if(ev.target.closest('[data-favorite-toggle]'))return;
+    const n=nodes.find(x=>Number(x.node_num)===id);if(n)showNode(n);};
    el.onkeydown=ev=>{
+    if(ev.target.closest('[data-favorite-toggle]'))return;
     if(ev.key==='Enter'){ev.preventDefault();const n=nodes.find(x=>Number(x.node_num)===id);if(n)showNode(n);}
     if(ev.key===' '){ev.preventDefault();selectNodeRow(id,ev);}
    };
    el.oncontextmenu=ev=>{
+    if(ev.target.closest('[data-favorite-toggle]'))return;
     ev.preventDefault();
     if(!nodeSelectedIds.has(id)){nodeSelectedIds.clear();nodeSelectedIds.add(id);nodeSelectAnchor=id;updateNodeSelectionVisual();}
     openNodeContext(id,ev.clientX,ev.clientY);
@@ -2068,6 +2192,8 @@ function openNodeContext(nodeNum,x,y){
    action('detail','Informações completas')+
    action('locate','Mostrar no mapa',validPos(n),'O nó não informou posição')+
    action('copy','Copiar Node ID')+
+   action('favorite',favoriteNodeState(n).favorite?'★ Desfavoritar no rádio':'☆ Favoritar no rádio',
+     !!favoriteRadio(),'Conecte um único rádio local')+
    action('delete','Apagar nó do banco e do rádio')+
    '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
    RF_QUERY_TYPES.map(([k,l])=>action('query-'+k,l,!!activeRadioSource(),'Conecte um rádio com transmissão')).join('')+
@@ -2091,6 +2217,7 @@ function openNodeContext(nodeNum,x,y){
        nodes.find(v=>Number(v.node_num)===id)?.node_id||'!'+id.toString(16).padStart(8,'0')).join('\n'));
       notify(selected.length+' Node IDs copiados.');
      }catch(e){notify('Falha ao copiar Node IDs.',true);}break;
+    case 'favorite':await setFavoriteForNode(n,!favoriteNodeState(n).favorite);break;
     case 'delete':await deleteNodeFromRadioAndDatabase(n);break;
     case 'message':openDm(n.node_num);break;
     case 'detail':showNode(n);break;
@@ -2180,24 +2307,39 @@ function renderChat(updateConversation=true){
  const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:lastByKey(b)-lastByKey(a)||a.localeCompare(b));
  const query=norm($('messageNodeSearch').value.trim());
  const nodeById=new Map(nodes.map(n=>[Number(n.node_num),n]));
+ const radio=activeRadioSource?.();
+ const selectedRadioId=Number(radio?.id||state.sources?.find(s=>s.kind!=='mqtt'&&s.enabled)?.id||0);
+ const favorites=new Set(nodes.filter(n=>
+   selectedRadioId>0&&Array.isArray(n.favorite_source_ids)&&
+   n.favorite_source_ids.some(sid=>Number(sid)===selectedRadioId)
+ ).map(n=>'node:'+n.node_num));
+ const pinned=['channel:0',...list.filter(k=>favorites.has(k)).sort((a,b)=>nameOf(a).localeCompare(nameOf(b)))];
  const visible=list.filter(key=>{
-   if(!key.startsWith('node:'))return true; // Keep channels always accessible.
+   if(pinned.includes(key))return false;
+   if(!key.startsWith('node:'))return true;
    const num=Number(key.slice(5)),node=nodeById.get(num);
    return node?chatNodeMatches(node,query):!query;
  });
- const matched=visible.filter(key=>key.startsWith('node:')).length;
+ const matched=visible.filter(key=>key.startsWith('node:')).length+
+     pinned.filter(key=>key.startsWith('node:')&&chatNodeMatches(nodeById.get(Number(key.slice(5)))||{},query)).length;
  $('messageNodeSearchCount').textContent=query?
    matched+' nó(s) encontrado(s)':'Nós conhecidos: '+matched;
  $('messageNodeSearchClear').disabled=!$('messageNodeSearch').value;
- $('contacts').innerHTML=visible.map(key=>{
+ const contactMarkup=(key)=>{
   const latest=messages.filter(m=>chatKey(m)===key).at(-1);
   return '<button type="button" class="contact '+(key===currentChat?'selected':'')+
-    '" data-chat="'+esc(key)+'">'+esc(nameOf(key))+
+    (key==='channel:0'?' primary':favorites.has(key)?' favorite':'')+
+    '" data-chat="'+esc(key)+'">'+(favorites.has(key)?'★ ':'')+esc(nameOf(key))+
     (latest?'<small style="display:block;color:var(--muted)">'+esc(latest.text.slice(0,55))+'</small>':'')+
     '</button>';
- }).join('')+(query&&!matched?'<div class="muted" style="padding:12px">Nenhum nó encontrado.</div>':'');
- $('contacts').querySelectorAll('[data-chat]').forEach(el=>{
-   el.onclick=()=>{currentChat=el.dataset.chat;renderChat();};
+ };
+ $('contactPinned').innerHTML=contactMarkup('channel:0')+
+   (pinned.length>1?'<div class="pinnedSectionLabel">★ Favoritos do rádio</div>'+
+     pinned.slice(1).map(contactMarkup).join(''):'');
+ $('contacts').innerHTML=visible.map(contactMarkup).join('')+
+  (query&&!matched?'<div class="muted" style="padding:12px">Nenhum nó encontrado.</div>':'');
+ document.querySelectorAll('#contacts [data-chat],#contactPinned [data-chat]').forEach(el=>{
+   el.onclick=()=>{currentChat=el.dataset.chat;replyMessage=null;$('messageReplyPreview').hidden=true;closeMessageActions();renderChat();};
    if(el.dataset.chat.startsWith('node:')){
      el.addEventListener('contextmenu',e=>{e.preventDefault();openNodeContext(Number(el.dataset.chat.slice(5)),e.clientX,e.clientY);});
    }
@@ -2206,17 +2348,23 @@ function renderChat(updateConversation=true){
  $('chatHeader').textContent=currentChat.startsWith('node:')?
    'Privado · '+nameOf(currentChat):nameOf(currentChat);
  const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);
- let html=filtered.map(m=>'<div class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
+ visibleMessageRows=filtered;
+ let html=filtered.map((m,i)=>'<div tabindex="0" role="button" aria-label="Mensagem; abrir ações" data-msg-index="'+i+'" class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
    esc(m.text)+'</div><small>'+esc(new Date(m.timestamp_ms).toLocaleTimeString('pt-BR'))+
    (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
    messageStateHtml(m)+'</small></div>').join('');
  if(pendingChat?.chat===currentChat){
-  html+='<div class="bubble tx"><div>'+esc(pendingChat.text)+'</div><small>'+
+  html+='<div tabindex="0" role="button" aria-label="Mensagem pendente; abrir ações" data-msg-index="pending" class="bubble tx"><div>'+esc(pendingChat.text)+'</div><small>'+
      (pendingChat.failed?'Falha':'Enviando')+
      (pendingChat.failed?'<span class="msgState error">!</span>':
        '<span class="msgState working" title="Aguardando rádio">◷</span>')+'</small></div>';
  }
  $('bubbles').innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
+ $('bubbles').querySelectorAll('[data-msg-index]').forEach(el=>{
+  el.onclick=e=>openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,false);
+  el.oncontextmenu=e=>{e.preventDefault();openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,true);};
+  el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openMessageActions(el.dataset.msgIndex,0,0,false);}};
+ });
  $('bubbles').scrollTop=$('bubbles').scrollHeight;
  const choices=txRadioSources();
  // Allow the click even without a radio so the user can see why TX is unavailable.
@@ -2229,31 +2377,103 @@ $('messageNodeSearch').addEventListener('input',()=>renderChat(false));
 $('messageNodeSearchClear').onclick=()=>{
  $('messageNodeSearch').value='';renderChat(false);$('messageNodeSearch').focus();
 };
-$('messageSend').onclick=async()=>{
+let visibleMessageRows=[],replyMessage=null,actionMessage=null;
+const messageBytes=text=>new TextEncoder().encode(String(text)).length;
+function updateMessageBytes(){
+ const used=messageBytes($('messageText').value);
+ $('messageByteCount').textContent=used+'/220 bytes';
+ $('messageByteCount').classList.toggle('overlimit',used>220);
+}
+const emojiList=['😀','😂','😊','🥰','😍','👍','👍🏽','❤️','💛','🎉','👏','🙏','📡','📻','🌦️','⚡','🔋','🛰️','🇧🇷','✅'];
+$('messageEmojiPicker').innerHTML=emojiList.map((emoji,i)=>
+ '<button type="button" data-emoji="'+i+'" aria-label="Inserir emoji '+esc(emoji)+'">'+esc(emoji)+'</button>').join('');
+$('messageEmojiButton').onclick=()=>{
+ $('messageEmojiPicker').hidden=!$('messageEmojiPicker').hidden;
+};
+$('messageEmojiPicker').querySelectorAll('[data-emoji]').forEach(el=>{
+ el.onclick=()=>{
+  const field=$('messageText'),start=field.selectionStart,end=field.selectionEnd,
+   emoji=emojiList[Number(el.dataset.emoji)];
+  field.value=field.value.slice(0,start)+emoji+field.value.slice(end);
+  field.focus();field.setSelectionRange(start+emoji.length,start+emoji.length);
+  $('messageEmojiPicker').hidden=true;updateMessageBytes();
+ };
+});
+$('messageText').addEventListener('input',updateMessageBytes);
+function chooseReply(msg){
+ replyMessage={chat:currentChat,id:msg.id??null,packet_id:msg.packet_id??null,
+  text:msg.text,author:msg.direction==='tx'?'Você':idName(msg.from_node)};
+ $('messageReplyLabel').textContent='Responder a '+replyMessage.author+': '+replyMessage.text.slice(0,95);
+ $('messageReplyPreview').hidden=false;
+ $('messageText').focus();
+}
+$('messageReplyCancel').onclick=()=>{
+ replyMessage=null;$('messageReplyPreview').hidden=true;
+};
+function replyText(text,chat){
+ if(!replyMessage||replyMessage.chat!==chat)return text;
+ const quote='↪ '+replyMessage.author+': '+replyMessage.text.replace(/\s+/g,' ').slice(0,60)+'\n';
+ return quote+text;
+}
+function closeMessageActions(){$('messageBubbleActions').hidden=true;actionMessage=null;}
+function openMessageActions(index,x,y,rightClick){
+ const msg=index==='pending'?pendingChat:visibleMessageRows[Number(index)];
+ if(!msg||index==='pending'&&pendingChat?.chat!==currentChat)return;
+ actionMessage={...msg,chat:currentChat};
+ const retryable=(index==='pending'&&msg.failed===true)||
+   (msg.direction==='tx'&&['failed','rejected','timeout'].includes(msg.state));
+ $('messageRetryAction').hidden=!retryable;
+ $('messageReplyAction').hidden=index==='pending'||rightClick&&retryable;
+ const menu=$('messageBubbleActions');menu.hidden=false;
+ menu.style.left=Math.max(4,Math.min(window.innerWidth-190,Number(x)||100))+'px';
+ menu.style.top=Math.max(4,Math.min(window.innerHeight-90,Number(y)||130))+'px';
+}
+$('messageReplyAction').onclick=()=>{
+ if(actionMessage)chooseReply(actionMessage);
+ closeMessageActions();
+};
+$('messageRetryAction').onclick=async()=>{
+ const msg=actionMessage;closeMessageActions();
+ if(!msg||!confirm('Reenviar mensagem? A ausência de confirmação não garante que o destinatário não recebeu. Pode gerar uma duplicata.'))return;
+ await sendChatMessage(msg.text,msg.chat,true);
+};
+document.addEventListener('pointerdown',e=>{
+ if(!$('messageBubbleActions').hidden&&!e.target.closest('.messageBubbleActions')&&!e.target.closest('[data-msg-index]'))
+  closeMessageActions();
+ if(!$('messageEmojiPicker').hidden&&!e.target.closest('#messageEmojiPicker')&&!e.target.closest('#messageEmojiButton'))
+  $('messageEmojiPicker').hidden=true;
+});
+async function sendChatMessage(raw,chat,isRetry=false){
  if(messageSending)return;
- if(!txRadioSources().length){showNoConnectionDialog();return;}
- const original=$('messageText').value,text=original.trim();
+ const text=isRetry?String(raw).trim():replyText(String(raw).trim(),chat);
  if(!text){notify('Digite a mensagem.',true);return;}
- const bytes=new TextEncoder().encode(text).length;
- if(bytes>220){notify('Limite 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
+ const bytes=messageBytes(text);
+ if(bytes>220){notify('Limite de 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
  const choices=txRadioSources();
- if(!choices.length){showNoConnectionDialog();renderChat();return;}
- if(choices.length>1){notify('Mais de um rádio TX disponível. Desative os demais em Configurações → Conexões antes de enviar.',true);return;}
- const src=Number(choices[0].id);
- const target=currentChat.startsWith('node:')?Number(currentChat.slice(5)):'^all';
- const ch=currentChat.startsWith('channel:')?Number(currentChat.slice(8)):Number($('messageChannel').value);
- messageSending=true;pendingChat={chat:currentChat,text,failed:false};renderChat();
+ if(!choices.length){showNoConnectionDialog();return;}
+ if(choices.length>1){notify('Mais de um rádio TX conectado. Desative os demais em Conexões.',true);return;}
+ const source=Number(choices[0].id);
+ const target=chat.startsWith('node:')?Number(chat.slice(5)):'^all';
+ const channel=chat.startsWith('channel:')?Number(chat.slice(8)):Number($('messageChannel').value);
+ messageSending=true;
+ pendingChat={chat,text,failed:false};
+ renderChat();
  try{
-  await api('/api/messages/send',{source_id:src,to_node:target,text,channel:ch});
-  $('messageText').value='';pendingChat=null;
+  await api('/api/messages/send',{source_id:source,to_node:target,text,channel});
+  if(!isRetry){$('messageText').value='';replyMessage=null;$('messageReplyPreview').hidden=true;updateMessageBytes();}
+  pendingChat=null;
   notify('✓ Aceita pelo rádio local. Entrega e leitura não confirmadas.');
   await refreshAll();
- }catch(e){pendingChat={chat:currentChat,text,failed:true};notify('Falha TX: '+e.message,true);}
- finally{messageSending=false;renderChat();}
-};
+ }catch(e){
+  pendingChat={chat,text,failed:true,direction:'tx'};
+  notify('Falha TX: '+e.message,true);
+ }finally{messageSending=false;renderChat();}
+}
+$('messageSend').onclick=()=>sendChatMessage($('messageText').value,currentChat);
 $('messageText').onkeydown=e=>{
  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!messageSending)$('messageSend').click();}
 };
+updateMessageBytes();
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],

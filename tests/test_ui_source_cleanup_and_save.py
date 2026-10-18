@@ -11,8 +11,8 @@ class UIRegression(unittest.TestCase):
   self.assertIn("source:'all'",UI)
  def test_ambiguous_transmitter_blocks_send(self):
   self.assertIn("if(choices.length>1)",UI)
-  self.assertIn("const src=Number(choices[0].id)",UI)
-  self.assertIn("showNoConnectionDialog();renderChat();return;",UI)
+  self.assertIn("const source=Number(choices[0].id)",UI)
+  self.assertIn("if(!choices.length){showNoConnectionDialog();return;}",UI)
  def test_device_save_activation_tracks_edits(self):
   self.assertIn("form.oninput=updateDirty;form.onchange=updateDirty",UI)
   self.assertIn("$('loraSave').disabled=!dirty",UI)

@@ -85,7 +85,7 @@ console.log(JSON.stringify({single,ctrl,toggle,range,addRange,selectAll,run1,amb
 
     def test_interaction_and_rf_guardrails(self):
         self.assertIn("el.onclick=ev=>selectNodeRow(id,ev)", HTML)
-        self.assertIn("el.ondblclick=()=>", HTML)
+        self.assertIn("el.ondblclick=ev=>", HTML)
         self.assertIn("nodeSelectAnchor=id", HTML)
         self.assertIn("selectAllFilteredNodes();", HTML)
         self.assertIn("if(!nodeSelectedIds.has(id))", HTML)

@@ -20,12 +20,13 @@ class NoRadioDialogTests(unittest.TestCase):
     def test_send_remains_clickable_to_explain_disconnected_radio(self):
         self.assertNotIn("$('messageSend').disabled=!choices.length||messageSending;",UI)
         self.assertIn("$('messageSend').disabled=messageSending;",UI)
-        code=UI.split("$('messageSend').onclick=async()=>{",1)[1].split("$('messageText').onkeydown",1)[0]
-        self.assertLess(code.index("if(!txRadioSources().length){showNoConnectionDialog();return;}"),
-                        code.index("const original=$('messageText').value"))
-        self.assertIn("if(!choices.length){showNoConnectionDialog();renderChat();return;}",code)
-        self.assertIn("if(choices.length>1)",code)
+        code=UI.split("async function sendChatMessage(",1)[1].split("$('messageSend').onclick=",1)[0]
         self.assertIn("if(messageSending)return;",code)
+        self.assertIn("if(!choices.length){showNoConnectionDialog();return;}",code)
+        self.assertLess(code.index("if(!choices.length){showNoConnectionDialog();return;}"),
+                        code.index("const source=Number(choices[0].id)"))
+        self.assertIn("if(choices.length>1)",code)
+        self.assertIn("if(!isRetry){$('messageText').value=''",code)
 
     def test_draft_is_preserved_when_go_to_connections(self):
         dialog=UI.split("function showNoConnectionDialog(){",1)[1].split("function txRadioSources(){",1)[0]

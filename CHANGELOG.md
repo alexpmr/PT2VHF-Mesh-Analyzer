@@ -1,3 +1,15 @@
+# v0.6.33 — Mensagens, Contato e Automações
+
+- #80: padrões de automação RF 1 min, 24/h, 60 s, 24 h, tipos permitidos; botão Salvar automação amarelo, preferências antigas preservadas.
+- #134: nova aba Sobre em /sobre, banner de contato WhatsApp e e-mail, Ajuda preservada.
+- #129: seletor de emojis e contador UTF-8; limite de 220 bytes respeitado antes da transmissão.
+- #130: resposta contextual ao clicar no balão, prévia no compositor, citação textual curta para interoperabilidade básica.
+- #131: reenvio de mensagem com erro por botão direito, após aviso de risco de duplicidade; nova tentativa via rádio TX ativo.
+- #132: Canal primário fixo; favoritos importados do NodeDB têm área fixa e os outros contatos permanecem roláveis/pesquisáveis.
+- #136: favoritos na aba Nós, indicador de estado conhecido/desconhecido e comandos locais ao rádio para Favoritar/Desfavoritar, leitura periódica do NodeDB e confirmação explícita (mocks validados; hardware real pendente).
+- #79 parcial: cache radio-isolado de flags explícitas isFavorite/is_favorite, armazenado no SQLite; modificação no rádio e sincronização contínua permanecem pendentes de teste real.
+- Backlog total NÃO foi encerrado; validar com usuário, rádios físicos, Windows 10/11.
+
 # v0.6.32 — Validar atualização automática com execução real
 
 - Regressão Windows: fixture PyInstaller com launcher finalizando exit 0 e processo sucessor lançando serviço HTTP com atraso e nonce único; confirma conclusão por /health sem confundir bootloader com GUI.

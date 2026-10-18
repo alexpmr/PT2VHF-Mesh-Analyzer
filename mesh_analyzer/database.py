@@ -50,6 +50,13 @@ class Database:
                 created_ms INTEGER NOT NULL,
                 updated_ms INTEGER NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS node_favorites (
+                source_id INTEGER NOT NULL,
+                node_num INTEGER NOT NULL,
+                is_favorite INTEGER NOT NULL CHECK(is_favorite IN (0,1)),
+                confirmed_ms INTEGER NOT NULL,
+                PRIMARY KEY(source_id,node_num)
+            );
             CREATE TABLE IF NOT EXISTS nodes (
                 node_num INTEGER PRIMARY KEY,
                 node_id TEXT NOT NULL,
@@ -639,9 +646,33 @@ class Database:
             self._db.execute("INSERT INTO settings(key,value) VALUES('role_backfill_v0628','1')")
         return updated
 
+    def set_node_favorite_from_radio(self,source_id,node_num,is_favorite):
+        """Import an EXPLICIT boolean from a radio's NodeDB; never guess a favorite."""
+        if type(is_favorite) is not bool:
+            return False
+        sid,num=int(source_id),int(node_num)
+        if sid<=0 or not (0<num<0xffffffff):
+            return False
+        with self._lock,self._db:
+            self._db.execute("""INSERT INTO node_favorites(source_id,node_num,is_favorite,confirmed_ms)
+              VALUES(?,?,?,?) ON CONFLICT(source_id,node_num) DO UPDATE SET
+              is_favorite=excluded.is_favorite,confirmed_ms=excluded.confirmed_ms""",
+              (sid,num,int(is_favorite),now_ms()))
+        return True
+
     def node_rows(self, limit=5000):
         rows=self._rows("SELECT * FROM nodes ORDER BY last_seen_ms DESC LIMIT ?",(min(int(limit),15000),))
-        for r in rows: r["aliases"]=json.loads(r["aliases"] or "[]")
+        faves=self._rows("SELECT source_id,node_num,is_favorite FROM node_favorites")
+        by_num={};known_num={}
+        for item in faves:
+            num,sid=int(item["node_num"]),int(item["source_id"])
+            known_num.setdefault(num,[]).append(sid)
+            if item["is_favorite"]:by_num.setdefault(num,[]).append(sid)
+        for r in rows:
+            r["aliases"]=json.loads(r["aliases"] or "[]")
+            num=int(r["node_num"])
+            r["favorite_source_ids"]=by_num.get(num,[])
+            r["favorite_known_source_ids"]=known_num.get(num,[])
         return rows
 
     def node_source_rows(self):
