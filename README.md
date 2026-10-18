@@ -28,6 +28,7 @@
 - **Mensagens (#130):** clicar no balão oferece Responder e mostra uma prévia; esta versão usa fallback de citação textual, sem alegar suporte de reply nativo do firmware.
 - **Mensagens (#131):** clique com botão direito sobre mensagem TX com falha permite reenviar manualmente; exige confirmação de possível duplicação e gera nova tentativa.
 - **Mensagens (#132):** Canal primário sempre fixado no primeiro lugar e favoritos conhecidos do rádio em área fixa da barra lateral; resto da lista continua rolável e pesquisável.
+- **Nós (#136):** coluna de estrela (★/☆/◇) e opção de menu para Favoritar/Desfavoritar usando os comandos oficiais do rádio (`setFavorite`/`removeFavorite`); não atribui confirmação antes de o NodeDB informar o novo estado. A estrela respeita a origem do rádio conectado. Requer aceite com equipamento físico.
 - **NodeDB (#79, parcial):** flags booleanas explícitas de favorito importadas do rádio por fonte e persistidas em SQLite. **A alteração bidirecional dos favoritos no rádio e a atualização contínua sem reconexão ainda precisam de implementação/validação com hardware real**.
 - **Escopo:** esta release NÃO encerra todo o backlog de dezenas de issues históricas. Testes em hardware Meshtastic real e UI final no Windows 10/11 continuam necessários.
 
