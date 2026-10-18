@@ -81,13 +81,13 @@ class Release0625Tests(unittest.TestCase):
                     self.saved = str(destination)
                 def create_file_dialog(self, *_args, **_kwargs):
                     return self.saved
-            bridge.window = Window()
+            bridge._window = Window()
             with patch.dict(sys.modules, {"webview": mock_webview}):
                 data = base64.b64encode(pdf).decode("ascii")
                 result = bridge.save_pdf(data, "PT2VHF-Mesh-Analyzer.pdf")
                 self.assertTrue(result["saved"])
                 self.assertEqual(destination.read_bytes(), pdf)
-                bridge.window.saved = None
+                bridge._window.saved = None
                 self.assertTrue(bridge.save_pdf(data, "report.pdf")["cancelled"])
                 with self.assertRaises(ValueError):
                     bridge.save_pdf("not-base64", "report.pdf")
