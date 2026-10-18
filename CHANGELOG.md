@@ -1,3 +1,11 @@
+# v0.6.31 — Correção da reinicialização WebView2 e confirmação do atualizador
+
+- #103: diagnóstico fundamentado nos quatro logs reais v0.6.30. Inno Setup terminou com exit=0; nova instância foi iniciada, mas o monitor registrou `Updated application exited early: 0`.
+- Causa principal altamente provável desde v0.6.25: `PDFExportBridge.window` público permitia ao scanner JS API do pywebview percorrer `Window.native`/objetos COM WebView2. Corrigido para `_window` privado, mantendo `save_pdf` exposto.
+- Runner de atualização verifica `/health` autenticado por versão, nonce e UI pronta antes de avaliar saída do primeiro launcher. Saída normal com exit=0 não causa falha imediata; continua aguardando prontidão até o prazo configurado. Código não-zero sem prontidão reporta erro.
+- Testes de regressão do scanner pywebview, do PDF Bridge e da ordenação do health check do PowerShell, além da suíte Windows.
+- Aceite em hardware real requerido: atualização in-app de v0.6.30 para v0.6.31, Win10/Win11 Setup/Portable; não declarar bug encerrado apenas com CI.
+
 # v0.6.30 — Legenda recolhível e pesquisa/menções em Mensagens
 
 - #119 Mapa: legenda compacta no canto inferior esquerdo, recolhida por padrão, acessível por teclado e com detalhes da topologia recolhíveis. Os indicadores continuam atualizando em plano de fundo sem abrir o painel.
