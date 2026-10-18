@@ -144,23 +144,37 @@ try {
     $healthy = $false
     $deadline = [DateTime]::UtcNow.AddSeconds(180)
     $lastHealth = 'HTTP service unavailable'
+    $normalLauncherExit = $false
     while ([DateTime]::UtcNow -lt $deadline) {
         Start-Sleep -Milliseconds 700
-        $child.Refresh()
-        if ($child.HasExited) { throw ('Updated application exited early: ' + $child.ExitCode) }
+        # Health is the authority. The PID reported by a PyInstaller onefile
+        # bootloader may exit normally before the effective GUI process starts.
+        # Never declare success for a prior server: require the exact nonce.
         try {
             $response = Invoke-RestMethod -Uri ([string]$p.health_url) -TimeoutSec 2 -ErrorAction Stop
-            $lastHealth = 'version=' + $response.version + '; ui_ready=' + $response.ui_ready
             $identity = (-not $p.launch_nonce) -or ($response.update_nonce -eq [string]$p.launch_nonce)
+            $lastHealth = 'version=' + $response.version + '; ui_ready=' + $response.ui_ready + '; nonce_match=' + $identity
             if ($identity -and $response.version -eq [string]$p.version -and $response.success -eq $true -and $response.ui_ready -eq $true) {
                 $healthy = $true
                 break
             }
         } catch {
-            # The HTTP service may not have started yet.
+            # The authenticated HTTP service may not have started yet.
+        }
+        $child.Refresh()
+        if ($child.HasExited) {
+            if ($child.ExitCode -ne 0) {
+                throw ('Updated application process failed: exit=' + $child.ExitCode + '; health=' + $lastHealth)
+            }
+            if (-not $normalLauncherExit) {
+                $normalLauncherExit = $true
+                WriteLog 'Initial launcher exited with code 0; awaiting verified /health of successor'
+            }
+            # Exit 0 is not failure or success. Wait until readiness deadline.
         }
     }
-    if (-not $healthy) { throw ('Updated application did not confirm its version via /health: ' + $lastHealth) }
+    if (-not $healthy) { throw ('Updated application did not confirm its version via /health: ' + $lastHealth +
+                                '; initial_launcher_exited_normally=' + $normalLauncherExit) }
     # Never report success before the new process actually launches and reports readiness.
     WriteNotice 'installed' ''
     WriteLog 'Updated version confirmed via /health and running'
