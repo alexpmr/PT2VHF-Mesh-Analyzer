@@ -1,24 +1,32 @@
-# PT2VHF Mesh Analyzer — v0.6.29
+# PT2VHF Mesh Analyzer — v0.6.30
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ (x64)** e **Windows 11 (x64)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
 ## Downloads — Windows 10 / Windows 11 (64 bits)
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.29](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.29)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.30](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.30)**
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.29-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.29/PT2VHF-Mesh-Analyzer-v0.6.29-Setup-Win10-Win11-x64.exe) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.29-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.29/PT2VHF-Mesh-Analyzer-v0.6.29-Portable-Win10-Win11-x64.exe) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.29-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.29/PT2VHF-Mesh-Analyzer-v0.6.29-Portable-Win10-Win11-x64.zip) |
-| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.29/SHA256SUMS.txt) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.30-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.30/PT2VHF-Mesh-Analyzer-v0.6.30-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.30-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.30/PT2VHF-Mesh-Analyzer-v0.6.30-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.30-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.30/PT2VHF-Mesh-Analyzer-v0.6.30-Portable-Win10-Win11-x64.zip) |
+| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.30/SHA256SUMS.txt) |
 
 **Links automáticos (última versão):**
 [Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
 [Portable Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe) ·
 [Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.29 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.30 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+
+### Novidades da v0.6.30 — Mensagens e legenda compacta
+
+- **Mapa (#119):** legenda recolhida por padrão em botão compacto no canto inferior esquerdo, expansível e acessível; ícones de nós, significado dos enlaces amarelos e diagnóstico técnico em painel secundário. Indicadores continuam sendo atualizados sem manter a legenda aberta.
+- **Mensagens (#120):** o caractere `@` continua acionando sugestões, mas a seleção insere apenas o nome longo do nó com espaços, sem prefixo `@` nem underscores; fallback para nome curto/Node ID e verificação dos limites de bytes UTF-8.
+- **Mensagens (#121):** campo “Pesquisar nó...” acima dos contatos, filtro incremental por nome longo/curto/amigável, aliases e Node ID, ignorando acentos/maiúsculas. Inclui nós offline e sem conversa anterior; canais continuam acessíveis, busca local sem tráfego RF e botão limpar.
+- **Regressão (#118 e #57):** mantidos o indicador verde de versão atualizada e os estados/checks das mensagens; testes JavaScript e suite Windows devem validar.
+- **Escopo:** outras issues permanecem abertas para teste de equipamento, implantação e trabalho adicional. A publicação não significa resolução integral de todas as issues históricas.
 
 ### Novidades da v0.6.29
 
