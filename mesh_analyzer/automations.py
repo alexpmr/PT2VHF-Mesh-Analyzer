@@ -14,10 +14,10 @@ DEFAULTS = {
     "enabled": True,
     "types": {"nodeinfo": True, "position": True, "telemetry": True,
               "traceroute": True, "neighbors": True, "ping": True},
-    "evaluate_minutes": 15,
-    "max_per_hour": 6,
+    "evaluate_minutes": 1,
+    "max_per_hour": 24,
     "min_gap_seconds": 60,
-    "recent_hours": 72,
+    "recent_hours": 24,
     "ages_hours": {"nodeinfo": 720, "position": 168,
                    "telemetry": 24, "traceroute": 336},
 }
