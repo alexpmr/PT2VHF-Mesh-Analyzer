@@ -86,8 +86,12 @@ console.log(JSON.stringify(data));
 const norm=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const esc=x=>String(x??'');
 const elements={messageNodeSearch:{value:''},messageNodeSearchCount:{textContent:''},
-  messageNodeSearchClear:{disabled:false},contacts:{innerHTML:'',querySelectorAll:()=>[]}};
+  messageNodeSearchClear:{disabled:false},contacts:{innerHTML:'',querySelectorAll:()=>[]},
+  contactPinned:{innerHTML:''},messageReplyPreview:{hidden:true}};
 const $=id=>elements[id];
+const state={sources:[]},activeRadioSource=()=>null;
+const document={querySelectorAll:()=>[]};
+const closeMessageActions=()=>{},replyMessage=null;
 const nodes=[
  {node_num:11,long_name:'José Almeida',short_name:'JOSA',friendly_name:'Casa',node_id:'!abc'},
  {node_num:12,long_name:'Maria VHF',short_name:'VHF1',friendly_name:'',node_id:'!def'},
@@ -100,7 +104,8 @@ const output=[];
 for(const query of ['jose','casa','VhF','nada','']){
   elements.messageNodeSearch.value=query;
   renderChat(false);
-  output.push({query,html:elements.contacts.innerHTML,count:elements.messageNodeSearchCount.textContent});
+  output.push({query,html:elements.contacts.innerHTML,pinned:elements.contactPinned.innerHTML,
+ count:elements.messageNodeSearchCount.textContent});
 }
 console.log(JSON.stringify(output));
 """
@@ -111,7 +116,7 @@ console.log(JSON.stringify(output));
         self.assertIn("Maria VHF",results[2]["html"])
         self.assertIn("VHF3",results[2]["html"])
         self.assertIn("Nenhum nó encontrado",results[3]["html"])
-        self.assertIn("Canal primário",results[3]["html"])
+        self.assertIn("Canal primário",results[3]["pinned"])
         self.assertIn("José Almeida",results[4]["html"])
         self.assertIn("Maria VHF",results[4]["html"])
         self.assertEqual(results[0]["count"],"1 nó(s) encontrado(s)")
