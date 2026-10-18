@@ -271,6 +271,30 @@ html[data-theme] #autoSaveButton:focus-visible{
 :root[data-theme="gray"] .aboutContact{background:#252e2b}
 @media(max-width:710px){.aboutContact{flex-direction:column;padding:14px;gap:8px}
 .aboutActions{width:100%;padding-top:4px;flex:0 0 auto}.aboutActions a{white-space:normal}}
+
+/* Messaging: pin primary + radio favorites without losing the scrollable contact search. */
+#contactPinned{flex:0 0 auto;border-bottom:1px solid var(--line);max-height:42vh;overflow-y:auto}
+#contactPinned .contact{display:block;width:100%;text-align:left}
+#contactPinned .pinnedSectionLabel{padding:7px 10px 4px;font-size:11px;font-weight:700;color:var(--muted)}
+#contactPinned .contact.favorite{border-left:3px solid #e2ba35}
+#contactPinned .contact.primary{font-weight:800;border-left:3px solid var(--blue)}
+.messageByteCount{font-size:10px;color:var(--muted);align-self:center;white-space:nowrap}
+.messageByteCount.overlimit{color:#f07f7f;font-weight:800}
+#messageText{flex:1 1 auto;min-width:60px;resize:vertical;min-height:44px;max-height:140px;font:inherit}
+#messageEmojiButton{font-size:19px;min-width:34px}
+.messageEmojiPicker{position:absolute;bottom:100%;left:7px;background:var(--card);color:var(--ink);
+ border:1px solid var(--line);box-shadow:0 8px 22px #0006;display:flex;flex-wrap:wrap;gap:3px;
+ width:min(320px,90vw);padding:8px;border-radius:9px;z-index:1600}
+.messageEmojiPicker[hidden],.messageBubbleActions[hidden],.messageReplyPreview[hidden]{display:none!important}
+.messageEmojiPicker button{font-size:21px;min-width:38px}
+.messageReplyPreview{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ border-left:4px solid var(--accent);background:var(--panel);padding:7px 10px}
+#messageReplyLabel{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}
+.messageBubbleActions{position:fixed;z-index:6000;background:var(--card);color:var(--ink);
+ border:1px solid var(--line);border-radius:7px;padding:5px;box-shadow:0 7px 20px #0006}
+.messageBubbleActions button{display:block;width:100%;text-align:left}
+.bubble[data-msg-index]{cursor:pointer}
+.bubble[data-msg-index]:focus-visible{outline:2px solid var(--accent)}
 </style>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
@@ -342,7 +366,14 @@ try {
 <input id="messageNodeSearch" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nós para mensagem privada" autocomplete="off">
 <button type="button" id="messageNodeSearchClear" aria-label="Limpar pesquisa de nós" title="Limpar pesquisa">×</button>
 <span id="messageNodeSearchCount" role="status" aria-live="polite"></span>
-</div><div class="contacts" id="contacts"></div></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div><input id="messageText" placeholder="Digite uma mensagem RF (até 220 bytes)" maxlength="220"><button id="messageSend" type="button">➤ Enviar</button></div></div></div></section>
+</div><div class="contactPinned" id="contactPinned" aria-label="Canal primário e favoritos"></div><div class="contacts" id="contacts"></div></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div id="messageReplyPreview" class="messageReplyPreview" hidden><span id="messageReplyLabel"></span><button type="button" id="messageReplyCancel" title="Cancelar resposta">×</button></div>
+<div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div>
+<button id="messageEmojiButton" type="button" title="Inserir emoji" aria-label="Inserir emoji">☺</button>
+<div id="messageEmojiPicker" class="messageEmojiPicker" hidden></div>
+<textarea id="messageText" rows="2" placeholder="Digite uma mensagem RF (até 220 bytes UTF-8)" maxlength="220"></textarea>
+<div id="messageByteCount" role="status" class="messageByteCount">0/220 bytes</div>
+<button id="messageSend" type="button">➤ Enviar</button></div>
+<div id="messageBubbleActions" class="messageBubbleActions" hidden><button type="button" id="messageReplyAction">Responder</button><button type="button" id="messageRetryAction" hidden>Reenviar</button></div></div></div></section>
 <section class="view" id="viewStats">
 <div class="toolbar statsToolbar"><h2>Estatísticas</h2><div class="spacer"></div>
 <label>Período: <select id="statsPeriod"><option value="1h">1 h</option><option value="6h">6 h</option><option value="24h">24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all" selected>Todo</option></select></label>
