@@ -329,10 +329,10 @@ try {
 <div class="field"><label for="autoEnabled">Automação RF</label>
 <label><input id="autoEnabled" type="checkbox"> Ativar consultas automáticas (realiza transmissões RF)</label></div>
 <div class="formGrid" style="margin-top:12px">
-<div class="field"><label for="autoInterval">Avaliar a cada (minutos)</label><input id="autoInterval" type="number" min="1" max="1440" value="15"></div>
-<div class="field"><label for="autoPerHour">Máximo de consultas por hora</label><input id="autoPerHour" type="number" min="1" max="24" value="6"></div>
+<div class="field"><label for="autoInterval">Avaliar a cada (minutos)</label><input id="autoInterval" type="number" min="1" max="1440" value="1"></div>
+<div class="field"><label for="autoPerHour">Máximo de consultas por hora</label><input id="autoPerHour" type="number" min="1" max="24" value="24"></div>
 <div class="field"><label for="autoMinGap">Intervalo mínimo entre TX (segundos)</label><input id="autoMinGap" type="number" min="30" max="3600" value="60"></div>
-<div class="field"><label for="autoRecent">Consultar nós observados nas últimas (horas)</label><input id="autoRecent" type="number" min="1" max="720" value="72"></div>
+<div class="field"><label for="autoRecent">Consultar nós observados nas últimas (horas)</label><input id="autoRecent" type="number" min="1" max="720" value="24"></div>
 </div>
 <h4>Consultas permitidas</h4>
 <div class="formGrid" id="autoQueryToggles"></div>
@@ -1275,10 +1275,10 @@ async function loadAutomation(){
  try{
   const v=await api('/api/automation'),cfg=v.config||{};
   $('autoEnabled').checked=!!cfg.enabled;
-  $('autoInterval').value=cfg.evaluate_minutes||15;
-  $('autoPerHour').value=cfg.max_per_hour||6;
-  $('autoMinGap').value=cfg.min_gap_seconds||60;
-  $('autoRecent').value=cfg.recent_hours||72;
+  $('autoInterval').value=cfg.evaluate_minutes??1;
+  $('autoPerHour').value=cfg.max_per_hour??24;
+  $('autoMinGap').value=cfg.min_gap_seconds??60;
+  $('autoRecent').value=cfg.recent_hours??24;
   const supported=new Set(v.supported||[]);
   $('autoQueryToggles').innerHTML=AUTO_TYPES.map(([key,label])=>
    '<div class="field"><label><input type="checkbox" data-auto-kind="'+esc(key)+'" '+
