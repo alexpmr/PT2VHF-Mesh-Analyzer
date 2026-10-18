@@ -94,7 +94,7 @@ const nodes=[
  {node_num:13,long_name:'',short_name:'VHF3',friendly_name:'',node_id:'!ghi'},
 ];
 const messages=[],currentChat='node:11';
-const chatKey=()=>'',idName=num=>nodes.find(n=>n.node_num===num)?.long_name||'';
+const chatKey=()=>'',idName=num=>{const n=nodes.find(x=>x.node_num===num);return n?.long_name||n?.short_name||n?.node_id||''};
 """ + extract("function chatNodeMatches(","$('messageNodeSearch').addEventListener('input',") + """
 const output=[];
 for(const query of ['jose','casa','VhF','nada','']){
@@ -109,7 +109,7 @@ console.log(JSON.stringify(output));
         self.assertNotIn("Maria VHF",results[0]["html"])
         self.assertIn("José Almeida",results[1]["html"])
         self.assertIn("Maria VHF",results[2]["html"])
-        self.assertIn("VHF3",results[2]["html"] if "VHF3" in results[2]["html"] else "VHF3")  # fallback test in code below
+        self.assertIn("VHF3",results[2]["html"])
         self.assertIn("Nenhum nó encontrado",results[3]["html"])
         self.assertIn("Canal primário",results[3]["html"])
         self.assertIn("José Almeida",results[4]["html"])
