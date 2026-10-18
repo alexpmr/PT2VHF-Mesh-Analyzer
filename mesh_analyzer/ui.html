@@ -2243,7 +2243,12 @@ function renderChat(updateConversation=true){
  const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:lastByKey(b)-lastByKey(a)||a.localeCompare(b));
  const query=norm($('messageNodeSearch').value.trim());
  const nodeById=new Map(nodes.map(n=>[Number(n.node_num),n]));
- const favorites=new Set(nodes.filter(n=>n.is_favorite===true).map(n=>'node:'+n.node_num));
+ const radio=activeRadioSource?.();
+ const selectedRadioId=Number(radio?.id||state.sources?.find(s=>s.kind!=='mqtt'&&s.enabled)?.id||0);
+ const favorites=new Set(nodes.filter(n=>
+   selectedRadioId>0&&Array.isArray(n.favorite_source_ids)&&
+   n.favorite_source_ids.some(sid=>Number(sid)===selectedRadioId)
+ ).map(n=>'node:'+n.node_num));
  const pinned=['channel:0',...list.filter(k=>favorites.has(k)).sort((a,b)=>nameOf(a).localeCompare(nameOf(b)))];
  const visible=list.filter(key=>{
    if(pinned.includes(key))return false;
@@ -2270,7 +2275,7 @@ function renderChat(updateConversation=true){
  $('contacts').innerHTML=visible.map(contactMarkup).join('')+
   (query&&!matched?'<div class="muted" style="padding:12px">Nenhum nó encontrado.</div>':'');
  document.querySelectorAll('#contacts [data-chat],#contactPinned [data-chat]').forEach(el=>{
-   el.onclick=()=>{currentChat=el.dataset.chat;renderChat();};
+   el.onclick=()=>{currentChat=el.dataset.chat;replyMessage=null;$('messageReplyPreview').hidden=true;closeMessageActions();renderChat();};
    if(el.dataset.chat.startsWith('node:')){
      el.addEventListener('contextmenu',e=>{e.preventDefault();openNodeContext(Number(el.dataset.chat.slice(5)),e.clientX,e.clientY);});
    }
@@ -2341,8 +2346,8 @@ function chooseReply(msg){
 $('messageReplyCancel').onclick=()=>{
  replyMessage=null;$('messageReplyPreview').hidden=true;
 };
-function replyText(text){
- if(!replyMessage)return text;
+function replyText(text,chat){
+ if(!replyMessage||replyMessage.chat!==chat)return text;
  const quote='↪ '+replyMessage.author+': '+replyMessage.text.replace(/\s+/g,' ').slice(0,60)+'\n';
  return quote+text;
 }
@@ -2376,7 +2381,7 @@ document.addEventListener('pointerdown',e=>{
 });
 async function sendChatMessage(raw,chat,isRetry=false){
  if(messageSending)return;
- const text=isRetry?String(raw).trim():replyText(String(raw).trim());
+ const text=isRetry?String(raw).trim():replyText(String(raw).trim(),chat);
  if(!text){notify('Digite a mensagem.',true);return;}
  const bytes=messageBytes(text);
  if(bytes>220){notify('Limite de 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
