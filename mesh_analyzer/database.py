@@ -662,12 +662,17 @@ class Database:
 
     def node_rows(self, limit=5000):
         rows=self._rows("SELECT * FROM nodes ORDER BY last_seen_ms DESC LIMIT ?",(min(int(limit),15000),))
-        faves=self._rows("SELECT source_id,node_num FROM node_favorites WHERE is_favorite=1")
-        by_num={}
-        for item in faves:by_num.setdefault(int(item["node_num"]),[]).append(int(item["source_id"]))
+        faves=self._rows("SELECT source_id,node_num,is_favorite FROM node_favorites")
+        by_num={};known_num={}
+        for item in faves:
+            num,sid=int(item["node_num"]),int(item["source_id"])
+            known_num.setdefault(num,[]).append(sid)
+            if item["is_favorite"]:by_num.setdefault(num,[]).append(sid)
         for r in rows:
             r["aliases"]=json.loads(r["aliases"] or "[]")
-            r["favorite_source_ids"]=by_num.get(int(r["node_num"]),[])
+            num=int(r["node_num"])
+            r["favorite_source_ids"]=by_num.get(num,[])
+            r["favorite_known_source_ids"]=known_num.get(num,[])
         return rows
 
     def node_source_rows(self):
