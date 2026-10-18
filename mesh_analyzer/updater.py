@@ -152,7 +152,7 @@ try {
         # Never declare success for a prior server: require the exact nonce.
         try {
             $response = Invoke-RestMethod -Uri ([string]$p.health_url) -TimeoutSec 2 -ErrorAction Stop
-            $identity = (-not $p.launch_nonce) -or ($response.update_nonce -eq [string]$p.launch_nonce)
+            $identity = ([string]$p.launch_nonce -ne '') -and ($response.update_nonce -eq [string]$p.launch_nonce)
             $lastHealth = 'version=' + $response.version + '; ui_ready=' + $response.ui_ready + '; nonce_match=' + $identity
             if ($identity -and $response.version -eq [string]$p.version -and $response.success -eq $true -and $response.ui_ready -eq $true) {
                 $healthy = $true
