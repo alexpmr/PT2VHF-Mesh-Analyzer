@@ -1,3 +1,14 @@
+## v0.6.33 — Entregas e pendências
+
+- #80: novos padrões RF e Salvar automação destacado.
+- #134: Sobre com WhatsApp +55 61 98402 3634 e e-mail alexpmr@gmail.com.
+- #129: seletor emoji, contador 220 bytes UTF-8.
+- #130: responder com citação textual em canal/DM; reply_id nativo ainda não garantido.
+- #131: reenvio manual com aviso de duplicação e nova tentativa de TX. Falhas em sessão não necessariamente estão persistidas, investigar histórico de rejeições.
+- #132: Canal primário fixo e favoritos do rádio em seção fixa.
+- #79: importação read-only do NodeDB por origem implementada; escrita bidirecional/atualização sem reconexão depende de SDK e rádio real.
+- Há muitas outras issues históricas abertas; não as fechar automaticamente nem alegar backlog integralmente sanado.
+
 ## P1 — Mensagens PING/CLIMA: preservar quebras de linha recebidas (18/10/2026)
 
 - **Relato de campo:** o mesmo conteúdo de PING/CLIMA aparece corretamente com múltiplas linhas no Traffic Analyzer, mas no **PT2VHF Mesh Analyzer** é exibido como texto contínuo em uma única linha.
