@@ -310,10 +310,19 @@ class UpdateManager:
         path=self.profile/"update_complete.json"
         try:
             obj=json.loads(path.read_text(encoding="utf-8-sig"))
-            if obj.get("status") == "failed" or (obj.get("version") == self.monitor.status()["current"] and obj.get("status") == "installed"):
+            current=self.monitor.status()["current"]
+            same_version=obj.get("version")==current
+            if obj.get("status") == "failed" or (same_version and obj.get("status") == "installed"):
                 obj=dict(obj)
-                obj['current_version']=self.monitor.status()['current']
-                obj['historical']=obj.get('status')=='failed' and obj.get('version')!=obj['current_version']
+                obj["current_version"]=current
+                obj["historical"]=obj.get("status")=="failed" and not same_version
+                if obj.get("status")=="failed" and same_version:
+                    # The attempted version is running now, so installation did
+                    # occur. Keep the failed /health diagnosis, but distinguish
+                    # unverified automatic restart from a failed installation.
+                    # Never claim update success without the exact launch nonce.
+                    obj["status"]="unverified"
+                    obj["original_status"]="failed"
                 return {"success":True,"notice":obj}
         except (OSError,TypeError,ValueError):pass
         return {"success":True,"notice":None}
