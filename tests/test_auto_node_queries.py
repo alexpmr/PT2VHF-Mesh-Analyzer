@@ -93,6 +93,17 @@ class EnrichmentTests(unittest.TestCase):
             server.server_close()
             thread.join(timeout=2)
 
+    def test_save_automation_button_is_yellow_on_all_themes(self):
+        html=(Path(__file__).resolve().parents[1]/"mesh_analyzer"/"ui.html").read_text(encoding="utf-8")
+        self.assertIn('type="submit" id="autoSaveButton">Salvar automação</button>',html)
+        self.assertIn("html[data-theme] #autoSaveButton{",html)
+        self.assertIn("background:#ffd447!important",html)
+        self.assertIn("color:#202126!important",html)
+        self.assertIn("html[data-theme] #autoSaveButton:hover:not(:disabled)",html)
+        self.assertIn("html[data-theme] #autoSaveButton:focus-visible",html)
+        # Scoped to the save action: RF preview, Run Now and refresh are secondary.
+        self.assertIn('id="autoPreview">Simular fila (sem TX)</button>',html)
+
     def test_screenshot_defaults_on_new_profile(self):
         cfg=self.service.config()
         self.assertTrue(cfg["enabled"])
