@@ -93,6 +93,37 @@ class EnrichmentTests(unittest.TestCase):
             server.server_close()
             thread.join(timeout=2)
 
+    def test_screenshot_defaults_on_new_profile(self):
+        cfg=self.service.config()
+        self.assertTrue(cfg["enabled"])
+        self.assertEqual(cfg["evaluate_minutes"],1)
+        self.assertEqual(cfg["max_per_hour"],24)
+        self.assertEqual(cfg["min_gap_seconds"],60)
+        self.assertEqual(cfg["recent_hours"],24)
+        for kind in ("nodeinfo","position","telemetry","traceroute"):
+            self.assertTrue(cfg["types"][kind])
+        # Unsupported kinds remain visually disabled; they must never trigger RF.
+        self.assertTrue(cfg["types"]["neighbors"])
+        self.assertTrue(cfg["types"]["ping"])
+        self.assertEqual(self.sources.queries.sent, [])
+
+    def test_explicit_legacy_preferences_survive_new_defaults(self):
+        self.service.save({
+            "enabled":False, "evaluate_minutes":15,
+            "max_per_hour":6, "min_gap_seconds":90,
+            "recent_hours":72, "types":{"traceroute":False}
+        })
+        restored=NodeEnrichment(self.db,self.sources)
+        cfg=restored.config()
+        self.assertFalse(cfg["enabled"])
+        self.assertEqual(cfg["evaluate_minutes"],15)
+        self.assertEqual(cfg["max_per_hour"],6)
+        self.assertEqual(cfg["min_gap_seconds"],90)
+        self.assertEqual(cfg["recent_hours"],72)
+        self.assertFalse(cfg["types"]["traceroute"])
+        self.assertEqual(restored.tick()["sent"],False)
+        self.assertEqual(self.sources.queries.sent, [])
+
     def test_enabled_default_can_be_disabled_without_rf(self):
         self.assertTrue(self.service.config()["enabled"])
         self.assertTrue(all(self.service.config()["types"].values()))
