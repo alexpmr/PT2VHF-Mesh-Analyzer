@@ -93,6 +93,48 @@ class EnrichmentTests(unittest.TestCase):
             server.server_close()
             thread.join(timeout=2)
 
+    def test_save_automation_button_is_yellow_on_all_themes(self):
+        html=(Path(__file__).resolve().parents[1]/"mesh_analyzer"/"ui.html").read_text(encoding="utf-8")
+        self.assertIn('type="submit" id="autoSaveButton">Salvar automação</button>',html)
+        self.assertIn("html[data-theme] #autoSaveButton{",html)
+        self.assertIn("background:#ffd447!important",html)
+        self.assertIn("color:#202126!important",html)
+        self.assertIn("html[data-theme] #autoSaveButton:hover:not(:disabled)",html)
+        self.assertIn("html[data-theme] #autoSaveButton:focus-visible",html)
+        # Scoped to the save action: RF preview, Run Now and refresh are secondary.
+        self.assertIn('id="autoPreview">Simular fila (sem TX)</button>',html)
+
+    def test_screenshot_defaults_on_new_profile(self):
+        cfg=self.service.config()
+        self.assertTrue(cfg["enabled"])
+        self.assertEqual(cfg["evaluate_minutes"],1)
+        self.assertEqual(cfg["max_per_hour"],24)
+        self.assertEqual(cfg["min_gap_seconds"],60)
+        self.assertEqual(cfg["recent_hours"],24)
+        for kind in ("nodeinfo","position","telemetry","traceroute"):
+            self.assertTrue(cfg["types"][kind])
+        # Unsupported kinds remain visually disabled; they must never trigger RF.
+        self.assertTrue(cfg["types"]["neighbors"])
+        self.assertTrue(cfg["types"]["ping"])
+        self.assertEqual(self.sources.queries.sent, [])
+
+    def test_explicit_legacy_preferences_survive_new_defaults(self):
+        self.service.save({
+            "enabled":False, "evaluate_minutes":15,
+            "max_per_hour":6, "min_gap_seconds":90,
+            "recent_hours":72, "types":{"traceroute":False}
+        })
+        restored=NodeEnrichment(self.db,self.sources)
+        cfg=restored.config()
+        self.assertFalse(cfg["enabled"])
+        self.assertEqual(cfg["evaluate_minutes"],15)
+        self.assertEqual(cfg["max_per_hour"],6)
+        self.assertEqual(cfg["min_gap_seconds"],90)
+        self.assertEqual(cfg["recent_hours"],72)
+        self.assertFalse(cfg["types"]["traceroute"])
+        self.assertEqual(restored.tick()["sent"],False)
+        self.assertEqual(self.sources.queries.sent, [])
+
     def test_enabled_default_can_be_disabled_without_rf(self):
         self.assertTrue(self.service.config()["enabled"])
         self.assertTrue(all(self.service.config()["types"].values()))
@@ -110,7 +152,7 @@ class EnrichmentTests(unittest.TestCase):
         restored=NodeEnrichment(self.db,self.sources)
         self.assertFalse(restored.config()['enabled'])
         self.assertFalse(restored.config()['types']['traceroute'])
-        self.assertEqual(restored.config()['max_per_hour'],6)
+        self.assertEqual(restored.config()['max_per_hour'],24)
         self.assertEqual(restored.config()['min_gap_seconds'],60)
 
     def test_activation_sends_one_and_tracks_reply(self):
