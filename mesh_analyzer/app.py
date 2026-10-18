@@ -279,6 +279,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/nodes/friendly":
                     self._json({"success":True,"node":db.set_node_friendly_name(
                         payload.get("node_num"),payload.get("friendly_name",""))})
+                elif path == "/api/nodes/favorite":
+                    self._json(sources.set_favorite(
+                        payload.get("source_id"),payload.get("node_num"),payload.get("is_favorite")))
                 elif path == "/api/retention/cleanup":
                     self._json({"success":True,"removed":db.cleanup()})
                 elif path == "/api/system/settings":
