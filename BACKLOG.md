@@ -1,3 +1,10 @@
+## v0.6.32 — Atualização e reinicialização (#103)
+
+- Teste de integração Windows com novo processo PyInstaller atrasado e launcher inicial encerrando exit=0.
+- Exigir nonce, versão e UI pronta para confirmar atualização; ignorar servidor obsoleto ou respostas anônimas.
+- Se o aplicativo correto já estiver em execução, diferenciar **instalado mas reinício não confirmado** de erro real de instalação.
+- Pendente: comprovar atualização efetiva pelo aplicativo Windows 10/11 no PC afetado sem popup espúrio.
+
 ## v0.6.31 — Atualizador e ponte PDF/WebView2
 
 - #103: logs de 17/10/2026 apontam regressão do `PDFExportBridge` público no `js_api`, levando pywebview a inspecionar propriedades nativas recursivamente. Alterado para atributo `_window` não exportado.
