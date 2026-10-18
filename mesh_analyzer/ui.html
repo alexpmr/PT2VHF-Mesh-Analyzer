@@ -202,6 +202,11 @@ html[data-theme] button:not(.active):not(.danger),
 html[data-theme] select,html[data-theme] input:not([type=checkbox]):not([type=radio]):not([type=color]),
 html[data-theme] textarea{background:var(--control)!important;color:var(--ink)!important;border-color:var(--line)!important}
 html[data-theme] button:not(.active):hover:not(:disabled){background:var(--hover)!important}
+/* The update status must win over the global theme's button background. */
+html[data-theme] #topUpdate.latest,html[data-theme] #topUpdate.latest:hover{background:#164a36!important;border-color:#238c5e!important;color:#a1e7bf!important}
+html[data-theme] #topUpdate.available,html[data-theme] #topUpdate.available:hover{background:#6e4914!important;border-color:#d29b2c!important;color:#ffe2a0!important}
+html[data-theme] #topUpdate.error{background:#542c35!important;border-color:#8e6772!important;color:#ffd1d4!important}
+html[data-theme] #topUpdate.waiting{background:var(--control)!important;border-color:#718396!important;color:var(--muted)!important}
 html[data-theme] .navbtn.active,html[data-theme] .settingsTab.active,html[data-theme] .subtab.active{background:var(--accent)!important;color:#171a20!important}
 html[data-theme] #playback,html[data-theme] .toolbar,html[data-theme] .settingsTabs,
 html[data-theme] .subtabs,html[data-theme] .composer{background:var(--panel)!important}
