@@ -16,7 +16,7 @@ import unittest
 from mesh_analyzer.updater import RUNNER_PS
 
 FIXTURE = r'''
-import http.server, json, os, subprocess, sys
+import http.server, json, os, subprocess, sys, time
 from pathlib import Path
 if len(sys.argv)>1 and sys.argv[1]=='parent':
     plan=Path(sys.argv[2]); data=json.loads(plan.read_text())
@@ -28,11 +28,24 @@ if len(sys.argv)>1 and sys.argv[1]=='parent':
         stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
         creationflags=subprocess.CREATE_NO_WINDOW,close_fds=True)
     sys.exit(0)
+if len(sys.argv)>1 and sys.argv[1]=='launcher':
+    # Simulate a onefile/bootstrap launcher exiting normally, while the
+    # actual WebView/API successor continues starting in a separate process.
+    fresh=dict(os.environ)
+    fresh['PYINSTALLER_RESET_ENVIRONMENT']='1'
+    subprocess.Popen([sys.executable,'server'],env=fresh,
+        stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
+        creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0),close_fds=True)
+    sys.exit(0)
 root=Path(os.environ['MESH_FIXTURE_ROOT'])
+if len(sys.argv)>1 and sys.argv[1]=='server':
+    time.sleep(1.5)
+
 (root/'child.json').write_text(json.dumps({'mei':sys._MEIPASS,'exists':Path(sys._MEIPASS).is_dir()}))
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        body=json.dumps({'version':'0.6.21','success':True,'ui_ready':True}).encode()
+        body=json.dumps({'version':'0.6.21','success':True,'ui_ready':True,
+                         'update_nonce':os.environ.get('PT2VHF_UPDATE_NONCE','')}).encode()
         self.send_response(200);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
     def log_message(self,*args):pass
 http.server.HTTPServer(('127.0.0.1',int(os.environ['MESH_FIXTURE_PORT'])),Handler).serve_forever()
@@ -57,7 +70,9 @@ class FrozenRestartTests(unittest.TestCase):
             plan.write_text(json.dumps({'version':'0.6.21','mode':'portable','notes':'fixture',
                 'executable':str(target),'candidate':str(candidate),'previous':str(root/'previous.exe'),
                 'log':str(root/'update.log'),'notice':str(notice),'runner_ready':str(root/'ready.json'),
-                'run_nonce':'fixture-nonce','health_url':f'http://127.0.0.1:{port}/health'}))
+                'run_nonce':'fixture-nonce','launch_nonce':'fixture-ready-nonce',
+                'restart_arguments':'launcher',
+                'health_url':f'http://127.0.0.1:{port}/health'}))
             env={**os.environ,'MESH_FIXTURE_ROOT':str(root),'MESH_FIXTURE_PORT':str(port)}
             child_pid=None
             try:
@@ -76,6 +91,18 @@ class FrozenRestartTests(unittest.TestCase):
                     self.fail('Updater did not write completion notice: '+details)
                 result=json.loads(notice.read_text(encoding='utf-8-sig'))
                 self.assertEqual(result['status'],'installed',result)
+                # The initial launcher has already exited code 0 before the
+                # successor's delayed /health becomes ready.
+                for attempt in range(15):
+                    try:
+                        update_log=(root/'update.log').read_text(encoding='utf-8-sig')
+                        break
+                    except OSError:
+                        time.sleep(.2)
+                else:
+                    self.fail('Could not read the update runner log after completion')
+                self.assertIn('Initial launcher exited with code 0',update_log)
+                self.assertIn('Updated version confirmed via /health',update_log)
                 data=json.loads((root/'child.json').read_text())
                 self.assertTrue(data['exists'])
                 self.assertNotEqual(data['mei'],json.loads(plan.read_text())['old_mei'])
