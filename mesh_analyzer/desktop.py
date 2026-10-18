@@ -43,7 +43,10 @@ class PDFExportBridge:
     """
 
     def __init__(self):
-        self.window = None
+        # This must NOT be public: pywebview traverses public js_api fields
+        # recursively, which exposes WinForms/WebView2 native COM objects and
+        # can crash the new instance during the automatic updater restart.
+        self._window = None
 
     def save_pdf(self, data_base64: str, suggested_name: str = "") -> dict:
         import base64
@@ -58,10 +61,10 @@ class PDFExportBridge:
         filename = Path(str(suggested_name)).name
         if not filename.lower().endswith(".pdf") or len(filename) > 150:
             filename = "PT2VHF-Mesh-Analyzer-Relatorio.pdf"
-        if self.window is None:
+        if self._window is None:
             raise RuntimeError("Janela nativa não disponível")
         import webview
-        result = self.window.create_file_dialog(
+        result = self._window.create_file_dialog(
             webview.SAVE_DIALOG,
             save_filename=filename,
             file_types=("Arquivos PDF (*.pdf)",),
@@ -104,7 +107,7 @@ def open_desktop_window(url: str, profile: Path) -> None:
     )
     if window is None:
         raise RuntimeError("Não foi possível criar a janela desktop.")
-    pdf_bridge.window = window
+    pdf_bridge._window = window
     # Runs on the main thread; returns only after the last desktop window closes.
     # Windows 10 1809+ requires Microsoft Edge WebView2 Runtime (Evergreen), if absent.
     try:
