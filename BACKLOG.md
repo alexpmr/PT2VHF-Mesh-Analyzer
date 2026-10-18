@@ -1,3 +1,16 @@
+## P1 — Mensagens PING/CLIMA: preservar quebras de linha recebidas (18/10/2026)
+
+- **Relato de campo:** o mesmo conteúdo de PING/CLIMA aparece corretamente com múltiplas linhas no Traffic Analyzer, mas no **PT2VHF Mesh Analyzer** é exibido como texto contínuo em uma única linha.
+- O problema está no **renderizador/normalização do Mesh Analyzer**, não na origem da mensagem: a evidência mostra que o payload recebido contém quebras de linha e outro cliente as apresenta corretamente.
+- Aplicar a correção a **PING, CLIMA e qualquer mensagem de texto multilinha**, sem tratamento especial que achate somente esses comandos.
+- Preservar caracteres de nova linha (`\n` e `\r\n`) ao armazenar, recuperar via API e renderizar no balão da conversa.
+- No HTML/CSS, usar renderização que respeite novas linhas, por exemplo `white-space: pre-wrap` ou equivalente seguro, sem exigir inserção de `<br>` não sanitizada.
+- Não substituir quebras de linha por espaços durante sanitização, deduplicação, gravação SQLite, serialização JSON ou transformação para o modelo de mensagens.
+- Manter quebra automática de linhas longas e largura responsiva do balão.
+- Validar também mensagens recebidas por **Serial/USB, BLE e TCP/IP**, além de histórico recarregado após reinício.
+- **Teste de regressão:** um payload `"linha 1\nlinha 2\nlinha 3"` deve continuar contendo as três linhas no banco/API e ser exibido visualmente em três linhas no WebView2.
+- **Critério de aceite:** PING e CLIMA enviados pelo Traffic Analyzer devem aparecer no Mesh Analyzer com a mesma estrutura de linhas observada no cliente de origem.
+
 ## v0.6.32 — Atualização e reinicialização (#103)
 
 - Teste de integração Windows com novo processo PyInstaller atrasado e launcher inicial encerrando exit=0.
