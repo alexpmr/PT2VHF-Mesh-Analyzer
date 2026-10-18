@@ -44,6 +44,18 @@ if len(sys.argv)>1 and sys.argv[1]=='server':
 (root/'child.json').write_text(json.dumps({'mei':sys._MEIPASS,'exists':Path(sys._MEIPASS).is_dir()}))
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
+        # Make the exit=0 regression deterministic. A fast new instance can
+        # become healthy while the initial PyInstaller bootloader is still
+        # cleaning its _MEI folder. Deliberately withhold readiness until the
+        # runner has observed and logged that initial launcher exit.
+        try:
+            runner_log=(root/'update.log').read_text(encoding='utf-8-sig')
+        except OSError:
+            runner_log=''
+        if 'Initial launcher exited with code 0' not in runner_log:
+            self.send_response(503)
+            self.end_headers()
+            return
         body=json.dumps({'version':'0.6.21','success':True,'ui_ready':True,
                          'update_nonce':os.environ.get('PT2VHF_UPDATE_NONCE','')}).encode()
         self.send_response(200);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
