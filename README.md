@@ -1,24 +1,32 @@
-# PT2VHF Mesh Analyzer — v0.6.31
+# PT2VHF Mesh Analyzer — v0.6.32
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ (x64)** e **Windows 11 (x64)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
 ## Downloads — Windows 10 / Windows 11 (64 bits)
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.31](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.31)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.32](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.32)**
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.31-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.31/PT2VHF-Mesh-Analyzer-v0.6.31-Setup-Win10-Win11-x64.exe) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.31-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.31/PT2VHF-Mesh-Analyzer-v0.6.31-Portable-Win10-Win11-x64.exe) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.31-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.31/PT2VHF-Mesh-Analyzer-v0.6.31-Portable-Win10-Win11-x64.zip) |
-| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.31/SHA256SUMS.txt) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.32-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.32/PT2VHF-Mesh-Analyzer-v0.6.32-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.32-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.32/PT2VHF-Mesh-Analyzer-v0.6.32-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.32-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.32/PT2VHF-Mesh-Analyzer-v0.6.32-Portable-Win10-Win11-x64.zip) |
+| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.32/SHA256SUMS.txt) |
 
 **Links automáticos (última versão):**
 [Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
 [Portable Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe) ·
 [Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.31 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.32 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+
+### Novidades da v0.6.32 — Testes completos do atualizador Windows
+
+- **Reinicialização (#103):** teste de ponta a ponta com PyInstaller real simulando launcher encerrando normalmente com código 0 antes de uma nova instância iniciar o servidor de saúde. Requer nonce correto, versão e `ui_ready` antes de declarar sucesso.
+- **Autenticidade do processo:** a validação /health agora exige nonce não vazio e correspondente; não aceita uma aplicação antiga ou uma resposta sem identificação.
+- **Diagnóstico verdadeiro:** quando a versão instalada já está em execução, mas a tentativa anterior não confirmou o reinício, a interface informa **“versão instalada; reinício automático não confirmado”** — nunca “falha na instalação” sem evidência. Preserva o relatório da tentativa anterior para investigação.
+- **Regressões:** testes de relatórios de atualização com versões iguais/antigas, cancelamento de aviso, verificação da identidade do serviço e PowerShell/PyInstaller real no pipeline Windows.
+- **Compatibilidade:** Setup e Portable Windows 10 (1809+) / 11 x64; sem apagar banco SQLite. Teste de atualização no computador real continua sendo obrigatório para encerrar #103.
 
 ### Novidades da v0.6.31 — Atualização automática e WebView2
 
