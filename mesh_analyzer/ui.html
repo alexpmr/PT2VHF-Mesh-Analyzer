@@ -295,6 +295,13 @@ html[data-theme] #autoSaveButton:focus-visible{
 .messageBubbleActions button{display:block;width:100%;text-align:left}
 .bubble[data-msg-index]{cursor:pointer}
 .bubble[data-msg-index]:focus-visible{outline:2px solid var(--accent)}
+
+/* Source-confirmed Meshtastic NodeDB favorites: never signal success while pending. */
+.nodeFavoriteToggle{min-width:30px;font-size:20px!important;font-weight:800;line-height:1;
+ padding:5px 8px!important;border:1px solid var(--line);background:var(--control)!important;color:var(--muted)!important}
+.nodeFavoriteToggle.isFavorite{color:#ffd447!important}
+.nodeFavoriteToggle:not(:disabled):hover{background:var(--hover)!important}
+.nodeFavoriteToggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
@@ -1687,6 +1694,39 @@ $('messageText').addEventListener('keydown',e=>{
  if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();e.stopImmediatePropagation();insertMention(mentionIndex);}
 },true);
 
+const pendingFavoriteNodes=new Set();
+function favoriteRadio(){
+ const radios=(state.sources||[]).filter(s=>['serial','ble','tcp'].includes(s.kind)&&s.enabled&&
+  state.connections?.[String(s.id)]?.status==='connected'&&state.connections[String(s.id)].tx_capable);
+ if(radios.length===1)return radios[0];
+ if(radios.length>1)return radios.find(s=>String(s.id)===String(mapSourceFilter))||null;
+ return null;
+}
+function favoriteNodeState(node){
+ const source=favoriteRadio(),sid=Number(source?.id||0);
+ const known=sid>0&&Array.isArray(node.favorite_known_source_ids)&&
+  node.favorite_known_source_ids.some(x=>Number(x)===sid);
+ const value=known&&Array.isArray(node.favorite_source_ids)&&
+  node.favorite_source_ids.some(x=>Number(x)===sid);
+ return {source,known,favorite:Boolean(value)};
+}
+async function setFavoriteForNode(node,wantFavorite){
+ const id=Number(node.node_num),source=favoriteRadio();
+ if(!source){notify('Conecte e selecione um único rádio local para alterar favoritos.',true);return;}
+ if(pendingFavoriteNodes.has(id))return;
+ pendingFavoriteNodes.add(id);
+ renderNodes();
+ try{
+  const result=await api('/api/nodes/favorite',{source_id:source.id,node_num:id,is_favorite:Boolean(wantFavorite)});
+  if(result.confirmed===true){
+   notify((wantFavorite?'Favorito':'Não favorito')+' confirmado pelo NodeDB: '+idName(id));
+  }else{
+   notify('Comando enviado ao rádio. Aguardando confirmação do NodeDB para atualizar a estrela.');
+  }
+  await refreshAll();
+ }catch(e){notify('Favoritos do rádio: '+e.message,true);}
+ finally{pendingFavoriteNodes.delete(id);renderNodes();}
+}
 const nodeCols=[['long_name','Nome longo'],['short_name','Nome curto'],['role','Role'],['hw_model','Hardware'],['hops','Saltos'],['battery','Bateria'],['voltage','Tensão'],['distance','Distância'],['snr','SNR'],['last_seen_ms','Última interação'],['position_ms','Última posição'],['node_id','Node ID']];
 let selectedNodeCols=new Set(nodeCols.slice(0,11).map(x=>x[0])),nodeSort='distance',nodeSortAsc=true;
 try{const c=JSON.parse(localStorage.getItem('mesh.nodes.columns')||'null');if(Array.isArray(c)&&c.length)selectedNodeCols=new Set(c);}catch(e){}
@@ -1926,24 +1966,45 @@ function renderNodes(){
  const list=nodes.filter(n=>matches(n,q)||[n.hw_model,hardwareName(n.hw_model),n.role].some(x=>norm(x).includes(q)));
  $('nodesCounter').textContent=list.length+' de '+nodes.length+' nós';
  const visible=nodeCols.filter(x=>selectedNodeCols.has(x[0]));
- $('nodesHeader').innerHTML=visible.map(([k,label])=>'<th data-nodesort="'+k+'" role="button" tabindex="0">'+esc(label)+(k===nodeSort?(nodeSortAsc?' ▲':' ▼'):'')+'</th>').join('');
+ $('nodesHeader').innerHTML='<th title="Favoritos do rádio conectado">★</th>'+
+  visible.map(([k,label])=>'<th data-nodesort="'+k+'" role="button" tabindex="0">'+esc(label)+(k===nodeSort?(nodeSortAsc?' ▲':' ▼'):'')+'</th>').join('');
  list.sort((a,b)=>{const av=nodeValue(a,nodeSort),bv=nodeValue(b,nodeSort);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;
   const cmp=typeof av==='number'&&typeof bv==='number'?av-bv:String(av).localeCompare(String(bv),'pt-BR',{numeric:true});return nodeSortAsc?cmp:-cmp;});
  nodeVisibleOrder=list.map(n=>Number(n.node_num));
  const existing=new Set(nodes.map(n=>Number(n.node_num)));
  [...nodeSelectedIds].forEach(id=>{if(!existing.has(id))nodeSelectedIds.delete(id);});
- $('nodesRows').innerHTML=list.map(n=>'<tr data-node="'+n.node_num+'" tabindex="0" aria-selected="false">'+
-   visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>').join('')||
-   '<tr><td>Nenhum nó conhecido.</td></tr>';
+ $('nodesRows').innerHTML=list.map(n=>{
+  const fav=favoriteNodeState(n),busy=pendingFavoriteNodes.has(Number(n.node_num));
+  const text=busy?'⋯':!fav.known?'◇':fav.favorite?'★':'☆';
+  const label=busy?'Aguardando rádio':!fav.source?'Conecte rádio para consultar favoritos':
+   !fav.known?'Favorito ainda não informado pelo NodeDB':
+   fav.favorite?'Desfavoritar no rádio':'Favoritar no rádio';
+  return '<tr data-node="'+n.node_num+'" tabindex="0" aria-selected="false">'+
+    '<td><button type="button" class="nodeFavoriteToggle '+(fav.favorite?'isFavorite':'')+
+     '" data-favorite-toggle="'+n.node_num+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+
+     ((busy||!fav.source)?'disabled':'')+'>'+text+'</button></td>'+
+    visible.map(([k])=>'<td title="'+esc(nodeDisplay(n,k))+'">'+esc(nodeDisplay(n,k))+'</td>').join('')+'</tr>';
+ }).join('')||'<tr><td colspan="'+(visible.length+1)+'">Nenhum nó conhecido.</td></tr>';
+ $('nodesRows').querySelectorAll('[data-favorite-toggle]').forEach(button=>{
+  button.onclick=ev=>{
+   ev.preventDefault();ev.stopPropagation();
+   const n=nodes.find(n=>Number(n.node_num)===Number(button.dataset.favoriteToggle));
+   if(n)setFavoriteForNode(n,!favoriteNodeState(n).favorite);
+  };
+  button.ondblclick=ev=>{ev.preventDefault();ev.stopPropagation();};
+ });
  $('nodesRows').querySelectorAll('[data-node]').forEach(el=>{
    const id=Number(el.dataset.node);
    el.onclick=ev=>selectNodeRow(id,ev);
-   el.ondblclick=()=>{const n=nodes.find(x=>Number(x.node_num)===id);if(n)showNode(n);};
+   el.ondblclick=ev=>{if(ev.target.closest('[data-favorite-toggle]'))return;
+    const n=nodes.find(x=>Number(x.node_num)===id);if(n)showNode(n);};
    el.onkeydown=ev=>{
+    if(ev.target.closest('[data-favorite-toggle]'))return;
     if(ev.key==='Enter'){ev.preventDefault();const n=nodes.find(x=>Number(x.node_num)===id);if(n)showNode(n);}
     if(ev.key===' '){ev.preventDefault();selectNodeRow(id,ev);}
    };
    el.oncontextmenu=ev=>{
+    if(ev.target.closest('[data-favorite-toggle]'))return;
     ev.preventDefault();
     if(!nodeSelectedIds.has(id)){nodeSelectedIds.clear();nodeSelectedIds.add(id);nodeSelectAnchor=id;updateNodeSelectionVisual();}
     openNodeContext(id,ev.clientX,ev.clientY);
@@ -2131,6 +2192,8 @@ function openNodeContext(nodeNum,x,y){
    action('detail','Informações completas')+
    action('locate','Mostrar no mapa',validPos(n),'O nó não informou posição')+
    action('copy','Copiar Node ID')+
+   action('favorite',favoriteNodeState(n).favorite?'★ Desfavoritar no rádio':'☆ Favoritar no rádio',
+     !!favoriteRadio(),'Conecte um único rádio local')+
    action('delete','Apagar nó do banco e do rádio')+
    '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
    RF_QUERY_TYPES.map(([k,l])=>action('query-'+k,l,!!activeRadioSource(),'Conecte um rádio com transmissão')).join('')+
@@ -2154,6 +2217,7 @@ function openNodeContext(nodeNum,x,y){
        nodes.find(v=>Number(v.node_num)===id)?.node_id||'!'+id.toString(16).padStart(8,'0')).join('\n'));
       notify(selected.length+' Node IDs copiados.');
      }catch(e){notify('Falha ao copiar Node IDs.',true);}break;
+    case 'favorite':await setFavoriteForNode(n,!favoriteNodeState(n).favorite);break;
     case 'delete':await deleteNodeFromRadioAndDatabase(n);break;
     case 'message':openDm(n.node_num);break;
     case 'detail':showNode(n);break;
