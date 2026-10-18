@@ -110,7 +110,7 @@ class EnrichmentTests(unittest.TestCase):
         restored=NodeEnrichment(self.db,self.sources)
         self.assertFalse(restored.config()['enabled'])
         self.assertFalse(restored.config()['types']['traceroute'])
-        self.assertEqual(restored.config()['max_per_hour'],6)
+        self.assertEqual(restored.config()['max_per_hour'],24)
         self.assertEqual(restored.config()['min_gap_seconds'],60)
 
     def test_activation_sends_one_and_tracks_reply(self):
