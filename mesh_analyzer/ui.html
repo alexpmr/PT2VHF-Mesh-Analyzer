@@ -2451,7 +2451,7 @@ async function sendChatMessage(raw,chat,isRetry=false){
  if(bytes>220){notify('Limite de 220 bytes UTF-8; texto usa '+bytes+'.',true);return;}
  const choices=txRadioSources();
  if(!choices.length){showNoConnectionDialog();return;}
- if(choices.length>1){notify('Mais de um rádio TX conectado. Escolha apenas um em Conexões.',true);return;}
+ if(choices.length>1){notify('Mais de um rádio TX conectado. Desative os demais em Conexões.',true);return;}
  const source=Number(choices[0].id);
  const target=chat.startsWith('node:')?Number(chat.slice(5)):'^all';
  const channel=chat.startsWith('channel:')?Number(chat.slice(8)):Number($('messageChannel').value);
