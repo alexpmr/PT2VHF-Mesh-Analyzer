@@ -241,6 +241,18 @@ html[data-theme="light"] #radioConnectionStatus[data-status="connected"]{backgro
 .mesh-role-marker:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%}
 .roleLegend{margin:6px 0}.roleLegend summary{cursor:pointer}.roleLegendItem{display:flex;align-items:center;gap:6px;white-space:nowrap}
 .roleLegendItem svg{width:24px;height:24px;flex:none}#nodeRoleLegend{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;max-height:185px;overflow:auto;margin-top:6px}
+/* Primary action in RF Automation: visually stronger than simulation/status tools.
+   Keep this after global !important theme button rules for dark/gray/light parity. */
+html[data-theme] #autoSaveButton{
+ background:#ffd447!important;color:#202126!important;border:1px solid #df9b00!important;
+ font-weight:800;padding:9px 16px;box-shadow:0 2px 9px #0004;
+}
+html[data-theme] #autoSaveButton:hover:not(:disabled){
+ background:#ffe17c!important;border-color:#ba7e00!important;
+}
+html[data-theme] #autoSaveButton:focus-visible{
+ outline:3px solid var(--blue);outline-offset:2px;
+}
 </style>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
@@ -337,7 +349,7 @@ try {
 <h4>Consultas permitidas</h4>
 <div class="formGrid" id="autoQueryToggles"></div>
 <p class="muted">NodeInfo, posição e telemetria são recomendados. As consultas compatíveis ficam selecionadas e a automação ativa por padrão, com limites de transmissão. Vizinhos e ping serão utilizados somente quando o aplicativo e o firmware fornecerem consultas reais compatíveis.</p>
-<div class="actions"><button type="submit">Salvar automação</button>
+<div class="actions"><button type="submit" id="autoSaveButton">Salvar automação</button>
 <button type="button" id="autoPreview">Simular fila (sem TX)</button>
 <button type="button" id="autoRun">Executar uma consulta agora</button>
 <button type="button" id="autoReload">Atualizar estado</button></div>
