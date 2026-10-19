@@ -18,7 +18,7 @@ button:hover:not(:disabled){background:var(--hover)!important}
 .dataTable tr:hover td,#nodeContextMenu button:hover:not(:disabled){background:var(--hover)!important}
 #nodesRows tr.nodeSelected td,#nodesRows tr[aria-selected="true"] td{background:var(--active-row)!important}
 .field label,.statsCard h3,.card h3{color:var(--ink)}
-:root[data-theme="light"] .bubble>div{white-space:pre-wrap;overflow-wrap:anywhere}.bubble.tx{background:#d6efe3;color:#193d31}
+:root[data-theme="light"] .bubble.tx{background:#d6efe3;color:#193d31}
 :root[data-theme="gray"] .bubble.tx{background:#315b4c}
 :root[data-theme="light"] .notice{background:#fff4dc;color:#62470d;border-color:#c39840}
 :root[data-theme="light"] #radioConnectionStatus[data-status="connected"]{background:#d7f5e4;color:#126a3b}
@@ -302,7 +302,8 @@ html[data-theme] #autoSaveButton:focus-visible{
 .nodeFavoriteToggle.isFavorite{color:#ffd447!important}
 .nodeFavoriteToggle:not(:disabled):hover{background:var(--hover)!important}
 .nodeFavoriteToggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-#sourceSaveButton{background:#f3cf48;color:#17202a;border:2px solid #ffe67d;font-weight:700;padding:9px 16px}#radioConnectionText{display:inline-block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+html[data-theme] #sourceSaveButton{background:#f3cf48!important;color:#17202a!important;border:2px solid #ffe67d;font-weight:700;padding:9px 16px}#radioConnectionText{display:inline-block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.bubble>div{white-space:pre-wrap;overflow-wrap:anywhere}
 </style>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
