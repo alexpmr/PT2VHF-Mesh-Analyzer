@@ -1,3 +1,9 @@
+## v0.6.34 — Implementado nesta entrega
+
+Correções e critérios registrados no CHANGELOG: #138–#143; melhorias #59, #124, #125, #126 e #137. Aceite em rádio e Windows físicos pendente. A fila agrega consultas do backend com lotes da janela atual; persistência central dos lotes permanece pendente. Favoritos locais pendentes são mostrados separadamente da confirmação do dispositivo.
+
+Continuam pendentes: tradução integral (#1), relatório avançado completo do modelo (#13), validação física de atualização (#103), confirmação de som/WebView2 (#126), e demais critérios não contemplados nas issues antigas abaixo. Esta versão não encerra automaticamente todas as issues.
+
 ## v0.6.33 — Entregas e pendências
 
 - #80: novos padrões RF e Salvar automação destacado.

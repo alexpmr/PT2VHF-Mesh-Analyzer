@@ -1,3 +1,18 @@
+# v0.6.34 — Conexões, mensagens e acompanhamento de consultas
+
+- #138: pesquisa do mapa exige as duas pontas correspondentes também nos fluxos lógicos; contagens e autozoom respeitam o filtro. Pulsos deixam de aparecer em nós ocultos.
+- #139: múltiplas conexões persistidas, primeira conexão de rádio bem-sucedida vence de forma atômica; demais ficam em espera e suas interfaces excedentes são fechadas. Timeout de conexão de 20 s por SDK. MQTT permanece receptor independente. Conexão automática marcada em novos cadastros e na descoberta; escolha anterior preservada. Nome longo detectado atualiza o nome da conexão. Salvar conexão destacado; formulário de adição não desaparece no refresh periódico.
+- #140/#143: mensagens de hoje exibem tempo relativo, anteriores exibem data e horário; tooltip com instante completo. Balões preservam quebras de linha e texto literal seguro.
+- #141: comando de favorito/desfavorito atualiza o estado local persistido; estado pendente explícito separado da confirmação do NodeDB. Cache antigo não desfaz a escolha. Erro de envio não altera o estado local.
+- #142: indicador verde mostra o nome da conexão ativa; sem rádio conectado mostra “desconectado”.
+- #124: painel recolhido no canto superior direito do mapa com consultas manuais/automáticas, histórico de resultado e contagem de lotes desta janela. Candidatas de automação são diferenciadas de consultas efetivamente enviadas. Lotes ainda pertencem à janela que os iniciou, não a uma fila persistida central.
+- #125: Salvar automação habilita com edição; ao sair, Salvar/Descartar/Continuar. Erro de gravação mantém a edição e a tela. Fechamento do navegador usa aviso nativo.
+- #126 parcial: áudio deixa de depender da opção de animar e é desbloqueado por interação; som físico/WebView2 ainda requer aceite.
+- #59: ranking analisa todos os enlaces RF diretos selecionados, procura posições históricas próximas à observação e agrega pares invertidos/repetidos. Diagnóstico informa quantos foram excluídos por posição. Traceroute não é promovido a RF direto.
+- #137 parcial: traceroute manual abre os detalhes do nó com acompanhamento da solicitação e da resposta. Ausência de resposta não cria enlace fictício.
+
+Validação: testes automatizados Python, interface Chrome e empacotamento Windows no pipeline. Rádio físico e atualização no PC do usuário precisam de aceite. Tradução integral, relatório avançado equivalente ao modelo e demais pendências antigas não são declaradas concluídas.
+
 # v0.6.33 — Mensagens, Contato e Automações
 
 - #80: padrões de automação RF 1 min, 24/h, 60 s, 24 h, tipos permitidos; botão Salvar automação amarelo, preferências antigas preservadas.

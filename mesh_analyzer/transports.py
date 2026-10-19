@@ -318,6 +318,19 @@ class SourceManager:
         for src in self.db.sources(public=False):
             if src["enabled"]:self.connect(src["id"])
 
+    def _update_device_name(self,source_id,iface):
+        local=getattr(iface,"localNode",None)
+        info=getattr(iface,"myInfo",None)
+        own=getattr(local,"nodeNum",None) or getattr(info,"my_node_num",None)
+        entries=getattr(iface,"nodesByNum",{})
+        node=entries.get(own,{}) if isinstance(entries,dict) else {}
+        user=node.get("user",{}) if isinstance(node,dict) else {}
+        name=str(user.get("longName") or user.get("long_name") or "").strip()[:72]
+        if name:
+            with self.db._lock,self.db._db:
+                self.db._db.execute("UPDATE sources SET name=?,updated_ms=? WHERE id=?",
+                                    (name,now_ms(),int(source_id)))
+
     def sync_favorites_from_radio(self,source_id):
         """Import only explicit favorite flags from the connected radio NodeDB."""
         with self._lock:
@@ -359,6 +372,7 @@ class SourceManager:
         if not callable(method):
             raise RuntimeError("Firmware/SDK deste rádio não oferece comando de favoritos")
         method(num)
+        self.db.request_node_favorite(sid,num,is_favorite)
         # Read back without fabricating ACK, even if local admin command returned.
         self.sync_favorites_from_radio(sid)
         entries=getattr(iface,"nodesByNum",None)
@@ -418,6 +432,14 @@ class SourceManager:
             if not src or not src["enabled"]:break
             with self._lock:
                 if id in self._stop_sources:break
+            if src["kind"] != "mqtt":
+                with self._lock:
+                    occupied=any(k!=id and self._states.get(k,{}).get("status")=="connected"
+                                 and (self.db.source(k) or {}).get("kind")!="mqtt" for k in self._interfaces)
+                if occupied:
+                    self._set(id,"standby","Outra conexão de rádio está ativa")
+                    if self._stop.wait(1):break
+                    continue
             self._set(id,"connecting")
             iface=None
             try:
@@ -429,18 +451,27 @@ class SourceManager:
                     self._ensure_pubsub()
                     if kind == "serial":
                         from meshtastic.serial_interface import SerialInterface
-                        iface=SerialInterface(devPath=conf["port"])
+                        iface=SerialInterface(devPath=conf["port"],timeout=20)
                     elif kind == "tcp":
                         from meshtastic.tcp_interface import TCPInterface
-                        iface=TCPInterface(hostname=conf["host"],portNumber=int(conf.get("port") or 4403))
+                        iface=TCPInterface(hostname=conf["host"],portNumber=int(conf.get("port") or 4403),timeout=20)
                     elif kind == "ble":
                         from meshtastic.ble_interface import BLEInterface
-                        iface=BLEInterface(address=conf["address"])
+                        iface=BLEInterface(address=conf["address"],timeout=20)
                     else:raise RuntimeError("Transporte desconhecido")
-                    with self._lock:self._interfaces[id]=iface
+                    with self._lock:
+                        occupied=any(k!=id and self._states.get(k,{}).get("status")=="connected"
+                                     and (self.db.source(k) or {}).get("kind")!="mqtt" for k in self._interfaces)
+                        cancelled=id in self._stop_sources or self._stop.is_set()
+                        if not occupied and not cancelled:
+                            self._interfaces[id]=iface
+                            self._set(id,"connected")
+                    if occupied or cancelled:
+                        self._set(id,"standby" if occupied else "disconnected")
+                        continue
                     self.ingest.seed_from_interface(id,iface)
                     self.sync_favorites_from_radio(id)
-                    self._set(id,"connected")
+                    self._update_device_name(id,iface)
                     self.db.log("Conexão estabelecida com fonte "+str(id),source_id=id)
                     next_favorite_sync=time.monotonic()+15
                     while not self._stop.wait(1):
@@ -448,7 +479,9 @@ class SourceManager:
                             if self._interfaces.get(id) is not iface:break
                         if not (self.db.source(id) or {}).get("enabled"):break
                         if time.monotonic()>=next_favorite_sync:
-                            try:self.sync_favorites_from_radio(id)
+                            try:
+                                self.sync_favorites_from_radio(id)
+                                self._update_device_name(id,iface)
                             except Exception:pass
                             next_favorite_sync=time.monotonic()+15
             except Exception as exc:

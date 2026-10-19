@@ -181,6 +181,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/queries":
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
                     self._json({"success":True,"data":sources.queries.status(query.get("node",[None])[0])})
+                elif path == "/api/tasks":
+                    from .task_status import snapshot
+                    self._json(snapshot(db,sources,automation))
                 elif path == "/api/automation":
                     self._json(automation.overview() if automation else
                                {"success":False,"error":"Automação não disponível"})

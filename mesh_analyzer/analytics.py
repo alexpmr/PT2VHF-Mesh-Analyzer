@@ -144,30 +144,45 @@ def calculate(db, params=None, connection_status=None):
     confirmed_where=["quality='confirmed_direct_rf'"]+link_where
     confirmed_links=db._rows(
         "SELECT a,b,source_id,quality,observations,last_seen_ms FROM links WHERE "+
-        " AND ".join(confirmed_where)+" ORDER BY last_seen_ms DESC LIMIT 500",
+        " AND ".join(confirmed_where)+" ORDER BY last_seen_ms DESC",
         tuple(link_args))
     coords={n["node_num"]:n for n in node_rows}
     direct_rank=[]
+    excluded_positions=0
+    def position_at(node,link):
+        # Match the same receiver and the RF time before considering current cache.
+        found=db._rows("SELECT latitude,longitude,timestamp_ms AS position_ms FROM positions "
+                       "WHERE node_num=? AND source_id=? AND timestamp_ms BETWEEN ? AND ? "
+                       "ORDER BY ABS(timestamp_ms-?),timestamp_ms DESC LIMIT 1",
+                       (node,link["source_id"],link["last_seen_ms"]-1800000,
+                        link["last_seen_ms"]+1800000,link["last_seen_ms"]))
+        if found:return found[0]
+        current=coords.get(node)
+        if current and current["position_ms"] and abs(current["position_ms"]-link["last_seen_ms"])<=1800000:
+            return current
+        return None
     for link in confirmed_links:
-        a,b=coords.get(link["a"]),coords.get(link["b"])
-        if not a or not b:continue
-        if any(n["latitude"] is None or n["longitude"] is None or not n["position_ms"] for n in (a,b)):
-            continue
-        # Historical/mobile links cannot inherit coordinates far from their
-        # RF observation. Position timestamps require close temporal agreement.
-        if any(abs(n["position_ms"]-link["last_seen_ms"])>1800000 for n in (a,b)):
+        a,b=position_at(link["a"],link),position_at(link["b"],link)
+        if not a or not b or any(n["latitude"] is None or n["longitude"] is None or
+                                abs(n["latitude"])>90 or abs(n["longitude"])>180 for n in (a,b)):
+            excluded_positions+=1
             continue
         lat1,lon1,lat2,lon2=map(math.radians,
              [a["latitude"],a["longitude"],b["latitude"],b["longitude"]])
         delta=2*6371.0088*math.asin(min(1,math.sqrt(
               math.sin((lat2-lat1)/2)**2+
               math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2)))
-        direct_rank.append({"a":link["a"],"b":link["b"],"name_a":node_names[link["a"]],
-                            "name_b":node_names[link["b"]],"distance_km":round(delta,3),
+        direct_rank.append({"a":link["a"],"b":link["b"],"name_a":node_names.get(link["a"],f"!{link['a']:08x}"),
+                            "name_b":node_names.get(link["b"],f"!{link['b']:08x}"),"distance_km":round(delta,3),
                             "observations":link["observations"],"snr":None,
                             "source_id":link["source_id"],"last_rf_ms":link["last_seen_ms"]})
     direct_rank.sort(key=lambda x:(-x["distance_km"],x["a"],x["b"]))
-    direct_rank=direct_rank[:10]
+    unique=[];seen_pairs=set()
+    for entry in direct_rank:
+        pair=tuple(sorted((entry["a"],entry["b"])))
+        if pair not in seen_pairs:
+            unique.append(entry);seen_pairs.add(pair)
+    direct_rank=unique[:10]
     silent = [n for n in node_rows if n["last_seen_ms"] < cutoff and n["last_seen_ms"] > 0]
     low_battery = [n for n in node_rows if n["battery"] is not None and 0 <= n["battery"] < 20]
     alerts = ([{"severity": "atenção", "kind": "nó silencioso",
@@ -230,7 +245,7 @@ def calculate(db, params=None, connection_status=None):
                    "alerts":len(alerts), "critical":sum(a["severity"]=="crítico" for a in alerts)},
         "packet_types":types, "source_breakdown":sources, "top_originators":origins,
         "message_by_channel":message_by_channel,"message_by_direction":message_by_direction,
-        "message_originators":message_originators,"direct_rf_rank":direct_rank,
+        "message_originators":message_originators,"direct_rf_rank":direct_rank,"direct_rf_diagnostics":{"candidates":len(confirmed_links),"excluded_positions":excluded_positions,"unique_pairs":len(unique)},
         "hourly":hourly,"hops":hops,"link_types":links,"alerts":alerts,
         "nodes":node_rows,"rf_samples":rf_summary,
         "diagnosis": {

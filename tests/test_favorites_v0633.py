@@ -39,18 +39,20 @@ class FavoriteRadioTests(unittest.TestCase):
         self.assertFalse(res["confirmed"])
         self.assertEqual(res["status"],"awaiting_nodedb")
         self.assertEqual(self.local.calls,[("set",42)])
-        self.assertEqual(self.db.node_rows()[0]["favorite_source_ids"],[])
+        self.assertEqual(self.db.node_rows()[0]["favorite_source_ids"],[1])
+        self.assertEqual(self.db.node_rows()[0]["favorite_pending_source_ids"],[1])
         self.iface.nodesByNum[42]["isFavorite"]=True
         self.sources.sync_favorites_from_radio(1)
         self.assertEqual(self.db.node_rows()[0]["favorite_source_ids"],[1])
         self.assertEqual(self.sources.set_favorite(1,42,True)["status"],"confirmed")
 
-    def test_unfavorite_updates_only_after_radio_reports(self):
+    def test_unfavorite_updates_local_and_tracks_radio_confirmation(self):
         self.iface.nodesByNum[42]["isFavorite"]=True
         self.sources.sync_favorites_from_radio(1)
         res=self.sources.set_favorite(1,42,False)
         self.assertFalse(res["confirmed"])
-        self.assertEqual(self.db.node_rows()[0]["favorite_source_ids"],[1])
+        self.assertEqual(self.db.node_rows()[0]["favorite_source_ids"],[])
+        self.assertEqual(self.db.node_rows()[0]["favorite_pending_source_ids"],[1])
         self.assertEqual(self.local.calls[-1],("remove",42))
         self.iface.nodesByNum[42]["isFavorite"]=False
         self.sources.sync_favorites_from_radio(1)
@@ -88,4 +90,4 @@ class FavoriteRadioTests(unittest.TestCase):
         ):
             self.assertIn(marker,HTML)
         self.assertIn("ev.stopPropagation()",HTML)
-        self.assertIn("Aguardando confirmação do NodeDB",HTML)
+        self.assertIn("confirmação pendente",HTML)

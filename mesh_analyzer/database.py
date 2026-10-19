@@ -41,6 +41,10 @@ class Database:
         self._db.execute("PRAGMA busy_timeout=5000")
         with self._lock, self._db:
             self._db.executescript("""
+            CREATE TABLE IF NOT EXISTS favorite_requests (
+                source_id INTEGER NOT NULL,node_num INTEGER NOT NULL,
+                desired INTEGER NOT NULL,requested_ms INTEGER NOT NULL,
+                PRIMARY KEY(source_id,node_num));
             CREATE TABLE IF NOT EXISTS sources (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -646,6 +650,12 @@ class Database:
             self._db.execute("INSERT INTO settings(key,value) VALUES('role_backfill_v0628','1')")
         return updated
 
+    def request_node_favorite(self,source_id,node_num,value):
+        if type(value) is not bool:raise ValueError("Favorito inválido")
+        with self._lock,self._db:
+            self._db.execute("INSERT OR REPLACE INTO favorite_requests VALUES(?,?,?,?)",
+                             (int(source_id),int(node_num),int(value),now_ms()))
+
     def set_node_favorite_from_radio(self,source_id,node_num,is_favorite):
         """Import an EXPLICIT boolean from a radio's NodeDB; never guess a favorite."""
         if type(is_favorite) is not bool:
@@ -654,6 +664,8 @@ class Database:
         if sid<=0 or not (0<num<0xffffffff):
             return False
         with self._lock,self._db:
+            self._db.execute("DELETE FROM favorite_requests WHERE source_id=? AND node_num=? AND desired=?",
+                             (sid,num,int(is_favorite)))
             self._db.execute("""INSERT INTO node_favorites(source_id,node_num,is_favorite,confirmed_ms)
               VALUES(?,?,?,?) ON CONFLICT(source_id,node_num) DO UPDATE SET
               is_favorite=excluded.is_favorite,confirmed_ms=excluded.confirmed_ms""",
@@ -663,8 +675,11 @@ class Database:
     def node_rows(self, limit=5000):
         rows=self._rows("SELECT * FROM nodes ORDER BY last_seen_ms DESC LIMIT ?",(min(int(limit),15000),))
         faves=self._rows("SELECT source_id,node_num,is_favorite FROM node_favorites")
+        pending=self._rows("SELECT source_id,node_num,desired AS is_favorite FROM favorite_requests")
+        merged={(x["source_id"],x["node_num"]):x for x in faves}
+        merged.update({(x["source_id"],x["node_num"]):x for x in pending})
         by_num={};known_num={}
-        for item in faves:
+        for item in merged.values():
             num,sid=int(item["node_num"]),int(item["source_id"])
             known_num.setdefault(num,[]).append(sid)
             if item["is_favorite"]:by_num.setdefault(num,[]).append(sid)
@@ -673,6 +688,7 @@ class Database:
             num=int(r["node_num"])
             r["favorite_source_ids"]=by_num.get(num,[])
             r["favorite_known_source_ids"]=known_num.get(num,[])
+            r["favorite_pending_source_ids"]=[x["source_id"] for x in pending if x["node_num"]==num]
         return rows
 
     def node_source_rows(self):

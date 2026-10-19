@@ -40,6 +40,13 @@ jobs:
           Set-Content -Path $scriptPath -Value $match.Groups[1].Value -Encoding utf8
           node --check $scriptPath
           if ($LASTEXITCODE -ne 0) { throw 'Sintaxe JavaScript invalida' }
+      - name: Testar interface no Chrome real
+        shell: pwsh
+        run: |
+          npm install --prefix "$env:RUNNER_TEMP/mesh-ui-deps" playwright@1.58.2
+          $env:NODE_PATH = "$env:RUNNER_TEMP/mesh-ui-deps/node_modules"
+          node scripts/test_ui_v0634.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface no Chrome' }
       - name: Validar sintaxe do PowerShell de atualização
         shell: pwsh
         run: |

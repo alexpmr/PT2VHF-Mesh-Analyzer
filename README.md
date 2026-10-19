@@ -1,26 +1,30 @@
-# PT2VHF Mesh Analyzer — v0.6.33
+# PT2VHF Mesh Analyzer — v0.6.34
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ (x64)** e **Windows 11 (x64)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
 ## Downloads — Windows 10 / Windows 11 (64 bits)
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.33](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.33)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.34](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.34)**
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.33-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.33/PT2VHF-Mesh-Analyzer-v0.6.33-Setup-Win10-Win11-x64.exe) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.33-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.33/PT2VHF-Mesh-Analyzer-v0.6.33-Portable-Win10-Win11-x64.exe) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.33-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.33/PT2VHF-Mesh-Analyzer-v0.6.33-Portable-Win10-Win11-x64.zip) |
-| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.33/SHA256SUMS.txt) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.34-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.34/PT2VHF-Mesh-Analyzer-v0.6.34-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.34-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.34/PT2VHF-Mesh-Analyzer-v0.6.34-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.34-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.34/PT2VHF-Mesh-Analyzer-v0.6.34-Portable-Win10-Win11-x64.zip) |
+| **SHA256** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.34/SHA256SUMS.txt) |
 
 **Links automáticos (última versão):**
 [Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
 [Portable Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe) ·
 [Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.33 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+**Requisitos:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.34 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
 
-### Novidades da v0.6.33 — Contato, Automações e Mensagens
+### Novidades da v0.6.34
+
+Quebras de linha e datas nas mensagens; nome da conexão ativa na barra superior; primeira conexão de rádio disponível com demais em espera; favoritos locais com confirmação do rádio separada; fila recolhida no mapa; aviso ao sair das automações sem salvar; filtros de enlaces e ranking com posições históricas. Veja [CHANGELOG.md](CHANGELOG.md) para escopo e limites.
+
+### Recursos mantidos da v0.6.33 — Contato, Automações e Mensagens
 
 - **Automações (#80):** novos padrões: ligado, avaliação a cada 1 minuto, 24 consultas/hora, mínimo 60 segundos entre TX, nós das últimas 24 horas; preserva configurações anteriores. Botão Salvar automação amarelo em todos os temas.
 - **Sobre (#134):** página nova /sobre com cartão “DÚVIDAS, DIFICULDADES OU SUGESTÕES? / Fale comigo”, WhatsApp 61 98402-3634 e e-mail alexpmr@gmail.com clicáveis, com o menu Ajuda e /ajuda preservados.

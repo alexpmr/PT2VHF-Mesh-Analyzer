@@ -19,6 +19,6 @@ class AutomaticConnectionUX(unittest.TestCase):
         self.assertIn("Configuração Automática</button>",HTML)
         self.assertIn("/api/discovery/start",HTML)
         self.assertIn("Não verificado pelo protocolo",HTML)
-        self.assertIn("$('sourceEnabled').checked=false",HTML)
+        self.assertIn("$('sourceEnabled').checked=true",HTML)
 
 if __name__=="__main__":unittest.main()
