@@ -106,7 +106,8 @@ class ReleaseMonitor:
                 "notes":self._result.get("notes","") if self._result else "",
                 "checked_at":self._at or None,
                 "next_check":self._at+minutes*60 if self._at else None,
-                "interval_minutes":minutes,"error":self._error}
+                "interval_minutes":minutes,"error":self._error,
+                "direct_update":os.name=="nt"}
 
     def _loop(self):
         while not self._stop.is_set():
@@ -463,12 +464,19 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                      if launch_browser is None else launch_browser)
         if open_browser:
             webbrowser.open(address)
+        browser_mode=False
         if desktop:
             try:
                 from .desktop import open_desktop_window
                 open_desktop_window(address, data)
             except Exception as exc:
                 LOG.exception("Não foi possível iniciar a janela desktop")
+                if sys.platform.startswith("linux"):
+                    # Linux packages do not bundle GTK/Qt: use the default
+                    # browser and keep serving until the process is stopped.
+                    LOG.warning("Abrindo %s no navegador padrão", address)
+                    if not open_browser:webbrowser.open(address)
+                    browser_mode=True
                 # Windowed PyInstaller EXEs have no console. Show a visible
                 # diagnosis rather than silently redirecting to a browser.
                 if sys.platform == "win32":
@@ -478,8 +486,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                             None, str(exc)[:600],
                             "PT2VHF Mesh Analyzer — Falha na interface", 0x10)
                     except Exception:pass
-                raise
-        else:
+                if not browser_mode:raise
+        if not desktop or browser_mode:
             try:
                 while server_thread.is_alive():
                     server_thread.join(timeout=0.5)

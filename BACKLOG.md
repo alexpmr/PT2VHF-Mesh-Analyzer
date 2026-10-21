@@ -1,3 +1,9 @@
+## v0.6.36 — Implementado nesta entrega
+
+- Linux x64 e macOS (arm64/x64) adicionados ao pipeline e à release; ZIP de código-fonte removido dos downloads.
+- #144, #145 e #146 implementados com testes automatizados (Python e Chromium). Aceite em campo pendente: confirmar com o rádio do usuário que os horários deixaram de ficar fixos em “há 3 minutos”.
+- Pendências novas: assinatura/notarização Apple, atualização interna no macOS/Linux, janela nativa no Linux (GTK/Qt) e validação de BLE/serial nessas plataformas.
+
 ## v0.6.35 — Implementado nesta entrega
 
 - Aviso de nova versão: pedido do mantenedor para o APRS Client, Sat Tool, Prop Tool, Mesh Analyzer e venus-8. Aqui, o diálogo de atualização existente abre automaticamente ao detectar versão nova; "Depois" adia 24 h.

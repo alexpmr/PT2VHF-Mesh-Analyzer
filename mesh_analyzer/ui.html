@@ -79,7 +79,7 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .card{background:#17212b;border:1px solid var(--line);border-radius:10px;padding:14px}.card h3{margin:0 0 9px;color:#e9d46d;font-size:14px}.muted{color:var(--muted)}.muted small{line-height:1.5}.notice{border:1px solid #8a6c2f;background:#443b2226;padding:9px;border-radius:8px;color:#e4d5a8}
 .tableWrap{overflow:auto;min-height:0;flex:1}.dataTable{border-collapse:collapse;width:100%;font-size:12px}.dataTable th{position:sticky;top:0;background:#1b2b38;color:#cbd6df;padding:9px;text-align:left;white-space:nowrap;border-bottom:1px solid #405668;z-index:2}.dataTable td{padding:9px;border-bottom:1px solid #22313f;white-space:nowrap}.dataTable tr:hover td{background:#1e3140}.dataTable tr[data-node]{cursor:pointer}
 #viewMessages{overflow:hidden}#messageLayout{display:grid;grid-template-columns:285px 1fr;flex:1;min-height:0}.contacts{border-right:1px solid var(--line);overflow:auto;background:#111c27}.contact{display:block;width:100%;padding:11px;text-align:left;border:0;border-bottom:1px solid #2b3b48;border-radius:0}.contact.selected{background:#30465c;border-left:3px solid var(--accent)}
-.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px}.bubble{max-width:75%;padding:7px 10px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}.bubble small{display:block;text-align:right;color:#adbdc8;margin-top:4px;font-size:10px}
+.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px}.bubble{max-width:75%;padding:7px 10px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}.bubblesNewMessages{align-self:center;margin:-38px 0 6px;position:relative;z-index:2;border-radius:14px;background:#d29b2c;border-color:#d29b2c;color:#1b1b1b;font-weight:700;font-size:11px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)}.bubblesNewMessages[hidden]{display:none}.bubble small{display:block;text-align:right;color:#adbdc8;margin-top:4px;font-size:10px}
 .bubble .msgState{display:inline-block;padding-left:5px;font-size:13px}
 .msgState.accepted,.msgState.delivered{color:#34c759}.msgState.working{color:#efd1a2}.msgState.error{color:#f8afaf}
 #messageTxStatus{padding:5px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
@@ -315,7 +315,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.35</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.36</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -376,7 +376,7 @@ try {
 <input id="messageNodeSearch" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nós para mensagem privada" autocomplete="off">
 <button type="button" id="messageNodeSearchClear" aria-label="Limpar pesquisa de nós" title="Limpar pesquisa">×</button>
 <span id="messageNodeSearchCount" role="status" aria-live="polite"></span>
-</div><div class="contactPinned" id="contactPinned" aria-label="Canal primário e favoritos"></div><div class="contacts" id="contacts"></div></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div id="messageReplyPreview" class="messageReplyPreview" hidden><span id="messageReplyLabel"></span><button type="button" id="messageReplyCancel" title="Cancelar resposta">×</button></div>
+</div><div class="contactPinned" id="contactPinned" aria-label="Canal primário e favoritos"></div><div class="contacts" id="contacts"></div></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><button type="button" id="bubblesNewMessages" class="bubblesNewMessages" hidden>↓ Novas mensagens</button><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div id="messageReplyPreview" class="messageReplyPreview" hidden><span id="messageReplyLabel"></span><button type="button" id="messageReplyCancel" title="Cancelar resposta">×</button></div>
 <div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div>
 <button id="messageEmojiButton" type="button" title="Inserir emoji" aria-label="Inserir emoji">☺</button>
 <div id="messageEmojiPicker" class="messageEmojiPicker" hidden></div>
@@ -477,7 +477,7 @@ try {
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.35</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.36</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewAbout"><div class="panels">
@@ -494,7 +494,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.35.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.36.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -2333,15 +2333,35 @@ function chatNodeMatches(node,query){
          ...(Array.isArray(node.aliases)?node.aliases:[])]
    .some(name=>norm(name).includes(query));
 }
-function messageTimeHtml(timestamp,now=new Date()){
+// #144: cada mensagem usa o próprio timestamp; horário futuro (relógio do
+// rádio adiantado) mostra data/hora absoluta em vez de uma idade inventada.
+function messageTimeLabel(timestamp,now=new Date()){
  const value=Number(timestamp),date=new Date(value);
- if(!value||!Number.isFinite(date.getTime()))return 'Data indisponível';
+ if(!value||!Number.isFinite(date.getTime()))return null;
+ const full=date.toLocaleString('pt-BR');
+ const seconds=Math.floor((now-date)/1000);
+ if(seconds<-60)return {date,label:full,title:full+' · horário à frente do relógio deste computador'};
  const same=date.getFullYear()===now.getFullYear()&&date.getMonth()===now.getMonth()&&date.getDate()===now.getDate();
- let label=date.toLocaleString('pt-BR');
- if(same){const seconds=Math.max(0,Math.floor((now-date)/1000));
-  label=seconds<60?'agora':seconds<3600?'há '+Math.floor(seconds/60)+' minuto'+(seconds<120?'':'s'):
-   'há '+Math.floor(seconds/3600)+' hora'+(seconds<7200?'':'s');}
- return '<time datetime="'+date.toISOString()+'" title="'+esc(date.toLocaleString('pt-BR'))+'">'+esc(label)+'</time>';
+ if(!same)return {date,label:full,title:full};
+ const age=Math.max(0,seconds);
+ const label=age<60?'agora':age<3600?'há '+Math.floor(age/60)+' minuto'+(age<120?'':'s'):
+   'há '+Math.floor(age/3600)+' hora'+(age<7200?'':'s');
+ return {date,label,title:full};
+}
+function messageTimeHtml(timestamp,now=new Date(),radioTimestamp=null){
+ const info=messageTimeLabel(timestamp,now);
+ if(!info)return 'Data indisponível';
+ let title=info.title;
+ const radio=Number(radioTimestamp);
+ if(radio&&Math.abs(radio-info.date.getTime())>=1000)
+  title+=' · relógio do rádio: '+new Date(radio).toLocaleString('pt-BR');
+ return '<time data-ts="'+info.date.getTime()+'" datetime="'+info.date.toISOString()+'" title="'+esc(title)+'">'+esc(info.label)+'</time>';
+}
+function refreshMessageTimes(now=new Date()){
+ $('bubbles').querySelectorAll('time[data-ts]').forEach(el=>{
+  const info=messageTimeLabel(Number(el.dataset.ts),now);
+  if(info&&el.textContent!==info.label)el.textContent=info.label;
+ });
 }
 function renderChat(updateConversation=true){
  const chats=new Set(['channel:0']);
@@ -2395,23 +2415,50 @@ function renderChat(updateConversation=true){
    'Privado · '+nameOf(currentChat):nameOf(currentChat);
  const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);
  visibleMessageRows=filtered;
- let html=filtered.map((m,i)=>'<div tabindex="0" role="button" aria-label="Mensagem; abrir ações" data-msg-index="'+i+'" class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
-   esc(m.text)+'</div><small>'+messageTimeHtml(m.timestamp_ms)+
-   (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
-   messageStateHtml(m)+'</small></div>').join('');
- if(pendingChat?.chat===currentChat){
-  html+='<div tabindex="0" role="button" aria-label="Mensagem pendente; abrir ações" data-msg-index="pending" class="bubble tx"><div>'+esc(pendingChat.text)+'</div><small>'+
-     (pendingChat.failed?'Falha':'Enviando')+
-     (pendingChat.failed?'<span class="msgState error">!</span>':
-       '<span class="msgState working" title="Aguardando rádio">◷</span>')+'</small></div>';
+ const box=$('bubbles');
+ const pendingHere=pendingChat?.chat===currentChat?pendingChat:null;
+ const msgKey=(m,i)=>String(m.id??m.packet_key??('i'+i));
+ const signature=currentChat+'\u0001'+filtered.map((m,i)=>[msgKey(m,i),m.state,m.timestamp_ms,m.text].join('\u0002')).join('\u0001')+
+   '\u0001'+(pendingHere?pendingHere.text+'\u0002'+pendingHere.failed:'');
+ // #145: o refresh periódico sem mudanças só atualiza os horários relativos,
+ // sem reconstruir os balões nem mexer na rolagem.
+ if(signature===chatRenderSignature){refreshMessageTimes();}
+ else{
+  const switched=chatRenderedKey!==currentChat||chatForceBottom;
+  const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<=CHAT_BOTTOM_SLACK;
+  let anchorKey=null,anchorOffset=0;
+  if(!switched&&!atBottom){
+   const top=box.getBoundingClientRect().top;
+   for(const el of box.querySelectorAll('[data-msg-key]')){
+    const rect=el.getBoundingClientRect();
+    if(rect.bottom>top){anchorKey=el.dataset.msgKey;anchorOffset=rect.top-top;break;}
+   }
+  }
+  const lastKey=filtered.length?msgKey(filtered.at(-1),filtered.length-1):'';
+  let html=filtered.map((m,i)=>'<div tabindex="0" role="button" aria-label="Mensagem; abrir ações" data-msg-index="'+i+'" data-msg-key="'+esc(msgKey(m,i))+'" class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
+    esc(m.text)+'</div><small>'+messageTimeHtml(m.timestamp_ms,new Date(),m.radio_time_ms)+
+    (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
+    messageStateHtml(m)+'</small></div>').join('');
+  if(pendingHere){
+   html+='<div tabindex="0" role="button" aria-label="Mensagem pendente; abrir ações" data-msg-index="pending" data-msg-key="pending" class="bubble tx"><div>'+esc(pendingHere.text)+'</div><small>'+
+      (pendingHere.failed?'Falha':'Enviando')+
+      (pendingHere.failed?'<span class="msgState error">!</span>':
+        '<span class="msgState working" title="Aguardando rádio">◷</span>')+'</small></div>';
+  }
+  box.innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
+  box.querySelectorAll('[data-msg-index]').forEach(el=>{
+   el.onclick=e=>openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,false);
+   el.oncontextmenu=e=>{e.preventDefault();openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,true);};
+   el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openMessageActions(el.dataset.msgIndex,0,0,false);}};
+  });
+  if(switched||atBottom){box.scrollTop=box.scrollHeight;$('bubblesNewMessages').hidden=true;}
+  else{
+   const anchor=anchorKey&&[...box.querySelectorAll('[data-msg-key]')].find(el=>el.dataset.msgKey===anchorKey);
+   if(anchor)box.scrollTop+=anchor.getBoundingClientRect().top-box.getBoundingClientRect().top-anchorOffset;
+   if(lastKey&&lastKey!==chatRenderedLastKey)$('bubblesNewMessages').hidden=false;
+  }
+  chatRenderSignature=signature;chatRenderedKey=currentChat;chatRenderedLastKey=lastKey;chatForceBottom=false;
  }
- $('bubbles').innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
- $('bubbles').querySelectorAll('[data-msg-index]').forEach(el=>{
-  el.onclick=e=>openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,false);
-  el.oncontextmenu=e=>{e.preventDefault();openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,true);};
-  el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openMessageActions(el.dataset.msgIndex,0,0,false);}};
- });
- $('bubbles').scrollTop=$('bubbles').scrollHeight;
  const choices=txRadioSources();
  // Allow the click even without a radio so the user can see why TX is unavailable.
  $('messageSend').disabled=messageSending;
@@ -2424,6 +2471,13 @@ $('messageNodeSearchClear').onclick=()=>{
  $('messageNodeSearch').value='';renderChat(false);$('messageNodeSearch').focus();
 };
 let visibleMessageRows=[],replyMessage=null,actionMessage=null;
+const CHAT_BOTTOM_SLACK=48;
+let chatRenderSignature='',chatRenderedKey='',chatRenderedLastKey='',chatForceBottom=false;
+$('bubbles').addEventListener('scroll',()=>{
+ const box=$('bubbles');
+ if(box.scrollHeight-box.scrollTop-box.clientHeight<=CHAT_BOTTOM_SLACK)$('bubblesNewMessages').hidden=true;
+});
+$('bubblesNewMessages').onclick=()=>{const box=$('bubbles');box.scrollTop=box.scrollHeight;$('bubblesNewMessages').hidden=true;};
 const messageBytes=text=>new TextEncoder().encode(String(text)).length;
 function updateMessageBytes(){
  const used=messageBytes($('messageText').value);
@@ -2503,6 +2557,7 @@ async function sendChatMessage(raw,chat,isRetry=false){
  const channel=chat.startsWith('channel:')?Number(chat.slice(8)):Number($('messageChannel').value);
  messageSending=true;
  pendingChat={chat,text,failed:false};
+ chatForceBottom=true;
  renderChat();
  try{
   await api('/api/messages/send',{source_id:source,to_node:target,text,channel});
@@ -3073,13 +3128,16 @@ setInterval(pollActivity,650);
 function updateVersionState(info){
  monitorState=info;const btn=$('topUpdate');
  btn.className='';let label='';
- if(info.error){btn.classList.add('error');label='VERIFICAÇÃO INDISPONÍVEL';}
- else if(!info.checked_at){btn.classList.add('waiting');label='v'+(info.current||'')+' · verificando...';}
- else if(info.available){btn.classList.add('available');label='NOVA VERSÃO v'+info.latest;}
- else{btn.classList.add('latest');label='v'+info.current+' · ATUALIZADO';}
+ // #146: rótulo sem número de versão; verde/laranja só após verificação
+ // bem-sucedida. As versões ficam no título e nos detalhes da atualização.
+ if(info.error){btn.classList.add('error');label='Verificação indisponível';}
+ else if(!info.checked_at){btn.classList.add('waiting');label='Verificando...';}
+ else if(info.available){btn.classList.add('available');label='Nova Versão';}
+ else{btn.classList.add('latest');label='Atualizado';}
  btn.textContent=label;
  maybePromptUpdate(info);
- btn.title=info.available?'Nova versão disponível. Clique para ver novidades e baixar.':'Clique para verificar a última versão agora';
+ btn.title=info.available?'Nova versão v'+info.latest+' disponível (instalada v'+info.current+'). Clique para ver novidades e atualizar.':
+   'Versão instalada v'+(info.current||'?')+'. Clique para verificar a última versão agora';
  $('updateStatus').textContent=info.error?'Verificação indisponível: '+info.error:
  info.available?'Nova versão '+info.latest+' disponível, instalada '+info.current+'. Clique no indicador para atualizar diretamente.':
  info.checked_at?'Versão '+info.current+' atualizada.':'Aguardando resposta do GitHub.';
@@ -3091,13 +3149,13 @@ function updateVersionState(info){
 async function checkUpdates(manual=false){
  if(manual&&checkingManually)return;
  try{
-  if(manual){checkingManually=true;$('topUpdate').textContent='VERIFICANDO...';}
+  if(manual){checkingManually=true;$('topUpdate').className='waiting';$('topUpdate').textContent='Verificando...';}
   const info=manual?await api('/api/update/check',{}):await api('/api/update/latest');
   updateVersionState(info);
   if(manual)notify(info.error?'GitHub indisponível: '+info.error:
      info.available?'Nova versão '+info.latest+' disponível.':'Nenhuma atualização disponível.',Boolean(info.error));
  }catch(e){
-  $('topUpdate').className='error';$('topUpdate').textContent='VERIFICAÇÃO INDISPONÍVEL';
+  $('topUpdate').className='error';$('topUpdate').textContent='Verificação indisponível';
   $('updateStatus').textContent=e.message;if(manual)notify(e.message,true);
  }finally{checkingManually=false;}
 }
@@ -3138,6 +3196,7 @@ function showUpdateDialog(info,installed=false){
  $('updateProgress').hidden=true;
  $('updateNotes').hidden=false;
  $('updateApply').hidden=notice;
+ $('updateApply').textContent=monitorState?.direct_update===false?'Baixar nova versão':'Atualizar agora';
  $('updateLater').textContent='Depois / Fechar';
  $('updateLater').disabled=false;
  $('updateRelease').hidden=notice;
@@ -3176,6 +3235,8 @@ async function checkUpdateProgress(){
 }
 async function beginUpdateDirect(){
  if(!monitorState?.available||!monitorState.latest||updateInstalling)return;
+ // Linux/macOS: sem instalador interno; baixar o pacote novo pela release.
+ if(monitorState.direct_update===false){window.open(monitorState.release_url||'https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest','_blank');return;}
  updateInstalling=true;currentUpdateNotice=false;
  $('updateTitle').textContent='Atualizando para v'+monitorState.latest;
  $('updateSummary').textContent='Baixando e verificando o pacote oficial do GitHub. Aguarde.';

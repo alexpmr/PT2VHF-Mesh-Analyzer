@@ -1,3 +1,13 @@
+# v0.6.36 — Linux, macOS, horários e rolagem das mensagens
+
+- Plataformas: novos pacotes **Linux x64** (`.tar.gz` com executável, ícone e `instalar.sh`) e **macOS** Apple Silicon e Intel (`.dmg`, app com assinatura ad-hoc e permissão de Bluetooth). No macOS a janela usa o WebKit do sistema; no Linux a interface abre no navegador padrão. Atualização interna permanece exclusiva do Windows; nas demais plataformas o botão abre a release.
+- Downloads: o ZIP de código-fonte deixou de ser publicado na release. SHA256SUMS.txt cobre todas as plataformas.
+- #144: o rxTime vem do relógio do rádio; quando ele difere até 15 min do PC, a mensagem usa o horário de recepção local (defasagem do relógio do rádio era a causa provável do “há 3 minutos” fixo). Histórico fora dessa janela preserva o horário original. Horário do rádio persistido em `radio_time_ms` e exibido no detalhe. Horário futuro mostra data/hora absolutas.
+- #145: o refresh periódico só atualiza os horários relativos, sem reconstruir os balões nem mover a rolagem. Ao ler o histórico, a posição é preservada por âncora e novas mensagens mostram “↓ Novas mensagens”; no final da conversa, acompanha automaticamente. Troca de conversa e envio levam ao final.
+- #146: botão da barra superior mostra somente “Atualizado” (verde) ou “Nova Versão” (laranja) após verificação bem-sucedida; “Verificando...” e “Verificação indisponível” como estados neutros. Versões no título do botão e no diálogo.
+
+Validação: testes Python, regressões Chromium (v0.6.34 e v0.6.36) e empacotamento Windows/Linux/macOS no pipeline, com teste da API local em cada pacote. Rádio físico, BLE no macOS/Linux e janela nativa no macOS precisam de aceite em equipamento real.
+
 # v0.6.35 — Aviso de nova versão
 
 - Atualizações: ao detectar versão nova, além do indicador NOVA VERSÃO no menu superior, o diálogo de atualização abre sozinho perguntando "Deseja atualizar agora?", com Atualizar agora / Depois / Abrir release. "Atualizar agora" segue o fluxo existente (download, SHA256, instalação); "Depois" adia a mesma versão por 24 h. Não abre sobre outro diálogo (primeira execução, sem conexão) nem se a atualização já estiver em andamento.

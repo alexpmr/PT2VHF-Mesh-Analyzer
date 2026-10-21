@@ -1,4 +1,4 @@
-name: Build PT2VHF Mesh Analyzer Windows 10/11 x64
+name: Build PT2VHF Mesh Analyzer Windows, Linux e macOS
 on:
   push:
     branches: [main]
@@ -47,6 +47,8 @@ jobs:
           $env:NODE_PATH = "$env:RUNNER_TEMP/mesh-ui-deps/node_modules"
           node scripts/test_ui_v0634.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface no Chrome' }
+          node scripts/test_ui_v0636.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.36 no Chrome' }
       - name: Validar sintaxe do PowerShell de atualização
         shell: pwsh
         run: |
@@ -92,7 +94,6 @@ jobs:
           Copy-Item "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.zip" "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip" -Force
           Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe' -Force
           Copy-Item 'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip' 'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip' -Force
-          Compress-Archive -Path 'mesh_analyzer','tests','scripts','windows','README.md','BACKLOG.md','CHANGELOG.md','Iniciar_Windows_11.bat','Iniciar_Windows_10_11.bat','VERSION','build_windows.ps1','launch.py','requirements.txt','requirements-build.txt','branding' -DestinationPath "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip" -Force
           Get-FileHash 'dist/PT2VHF-Mesh-Analyzer.exe' -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  PT2VHF-Mesh-Analyzer.exe" } | Out-File 'dist/SHA256SUMS.txt' -Encoding ascii
       - name: Instalar Inno Setup
         shell: pwsh
@@ -119,46 +120,157 @@ jobs:
             dist/*-Portable-Win11-x64.exe
             dist/*-Portable-Win11-x64.zip
             dist/*-Setup-Win11-x64.exe
-            dist/*-Codigo-Fonte.zip
             dist/SHA256SUMS.txt
-      - name: Publicar GitHub Release da versão atual
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: pwsh
+
+  package-linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Instalar bibliotecas e gerador
+        run: python -m pip install -r requirements-build.txt
+      - name: Criar identidade visual (PNG)
+        run: python branding/build_icons.py
+      - name: Validar testes automatizados
+        run: python -m unittest discover -s tests -v
+      - name: Compilar executável Linux x64
         run: |
-          $version = (Get-Content VERSION -Raw).Trim()
-          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'VERSION invalido' }
-          $tag = "v$version"
-          $repository = $env:GITHUB_REPOSITORY
-          $assets = @(
-            'dist/PT2VHF-Mesh-Analyzer.exe',
-            'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe',
-            'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe',
-            'dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip',
-            'dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe',
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.exe",
-            'dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip',
-            'dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe',
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.zip",
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win10-Win11-x64.exe",
-            # Legacy aliases required by v0.6.25 and older automatic updater clients.
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win11-x64.exe",
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe",
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip",
-            "dist/PT2VHF-Mesh-Analyzer-v$version-Codigo-Fonte.zip",
-            'dist/SHA256SUMS.txt'
-          )
-          $release = gh release view $tag --repo $repository --json tagName 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "Release $tag já existe; nenhuma alteração retroativa."
-          } else {
-            gh release create $tag @assets --repo $repository --target $env:GITHUB_SHA --title "PT2VHF Mesh Analyzer v$version" --notes-file CHANGELOG.md
-            if ($LASTEXITCODE -ne 0) { throw 'Falha na publicação da release' }
-          }
-      - name: Manter somente a release atual e seus downloads
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+          python -m PyInstaller --noconfirm --clean --onefile --name PT2VHF-Mesh-Analyzer --add-data 'branding/mesh_analyzer_logo.png.b64:branding' --add-data 'mesh_analyzer/ui.html:mesh_analyzer' --collect-submodules meshtastic --collect-submodules bleak --collect-submodules zeroconf --collect-submodules paho --collect-submodules pubsub --hidden-import serial.tools.list_ports launch.py
+          test -x dist/PT2VHF-Mesh-Analyzer
+      - name: Testar executável Linux (API local)
+        run: |
+          dist/PT2VHF-Mesh-Analyzer --headless --no-browser --port 8797 --data-dir "$RUNNER_TEMP/mesh-linux" &
+          pid=$!
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8797/health && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8797/health | grep -q "$(cat VERSION)"
+          kill $pid
+      - name: Empacotar Linux
+        run: |
+          version=$(cat VERSION)
+          pkg="PT2VHF-Mesh-Analyzer-v$version-Linux-x64"
+          mkdir -p "pkg/$pkg"
+          cp dist/PT2VHF-Mesh-Analyzer "pkg/$pkg/"
+          cp branding/mesh-analyzer.png "pkg/$pkg/pt2vhf-mesh-analyzer.png"
+          cp linux/instalar.sh linux/LEIA-ME.txt "pkg/$pkg/"
+          chmod +x "pkg/$pkg/PT2VHF-Mesh-Analyzer" "pkg/$pkg/instalar.sh"
+          tar -C pkg -czf "dist/$pkg.tar.gz" "$pkg"
+          cp "dist/$pkg.tar.gz" dist/PT2VHF-Mesh-Analyzer-Linux-x64.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-Mesh-Analyzer-Linux
+          path: dist/*-Linux-x64.tar.gz
+
+  package-macos:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Instalar bibliotecas e gerador
+        run: python -m pip install -r requirements-build.txt
+      - name: Criar identidade visual (PNG)
+        run: python branding/build_icons.py
+      - name: Validar testes automatizados
+        run: python -m unittest discover -s tests -v
+      - name: Compilar aplicativo macOS (${{ matrix.arch }})
+        run: |
+          python -m PyInstaller --noconfirm --clean --windowed --name "PT2VHF Mesh Analyzer" --osx-bundle-identifier br.pt2vhf.meshanalyzer --icon branding/mesh-analyzer.png --add-data 'branding/mesh_analyzer_logo.png.b64:branding' --add-data 'mesh_analyzer/ui.html:mesh_analyzer' --collect-submodules meshtastic --collect-submodules bleak --collect-submodules zeroconf --collect-submodules paho --collect-submodules pubsub --collect-all webview --hidden-import serial.tools.list_ports launch.py
+          app="dist/PT2VHF Mesh Analyzer.app"
+          test -d "$app"
+          # Bluetooth LE (bleak) exige a descrição de uso no Info.plist.
+          plutil -insert NSBluetoothAlwaysUsageDescription -string "Conectar a rádios Meshtastic via Bluetooth LE." "$app/Contents/Info.plist"
+          plutil -replace CFBundleShortVersionString -string "$(cat VERSION)" "$app/Contents/Info.plist"
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep "$app"
+      - name: Testar aplicativo macOS (API local)
+        run: |
+          "dist/PT2VHF Mesh Analyzer.app/Contents/MacOS/PT2VHF Mesh Analyzer" --headless --no-browser --port 8798 --data-dir "$RUNNER_TEMP/mesh-mac" &
+          pid=$!
+          for i in $(seq 1 90); do curl -fsS http://127.0.0.1:8798/health && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8798/health | grep -q "$(cat VERSION)"
+          kill $pid
+      - name: Criar DMG
+        run: |
+          version=$(cat VERSION)
+          mkdir -p dmg
+          cp -R "dist/PT2VHF Mesh Analyzer.app" dmg/
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname "PT2VHF Mesh Analyzer" -srcfolder dmg -ov -format UDZO "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-${{ matrix.arch }}.dmg"
+          cp "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-${{ matrix.arch }}.dmg" "dist/PT2VHF-Mesh-Analyzer-macOS-${{ matrix.arch }}.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PT2VHF-Mesh-Analyzer-macOS-${{ matrix.arch }}
+          path: dist/*-macOS-${{ matrix.arch }}.dmg
+
+  publish-release:
+    needs: [package-win10-win11, package-linux, package-macos]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Gerar SHA256SUMS de todas as plataformas
+        run: |
+          cd dist
+          rm -f SHA256SUMS.txt
+          sha256sum -- * | sed 's/^\([0-9a-f]*\)/\U\1/' > ../SHA256SUMS.txt
+          mv ../SHA256SUMS.txt SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Publicar GitHub Release da versão atual
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: pwsh
+        run: |
+          version=$(tr -d '[:space:]' < VERSION)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'VERSION invalido'; exit 1; }
+          tag="v$version"
+          assets=(
+            dist/PT2VHF-Mesh-Analyzer.exe
+            dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe
+            dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.exe
+            dist/PT2VHF-Mesh-Analyzer-Portable-Win11-x64.zip
+            dist/PT2VHF-Mesh-Analyzer-Setup-Win11-x64.exe
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.exe"
+            dist/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.zip
+            dist/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win10-Win11-x64.zip"
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win10-Win11-x64.exe"
+            # Legacy aliases required by v0.6.25 and older automatic updater clients.
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Setup-Win11-x64.exe"
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.exe"
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip"
+            "dist/PT2VHF-Mesh-Analyzer-v$version-Linux-x64.tar.gz"
+            dist/PT2VHF-Mesh-Analyzer-Linux-x64.tar.gz
+            "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-arm64.dmg"
+            dist/PT2VHF-Mesh-Analyzer-macOS-arm64.dmg
+            "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-x64.dmg"
+            dist/PT2VHF-Mesh-Analyzer-macOS-x64.dmg
+            dist/SHA256SUMS.txt
+          )
+          for a in "${assets[@]}"; do [ -s "$a" ] || { echo "Arquivo ausente: $a"; exit 1; }; done
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json tagName >/dev/null 2>&1; then
+            echo "Release $tag já existe; nenhuma alteração retroativa."
+          else
+            gh release create "$tag" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "PT2VHF Mesh Analyzer v$version" --notes-file CHANGELOG.md
+          fi
+      - name: Manter somente a release atual e seus downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: python scripts/retain_latest_release.py

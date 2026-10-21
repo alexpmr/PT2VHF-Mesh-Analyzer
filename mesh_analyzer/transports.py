@@ -103,6 +103,18 @@ def waypoint_from_decoded(decoded):
     except (ValueError,TypeError,OverflowError): return None
 
 
+# #144: rxTime vem do relógio do rádio, que pode estar alguns minutos defasado
+# do PC; isso fazia toda mensagem recém-chegada aparecer como "há 3 minutos".
+# Dentro desta janela a recepção é ao vivo e vale o relógio local; fora dela
+# (histórico reenviado pelo rádio) preserva-se o horário original do pacote.
+LIVE_CLOCK_SKEW_MS=15*60*1000
+
+
+def message_timestamp(radio_ms:int,received_ms:int)->int:
+    if abs(int(radio_ms)-int(received_ms))<=LIVE_CLOCK_SKEW_MS:return int(received_ms)
+    return min(int(radio_ms),int(received_ms))
+
+
 class PacketIngestor:
     def __init__(self,db:Database):self.db=db
 
@@ -140,11 +152,13 @@ class PacketIngestor:
         decoded=packet.get("decoded") if isinstance(packet.get("decoded"),dict) else {}
         from_num=number(packet.get("from") if "from" in packet else packet.get("fromId"))
         to_num=number(packet.get("to") if "to" in packet else packet.get("toId"))
-        raw_ts=packet.get("rxTime") or packet.get("rx_time") or packet.get("timestamp") or now_ms()
+        received_ms=now_ms()
+        raw_ts=packet.get("rxTime") or packet.get("rx_time") or packet.get("timestamp") or received_ms
         try: ts=int(float(raw_ts));ts=ts*1000 if ts<10_000_000_000 else ts
-        except (ValueError,TypeError):ts=now_ms()
+        except (ValueError,TypeError):ts=received_ms
         # Future clocks and firmware zero timestamps must not damage retention.
-        if ts<946684800000 or ts>now_ms()+86400000:ts=now_ms()
+        if ts<946684800000 or ts>received_ms+86400000:ts=received_ms
+        radio_ts=ts
         packet_id=packet.get("id") or packet.get("packetId")
         if not packet_id:packet_id=hashlib.blake2s(json.dumps(_json_safe(packet),sort_keys=True).encode(),digest_size=8).hexdigest()
         # Duplicate RX events in same source should not inflate statistics.
@@ -221,7 +235,9 @@ class PacketIngestor:
                 rx_good=metric(loc,"numPacketsRx","num_packets_rx"),
                 rx_bad=metric(loc,"numPacketsRxBad","num_packets_rx_bad"))
         if port in ("TEXT_MESSAGE_APP","1") and text:
-            self.db.add_message({"source_id":source_id,"packet_key":unique,"packet_id":str(packet_id),"timestamp_ms":ts,
+            self.db.add_message({"source_id":source_id,"packet_key":unique,"packet_id":str(packet_id),
+                                 "timestamp_ms":message_timestamp(radio_ts,received_ms),
+                                 "radio_time_ms":radio_ts,
                                  "from_node":from_num,"to_node":to_num,"channel":int(packet.get("channel") or 0),
                                  "direction":"rx","text":text[:1024],"state":"received"})
         kind,edges=extract_topology(packet)

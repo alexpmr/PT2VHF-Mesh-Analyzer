@@ -213,6 +213,9 @@ class Database:
             packet_columns = {row[1] for row in self._db.execute("PRAGMA table_info(packets)")}
             if "direction" not in packet_columns:
                 self._db.execute("ALTER TABLE packets ADD COLUMN direction TEXT NOT NULL DEFAULT 'rx'")
+            message_columns = {row[1] for row in self._db.execute("PRAGMA table_info(messages)")}
+            if "radio_time_ms" not in message_columns:
+                self._db.execute("ALTER TABLE messages ADD COLUMN radio_time_ms INTEGER")
             columns = {row[1] for row in self._db.execute("PRAGMA table_info(nodes)")}
             if "voltage" not in columns:
                 self._db.execute("ALTER TABLE nodes ADD COLUMN voltage REAL")
@@ -846,7 +849,7 @@ class Database:
                 raise
 
     def add_message(self, item:dict):
-        fields=["source_id","packet_key","packet_id","timestamp_ms","from_node","to_node","channel","direction","text","state"]
+        fields=["source_id","packet_key","packet_id","timestamp_ms","from_node","to_node","channel","direction","text","state","radio_time_ms"]
         with self._lock,self._db:
             try:
                 self._db.execute("INSERT INTO messages("+",".join(fields)+") VALUES("+",".join("?" for _ in fields)+")",

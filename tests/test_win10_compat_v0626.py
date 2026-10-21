@@ -32,7 +32,8 @@ class Win10CompatibilityTests(unittest.TestCase):
         self.assertIn("Setup-Win11-x64.exe", workflow)
         self.assertIn("Portable-Win10-Win11-x64.zip", workflow)
         self.assertIn("Setup-Win10-Win11-x64.exe", workflow)
-        self.assertIn("Iniciar_Windows_10_11.bat", workflow)
+        # v0.6.36: o ZIP de código-fonte deixou de ser publicado na release.
+        self.assertNotIn("Codigo-Fonte", workflow)
         self.assertTrue((ROOT / "Iniciar_Windows_10_11.bat").exists())
 
     def test_release_cleanup_preserves_previous_until_both_families_uploaded(self):
