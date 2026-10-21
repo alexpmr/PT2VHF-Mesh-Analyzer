@@ -422,11 +422,11 @@ try {
 <div class="field"><label for="autoInterval">Avaliar a cada (minutos)</label><input id="autoInterval" type="number" min="1" max="1440" value="1"></div>
 <div class="field"><label for="autoPerHour">Máximo de consultas por hora</label><input id="autoPerHour" type="number" min="1" max="24" value="24"></div>
 <div class="field"><label for="autoMinGap">Intervalo mínimo entre TX (segundos)</label><input id="autoMinGap" type="number" min="30" max="3600" value="60"></div>
-<div class="field"><label for="autoRecent">Consultar nós observados nas últimas (horas)</label><input id="autoRecent" type="number" min="1" max="720" value="24"></div>
+<div class="field"><label for="autoRecent">Consultar nós observados nas últimas (horas)</label><input id="autoRecent" type="number" min="1" max="720" value="24"></div><div class="field"><label for="autoPresenceSilent">Ping de presença: nós calados há mais de (horas)</label><input id="autoPresenceSilent" type="number" min="1" max="48" value="2"></div><div class="field"><label for="autoPresenceWindow">Ping de presença: até nós calados há (horas)</label><input id="autoPresenceWindow" type="number" min="6" max="720" value="72"></div><div class="field"><label for="autoChannelBusy">Pausar se a utilização do canal passar de (%)</label><input id="autoChannelBusy" type="number" min="5" max="100" value="25"></div>
 </div>
 <h4>Consultas permitidas</h4>
 <div class="formGrid" id="autoQueryToggles"></div>
-<p class="muted">NodeInfo, posição e telemetria são recomendados. As consultas compatíveis ficam selecionadas e a automação ativa por padrão, com limites de transmissão. Vizinhos e ping serão utilizados somente quando o aplicativo e o firmware fornecerem consultas reais compatíveis.</p>
+<p class="muted">NodeInfo, posição e telemetria são recomendados. As consultas compatíveis ficam selecionadas e a automação ativa por padrão, com limites de transmissão. O ping de presença chama primeiro os nós calados há mais tempo (pedido leve de NodeInfo), tenta de novo em 30 min, 1 h, 2 h… até 24 h, pausa com o canal congestionado e usa no máximo metade das consultas por hora.</p>
 <div class="actions"><button type="submit" id="autoSaveButton">Salvar automação</button>
 <button type="button" id="autoPreview">Simular fila (sem TX)</button>
 <button type="button" id="autoRun">Executar uma consulta agora</button>
@@ -1303,8 +1303,8 @@ function renderMap(){
    if(!allowed.has(n.node_num)||!validPos(n))continue;
    if($('mapIdentifiedOnly').checked&&!n.long_name&&!n.short_name)continue;
    const point=[n.latitude,n.longitude];
-   const marker=L.marker(point,{icon:nodeRoleIcon(n),keyboard:true,riseOnHover:true,
-     alt:(n.short_name||n.long_name||n.node_id)+' · '+nodeRoleMeta(n.role)[1]});
+   const marker=L.marker(point,{icon:nodeRoleIcon(n),keyboard:true,riseOnHover:true,opacity:presenceSilent(n)?0.4:1,
+     alt:(n.short_name||n.long_name||n.node_id)+' · '+nodeRoleMeta(n.role)[1]+(presenceSilent(n)?' · sem resposta':'')});
    marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id)+' · '+esc(nodeRoleMeta(n.role)[1]),{
      permanent:$('showNames').checked,direction:'top'});
    marker.on('click',()=>showNode(n));
@@ -1379,8 +1379,7 @@ const AUTO_TYPES=[
  ['position','Posição — coordenadas e altitude'],
  ['telemetry','Telemetria — bateria e sensores'],
  ['traceroute','Traceroute — saltos conhecidos'],
- ['neighbors','Vizinhos — recurso futuro, se suportado'],
- ['ping','Ping — recurso futuro, se suportado']
+ ['ping','Ping de presença — chama nós calados há horas']
 ];
 let automationConfigLoaded=false;
 function drawAutomationQueue(rows,caption=''){
@@ -1401,11 +1400,14 @@ async function loadAutomation(){
   $('autoPerHour').value=cfg.max_per_hour??24;
   $('autoMinGap').value=cfg.min_gap_seconds??60;
   $('autoRecent').value=cfg.recent_hours??24;
+  $('autoPresenceSilent').value=cfg.presence_silent_hours??2;
+  $('autoPresenceWindow').value=cfg.presence_window_hours??72;
+  $('autoChannelBusy').value=cfg.channel_busy_percent??25;
   const supported=new Set(v.supported||[]);
   $('autoQueryToggles').innerHTML=AUTO_TYPES.map(([key,label])=>
    '<div class="field"><label><input type="checkbox" data-auto-kind="'+esc(key)+'" '+
     (cfg.types?.[key]?'checked ':'')+
-    ((!supported.has(key)&&['neighbors','ping'].includes(key))?'disabled ':'')+
+    ((key==='ping'&&!supported.has('nodeinfo'))?'disabled ':'')+
     '> '+esc(label)+'</label></div>').join('');
   automationConfigLoaded=true;
   $('autoSaveButton').disabled=true;
@@ -1426,7 +1428,9 @@ async function saveAutomation(){
  document.querySelectorAll('[data-auto-kind]').forEach(el=>{if(!el.disabled)types[el.dataset.autoKind]=el.checked;});
  const config={enabled:$('autoEnabled').checked,types,
    evaluate_minutes:Number($('autoInterval').value),max_per_hour:Number($('autoPerHour').value),
-   min_gap_seconds:Number($('autoMinGap').value),recent_hours:Number($('autoRecent').value)};
+   min_gap_seconds:Number($('autoMinGap').value),recent_hours:Number($('autoRecent').value),
+   presence_silent_hours:Number($('autoPresenceSilent').value),presence_window_hours:Number($('autoPresenceWindow').value),
+   channel_busy_percent:Number($('autoChannelBusy').value)};
  try{
   await api('/api/automation/settings',config);
   notify('Automação salva. '+(config.enabled?'Consultas RF habilitadas.':'Nenhuma transmissão automática será feita.'));
@@ -1782,8 +1786,8 @@ async function setFavoriteForNode(node,wantFavorite){
  }catch(e){notify('Favoritos: '+e.message,true);}
  finally{pendingFavoriteNodes.delete(id);renderNodes();}
 }
-const nodeCols=[['long_name','Nome longo'],['short_name','Nome curto'],['role','Role'],['hw_model','Hardware'],['hops','Saltos'],['battery','Bateria'],['voltage','Tensão'],['distance','Distância'],['snr','SNR'],['last_seen_ms','Última interação'],['position_ms','Última posição'],['node_id','Node ID']];
-let selectedNodeCols=new Set(nodeCols.slice(0,11).map(x=>x[0])),nodeSort='distance',nodeSortAsc=true;
+const nodeCols=[['long_name','Nome longo'],['short_name','Nome curto'],['role','Role'],['hw_model','Hardware'],['hops','Saltos'],['battery','Bateria'],['voltage','Tensão'],['distance','Distância'],['snr','SNR'],['last_seen_ms','Última interação'],['position_ms','Última posição'],['presence','Presença'],['node_id','Node ID']];
+let selectedNodeCols=new Set(nodeCols.slice(0,12).map(x=>x[0])),nodeSort='distance',nodeSortAsc=true;
 try{const c=JSON.parse(localStorage.getItem('mesh.nodes.columns')||'null');if(Array.isArray(c)&&c.length)selectedNodeCols=new Set(c);}catch(e){}
 try{const d=JSON.parse(localStorage.getItem('mesh.nodes.sort')||'null');
  if(d&&nodeCols.some(col=>col[0]===d.col)&&typeof d.asc==='boolean'){nodeSort=d.col;nodeSortAsc=d.asc;}
@@ -1801,9 +1805,24 @@ function nodeValue(n,key){
    return found.length?Number(found[0].hops):null;
   }
  if(key==='last_seen_ms'||key==='position_ms')return n[key]||null;
+ if(key==='presence')return n.presence?(n.presence.reply_ms||-n.presence.attempts):null;
  return n[key]??null;
 }
+// #159: "respondeu há X" / "sem resposta (N)" / "checando" a partir da automação.
+function presenceText(n){
+ const p=n.presence;if(!p)return null;
+ if(p.state==='awaiting_reply')return 'checando…';
+ if(p.state==='replied'||(p.reply_ms&&p.reply_ms>=p.checked_ms))return 'respondeu '+age(p.reply_ms||p.checked_ms);
+ if(['timeout','error','disconnected'].includes(p.state))return 'sem resposta ('+Math.max(1,p.attempts)+')';
+ return null;
+}
+function presenceSilent(n){
+ // Sem resposta a 2+ checagens e sem transmitir desde a última: esmaecido no mapa.
+ const p=n.presence;
+ return !!p&&['timeout','error'].includes(p.state)&&p.attempts>=2&&Number(n.last_seen_ms||0)<p.checked_ms;
+}
 function nodeDisplay(n,key){
+ if(key==='presence')return presenceText(n)||'—';
  const v=nodeValue(n,key);
  if(v===null||v===undefined||v==='')return '—';
  if(key==='distance')return Number(v).toFixed(1)+' km';
@@ -2251,7 +2270,7 @@ function openNodeContext(nodeNum,x,y){
    action('delete','Apagar nó do banco e do rádio')+
    '<div style="padding:6px 9px;color:var(--muted);font-size:11px">Consultas remotas (requer rádio e protocolo compatível)</div>'+
    RF_QUERY_TYPES.map(([k,l])=>action('query-'+k,l,!!activeRadioSource(),'Conecte um rádio com transmissão')).join('')+
-   action('future','Ping / Vizinhos',false,'Não há API validada para esta versão'));
+   '');
  menu.hidden=false;
  const width=menu.offsetWidth||250,height=menu.offsetHeight||340;
  menu.style.left=Math.max(6,Math.min(x,innerWidth-width-6))+'px';

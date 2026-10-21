@@ -113,8 +113,9 @@ class EnrichmentTests(unittest.TestCase):
         self.assertEqual(cfg["recent_hours"],24)
         for kind in ("nodeinfo","position","telemetry","traceroute"):
             self.assertTrue(cfg["types"][kind])
-        # Unsupported kinds remain visually disabled; they must never trigger RF.
-        self.assertTrue(cfg["types"]["neighbors"])
+        # v0.6.38 (#159): "ping" é a checagem de presença real; "Vizinhos", sem
+        # consulta compatível, deixou de ser oferecido.
+        self.assertNotIn("neighbors",cfg["types"])
         self.assertTrue(cfg["types"]["ping"])
         self.assertEqual(self.sources.queries.sent, [])
 

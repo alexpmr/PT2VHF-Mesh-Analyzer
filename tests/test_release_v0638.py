@@ -363,3 +363,87 @@ class FavoriteMerge(unittest.TestCase):
             self.assertEqual({k: v["is_favorite"] for k, v in reopened.app_favorites().items()}, {11: True, 12: True})
         finally:
             reopened.close()
+
+
+class PresencePing(unittest.TestCase):
+    """#159: nós calados há horas recebem checagem de presença."""
+
+    def setUp(self):
+        from tests.test_auto_node_queries import FakeSources
+        from mesh_analyzer.automations import NodeEnrichment
+        self.tmp = tempfile.TemporaryDirectory()
+        self.db = Database(Path(self.tmp.name) / "t.sqlite3")
+        self.sid = self.db.upsert_source({"name": "R", "kind": "serial", "config": {"port": "COM3"}, "enabled": True})["id"]
+        self.sources = FakeSources(self.sid)
+        self.auto = NodeEnrichment(self.db, self.sources)
+        self.now = int(time.time() * 1000)
+
+    def tearDown(self):
+        self.db.close(); self.tmp.cleanup()
+
+    def node(self, num, silent_h, role="CLIENT"):
+        self.db.upsert_node(num, self.sid, timestamp_ms=self.now - int(silent_h * 3600000), observed=True,
+                            long_name="N%d" % num, short_name="N", hw_model="T", role=role,
+                            latitude=-15.0, longitude=-47.0, battery=80)
+
+    def pings(self, now=None):
+        cfg = self.auto.config()
+        c = self.auto._candidates(self.sid, self.sources.queries.supported, 100, cfg, now or self.now)
+        return [x for x in c if x["kind"] == "ping"], c
+
+    def test_silent_nodes_are_checked_longest_silence_first(self):
+        for num, h in ((1, 0.2), (2, 3), (3, 12), (4, 40), (5, 80)):
+            self.node(num, h)
+        pings, everything = self.pings()
+        self.assertEqual([p["node"] for p in pings], [4, 3, 2])
+        self.assertEqual(pings[0]["reason"], "Calado há 40 h")
+        first_other = next(i for i, c in enumerate(everything) if c["kind"] != "ping")
+        self.assertLess(everything.index(pings[0]), first_other)
+
+    def test_quiet_roles_are_not_pinged(self):
+        self.node(6, 5, role="CLIENT_MUTE")
+        self.node(7, 5, role="TRACKER")
+        self.assertEqual(self.pings()[0], [])
+
+    def test_ping_goes_out_as_nodeinfo_request_and_backs_off(self):
+        self.node(4, 40)
+        self.auto.save({"types": {"nodeinfo": False, "position": False, "telemetry": False, "traceroute": False}})
+        out = self.auto.tick()
+        self.assertEqual((out["kind"], self.sources.queries.sent[-1]), ("ping", (self.sid, 4, "nodeinfo")))
+        rid = "rf-1"
+        self.sources.queries.replies[rid]["state"] = "timeout"
+        self.auto._reconcile(self.now + 1000)
+        row = self.db._rows("SELECT * FROM auto_node_queries WHERE kind='ping'")[0]
+        self.assertEqual(row["attempts"], 1)
+        self.assertAlmostEqual(row["due_ms"] - (self.now + 1000), 30 * 60000, delta=2000)
+        self.assertEqual(self.pings(self.now + 2000)[0], [])
+        self.assertEqual([p["node"] for p in self.pings(self.now + 31 * 60000)[0]], [4])
+
+    def test_spontaneous_transmission_resets_attempts(self):
+        self.node(4, 40)
+        with self.db._lock, self.db._db:
+            self.db._db.execute("""INSERT INTO auto_node_queries(source_id,node_num,kind,state,sent_ms,due_ms,attempts)
+              VALUES(?,?,?,?,?,?,?)""", (self.sid, 4, "ping", "timeout", self.now - 45 * 3600000, self.now + 9 * 3600000, 5))
+        self.assertEqual([p["node"] for p in self.pings()[0]], [4])
+
+    def test_busy_channel_blocks_transmission(self):
+        self.node(4, 40)
+        self.db.add_rf_sample(self.sid, 100, self.now - 60000, channel_util=41.0, air_util=2.0)
+        out = self.auto.tick()
+        self.assertFalse(out["sent"])
+        self.assertIn("Canal congestionado", out["reason"])
+        self.assertEqual(self.sources.queries.sent, [])
+
+    def test_presence_share_of_hourly_budget(self):
+        self.node(4, 40)
+        self.auto.save({"max_per_hour": 2, "presence_share_percent": 50,
+                        "types": {"nodeinfo": False, "position": False, "telemetry": False, "traceroute": False}})
+        with self.db._lock, self.db._db:
+            self.db._db.execute("INSERT INTO auto_query_transmissions(source_id,node_num,kind,sent_ms) VALUES(?,?,?,?)",
+                                (self.sid, 9, "ping", self.now - 600000))
+        self.assertIn("Cota", self.auto.tick()["reason"])
+
+    def test_config_validates_window(self):
+        with self.assertRaises(ValueError):
+            self.auto.save({"presence_silent_hours": 10, "presence_window_hours": 8})
+        self.assertNotIn("neighbors", self.auto.config()["types"])

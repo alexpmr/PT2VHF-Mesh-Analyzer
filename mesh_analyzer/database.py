@@ -784,10 +784,19 @@ class Database:
             known_num.setdefault(num,[]).append(sid)
             if item["is_favorite"]:by_num.setdefault(num,[]).append(sid)
         app=self.app_favorites()
+        # #159: resultado da última checagem de presença (tabela da automação).
+        try:
+            presence={int(x["node_num"]):x for x in self._rows("""SELECT node_num,state,attempts,sent_ms,last_reply_ms
+              FROM auto_node_queries WHERE kind='ping' ORDER BY sent_ms""")}
+        except sqlite3.OperationalError:
+            presence={}
         for r in rows:
             r["aliases"]=json.loads(r["aliases"] or "[]")
             num=int(r["node_num"])
             r["favorite"]=bool(app.get(num,{}).get("is_favorite"))
+            check=presence.get(num)
+            r["presence"]={"state":check["state"],"attempts":int(check["attempts"]),"checked_ms":int(check["sent_ms"]),
+                           "reply_ms":int(check["last_reply_ms"])} if check else None
             r["favorite_source_ids"]=by_num.get(num,[])
             r["favorite_known_source_ids"]=known_num.get(num,[])
             r["favorite_pending_source_ids"]=[x["source_id"] for x in pending if x["node_num"]==num]

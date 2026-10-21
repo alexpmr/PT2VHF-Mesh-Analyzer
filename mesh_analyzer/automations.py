@@ -9,18 +9,27 @@ import json
 import threading
 import time
 
-KINDS = ("nodeinfo", "position", "telemetry", "traceroute", "neighbors", "ping")
+# "neighbors" saiu na v0.6.38 (#159): não há consulta NeighborInfo compatível.
+KINDS = ("nodeinfo", "position", "telemetry", "traceroute", "ping")
 DEFAULTS = {
     "enabled": True,
     "types": {"nodeinfo": True, "position": True, "telemetry": True,
-              "traceroute": True, "neighbors": True, "ping": True},
+              "traceroute": True, "ping": True},
     "evaluate_minutes": 1,
     "max_per_hour": 24,
     "min_gap_seconds": 60,
     "recent_hours": 24,
     "ages_hours": {"nodeinfo": 720, "position": 168,
                    "telemetry": 24, "traceroute": 336},
+    # #159: checagem de presença ("ping") de nós calados.
+    "presence_silent_hours": 2,
+    "presence_window_hours": 72,
+    "presence_share_percent": 50,
+    "channel_busy_percent": 25,
 }
+# Papéis que não respondem a consultas ou dormem a maior parte do tempo.
+QUIET_ROLES = {"CLIENT_MUTE", "TRACKER", "TAK_TRACKER", "SENSOR"}
+PING_RETRY_MS = 30 * 60000
 PORT_KIND = {"NODEINFO_APP": "nodeinfo", "POSITION_APP": "position",
              "TELEMETRY_APP": "telemetry", "TRACEROUTE_APP": "traceroute"}
 THROTTLE_STATES = ("awaiting_reply",)
@@ -82,6 +91,9 @@ class NodeEnrichment:
         result = {**DEFAULTS, **{k: stored[k] for k in DEFAULTS if k in stored}}
         result["types"] = {k: bool((stored.get("types") or {}).get(k, DEFAULTS["types"][k]))
                            for k in KINDS}
+        for k in ("presence_silent_hours", "presence_window_hours", "presence_share_percent", "channel_busy_percent"):
+            if type(result[k]) is not int:
+                result[k] = DEFAULTS[k]
         result["ages_hours"] = {k: int((stored.get("ages_hours") or {}).get(k, v))
                                for k, v in DEFAULTS["ages_hours"].items()}
         return result
@@ -90,7 +102,8 @@ class NodeEnrichment:
         if not isinstance(patch, dict):
             raise ValueError("Configuração inválida")
         allowed = {"enabled", "types", "evaluate_minutes", "max_per_hour",
-                   "min_gap_seconds", "recent_hours", "ages_hours"}
+                   "min_gap_seconds", "recent_hours", "ages_hours", "presence_silent_hours",
+                   "presence_window_hours", "presence_share_percent", "channel_busy_percent"}
         if set(patch) - allowed:
             raise ValueError("Parâmetro desconhecido da automação")
         config = self.config()
@@ -99,7 +112,8 @@ class NodeEnrichment:
                 raise ValueError("Ativação inválida")
             config["enabled"] = patch["enabled"]
         if "types" in patch:
-            types = patch["types"]
+            types = {k: v for k, v in patch["types"].items() if k != "neighbors"} \
+                if isinstance(patch["types"], dict) else patch["types"]
             if not isinstance(types, dict) or set(types) - set(KINDS):
                 raise ValueError("Tipos de consulta inválidos")
             for k, v in types.items():
@@ -109,12 +123,18 @@ class NodeEnrichment:
         for name, lo, hi in (("evaluate_minutes", 1, 1440),
                              ("max_per_hour", 1, 24),
                              ("min_gap_seconds", 30, 3600),
-                             ("recent_hours", 1, 720)):
+                             ("recent_hours", 1, 720),
+                             ("presence_silent_hours", 1, 48),
+                             ("presence_window_hours", 6, 720),
+                             ("presence_share_percent", 10, 100),
+                             ("channel_busy_percent", 5, 100)):
             if name in patch:
                 value = patch[name]
                 if type(value) is not int or not lo <= value <= hi:
                     raise ValueError("Valor inválido: " + name)
                 config[name] = value
+        if config["presence_window_hours"] <= config["presence_silent_hours"]:
+            raise ValueError("A janela de presença deve ser maior que o tempo calado")
         if "ages_hours" in patch:
             values = patch["ages_hours"]
             if not isinstance(values, dict) or set(values) - set(DEFAULTS["ages_hours"]):
@@ -241,11 +261,61 @@ class NodeEnrichment:
                                           "Atualização vencida"),
                                "last_seen_ms": node["source_last_seen"],
                                "previous": previous})
-        # Missing info first, then newest observed node, with oldest attempts fairly recycled.
-        result.sort(key=lambda c: (0 if c["reason"] == "Informação ausente" else 1,
-                                   int(c["previous"]["sent_ms"]) if c["previous"] else 0,
-                                   -int(c["last_seen_ms"])))
+        if config["types"].get("ping") and "nodeinfo" in supported:
+            result.extend(self._presence(source_id, own, config, now, attempts))
+        # Informação ausente primeiro; depois quem está calado há mais tempo (#159);
+        # por fim dados vencidos, reciclando de forma justa as tentativas antigas.
+        def order(c):
+            if c["reason"] == "Informação ausente":
+                return (0, 0, 0)
+            if c["kind"] == "ping":
+                return (1, int(c["last_seen_ms"]), 0)
+            return (2, int(c["previous"]["sent_ms"]) if c["previous"] else 0, -int(c["last_seen_ms"]))
+        result.sort(key=order)
         return result
+
+    def _presence(self, source_id, own, config, now, attempts):
+        """#159: nós ouvidos por RF e calados há mais de X horas, dentro da janela."""
+        silent = config["presence_silent_hours"] * 3600000
+        window = config["presence_window_hours"] * 3600000
+        rows = self.db._rows("""SELECT n.node_num,n.long_name,n.short_name,n.node_id,n.role,
+                    ns.last_seen_ms AS source_last_seen
+          FROM nodes n JOIN node_sources ns ON ns.node_num=n.node_num
+          WHERE ns.source_id=? AND ns.observed=1 AND ns.last_seen_ms BETWEEN ? AND ?""",
+          (source_id, now - window, now - silent))
+        result = []
+        for node in rows:
+            num = node["node_num"]
+            if num == own or not 0 < num < 0xffffffff or (node["role"] or "") in QUIET_ROLES:
+                continue
+            previous = attempts.get((num, "ping"))
+            heard = int(node["source_last_seen"] or 0)
+            if previous and heard > int(previous["sent_ms"] or 0):
+                previous = None  # voltou a transmitir sozinho: zera a contagem
+            if previous and int(previous["due_ms"]) > now:
+                continue
+            hours = max(1, (now - heard) // 3600000)
+            result.append({"node": num, "kind": "ping",
+                           "name": node["long_name"] or node["short_name"] or node["node_id"],
+                           "reason": "Calado há " + str(hours) + " h",
+                           "last_seen_ms": heard, "previous": previous})
+        return result
+
+    def _channel_busy(self, source_id, own, config, now):
+        """Utilização do canal / airtime do próprio rádio nos últimos 15 minutos."""
+        if not own:
+            return None
+        row = self.db._db.execute("""SELECT channel_util,air_util FROM rf_samples
+          WHERE source_id=? AND node_num=? AND timestamp_ms>=? ORDER BY timestamp_ms DESC LIMIT 1""",
+          (source_id, own, now - 900000)).fetchone()
+        if not row:
+            return None
+        channel, air = row[0], row[1]
+        if channel is not None and float(channel) > config["channel_busy_percent"]:
+            return "Canal congestionado (" + str(round(float(channel))) + "% de utilização)"
+        if air is not None and float(air) > 7:
+            return "Airtime TX do rádio alto (" + str(round(float(air), 1)) + "%)"
+        return None
 
     def _record(self, source_id, node, kind, reqid, state, now, due, attempts, error=""):
         with self.db._lock, self.db._db:
@@ -275,6 +345,11 @@ class NodeEnrichment:
                 ok = state == "replied"
                 attempts = 0 if ok else min(9, row["attempts"]+1)
                 delay = 6*3600000 if ok else min(86400000, 900000*(2**min(attempts, 6)))
+                if row["kind"] == "ping":
+                    # Respondeu: só volta a ser checado se calar de novo. Sem resposta:
+                    # 30 min, 1 h, 2 h, 4 h… até 24 h.
+                    delay = (self.config()["presence_silent_hours"]*3600000 if ok else
+                             min(86400000, PING_RETRY_MS*(2**max(0, attempts-1))))
                 with self.db._lock, self.db._db:
                     self.db._db.execute("""UPDATE auto_node_queries SET
                       state=?,attempts=?,due_ms=?,last_reply_ms=CASE WHEN ? THEN ? ELSE last_reply_ms END,
@@ -284,11 +359,13 @@ class NodeEnrichment:
                        row["source_id"],row["node_num"],row["kind"]))
             elif now-row["sent_ms"] >= 90000:
                 attempts = min(9, row["attempts"]+1)
+                retry = (min(86400000, PING_RETRY_MS*(2**max(0, attempts-1))) if row["kind"] == "ping"
+                         else min(86400000, 900000*(2**min(attempts, 6))))
                 with self.db._lock, self.db._db:
                     self.db._db.execute("""UPDATE auto_node_queries
                       SET state='timeout',attempts=?,due_ms=?,error='Sem resposta RF'
                       WHERE source_id=? AND node_num=? AND kind=?""",
-                      (attempts,now+min(86400000,900000*(2**min(attempts,6))),
+                      (attempts,now+retry,
                        row["source_id"],row["node_num"],row["kind"]))
         return bool(self.db._rows("SELECT 1 FROM auto_node_queries WHERE state='awaiting_reply' LIMIT 1"))
 
@@ -339,10 +416,23 @@ class NodeEnrichment:
                 return {"sent": False, "reason": "Limite de consultas por hora"}
             if recent[1] and now-recent[1] < cfg["min_gap_seconds"]*1000:
                 return {"sent": False, "reason": "Intervalo mínimo de RF"}
+            busy = self._channel_busy(source_id, own, cfg, now)
+            if busy:
+                return {"sent": False, "reason": busy}
+            with self.db._lock:
+                pings = self.db._db.execute(
+                    "SELECT COUNT(*) FROM auto_query_transmissions WHERE kind='ping' AND sent_ms>=?",
+                    (now-3600000,)).fetchone()[0]
+            if pings >= max(1, cfg["max_per_hour"]*cfg["presence_share_percent"]//100):
+                candidates = [c for c in candidates if c["kind"] != "ping"]
+                if not candidates:
+                    return {"sent": False, "reason": "Cota de checagens de presença nesta hora"}
             c = candidates[0]
             previous = c["previous"]
             try:
-                req = self.sources.queries.start(source_id, c["node"], c["kind"])
+                # Ping de presença = pedido de NodeInfo com resposta obrigatória (leve).
+                req = self.sources.queries.start(source_id, c["node"],
+                                                 "nodeinfo" if c["kind"] == "ping" else c["kind"])
             except (ValueError, RuntimeError) as exc:
                 # Local contention or transient device state: short cooldown.
                 self._record(source_id,c["node"],c["kind"],"", "error",now,
