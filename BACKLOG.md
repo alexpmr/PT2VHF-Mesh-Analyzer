@@ -1,3 +1,7 @@
+## v0.6.35 — Implementado nesta entrega
+
+- Aviso de nova versão: pedido do mantenedor para o APRS Client, Sat Tool, Prop Tool, Mesh Analyzer e venus-8. Aqui, o diálogo de atualização existente abre automaticamente ao detectar versão nova; "Depois" adia 24 h.
+
 ## v0.6.34 — Implementado nesta entrega
 
 Correções e critérios registrados no CHANGELOG: #138–#143; melhorias #59, #124, #125, #126 e #137. Aceite em rádio e Windows físicos pendente. A fila agrega consultas do backend com lotes da janela atual; persistência central dos lotes permanece pendente. Favoritos locais pendentes são mostrados separadamente da confirmação do dispositivo.

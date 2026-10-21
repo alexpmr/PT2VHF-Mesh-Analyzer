@@ -1,3 +1,7 @@
+# v0.6.35 — Aviso de nova versão
+
+- Atualizações: ao detectar versão nova, além do indicador NOVA VERSÃO no menu superior, o diálogo de atualização abre sozinho perguntando "Deseja atualizar agora?", com Atualizar agora / Depois / Abrir release. "Atualizar agora" segue o fluxo existente (download, SHA256, instalação); "Depois" adia a mesma versão por 24 h. Não abre sobre outro diálogo (primeira execução, sem conexão) nem se a atualização já estiver em andamento.
+
 # v0.6.34 — Conexões, mensagens e acompanhamento de consultas
 
 - #138: pesquisa do mapa exige as duas pontas correspondentes também nos fluxos lógicos; contagens e autozoom respeitam o filtro. Pulsos deixam de aparecer em nós ocultos.

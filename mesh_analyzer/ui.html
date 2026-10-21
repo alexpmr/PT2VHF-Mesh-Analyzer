@@ -315,7 +315,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.34</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.35</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -477,7 +477,7 @@ try {
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.34</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.35</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewAbout"><div class="panels">
@@ -494,7 +494,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.34.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.35.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -2986,7 +2986,7 @@ $('loraExport').onclick=()=>{
  const link=document.createElement('a');link.href=url;link.download='PT2VHF-Mesh-Config-Redacted.json';link.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
-let monitorState=null,sysLoaded=false,checkingManually=false;
+let monitorState=null,sysLoaded=false,checkingManually=false,updatePromptedFor=null,updatePromptOpen=false;
 const THEMES=['dark','gray','light'];
 function applySystemTheme(theme,persistCache=true){
  const selected=THEMES.includes(theme)?theme:'dark';
@@ -3078,6 +3078,7 @@ function updateVersionState(info){
  else if(info.available){btn.classList.add('available');label='NOVA VERSÃO v'+info.latest;}
  else{btn.classList.add('latest');label='v'+info.current+' · ATUALIZADO';}
  btn.textContent=label;
+ maybePromptUpdate(info);
  btn.title=info.available?'Nova versão disponível. Clique para ver novidades e baixar.':'Clique para verificar a última versão agora';
  $('updateStatus').textContent=info.error?'Verificação indisponível: '+info.error:
  info.available?'Nova versão '+info.latest+' disponível, instalada '+info.current+'. Clique no indicador para atualizar diretamente.':
@@ -3102,6 +3103,18 @@ async function checkUpdates(manual=false){
 }
 $('updateCheck').onclick=()=>checkUpdates(true);
 let currentUpdateNotice=false,updateInstalling=false,updatePoll=null;
+// Ao detectar versão nova, abre o diálogo perguntando se deseja atualizar;
+// "Depois" adia a mesma versão por 24 h e nada é instalado sem confirmação.
+const UPDATE_PROMPT_SNOOZE_MS=24*60*60*1000;
+function maybePromptUpdate(info){
+ if(!info?.available||!info.latest||updateInstalling||updatePromptedFor===info.latest)return;
+ try{const at=Number(localStorage.getItem('updatePromptSnooze.'+info.latest)||0);if(at&&Date.now()-at<UPDATE_PROMPT_SNOOZE_MS)return;}catch(e){}
+ if($('updateDialog').classList.contains('active')||$('firstRunDialog').classList.contains('open')||
+    $('messageNoConnectionDialog').classList.contains('open')){setTimeout(()=>maybePromptUpdate(monitorState),5000);return;}
+ updatePromptedFor=info.latest;updatePromptOpen=true;
+ showUpdateDialog(info);
+ $('updateSummary').textContent='Deseja atualizar agora? '+$('updateSummary').textContent;
+}
 function showUpdateDialog(info,installed=false){
  const failed=info.status==='failed',unverified=info.status==='unverified';
  const notice=installed||failed||unverified;
@@ -3183,7 +3196,7 @@ async function beginUpdateDirect(){
  }
 }
 $('topUpdate').onclick=()=>monitorState?.available?beginUpdateDirect():checkUpdates(true);
-$('updateApply').onclick=()=>beginUpdateDirect();
+$('updateApply').onclick=()=>{updatePromptOpen=false;beginUpdateDirect();};
 $('updateLater').onclick=async()=>{
  if(updateInstalling){
   $('updateLater').disabled=true;
@@ -3200,6 +3213,8 @@ $('updateLater').onclick=async()=>{
   return;
  }
  $('updateDialog').classList.remove('active');
+ if(updatePromptOpen&&updatePromptedFor){try{localStorage.setItem('updatePromptSnooze.'+updatePromptedFor,String(Date.now()));}catch(e){}}
+ updatePromptOpen=false;
  showFirstRunDialogOnce();
  if(currentUpdateNotice){
   try{await api('/api/update/ack',{});}catch(e){}
