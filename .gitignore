@@ -10,4 +10,5 @@ dist/
 *.sqlite3-wal
 *.log
 .env
-*.egg-info/
+*.egg-info/branding/mesh-analyzer.ico
+branding/mesh-analyzer.png
