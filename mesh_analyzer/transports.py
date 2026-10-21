@@ -247,9 +247,21 @@ class PacketIngestor:
         return True
 
 
+# #152: tempo máximo para a conexão escolhida no seletor assumir; depois disso
+# o rádio anterior volta a ser o ativo. No início do aplicativo, o rádio
+# preferido tem prioridade sobre "o primeiro que conectar vence" (#139).
+HANDOVER_TIMEOUT_S=45
+STARTUP_PREFERENCE_S=30
+
+
 class SourceManager:
+    RETRY_WAIT_S=7
+
     def __init__(self,db:Database):
         self.db=db
+        self._handover=None
+        self._switch={"phase":"idle"}
+        self._started_at=time.monotonic()
         self.ingest=PacketIngestor(db)
         self._stop=threading.Event()
         self._lock=threading.RLock()
@@ -331,7 +343,10 @@ class SourceManager:
             self._pub=pub;self._subscribed=True
 
     def start(self):
-        for src in self.db.sources(public=False):
+        self._started_at=time.monotonic()
+        preferred=self.db.preferred_radio()
+        # O rádio preferido (#152) é o primeiro a tentar conectar.
+        for src in sorted(self.db.sources(public=False),key=lambda s:s["id"]!=preferred):
             if src["enabled"]:self.connect(src["id"])
 
     def _update_device_name(self,source_id,iface):
@@ -346,6 +361,14 @@ class SourceManager:
             with self.db._lock,self.db._db:
                 self.db._db.execute("UPDATE sources SET name=?,updated_ms=? WHERE id=?",
                                     (name,now_ms(),int(source_id)))
+        own=number(own)
+        src=self.db.source(source_id)
+        if own and src and src["kind"]!="mqtt" and src["config"].get("node_num")!=own:
+            # Guarda o Node ID para a detecção automática não duplicar este rádio.
+            config=dict(src["config"]);config["node_num"]=own
+            with self.db._lock,self.db._db:
+                self.db._db.execute("UPDATE sources SET config=? WHERE id=?",
+                                    (json.dumps(config),int(source_id)))
 
     def sync_favorites_from_radio(self,source_id):
         """Import only explicit favorite flags from the connected radio NodeDB."""
@@ -398,6 +421,133 @@ class SourceManager:
         return {"success":True,"source_id":sid,"node_num":num,
                 "requested_favorite":is_favorite,"confirmed":confirmed,
                 "status":"confirmed" if confirmed else "awaiting_nodedb"}
+
+    def _blocked_by_priority(self,id):
+        """Caller holds self._lock. True while another radio has priority."""
+        handover=self._handover
+        if handover and time.monotonic()<handover["deadline"]:
+            return handover["target"]!=id
+        preferred=self.db.preferred_radio()
+        if preferred and preferred!=id and time.monotonic()-self._started_at<STARTUP_PREFERENCE_S:
+            src=self.db.source(preferred)
+            if src and src["enabled"] and src["kind"]!="mqtt":
+                return self._states.get(preferred,{}).get("status")=="connecting"
+        return False
+
+    def active_radio(self):
+        with self._lock:
+            for k,iface in self._interfaces.items():
+                if self._states.get(k,{}).get("status")=="connected" and (self.db.source(k) or {}).get("kind")!="mqtt":
+                    return k
+        return None
+
+    def switch_status(self):
+        with self._lock:return dict(self._switch)
+
+    def activate(self,id):
+        """#152: torna ativa outra conexão de rádio, com retorno à anterior se falhar."""
+        id=int(id)
+        src=self.db.source(id)
+        if not src:raise ValueError("Conexão não encontrada")
+        if src["kind"]=="mqtt":raise ValueError("MQTT é somente recepção e não pode ser o rádio ativo")
+        if not src["enabled"]:raise ValueError("Conexão desativada; ative-a em Configurações")
+        previous=self.active_radio()
+        self.db.set_preferred_radio(id)
+        if previous==id:
+            return {"state":"connected","source_id":id}
+        with self._lock:
+            if self._switch.get("phase")=="switching":
+                raise RuntimeError("Já existe uma troca de rádio em andamento")
+            self._handover={"target":id,"previous":previous,"deadline":time.monotonic()+HANDOVER_TIMEOUT_S}
+            self._switch={"phase":"switching","target":id,"previous":previous,"started_ms":now_ms()}
+            iface=self._interfaces.pop(previous,None) if previous else None
+        if iface:
+            try:iface.close()
+            except Exception:pass
+            self._set(previous,"standby","Troca para "+src["name"])
+        with self._lock:
+            worker=self._threads.get(id)
+        if not (worker and worker.is_alive()):self.connect(id)
+        threading.Thread(target=self._watch_switch,args=(id,previous),daemon=True,
+                         name="radio-switch-"+str(id)).start()
+        self.db.log("Troca de rádio ativo para "+src["name"],source_id=id)
+        return {"state":"switching","source_id":id,"previous":previous}
+
+    def _watch_switch(self,target,previous):
+        deadline=time.monotonic()+HANDOVER_TIMEOUT_S
+        error=""
+        while time.monotonic()<deadline and not self._stop.is_set():
+            with self._lock:
+                state=self._states.get(target,{})
+            if state.get("status")=="connected":
+                with self._lock:
+                    self._handover=None
+                    self._switch={"phase":"done","target":target,"previous":previous,"finished_ms":now_ms()}
+                return
+            if state.get("status")=="error":
+                error=state.get("error") or "Falha ao conectar"
+                break
+            if self._stop.wait(0.5):return
+        # Rollback: devolve a prioridade ao rádio anterior para não ficar sem rádio.
+        with self._lock:
+            if previous:
+                self._handover={"target":previous,"previous":target,"deadline":time.monotonic()+HANDOVER_TIMEOUT_S}
+            else:
+                self._handover=None
+            self._switch={"phase":"failed","target":target,"previous":previous,
+                          "error":error or "Tempo esgotado ao conectar","finished_ms":now_ms()}
+            iface=self._interfaces.pop(target,None) if previous else None
+        if iface:
+            try:iface.close()
+            except Exception:pass
+        if previous:
+            self.db.set_preferred_radio(previous)
+            self._set(target,"standby","Troca não concluída: "+(error or "tempo esgotado"))
+            src=self.db.source(previous)
+            if src and src["enabled"]:
+                with self._lock:
+                    worker=self._threads.get(previous)
+                if not (worker and worker.is_alive()):self.connect(previous)
+        self.db.log("Troca de rádio não concluída; mantendo o rádio anterior","warning",target)
+
+    def available_radios(self,ble_seen=None):
+        """#152: só a conexão ativa e as habilitadas com dispositivo presente agora.
+
+        Conexões em espera ficam com a interface fechada; a presença é conferida
+        sem abrir a porta e sem transmitir (enumeração COM, TCP curto, BLE visto).
+        """
+        import socket
+        from concurrent.futures import ThreadPoolExecutor
+        active=self.active_radio()
+        try:
+            from serial.tools import list_ports
+            ports={str(p.device) for p in list_ports.comports()}
+        except Exception:
+            ports=set()
+        seen={str(a).lower() for a in (ble_seen or ())}
+        def present(src):
+            conf=src["config"]
+            if src["kind"]=="serial":return str(conf.get("port") or "") in ports
+            if src["kind"]=="ble":return str(conf.get("address") or "").lower() in seen
+            if src["kind"]=="tcp":
+                try:
+                    with socket.create_connection((conf["host"],int(conf.get("port") or 4403)),timeout=1.5):
+                        return True
+                except (OSError,ValueError,KeyError):
+                    return False
+            return False
+        radios=[s for s in self.db.sources(public=False) if s["kind"]!="mqtt" and s["enabled"]]
+        with self._lock:
+            states={k:dict(v) for k,v in self._states.items()}
+        candidates=[s for s in radios if s["id"]!=active and states.get(s["id"],{}).get("status")!="error"]
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            flags=dict(zip([s["id"] for s in candidates],pool.map(present,candidates)))
+        result=[]
+        for s in radios:
+            if s["id"]==active or flags.get(s["id"]):
+                result.append({"id":s["id"],"name":s["name"],"kind":s["kind"],"active":s["id"]==active,
+                               "status":states.get(s["id"],{}).get("status","disconnected")})
+        return result
 
     def connect(self,id):
         id=int(id)
@@ -452,8 +602,10 @@ class SourceManager:
                 with self._lock:
                     occupied=any(k!=id and self._states.get(k,{}).get("status")=="connected"
                                  and (self.db.source(k) or {}).get("kind")!="mqtt" for k in self._interfaces)
-                if occupied:
-                    self._set(id,"standby","Outra conexão de rádio está ativa")
+                    waiting=not occupied and self._blocked_by_priority(id)
+                if occupied or waiting:
+                    self._set(id,"standby","Outra conexão de rádio está ativa" if occupied else
+                              "Aguardando o rádio escolhido como ativo")
                     if self._stop.wait(1):break
                     continue
             self._set(id,"connecting")
@@ -478,6 +630,7 @@ class SourceManager:
                     with self._lock:
                         occupied=any(k!=id and self._states.get(k,{}).get("status")=="connected"
                                      and (self.db.source(k) or {}).get("kind")!="mqtt" for k in self._interfaces)
+                        occupied=occupied or self._blocked_by_priority(id)
                         cancelled=id in self._stop_sources or self._stop.is_set()
                         if not occupied and not cancelled:
                             self._interfaces[id]=iface
@@ -511,7 +664,7 @@ class SourceManager:
                     except Exception:pass
             with self._lock:
                 if id in self._stop_sources:break
-            if self._stop.wait(7):break
+            if self._stop.wait(self.RETRY_WAIT_S):break
         with self._lock:
             if self._states.get(id,{}).get("status")!="error":self._set(id,"disconnected")
             if self._threads.get(id) is threading.current_thread():self._threads.pop(id,None)

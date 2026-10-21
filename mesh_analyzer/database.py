@@ -298,8 +298,9 @@ class Database:
         update = payload.get("config") or {}
         if not isinstance(update, dict):
             raise ValueError("Configuração inválida")
-        allowed = {"serial": {"port", "baudrate"}, "tcp": {"host", "port"},
-                   "ble": {"address"}, "mqtt": {"host", "port", "topic", "username", "password", "tls"}}[kind]
+        # node_num: Node ID lido do rádio ao cadastrar (#149/#151), evita duplicatas.
+        allowed = {"serial": {"port", "baudrate", "node_num"}, "tcp": {"host", "port", "node_num"},
+                   "ble": {"address", "node_num"}, "mqtt": {"host", "port", "topic", "username", "password", "tls"}}[kind]
         config = {k: v for k, v in config.items() if k in allowed} if existing and existing["kind"] == kind else {}
         for key, value in update.items():
             if key not in allowed:
@@ -352,7 +353,9 @@ class Database:
             self._db.execute("DELETE FROM sources WHERE id=?", (int(source_id),))
 
     SYSTEM_DEFAULTS = {"open_browser_on_start": False, "allow_lan_access": False,
-                       "update_minutes": 15, "theme": "dark"}
+                       "update_minutes": 15, "theme": "dark",
+                       # #149: aviso ao detectar rádio novo, por tipo de conexão.
+                       "device_autodetect": {"serial": True, "tcp": True, "ble": True}}
 
     def ui_preferences(self):
         """Validated persisted map presentation options, independent of browser."""
@@ -423,6 +426,8 @@ class Database:
         data["update_minutes"] = n if type(n) is int and 5 <= n <= 1440 else 15
         if data["theme"] not in ("dark", "gray", "light"):
             data["theme"] = "dark"
+        detect = data["device_autodetect"] if isinstance(data["device_autodetect"], dict) else {}
+        data["device_autodetect"] = {k: detect.get(k, True) is not False for k in ("serial", "tcp", "ble")}
         return data
 
     def set_system_settings(self, changes):
@@ -440,6 +445,13 @@ class Database:
         if "theme" in changes and (not isinstance(changes["theme"], str) or
                                    changes["theme"] not in ("dark", "gray", "light")):
             raise ValueError("Tema deve ser Escuro, Cinza ou Claro")
+        if "device_autodetect" in changes:
+            detect = changes["device_autodetect"]
+            if (not isinstance(detect, dict) or set(detect) - {"serial", "tcp", "ble"}
+                    or any(type(v) is not bool for v in detect.values())):
+                raise ValueError("Detecção automática: informe sim ou não para USB, Wi-Fi e Bluetooth")
+            changes = dict(changes)
+            changes["device_autodetect"] = {**self.system_settings()["device_autodetect"], **detect}
         updated = self.system_settings()
         updated.update(changes)
         updated["allow_lan_access"] = False
@@ -449,6 +461,38 @@ class Database:
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (json.dumps(updated),))
         return updated
+
+    def _setting(self, key, default=None):
+        with self._lock:
+            row = self._db.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+        try:
+            return json.loads(row[0]) if row else default
+        except (TypeError, ValueError):
+            return default
+
+    def _set_setting(self, key, value):
+        with self._lock, self._db:
+            self._db.execute("INSERT INTO settings(key,value) VALUES(?,?) "
+                             "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                             (key, json.dumps(value)))
+
+    def preferred_radio(self):
+        """#152: rádio escolhido pelo usuário no seletor da barra superior."""
+        value = self._setting("preferred_radio_source")
+        return value if type(value) is int and value > 0 else None
+
+    def set_preferred_radio(self, source_id):
+        self._set_setting("preferred_radio_source", int(source_id) if source_id else None)
+
+    def ignored_devices(self):
+        """#149: dispositivos dispensados com "Nunca para este dispositivo"."""
+        value = self._setting("device_detection_ignored", [])
+        return {str(x) for x in value} if isinstance(value, list) else set()
+
+    def ignore_device(self, key):
+        keys = self.ignored_devices()
+        keys.add(str(key)[:200])
+        self._set_setting("device_detection_ignored", sorted(keys)[-500:])
 
     def retention(self):
         with self._lock:

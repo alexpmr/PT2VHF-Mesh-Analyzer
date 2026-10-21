@@ -119,7 +119,21 @@ class ReleaseMonitor:
             if due:self.check(force=True)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None):
+def radios_available(db, sources):
+    """#152: BLE só é varrido quando há conexão BLE em espera para conferir."""
+    active=sources.active_radio()
+    need_ble=any(s["kind"]=="ble" and s["enabled"] and s["id"]!=active for s in db.sources(public=False))
+    seen=[]
+    if need_ble:
+        try:
+            from .device_detection import scan_ble
+            seen=[d["address"] for d in scan_ble(timeout=4.0)]
+        except Exception:
+            LOG.debug("Varredura BLE indisponível para o seletor de rádio",exc_info=True)
+    return sources.available_radios(ble_seen=seen)
+
+
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -175,6 +189,15 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/waypoints":self._json({"success":True,"data":db.waypoint_rows()})
                 elif path == "/api/events":self._json({"success":True,"data":db.event_rows()})
                 elif path == "/api/ports":self._json({"success":True,"data":available_serial_ports()})
+                elif path == "/api/radios/available":
+                    self._json({"success":True,"data":radios_available(db,sources),
+                                "switch":sources.switch_status()})
+                elif path == "/api/radios/switch":self._json({"success":True,"data":sources.switch_status()})
+                elif path == "/api/devices/detected":
+                    notices=[{k:v for k,v in n.items() if k not in ("candidate","key")} for n in watcher.notices()] if watcher else []
+                    self._json({"success":True,"data":notices})
+                elif path == "/api/devices/autoadd":
+                    self._json({"success":True,"data":autoadd.status() if autoadd else {"running":False,"phase":"idle","results":[]}})
                 elif path == "/api/discovery":self._json({"success":True,"data":discovery.snapshot() if discovery else {"running":False,"items":[],"errors":["Serviço indisponível"]}})
                 elif path == "/api/db/health":
                     check=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get("check",["0"])[0]=="1"
@@ -261,6 +284,17 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     if obj["enabled"]:sources.connect(source_id)
                     else:sources.disconnect(source_id)
                     self._json({"success":True,"source":obj})
+                elif path == "/api/radios/activate":
+                    self._json({"success":True,"data":sources.activate(payload["id"])})
+                elif path == "/api/devices/accept":
+                    if not watcher:raise ValueError("Detecção automática indisponível")
+                    self._json(watcher.accept(str(payload.get("id",""))))
+                elif path == "/api/devices/dismiss":
+                    if not watcher:raise ValueError("Detecção automática indisponível")
+                    self._json(watcher.dismiss(str(payload.get("id","")),payload.get("never") is True))
+                elif path == "/api/devices/autoadd/start":
+                    if not autoadd:raise ValueError("Adição automática indisponível")
+                    self._json({"success":True,"data":autoadd.start()})
                 elif path == "/api/discovery/start":
                     if not discovery:raise ValueError("Descoberta indisponível")
                     self._json({"success":True,"data":discovery.start()})
@@ -331,7 +365,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     result=sources.send_text(payload.get("source_id"),payload.get("to_node"),payload.get("text"),payload.get("channel",0))
                     self._json(result,201)
                 else:self._error("Operação não encontrada",404)
-            except (ValueError,KeyError,TypeError) as exc:
+            except (ValueError,LookupError,TypeError) as exc:
                 self._error(exc,400)
             except RuntimeError as exc:
                 LOG.exception("Falha operacional no POST %s",path)
@@ -356,6 +390,9 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     automation=NodeEnrichment(db,drivers)
     from .discovery import DeviceDiscovery
     discovery=DeviceDiscovery()
+    from .device_detection import AutoAdd, DeviceWatcher
+    watcher=DeviceWatcher(db,drivers)
+    autoadd=AutoAdd(db,drivers,watcher)
     server=None
     done=threading.Event()
     try:
@@ -415,6 +452,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 if shutdown_complete.is_set():return
                 done.set()
                 updates.stop()
+                watcher.close()
                 automation.close()
                 if server:
                     server.shutdown()
@@ -442,7 +480,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         threading.Thread(target=update_shutdown_coordinator,
                          name="update-clean-shutdown",daemon=True).start()
         server=ThreadingHTTPServer((host,int(port)),
-                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery))
+                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd))
         server.daemon_threads=True
         address="http://127.0.0.1:"+str(server.server_address[1])
         updater.health_url=address+"/health"
@@ -456,6 +494,9 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 except Exception:LOG.exception("Falha no job de retenção")
         threading.Thread(target=janitor,name="retention-cleaner",daemon=True).start()
         updates.start()
+        # #149: monitoramento de rádios novos só com interface (não em testes headless).
+        if desktop and not os.environ.get("PT2VHF_DISABLE_AUTODETECT"):
+            watcher.start()
         server_thread=threading.Thread(target=server.serve_forever,
              kwargs={"poll_interval":0.3},name="mesh-http",daemon=True)
         server_thread.start()
@@ -502,6 +543,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         else:
             done.set()
             updates.stop()
+            watcher.close()
             automation.close()
             if server:
                 server.shutdown()

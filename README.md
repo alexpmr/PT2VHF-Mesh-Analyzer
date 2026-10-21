@@ -1,35 +1,35 @@
-# PT2VHF Mesh Analyzer — v0.6.36
+# PT2VHF Mesh Analyzer — v0.6.37
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ / Windows 11 (x64)**, **Linux (x64)** e **macOS (Apple Silicon e Intel)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
 ## Downloads
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.36](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.36)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.37](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.37)**
 
 ### Windows 10 / Windows 11 (64 bits)
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.36-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.36/PT2VHF-Mesh-Analyzer-v0.6.36-Setup-Win10-Win11-x64.exe) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.36-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.36/PT2VHF-Mesh-Analyzer-v0.6.36-Portable-Win10-Win11-x64.exe) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.36-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.36/PT2VHF-Mesh-Analyzer-v0.6.36-Portable-Win10-Win11-x64.zip) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.37-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.37-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.37-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-Portable-Win10-Win11-x64.zip) |
 
 ### macOS
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **macOS Apple Silicon (M1/M2/M3/M4)** | `PT2VHF-Mesh-Analyzer-v0.6.36-macOS-arm64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.36/PT2VHF-Mesh-Analyzer-v0.6.36-macOS-arm64.dmg) |
-| **macOS Intel** | `PT2VHF-Mesh-Analyzer-v0.6.36-macOS-x64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.36/PT2VHF-Mesh-Analyzer-v0.6.36-macOS-x64.dmg) |
+| **macOS Apple Silicon (M1/M2/M3/M4)** | `PT2VHF-Mesh-Analyzer-v0.6.37-macOS-arm64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-macOS-arm64.dmg) |
+| **macOS Intel** | `PT2VHF-Mesh-Analyzer-v0.6.37-macOS-x64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-macOS-x64.dmg) |
 
 ### Linux
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Linux x64** | `PT2VHF-Mesh-Analyzer-v0.6.36-Linux-x64.tar.gz` | [Baixar TAR.GZ](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.36/PT2VHF-Mesh-Analyzer-v0.6.36-Linux-x64.tar.gz) |
+| **Linux x64** | `PT2VHF-Mesh-Analyzer-v0.6.37-Linux-x64.tar.gz` | [Baixar TAR.GZ](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-Linux-x64.tar.gz) |
 
 | Verificação | Arquivo | Link |
 |---|---|---|
-| **SHA256 (todas as plataformas)** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.36/SHA256SUMS.txt) |
+| **SHA256 (todas as plataformas)** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/SHA256SUMS.txt) |
 
 **Links automáticos (última versão):**
 [Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
@@ -39,13 +39,20 @@
 [Linux x64](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Linux-x64.tar.gz) ·
 [Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos Windows:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.36 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+**Requisitos Windows:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.37 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
 
 **Requisitos macOS:** macOS 13 Ventura ou superior. Abra o DMG e arraste **PT2VHF Mesh Analyzer** para **Aplicativos**. O app não é assinado/notarizado pela Apple: na primeira abertura, clique com o botão direito → **Abrir** (ou em Ajustes do Sistema → Privacidade e Segurança → **Abrir Mesmo Assim**). O macOS pede permissão de Bluetooth na primeira conexão BLE.
 
 **Requisitos Linux:** distribuição 64 bits com glibc 2.35+ (Ubuntu 22.04, Debian 12, Fedora 36 ou mais novos) e um navegador. Extraia o `.tar.gz` e execute `./PT2VHF-Mesh-Analyzer` (a interface abre no navegador padrão) ou `./instalar.sh` para criar o atalho no menu de aplicativos. Para rádio USB, o usuário deve pertencer ao grupo `dialout`.
 
 **Atualização:** no Windows, a atualização é feita pelo próprio aplicativo. No macOS e no Linux, o aplicativo avisa quando houver versão nova e o botão abre a página da release para baixar o pacote.
+
+### Novidades da v0.6.37
+
+- **Rádio detectado ao plugar (#149):** com o app aberto, ao conectar um rádio na USB (ou quando um rádio aparece no Wi-Fi ou bem perto pelo Bluetooth), surge o aviso **“Rádio Meshtastic detectado”** com **Adicionar e conectar** · **Agora não** · **Nunca para este dispositivo**. Um clique confirma que é um rádio Meshtastic, cadastra a conexão com o nome do rádio e conexão automática marcada, e conecta. Os avisos podem ser desligados por tipo em Configurações → Conexões.
+- **Adicionar automaticamente (#151):** botão novo ao lado de **Adicionar conexão manualmente**. Procura em USB, Wi-Fi e Bluetooth próximo e cadastra sozinho todos os rádios Meshtastic que ainda não estão configurados, com um resumo no final (adicionados, já configurados, sem resposta). Rodar de novo não duplica conexões.
+- **Seletor do rádio ativo (#152):** clique no indicador de conexão da barra superior para escolher qual rádio fica ativo. A lista mostra só a conexão ativa e as que estão habilitadas e com o dispositivo presente agora. Se a troca falhar, o rádio anterior volta automaticamente; o escolhido passa a ser o preferido ao abrir o app.
+- **Detectar automaticamente (#150):** novo nome do antigo botão “Configuração Automática”.
 
 ### Novidades da v0.6.36
 

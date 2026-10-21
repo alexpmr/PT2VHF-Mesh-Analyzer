@@ -16,7 +16,8 @@ class AutomaticConnectionUX(unittest.TestCase):
         self.assertIn("$('sourceFormCard').hidden=false",HTML)
 
     def test_automatic_discovery_manual_review(self):
-        self.assertIn("Configuração Automática</button>",HTML)
+        self.assertIn("Detectar automaticamente</button>",HTML)
+        self.assertNotIn("Configuração Automática",HTML)
         self.assertIn("/api/discovery/start",HTML)
         self.assertIn("Não verificado pelo protocolo",HTML)
         self.assertIn("$('sourceEnabled').checked=true",HTML)

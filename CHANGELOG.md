@@ -1,3 +1,15 @@
+# v0.6.37 — Rádios detectados automaticamente e seletor do rádio ativo
+
+Inclui todo o conteúdo da v0.6.36 (Linux, macOS, horários e rolagem das mensagens), que não chegou a ser publicada separadamente.
+
+- #149: monitoramento em segundo plano de portas USB (ao plugar), anúncios mDNS e BLE próximos (RSSI ≥ −70 dBm, serviço GATT Meshtastic). Rádios USB são verificados pelo handshake Meshtastic antes do aviso. "Adicionar e conectar" verifica, cadastra com o nome lido do rádio, Node ID e conexão automática marcada, e conecta; com outro rádio ativo, o novo fica em espera e o aviso oferece "Usar este agora". "Agora não" vale até o dispositivo sair e voltar; "Nunca" é persistido. Preferência por tipo (USB, Wi-Fi, Bluetooth) em Configurações → Conexões. Portas já cadastradas nunca são abertas e nada é transmitido por RF.
+- #150: botão "Configuração Automática" renomeado para "Detectar automaticamente".
+- #151: botão "Adicionar automaticamente" ao lado de "Adicionar conexão manualmente": varre USB (somente portas com VID USB), mDNS e BLE próximo, verifica cada candidato pelo protocolo Meshtastic e cadastra os que ainda não existem (por porta, host, endereço BLE ou Node ID). Resumo com adicionados, já configurados, sem resposta e erros; execução repetida não duplica.
+- #152: o indicador de conexão abre o seletor do rádio ativo, com somente a conexão ativa e as habilitadas cujo dispositivo está presente (porta COM enumerada, TCP respondendo, BLE visto), sem abrir a porta nem transmitir. A troca fecha o rádio atual e conecta o escolhido; se ele não conectar em 45 s ou der erro, o anterior volta. O escolhido vira o rádio preferido e conecta primeiro no próximo início. Nunca há dois rádios ativos (#139). Reconectar e Gerenciar conexões continuam no menu.
+- O Node ID do rádio passa a ser guardado na conexão quando ela conecta, para evitar cadastro duplicado.
+
+Validação: testes Python (detecção, adição automática, troca com sucesso e com retorno, disponibilidade) e regressão Chromium do seletor, do aviso e do resumo. Aceite com rádios físicos em USB, BLE e Wi-Fi pendente.
+
 # v0.6.36 — Linux, macOS, horários e rolagem das mensagens
 
 - Plataformas: novos pacotes **Linux x64** (`.tar.gz` com executável, ícone e `instalar.sh`) e **macOS** Apple Silicon e Intel (`.dmg`, app com assinatura ad-hoc e permissão de Bluetooth). No macOS a janela usa o WebKit do sistema; no Linux a interface abre no navegador padrão. Atualização interna permanece exclusiva do Windows; nas demais plataformas o botão abre a release.
