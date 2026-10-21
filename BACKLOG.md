@@ -1,3 +1,9 @@
+## v0.6.38 — Implementado nesta entrega
+
+- #153, #155, #156, #157, #158, #159 e #160 implementados com testes automatizados.
+- Aceite físico pendente: VHF3/VHF4/VHF6/VHF8 por Bluetooth (fila e PIN), rádio USB + Wi-Fi (prioridade), favoritos alterados pelo celular, ping de presença em malha real por algumas horas, `.deb` em Ubuntu/Mint reais e container em Raspberry Pi.
+- Pendências conhecidas: pedir o PIN BLE dentro do app (hoje orienta para a janela do Windows); container com Bluetooth e acesso pela rede com login (#160, etapa 2); verificar se o pacote do GHCR ficou público após a primeira publicação.
+
 ## v0.6.37 — Implementado nesta entrega
 
 - #149, #150, #151 e #152 implementados com testes automatizados (mocks de rádio e Chromium). Aceite físico pendente: plugar rádio USB real, BLE com PIN de pareamento, troca USB ↔ Wi-Fi com dois rádios reais.

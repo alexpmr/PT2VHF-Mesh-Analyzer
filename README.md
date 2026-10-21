@@ -1,51 +1,75 @@
-# PT2VHF Mesh Analyzer — v0.6.37
+# PT2VHF Mesh Analyzer — v0.6.38
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ / Windows 11 (x64)**, **Linux (x64)** e **macOS (Apple Silicon e Intel)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
 ## Downloads
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.37](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.37)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.38](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.38)**
 
 ### Windows 10 / Windows 11 (64 bits)
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.37-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-Setup-Win10-Win11-x64.exe) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.37-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-Portable-Win10-Win11-x64.exe) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.37-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-Portable-Win10-Win11-x64.zip) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.38-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.38/PT2VHF-Mesh-Analyzer-v0.6.38-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.38-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.38/PT2VHF-Mesh-Analyzer-v0.6.38-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.38-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.38/PT2VHF-Mesh-Analyzer-v0.6.38-Portable-Win10-Win11-x64.zip) |
 
 ### macOS
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **macOS Apple Silicon (M1/M2/M3/M4)** | `PT2VHF-Mesh-Analyzer-v0.6.37-macOS-arm64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-macOS-arm64.dmg) |
-| **macOS Intel** | `PT2VHF-Mesh-Analyzer-v0.6.37-macOS-x64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-macOS-x64.dmg) |
+| **macOS Apple Silicon (M1/M2/M3/M4)** | `PT2VHF-Mesh-Analyzer-v0.6.38-macOS-arm64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.38/PT2VHF-Mesh-Analyzer-v0.6.38-macOS-arm64.dmg) |
+| **macOS Intel** | `PT2VHF-Mesh-Analyzer-v0.6.38-macOS-x64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.38/PT2VHF-Mesh-Analyzer-v0.6.38-macOS-x64.dmg) |
 
 ### Linux
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Linux x64** | `PT2VHF-Mesh-Analyzer-v0.6.37-Linux-x64.tar.gz` | [Baixar TAR.GZ](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/PT2VHF-Mesh-Analyzer-v0.6.37-Linux-x64.tar.gz) |
+| **Ubuntu / Linux Mint (.deb)** | `PT2VHF-Mesh-Analyzer-v0.6.38-amd64.deb` | [Baixar .deb](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.38/PT2VHF-Mesh-Analyzer-v0.6.38-amd64.deb) |
+| **Linux x64 (outras distribuições)** | `PT2VHF-Mesh-Analyzer-v0.6.38-Linux-x64.tar.gz` | [Baixar TAR.GZ](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.38/PT2VHF-Mesh-Analyzer-v0.6.38-Linux-x64.tar.gz) |
+
+### Container (servidor, NAS e Raspberry Pi)
+
+Imagem `ghcr.io/alexpmr/pt2vhf-mesh-analyzer` para **amd64** e **arm64** (Raspberry Pi 4/5), atualizada a cada release:
+
+```bash
+docker run -d --name pt2vhf-mesh-analyzer --restart unless-stopped \
+  -p 127.0.0.1:8789:8789 -v mesh-data:/data \
+  ghcr.io/alexpmr/pt2vhf-mesh-analyzer:latest
+```
+
+Abra `http://localhost:8789` no próprio servidor. Rádio USB em servidor Linux: acrescente `--device /dev/ttyUSB0 --group-add dialout`. Exemplo completo em [`container/docker-compose.yml`](container/docker-compose.yml). Wi-Fi/TCP e MQTT funcionam sem restrição; Bluetooth e acesso por outros computadores da rede ainda não são suportados no container (acesso remoto por túnel SSH: `ssh -L 8789:127.0.0.1:8789 usuario@servidor`). Para atualizar: `docker pull ghcr.io/alexpmr/pt2vhf-mesh-analyzer:latest` e recrie o container; o volume `/data` preserva banco e configurações.
 
 | Verificação | Arquivo | Link |
 |---|---|---|
-| **SHA256 (todas as plataformas)** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.37/SHA256SUMS.txt) |
+| **SHA256 (todas as plataformas)** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.38/SHA256SUMS.txt) |
 
 **Links automáticos (última versão):**
 [Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
 [Portable Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe) ·
 [macOS Apple Silicon](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-macOS-arm64.dmg) ·
 [macOS Intel](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-macOS-x64.dmg) ·
+[Ubuntu/Mint .deb](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-amd64.deb) ·
 [Linux x64](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Linux-x64.tar.gz) ·
 [Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos Windows:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.37 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+**Requisitos Windows:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.38 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
 
 **Requisitos macOS:** macOS 13 Ventura ou superior. Abra o DMG e arraste **PT2VHF Mesh Analyzer** para **Aplicativos**. O app não é assinado/notarizado pela Apple: na primeira abertura, clique com o botão direito → **Abrir** (ou em Ajustes do Sistema → Privacidade e Segurança → **Abrir Mesmo Assim**). O macOS pede permissão de Bluetooth na primeira conexão BLE.
 
-**Requisitos Linux:** distribuição 64 bits com glibc 2.35+ (Ubuntu 22.04, Debian 12, Fedora 36 ou mais novos) e um navegador. Extraia o `.tar.gz` e execute `./PT2VHF-Mesh-Analyzer` (a interface abre no navegador padrão) ou `./instalar.sh` para criar o atalho no menu de aplicativos. Para rádio USB, o usuário deve pertencer ao grupo `dialout`.
+**Requisitos Linux:** distribuição 64 bits com glibc 2.35+ (Ubuntu 22.04, Linux Mint 21, Debian 12, Fedora 36 ou mais novos) e um navegador. **Ubuntu / Linux Mint:** dê dois cliques no `.deb` ou use `sudo apt install ./PT2VHF-Mesh-Analyzer-v0.6.38-amd64.deb`; o atalho aparece no menu e o comando `pt2vhf-mesh-analyzer` fica disponível. Remover o pacote preserva seus dados. **Outras distribuições:** extraia o `.tar.gz` e execute `./PT2VHF-Mesh-Analyzer` (a interface abre no navegador padrão) ou `./instalar.sh` para criar o atalho no menu de aplicativos. Para rádio USB, o usuário deve pertencer ao grupo `dialout`.
 
-**Atualização:** no Windows, a atualização é feita pelo próprio aplicativo. No macOS e no Linux, o aplicativo avisa quando houver versão nova e o botão abre a página da release para baixar o pacote.
+**Atualização:** no Windows, a atualização é feita pelo próprio aplicativo. No macOS e no Linux, o aplicativo avisa quando houver versão nova e o botão abre a página da release para baixar o pacote (no `.deb`, instale o novo por cima). No container, atualize a imagem.
+
+### Novidades da v0.6.38
+
+- **Rádio USB entra sozinho (#155):** ao plugar um rádio Meshtastic novo na USB, ele é verificado, cadastrado e conectado **sem clique**, com aviso e botão **Desfazer**. A USB tem prioridade sobre Wi-Fi e Bluetooth: se outro rádio estiver ativo, o USB assume (com retorno automático se falhar); rádios já cadastrados replugados também retomam a prioridade. Wi-Fi e Bluetooth continuam com o aviso de clique. Tudo configurável em Configurações → Conexões.
+- **Verificação Bluetooth não trava mais (#156):** "Adicionar e conectar" responde na hora e acompanha a verificação com **Cancelar**, prazo máximo (30 s USB/Wi-Fi, 45 s Bluetooth), mensagem clara ao estourar e **Tentar de novo**. Rádios Bluetooth são verificados **um de cada vez** ("Na fila 2 de 4"), com orientação sobre o PIN de pareamento. "Adicionar automaticamente" também ganhou Cancelar.
+- **Favoritos sincronizados (#157):** uma lista única de favoritos no aplicativo, mesclada nos dois sentidos ao conectar cada rádio (e a cada 15 s): favoritos do rádio entram no app, os do app vão para o rádio, e no conflito vale a alteração mais recente. Funciona sem rádio conectado; nós que o rádio ainda não conhece ficam pendentes e são aplicados quando ele ouvir o nó. Opção por conexão e **Sincronizar favoritos agora** no menu do rádio.
+- **Mensagens no estilo WhatsApp (#158):** no canal, o remetente aparece **em cima do balão**, colorido, com nome curto e Node ID à direita; mensagens seguidas do mesmo remetente ficam agrupadas; respostas aparecem como bloco de citação; horário no canto inferior direito.
+- **Ping de presença (#159):** a automação passa a chamar nós ouvidos por RF e **calados há mais de 2 h** (até 72 h), começando pelos calados há mais tempo. Sem resposta, tenta de novo em 30 min, 1 h, 2 h… até 24 h; pausa com canal congestionado e usa no máximo metade das consultas por hora. A aba Nós ganhou a coluna **Presença** ("respondeu há 10 min" / "sem resposta (3)") e nós sem resposta ficam esmaecidos no mapa. A opção "Vizinhos", que não tinha efeito, foi retirada.
+- **Ubuntu / Linux Mint (#153):** novo pacote `.deb`.
+- **Container (#160):** imagem oficial para servidor e Raspberry Pi.
 
 ### Novidades da v0.6.37
 

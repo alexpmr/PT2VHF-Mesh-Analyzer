@@ -447,3 +447,48 @@ class PresencePing(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.auto.save({"presence_silent_hours": 10, "presence_window_hours": 8})
         self.assertNotIn("neighbors", self.auto.config()["types"])
+
+
+class Packaging(unittest.TestCase):
+    """#153 (.deb) e #160 (container)."""
+    ROOT = Path(__file__).resolve().parents[1]
+
+    def test_container_mode_allows_internal_bind_only_with_flag(self):
+        from mesh_analyzer import app
+        with patch.object(app, "run", return_value=0) as run, patch.dict("os.environ", {"PT2VHF_CONTAINER": "1"}):
+            self.assertEqual(app.main(["--host", "0.0.0.0", "--headless"]), 0)
+            self.assertEqual(run.call_args[0][0], "0.0.0.0")
+        with patch.object(app, "run", return_value=0), patch.dict("os.environ", {"PT2VHF_CONTAINER": ""}):
+            with self.assertRaises(SystemExit):
+                app.main(["--host", "0.0.0.0", "--headless"])
+        with patch.object(app, "run", return_value=0) as run, \
+             patch.dict("os.environ", {"PT2VHF_CONTAINER": "1", "PT2VHF_HOST": "0.0.0.0", "PT2VHF_PORT": "9000"}):
+            app.main(["--headless"])
+            self.assertEqual(run.call_args[0][:2], ("0.0.0.0", 9000))
+
+    def test_container_update_is_image_pull(self):
+        from mesh_analyzer.app import ReleaseMonitor
+        db = Mock(); db.system_settings.return_value = {"update_minutes": 15}
+        with patch.dict("os.environ", {"PT2VHF_CONTAINER": "1"}):
+            st = ReleaseMonitor(db).status()
+        self.assertTrue(st["container"]); self.assertFalse(st["direct_update"])
+
+    def test_dockerfile_is_non_root_with_volume_and_healthcheck(self):
+        text = (self.ROOT / "Dockerfile").read_text(encoding="utf-8")
+        for marker in ("USER mesh", 'VOLUME ["/data"]', "HEALTHCHECK", "PT2VHF_CONTAINER=1",
+                       "PT2VHF_DISABLE_AUTODETECT=1", "EXPOSE 8789"):
+            self.assertIn(marker, text)
+        compose = (self.ROOT / "container" / "docker-compose.yml").read_text(encoding="utf-8")
+        self.assertIn('"127.0.0.1:8789:8789"', compose)
+
+    def test_pipeline_builds_deb_and_publishes_image_after_release(self):
+        wf = (self.ROOT / ".github" / "workflows" / "windows.yml").read_text(encoding="utf-8")
+        for marker in ("linux/build_deb.sh", "PT2VHF-Mesh-Analyzer-amd64.deb", "sudo apt-get remove -y -q pt2vhf-mesh-analyzer",
+                       "package-container:", "publish-container:", "needs: publish-release",
+                       "platforms: linux/amd64,linux/arm64", "ghcr.io/alexpmr/pt2vhf-mesh-analyzer:latest", "packages: write"):
+            self.assertIn(marker, wf)
+        self.assertNotIn("Codigo-Fonte", wf)
+        script = (self.ROOT / "linux" / "build_deb.sh").read_text(encoding="utf-8")
+        for marker in ("Package: $pkg", "Depends: libc6 (>= 2.35), xdg-utils", "Section: hamradio",
+                       "/usr/share/applications", "usermod -aG dialout", "são preservados"):
+            self.assertIn(marker, script)

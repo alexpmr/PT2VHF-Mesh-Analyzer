@@ -55,6 +55,11 @@ def latest_release(force=False):
 
 
 
+def in_container():
+    """Modo container (#160): PT2VHF_CONTAINER=1, definido pela imagem oficial."""
+    return os.environ.get("PT2VHF_CONTAINER")=="1"
+
+
 class ReleaseMonitor:
     """Exactly one update timer per running application, not per browser tab."""
     def __init__(self, db):
@@ -107,7 +112,8 @@ class ReleaseMonitor:
                 "checked_at":self._at or None,
                 "next_check":self._at+minutes*60 if self._at else None,
                 "interval_minutes":minutes,"error":self._error,
-                "direct_update":os.name=="nt"}
+                "direct_update":os.name=="nt" and not in_container(),
+                "container":in_container()}
 
     def _loop(self):
         while not self._stop.is_set():
@@ -543,6 +549,10 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                     except Exception:pass
                 if not browser_mode:raise
         if not desktop or browser_mode:
+            # #160: "docker stop" envia SIGTERM; encerra fechando rádio e SQLite.
+            def stop_requested(signum,frame):raise KeyboardInterrupt
+            if threading.current_thread() is threading.main_thread():
+                signal.signal(signal.SIGTERM,stop_requested)
             try:
                 while server_thread.is_alive():
                     server_thread.join(timeout=0.5)
@@ -568,16 +578,21 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
 
 def main(argv=None):
     parser=argparse.ArgumentParser(description="PT2VHF Mesh Analyzer v"+__version__)
-    parser.add_argument("--host",default="127.0.0.1",
+    container=in_container()
+    parser.add_argument("--host",default=os.environ.get("PT2VHF_HOST","127.0.0.1"),
                         help="Interface local; escuta externa não disponível")
-    parser.add_argument("--port",type=int,default=8789)
+    parser.add_argument("--port",type=int,default=int(os.environ.get("PT2VHF_PORT") or 8789))
     parser.add_argument("--browser",action="store_true",help="Abrir navegador externo adicional")
     parser.add_argument("--no-browser",action="store_true",help="Não abrir navegador externo")
     parser.add_argument("--headless",action="store_true",
                         help="Executar sem janela desktop (automação/testes)")
     parser.add_argument("--data-dir",default=None)
     opts=parser.parse_args(argv)
-    if opts.host not in ("127.0.0.1","localhost","::1"):
+    # #160: no container o servidor escuta em 0.0.0.0 *dentro* do container
+    # para o mapeamento de porta funcionar; a checagem de Host (só localhost)
+    # e o token CSRF continuam valendo, então a rede local segue bloqueada.
+    allowed=("127.0.0.1","localhost","::1")+(("0.0.0.0",) if container else ())
+    if opts.host not in allowed:
         parser.error("Acesso LAN permanece bloqueado até existir autenticação.")
     if opts.browser and opts.no_browser:
         parser.error("Escolha apenas --browser ou --no-browser")
