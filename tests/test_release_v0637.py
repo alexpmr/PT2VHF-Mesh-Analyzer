@@ -135,6 +135,8 @@ class Detection(Base):
         self.sources.active_radio.return_value=None
         self.ports=[]
         self.probed=[]
+        # Estes testes cobrem o aviso com clique (#149); USB sem clique é #155 (v0.6.38).
+        self.db.set_system_settings({"device_autoconnect":{"serial":False}})
 
     def prober(self,candidate):
         self.probed.append(candidate["address"])
@@ -156,13 +158,13 @@ class Detection(Base):
         self.ports.append(self.port("COM5"));w._check_usb()
         notice=w.notices()[0]
         self.assertEqual((notice["address"],notice["name"],notice["verified"]),("COM5","Rádio COM5",True))
-        out=w.accept(notice["id"])
+        out=w.accept(notice["id"],wait=True)["job"]
+        self.assertEqual(out["phase"],"done")
         src=self.db.source(out["source"]["id"])
         self.assertTrue(src["enabled"])
         self.assertEqual(src["config"]["port"],"COM5")
         self.assertIn("node_num",src["config"])
         self.sources.connect.assert_called_once_with(src["id"])
-        self.assertEqual(w.notices(),[])
         self.assertFalse(out["other_active"])
 
     def test_non_meshtastic_port_is_not_offered(self):
@@ -190,7 +192,7 @@ class Detection(Base):
         self.sources.active_radio.return_value=999
         w=self.watcher();w._check_usb()
         self.ports=[self.port("COM5")];w._check_usb()
-        self.assertTrue(w.accept(w.notices()[0]["id"])["other_active"])
+        self.assertTrue(w.accept(w.notices()[0]["id"],wait=True)["job"]["other_active"])
 
     def test_autodetect_preference_per_type(self):
         self.db.set_system_settings({"device_autodetect":{"serial":False}})
@@ -240,7 +242,7 @@ class Interface(unittest.TestCase):
         self.assertIn(">Detectar automaticamente</button>",HTML)
         self.assertIn('id="radioMenu"',HTML)
         self.assertIn("api('/api/radios/available')",HTML)
-        self.assertIn("api('/api/devices/accept',{id})",HTML)
+        self.assertIn("call('/api/devices/accept',id)",HTML)
         self.assertIn("Nunca para este dispositivo",HTML)
 
 

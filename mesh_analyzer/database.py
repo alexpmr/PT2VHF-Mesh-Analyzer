@@ -355,7 +355,11 @@ class Database:
     SYSTEM_DEFAULTS = {"open_browser_on_start": False, "allow_lan_access": False,
                        "update_minutes": 15, "theme": "dark",
                        # #149: aviso ao detectar rádio novo, por tipo de conexão.
-                       "device_autodetect": {"serial": True, "tcp": True, "ble": True}}
+                       "device_autodetect": {"serial": True, "tcp": True, "ble": True},
+                       # #155: USB verificado é adicionado e conectado sem clique e tem
+                       # prioridade sobre Wi-Fi/BLE; Wi-Fi e BLE mantêm o aviso por padrão.
+                       "device_autoconnect": {"serial": True, "tcp": False, "ble": False},
+                       "usb_priority": True}
 
     def ui_preferences(self):
         """Validated persisted map presentation options, independent of browser."""
@@ -428,6 +432,11 @@ class Database:
             data["theme"] = "dark"
         detect = data["device_autodetect"] if isinstance(data["device_autodetect"], dict) else {}
         data["device_autodetect"] = {k: detect.get(k, True) is not False for k in ("serial", "tcp", "ble")}
+        auto = data["device_autoconnect"] if isinstance(data["device_autoconnect"], dict) else {}
+        defaults = self.SYSTEM_DEFAULTS["device_autoconnect"]
+        data["device_autoconnect"] = {k: auto[k] if type(auto.get(k)) is bool else defaults[k]
+                                      for k in ("serial", "tcp", "ble")}
+        data["usb_priority"] = data["usb_priority"] is not False
         return data
 
     def set_system_settings(self, changes):
@@ -452,6 +461,15 @@ class Database:
                 raise ValueError("Detecção automática: informe sim ou não para USB, Wi-Fi e Bluetooth")
             changes = dict(changes)
             changes["device_autodetect"] = {**self.system_settings()["device_autodetect"], **detect}
+        if "device_autoconnect" in changes:
+            auto = changes["device_autoconnect"]
+            if (not isinstance(auto, dict) or set(auto) - {"serial", "tcp", "ble"}
+                    or any(type(v) is not bool for v in auto.values())):
+                raise ValueError("Conexão automática: informe sim ou não para USB, Wi-Fi e Bluetooth")
+            changes = dict(changes)
+            changes["device_autoconnect"] = {**self.system_settings()["device_autoconnect"], **auto}
+        if "usb_priority" in changes and type(changes["usb_priority"]) is not bool:
+            raise ValueError("Prioridade USB deve ser sim ou não")
         updated = self.system_settings()
         updated.update(changes)
         updated["allow_lan_access"] = False

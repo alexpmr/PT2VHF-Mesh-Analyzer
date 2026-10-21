@@ -346,7 +346,7 @@ class SourceManager:
         self._started_at=time.monotonic()
         preferred=self.db.preferred_radio()
         # O rádio preferido (#152) é o primeiro a tentar conectar.
-        for src in sorted(self.db.sources(public=False),key=lambda s:s["id"]!=preferred):
+        for src in sorted(self.db.sources(public=False),key=lambda s:(s["id"]!=preferred,s["kind"]!="serial")):
             if src["enabled"]:self.connect(src["id"])
 
     def _update_device_name(self,source_id,iface):
@@ -427,12 +427,19 @@ class SourceManager:
         handover=self._handover
         if handover and time.monotonic()<handover["deadline"]:
             return handover["target"]!=id
+        if time.monotonic()-self._started_at>=STARTUP_PREFERENCE_S:
+            return False
         preferred=self.db.preferred_radio()
-        if preferred and preferred!=id and time.monotonic()-self._started_at<STARTUP_PREFERENCE_S:
-            src=self.db.source(preferred)
-            if src and src["enabled"] and src["kind"]!="mqtt":
-                return self._states.get(preferred,{}).get("status")=="connecting"
-        return False
+        src=self.db.source(preferred) if preferred else None
+        if src and src["enabled"] and src["kind"]!="mqtt":
+            return preferred!=id and self._states.get(preferred,{}).get("status")=="connecting"
+        # #155: sem rádio escolhido, a USB tem prioridade ao iniciar o app.
+        mine=self.db.source(id) or {}
+        if mine.get("kind")=="serial" or not self.db.system_settings().get("usb_priority",True):
+            return False
+        return any(s["kind"]=="serial" and s["enabled"] and s["id"]!=id and
+                   self._states.get(s["id"],{}).get("status")=="connecting"
+                   for s in self.db.sources(public=False))
 
     def active_radio(self):
         with self._lock:

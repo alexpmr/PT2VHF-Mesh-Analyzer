@@ -436,7 +436,7 @@ try {
 <div class="field src tcp mqtt"><label for="sourceHost">Host / Endereço IP</label><input id="sourceHost" placeholder="192.168.1.100"></div><div class="field src tcp mqtt"><label for="sourceTcpPort">Porta TCP</label><input id="sourceTcpPort" type="number" min="1" max="65535" value="4403"></div>
 <div class="field src ble"><label for="sourceAddress">Identificador Bluetooth / endereço BLE</label><input id="sourceAddress" placeholder="Endereço ou UUID do rádio"></div>
 <div class="field src mqtt"><label for="mqttTopic">Tópico MQTT</label><input id="mqttTopic" value="msh/+/2/e/#"></div><div class="field src mqtt"><label for="mqttUsername">Usuário MQTT</label><input id="mqttUsername" autocomplete="off"></div><div class="field src mqtt"><label for="mqttPassword">Senha MQTT</label><input id="mqttPassword" type="password" autocomplete="new-password" placeholder="Em edição: deixe vazio para manter"></div><div class="field src mqtt"><label><input id="mqttTls" type="checkbox"> TLS</label></div>
-<div class="field span2"><label class="sourceAutoLabel">Conectar automaticamente ao iniciar <input id="sourceEnabled" type="checkbox" checked></label></div></div><div class="actions" style="margin-top:13px"><button type="submit" id="sourceSaveButton">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form><div class="card"><h3>Descoberta de rádios e conexões</h3><p class="muted">Busca candidatos USB/Serial, anúncios Bluetooth LE e serviços mDNS na rede local. A descoberta não conecta nem transmite; confirme e salve o dispositivo selecionado.</p><div class="actions"><button type="button" id="scanDevices">Detectar automaticamente</button><span id="scanStatus" class="muted">Pronto para procurar</span></div><div id="scanResults"></div><fieldset class="autodetectPrefs"><legend>Avisar quando um rádio novo for detectado</legend><label><input type="checkbox" data-autodetect="serial" checked> USB (ao plugar)</label><label><input type="checkbox" data-autodetect="tcp" checked> Wi-Fi (rede local)</label><label><input type="checkbox" data-autodetect="ble" checked> Bluetooth LE (próximo ao computador)</label></fieldset></div></div></section>
+<div class="field span2"><label class="sourceAutoLabel">Conectar automaticamente ao iniciar <input id="sourceEnabled" type="checkbox" checked></label></div></div><div class="actions" style="margin-top:13px"><button type="submit" id="sourceSaveButton">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form><div class="card"><h3>Descoberta de rádios e conexões</h3><p class="muted">Busca candidatos USB/Serial, anúncios Bluetooth LE e serviços mDNS na rede local. A descoberta não conecta nem transmite; confirme e salve o dispositivo selecionado.</p><div class="actions"><button type="button" id="scanDevices">Detectar automaticamente</button><span id="scanStatus" class="muted">Pronto para procurar</span></div><div id="scanResults"></div><fieldset class="autodetectPrefs"><legend>Avisar quando um rádio novo for detectado</legend><label><input type="checkbox" data-autodetect="serial" checked> USB (ao plugar)</label><label><input type="checkbox" data-autodetect="tcp" checked> Wi-Fi (rede local)</label><label><input type="checkbox" data-autodetect="ble" checked> Bluetooth LE (próximo ao computador)</label></fieldset><fieldset class="autodetectPrefs"><legend>Adicionar e conectar sem perguntar</legend><label><input type="checkbox" data-autoconnect="serial" checked> USB</label><label><input type="checkbox" data-autoconnect="tcp"> Wi-Fi</label><label><input type="checkbox" data-autoconnect="ble"> Bluetooth LE</label><label><input type="checkbox" id="usbPriority" checked> Dar prioridade ao rádio USB</label></fieldset></div></div></section>
 <section class="settingsPanel" id="settingsLora">
   <div class="card"><h3>Configuração do rádio Meshtastic</h3>
     <p class="muted">Leia os parâmetros reais do dispositivo conectado por USB/Serial, TCP/IP ou BLE. MQTT é apenas uma conexão de dados e não pode configurar rádios. A gravação pode reiniciar o nó e interromper a conexão.</p>
@@ -3450,60 +3450,72 @@ $('radioMenu').addEventListener('keydown',e=>{
 document.addEventListener('click',()=>{if(radioMenuOpen)closeRadioMenu();});
 window.addEventListener('resize',()=>{if(radioMenuOpen)placeRadioMenu();});
 
-// #149: aviso ao detectar rádio novo; um clique verifica, cadastra com
-// conexão automática e conecta.
-const deviceNoticeState=new Map();
-let lastDeviceNotices=[];
+// #149/#155/#156: avisos de rádio detectado. A verificação roda no servidor
+// com prazo, fila Bluetooth e Cancelar; a tela só acompanha o estado.
+let lastDeviceNotices=[],deviceNoticeTimer=null;
+const deviceJobActive=n=>['queued','connecting','registering'].includes(n.job?.phase);
+function deviceNoticeHtml(n){
+ const where=radioKindLabel(n.kind)+' · '+esc(n.address),job=n.job||{},id=esc(n.id);
+ const btn=(attr,label,primary)=>'<button type="button"'+(primary?' class="primary"':'')+' data-notice-'+attr+'="'+id+'">'+label+'</button>';
+ const card=(title,text,buttons,role)=>'<div class="deviceNotice"'+(role?' role="'+role+'"':'')+'><b>'+title+'</b><p>'+text+'</p>'+
+   (buttons?'<div class="actions">'+buttons+'</div>':'')+'</div>';
+ if(n.type==='auto_added')return card(esc(n.name)+' adicionado',
+   'Detectado na '+where+(n.switched?' e agora é o rádio ativo (prioridade USB).':n.waiting?'. Outro rádio está ativo; este ficou em espera.':' e conectando.'),
+   btn('undo','Desfazer')+btn('close','Fechar'));
+ if(job.phase==='queued')return card('Na fila: '+esc(n.name),where+' · aguardando ('+job.position+' de '+job.total+'). Os rádios Bluetooth são verificados um de cada vez.',btn('cancel','Cancelar'));
+ if(job.phase==='connecting'){
+  const secs=job.started_ms?Math.max(0,Math.round((Date.now()-job.started_ms)/1000)):0;
+  return card('Verificando '+esc(n.name)+'…',where+' · confirmando o rádio Meshtastic'+(secs?' ('+secs+' s)':'')+'.'+
+    (n.kind==='ble'?' Se o rádio pedir PIN, confira a janela de pareamento do Windows (PIN na tela do rádio; 123456 se não tiver tela).':''),btn('cancel','Cancelar'));
+ }
+ if(job.phase==='registering')return card('Adicionando '+esc(n.name)+'…',where+' · cadastrando e conectando.','');
+ if(job.phase==='failed')return card('Não foi possível adicionar '+esc(n.name),esc(job.error||'Sem resposta do rádio.'),
+   btn('add','Tentar de novo',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alert');
+ if(job.phase==='done'){
+  const name=esc(job.source?.name||n.name);
+  if(job.other_active)return card(name+' adicionado','Conexão automática marcada. Outro rádio está ativo; este ficou em espera.',btn('use','Usar este agora',true)+btn('close','Fechar'));
+  return card(name+' adicionado',job.switched?'Agora é o rádio ativo (prioridade USB).':'Conexão automática marcada; conectando.',btn('close','Fechar'));
+ }
+ return card('Rádio Meshtastic detectado',esc(n.name)+' — '+where+(job.phase==='cancelled'?' · verificação cancelada.':''),
+   btn('add','Adicionar e conectar',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alertdialog');
+}
 function renderDeviceNotices(list=lastDeviceNotices){
  lastDeviceNotices=list;
- const ids=new Set(list.map(n=>n.id));
- for(const n of list)if(!deviceNoticeState.has(n.id))deviceNoticeState.set(n.id,{notice:n,phase:'ask'});
- for(const [id,entry] of deviceNoticeState)if(!ids.has(id)&&entry.phase==='ask')deviceNoticeState.delete(id);
- const html=[...deviceNoticeState.entries()].map(([id,e])=>{
-  const n=e.notice,where=radioKindLabel(n.kind)+' · '+esc(n.address);
-  if(e.phase==='working')return '<div class="deviceNotice"><b>Verificando '+esc(n.name)+'…</b><p>'+where+' · confirmando o rádio Meshtastic e conectando.</p></div>';
-  if(e.phase==='added')return '<div class="deviceNotice"><b>'+esc(e.source.name)+' adicionado</b><p>Conexão automática marcada. Outro rádio está ativo; este ficou em espera.</p>'+
-    '<div class="actions"><button type="button" class="primary" data-notice-use="'+id+'">Usar este agora</button><button type="button" data-notice-close="'+id+'">Fechar</button></div></div>';
-  return '<div class="deviceNotice" role="alertdialog" aria-label="Rádio detectado"><b>Rádio Meshtastic detectado</b><p>'+esc(n.name)+' — '+where+'</p>'+
-    '<div class="actions"><button type="button" class="primary" data-notice-add="'+id+'">Adicionar e conectar</button>'+
-    '<button type="button" data-notice-later="'+id+'">Agora não</button><button type="button" data-notice-never="'+id+'">Nunca para este dispositivo</button></div></div>';
- }).join('');
- const box=$('deviceNotices');
+ const box=$('deviceNotices'),html=list.map(deviceNoticeHtml).join('');
  if(box.dataset.html!==html){box.innerHTML=html;box.dataset.html=html;}
- box.querySelectorAll('[data-notice-add]').forEach(b=>b.onclick=()=>acceptDeviceNotice(b.dataset.noticeAdd));
- box.querySelectorAll('[data-notice-later],[data-notice-never]').forEach(b=>b.onclick=async()=>{
-  const id=b.dataset.noticeLater||b.dataset.noticeNever;
-  deviceNoticeState.delete(id);renderDeviceNotices(lastDeviceNotices.filter(n=>n.id!==id));
-  try{await api('/api/devices/dismiss',{id,never:!!b.dataset.noticeNever});}catch(e){notify(e.message,true);}
- });
- box.querySelectorAll('[data-notice-use]').forEach(b=>b.onclick=()=>{
-  const e=deviceNoticeState.get(b.dataset.noticeUse);deviceNoticeState.delete(b.dataset.noticeUse);
-  renderDeviceNotices();if(e)chooseRadio(e.source.id);
- });
- box.querySelectorAll('[data-notice-close]').forEach(b=>b.onclick=()=>{deviceNoticeState.delete(b.dataset.noticeClose);renderDeviceNotices();});
-}
-async function acceptDeviceNotice(id){
- const entry=deviceNoticeState.get(id);if(!entry)return;
- entry.phase='working';renderDeviceNotices();
- try{
-  const r=await api('/api/devices/accept',{id});
-  if(r.other_active){entry.phase='added';entry.source=r.source;}
-  else{deviceNoticeState.delete(id);notify(r.source.name+' adicionado. Conectando…');}
-  await refreshAll();
- }catch(e){deviceNoticeState.delete(id);notify('Rádio detectado: '+e.message,true);}
- renderDeviceNotices();
+ const call=async(path,id,extra={})=>{try{await api(path,{id,...extra});}catch(e){notify(e.message,true);}await refreshDeviceNotices();};
+ const on=(attr,fn)=>box.querySelectorAll('[data-notice-'+attr+']').forEach(b=>b.onclick=()=>fn(b.getAttribute('data-notice-'+attr)));
+ on('add',id=>call('/api/devices/accept',id));
+ on('cancel',id=>call('/api/devices/cancel',id));
+ on('later',id=>call('/api/devices/dismiss',id));
+ on('never',id=>call('/api/devices/dismiss',id,{never:true}));
+ on('close',id=>call('/api/devices/dismiss',id));
+ on('undo',id=>call('/api/devices/undo',id).then(()=>{notify('Conexão removida; este dispositivo não será mais adicionado sozinho.');refreshAll();}));
+ on('use',id=>{const n=list.find(x=>x.id===id);call('/api/devices/dismiss',id);if(n?.job?.source)chooseRadio(n.job.source.id);});
+ // Acompanha mais rápido enquanto houver verificação em andamento.
+ clearTimeout(deviceNoticeTimer);
+ deviceNoticeTimer=setTimeout(refreshDeviceNotices,list.some(deviceJobActive)?1000:4000);
 }
 async function refreshDeviceNotices(){
- try{const r=await api('/api/devices/detected');renderDeviceNotices(r.data);}catch(e){}
+ try{
+  const r=await api('/api/devices/detected');
+  const finished=lastDeviceNotices.filter(deviceJobActive).some(old=>r.data.find(n=>n.id===old.id&&n.job?.phase==='done'));
+  renderDeviceNotices(r.data);
+  if(finished)refreshAll();
+ }catch(e){clearTimeout(deviceNoticeTimer);deviceNoticeTimer=setTimeout(refreshDeviceNotices,4000);}
 }
-setInterval(refreshDeviceNotices,4000);
+refreshDeviceNotices();
 
 // #151: varre USB, Wi-Fi e BLE e cadastra os rádios novos verificados.
-const autoAddOutcome={added:'adicionado',configured:'já configurado',no_response:'sem resposta Meshtastic',error:'erro'};
+const autoAddOutcome={added:'adicionado',configured:'já configurado',no_response:'sem resposta Meshtastic',error:'erro',cancelled:'cancelado'};
 function renderAutoAdd(data){
  const box=$('autoAddResult');box.hidden=false;
  $('sourceAddAuto').disabled=!!data.running;
- if(data.running){box.innerHTML='<b>Adicionar automaticamente</b><p class="muted">'+esc(data.phase||'Procurando…')+'</p>';return;}
+ if(data.running){
+  box.innerHTML='<b>Adicionar automaticamente</b><p class="muted">'+esc(data.phase||'Procurando…')+'</p><div class="actions"><button type="button" id="autoAddCancel">Cancelar</button></div>';
+  $('autoAddCancel').onclick=async()=>{try{renderAutoAdd((await api('/api/devices/autoadd/cancel',{})).data);}catch(e){notify(e.message,true);}};
+  return;
+ }
  const count=k=>data.results.filter(r=>r.outcome===k).length;
  const parts=[count('added')+' adicionada(s)',count('configured')+' já configurada(s)'];
  if(count('no_response'))parts.push(count('no_response')+' sem resposta Meshtastic');
@@ -3529,9 +3541,19 @@ document.querySelectorAll('[data-autodetect]').forEach(box=>box.onchange=async()
  catch(e){box.checked=!box.checked;notify(e.message,true);}
 });
 function syncAutodetectPrefs(){
- const prefs=state.system?.device_autodetect||{};
+ const prefs=state.system?.device_autodetect||{},auto=state.system?.device_autoconnect||{serial:true};
  document.querySelectorAll('[data-autodetect]').forEach(box=>{if(document.activeElement!==box)box.checked=prefs[box.dataset.autodetect]!==false;});
+ document.querySelectorAll('[data-autoconnect]').forEach(box=>{if(document.activeElement!==box)box.checked=auto[box.dataset.autoconnect]===true;});
+ if(document.activeElement!==$('usbPriority'))$('usbPriority').checked=state.system?.usb_priority!==false;
 }
+document.querySelectorAll('[data-autoconnect]').forEach(box=>box.onchange=async()=>{
+ try{await api('/api/system/settings',{device_autoconnect:{[box.dataset.autoconnect]:box.checked}});notify('Preferência de conexão automática salva.');}
+ catch(e){box.checked=!box.checked;notify(e.message,true);}
+});
+$('usbPriority').onchange=async()=>{
+ try{await api('/api/system/settings',{usb_priority:$('usbPriority').checked});notify('Prioridade USB '+($('usbPriority').checked?'ativada.':'desativada.'));}
+ catch(e){$('usbPriority').checked=!$('usbPriority').checked;notify(e.message,true);}
+};
 async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();syncAutodetectPrefs();
 if(!window._themeFromSQLite && state.system && !settingsPending.has('system')){
  sysLoaded=false;renderSystem();window._themeFromSQLite=true;

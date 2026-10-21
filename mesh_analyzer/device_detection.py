@@ -28,6 +28,15 @@ MESHTASTIC_BLE_SERVICE = "6ba1b218-15a8-461f-9fa8-5dcae273eafd"
 # do Bluetooth não devem gerar avisos; o rádio do usuário fica perto do PC.
 BLE_NEAR_RSSI = -70
 PROBE_TIMEOUT_S = 20
+# #156: prazo total da verificação, incluindo pareamento BLE; ao estourar, a
+# tentativa é abandonada com segurança em vez de prender a interface.
+PROBE_DEADLINE_S = {"serial": 30, "tcp": 30, "ble": 45}
+TIMEOUT_HINT = {
+    "serial": "O rádio não respondeu a tempo pela USB. Confira se outro programa está usando a porta.",
+    "tcp": "O rádio não respondeu a tempo pelo Wi-Fi. Confira se ele está ligado e na mesma rede.",
+    "ble": "O rádio não respondeu a tempo pelo Bluetooth. Se ele pedir PIN, confira a janela de "
+           "pareamento do Windows (PIN na tela do rádio; 123456 se ele não tiver tela).",
+}
 USB_POLL_S = 3
 BLE_POLL_S = 45
 
@@ -155,6 +164,34 @@ def probe(candidate, opener=open_interface):
                 pass
 
 
+def bounded_probe(prober, candidate, cancel=None, deadline=None):
+    """Executa a verificação com prazo rígido e cancelamento (#156).
+
+    A thread da verificação continua sozinha se o SDK travar; `probe()` fecha a
+    interface quando ela retornar, e o resultado tardio é descartado.
+    """
+    kind = candidate["kind"]
+    deadline = deadline or PROBE_DEADLINE_S.get(kind, 30)
+    box, done = {}, threading.Event()
+
+    def run():
+        try:
+            box["result"] = prober(candidate)
+        except Exception as exc:
+            box["result"] = {"ok": False, "error": (str(exc) or type(exc).__name__)[:160]}
+        finally:
+            done.set()
+
+    threading.Thread(target=run, name="probe-" + kind, daemon=True).start()
+    end = time.monotonic() + deadline
+    while not done.wait(0.2):
+        if cancel is not None and cancel.is_set():
+            return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
+        if time.monotonic() >= end:
+            return {"ok": False, "timed_out": True, "error": TIMEOUT_HINT.get(kind, "Tempo esgotado")}
+    return box["result"]
+
+
 class Registry:
     """Conexões já cadastradas, para não oferecer nem duplicar o mesmo rádio."""
 
@@ -183,6 +220,15 @@ class Registry:
         keys, _ = self.snapshot()
         return device_key(candidate["kind"], candidate["address"]) in keys
 
+    def source_for(self, candidate):
+        key = device_key(candidate["kind"], candidate["address"])
+        for src in self.db.sources(public=False):
+            conf = src["config"]
+            address = conf.get("port") or conf.get("host") or conf.get("address")
+            if src["kind"] == candidate["kind"] and address and device_key(src["kind"], address) == key:
+                return src
+        return None
+
     def add(self, candidate, info):
         """Cadastra com o nome lido do rádio e conexão automática marcada."""
         _, nodes = self.snapshot()
@@ -200,7 +246,12 @@ class Registry:
 
 
 class DeviceWatcher:
-    """#149: avisa quando um rádio novo aparece (USB plugado, mDNS ou BLE próximo)."""
+    """#149/#155/#156: rádios novos (USB plugado, mDNS, BLE próximo).
+
+    USB verificado pode ser adicionado e conectado sem clique, com prioridade
+    sobre Wi-Fi/BLE; os demais geram aviso com verificação em segundo plano,
+    prazo, fila Bluetooth e Cancelar.
+    """
 
     def __init__(self, db, sources, prober=probe, usb=usb_serial_ports, ble=scan_ble):
         self.db = db
@@ -214,6 +265,8 @@ class DeviceWatcher:
         self._notices = {}
         self._snoozed = set()
         self._busy = set()
+        self._ble_line = []
+        self._deferred = []
         self._usb_seen = None
         self._thread = None
         self._zc = None
@@ -235,7 +288,7 @@ class DeviceWatcher:
         with self._lock:
             (self._busy.add if value else self._busy.discard)(key)
 
-    def wait_idle(self, key, seconds=PROBE_TIMEOUT_S + 5):
+    def wait_idle(self, key, seconds=max(PROBE_DEADLINE_S.values()) + 5):
         """Aguarda o monitor terminar de verificar a mesma porta (uma porta, um dono)."""
         end = time.monotonic() + seconds
         while time.monotonic() < end:
@@ -245,12 +298,62 @@ class DeviceWatcher:
             time.sleep(0.2)
         return False
 
+    # Fila Bluetooth: o adaptador do Windows não aguenta conexões simultâneas.
+    def enter_ble(self, token, cancel=None, on_wait=None):
+        with self._lock:
+            if token not in self._ble_line:
+                self._ble_line.append(token)
+        while True:
+            with self._lock:
+                position = self._ble_line.index(token) + 1
+            if position == 1:
+                return True
+            if on_wait:
+                on_wait(position, len(self._ble_line))
+            if (cancel is not None and cancel.is_set()) or self._stop.wait(0.2):
+                self.leave_ble(token)
+                return False
+
+    def leave_ble(self, token):
+        with self._lock:
+            if token in self._ble_line:
+                self._ble_line.remove(token)
+
+    def verify(self, candidate, token, cancel=None, on_wait=None):
+        """Verificação com prazo, cancelamento e fila Bluetooth."""
+        ble = candidate["kind"] == "ble"
+        if ble and not self.enter_ble(token, cancel, on_wait):
+            return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
+        try:
+            return bounded_probe(self._probe, candidate, cancel)
+        finally:
+            if ble:
+                self.leave_ble(token)
+
     def notices(self):
         with self._lock:
-            return [dict(n) for n in self._notices.values()]
+            result = []
+            for n in self._notices.values():
+                item = {k: v for k, v in n.items() if k not in ("cancel",)}
+                if isinstance(n.get("job"), dict):
+                    item["job"] = dict(n["job"])
+                result.append(item)
+            return result
+
+    def _settings(self):
+        return self.db.system_settings()
 
     def _enabled(self, kind):
-        return self.db.system_settings()["device_autodetect"].get(kind, True)
+        return self._settings()["device_autodetect"].get(kind, True)
+
+    def _new_notice(self, key, candidate, name, **extra):
+        notice = {"id": hashlib.blake2s(key.encode(), digest_size=6).hexdigest(), "key": key,
+                  "type": "detected", "kind": candidate["kind"], "address": candidate["address"],
+                  "name": name, "detected_ms": now_ms(), "candidate": candidate}
+        notice.update(extra)
+        with self._lock:
+            self._notices[key] = notice
+        return notice
 
     def _offer(self, candidate, info=None):
         key = device_key(candidate["kind"], candidate["address"])
@@ -263,20 +366,69 @@ class DeviceWatcher:
             _, nodes = self.registry.snapshot()
             if info["node_num"] in nodes:
                 return
-        notice = {"id": hashlib.blake2s(key.encode(), digest_size=6).hexdigest(), "key": key,
-                  "kind": candidate["kind"], "address": candidate["address"],
-                  "name": (info or {}).get("long_name") or candidate["name"],
-                  "verified": info is not None, "detected_ms": now_ms(),
-                  "candidate": candidate}
-        with self._lock:
-            self._notices[key] = notice
+        self._new_notice(key, candidate, (info or {}).get("long_name") or candidate["name"],
+                         verified=info is not None)
 
     def _drop_missing(self, kind, present):
         with self._lock:
-            for key in [k for k, n in self._notices.items() if n["kind"] == kind and k not in present]:
+            for key in [k for k, n in self._notices.items()
+                        if n["kind"] == kind and k not in present and n["type"] == "detected"
+                        and not (n.get("job") or {}).get("phase") in ("queued", "connecting", "registering")]:
                 self._notices.pop(key, None)
             # "Agora não" vale até o dispositivo sair e voltar.
             self._snoozed = {k for k in self._snoozed if not k.startswith(kind + ":") or k in present}
+
+    # --- #155: prioridade USB e adição automática --------------------------------
+    def _radio_busy(self):
+        try:
+            return any(q.get("state") == "awaiting_reply" for q in self.sources.queries.status())
+        except Exception:
+            return False
+
+    def _prefer_usb(self, source_id):
+        """Rádio USB assume no lugar de Wi-Fi/BLE (troca segura de #152)."""
+        if not self._settings()["usb_priority"]:
+            return False
+        active = self.sources.active_radio()
+        if active is None or active == source_id:
+            return False
+        current = self.db.source(active)
+        if not current or current["kind"] == "serial":
+            return False
+        if self._radio_busy():
+            with self._lock:
+                if source_id not in self._deferred:
+                    self._deferred.append(source_id)
+            return False
+        try:
+            self.sources.activate(source_id)
+            return True
+        except (ValueError, RuntimeError) as exc:
+            LOG.warning("Prioridade USB não aplicada: %s", exc)
+            return False
+
+    def _run_deferred(self):
+        with self._lock:
+            pending, self._deferred = self._deferred, []
+        for source_id in pending:
+            if self.db.source(source_id):
+                self._prefer_usb(source_id)
+
+    def _auto_add(self, candidate, info):
+        key = device_key(candidate["kind"], candidate["address"])
+        if key in self.db.ignored_devices():
+            return None
+        previous = self.sources.active_radio()
+        try:
+            source = self.registry.add(candidate, info)
+        except LookupError:
+            return None
+        switched = self._prefer_usb(source["id"])
+        self._new_notice(key, candidate, source["name"], type="auto_added",
+                         source_id=source["id"], previous_id=previous, switched=switched,
+                         waiting=bool(previous) and not switched)
+        self.db.log("Rádio adicionado automaticamente: " + source["name"], source_id=source["id"])
+        return source
 
     def _check_usb(self):
         ports = {device_key("serial", p["address"]): p for p in self._usb()}
@@ -286,17 +438,24 @@ class DeviceWatcher:
             return  # Primeira leitura é a linha de base: aviso só ao plugar.
         for key in set(ports) - previous:
             candidate = ports[key]
-            if self.registry.configured(candidate):
+            configured = self.registry.source_for(candidate)
+            if configured:
+                if configured["enabled"]:
+                    self._prefer_usb(configured["id"])  # rádio já cadastrado replugado
                 continue
             # Placas ESP32 reiniciam ao abrir a porta; aguarda o boot.
             if self._stop.wait(2):
                 return
             self.busy(key)
             try:
-                info = self._probe(candidate)
+                info = self.verify(candidate, key)
             finally:
                 self.busy(key, False)
-            if info.get("ok"):
+            if not info.get("ok"):
+                continue
+            if self._settings()["device_autoconnect"].get("serial"):
+                self._auto_add(candidate, info)
+            else:
                 self._offer(candidate, info)
 
     def _check_ble(self):
@@ -307,6 +466,9 @@ class DeviceWatcher:
             # Varredura BLE durante conexão BLE ativa pode derrubá-la no Windows.
             if src["kind"] == "ble" and snapshot.get(str(src["id"]), {}).get("status") in ("connecting", "connected"):
                 return
+        with self._lock:
+            if self._ble_line:
+                return  # verificação BLE em andamento
         try:
             found = self._ble(timeout=4.0, near_only=True)
         except Exception as exc:
@@ -347,6 +509,7 @@ class DeviceWatcher:
         while not self._stop.is_set():
             try:
                 self._check_usb()
+                self._run_deferred()
             except Exception as exc:
                 LOG.debug("Enumeração USB falhou: %s", exc)
             if time.monotonic() >= next_ble:
@@ -354,42 +517,110 @@ class DeviceWatcher:
                 next_ble = time.monotonic() + BLE_POLL_S
             self._stop.wait(USB_POLL_S)
 
-    def dismiss(self, notice_id, never=False):
+    def _find(self, notice_id):
         with self._lock:
-            key = next((k for k, n in self._notices.items() if n["id"] == notice_id), None)
-            if key is None:
-                raise LookupError("Aviso não encontrado")
-            self._notices.pop(key)
-            if not never:
+            for key, n in self._notices.items():
+                if n["id"] == notice_id:
+                    return key, n
+        raise LookupError("Aviso não encontrado ou já tratado")
+
+    def dismiss(self, notice_id, never=False):
+        key, notice = self._find(notice_id)
+        if (notice.get("job") or {}).get("phase") in ("queued", "connecting", "registering"):
+            self.cancel(notice_id)
+        with self._lock:
+            self._notices.pop(key, None)
+            if notice["type"] == "detected" and not never and (notice.get("job") or {}).get("phase") != "done":
                 self._snoozed.add(key)
         if never:
             self.db.ignore_device(key)
         return {"success": True}
 
-    def accept(self, notice_id):
-        """Um clique: verifica, cadastra com conexão automática e conecta."""
+    def cancel(self, notice_id):
+        """#156: Cancelar libera o aviso na hora; nada é cadastrado."""
+        key, notice = self._find(notice_id)
         with self._lock:
-            notice = next((n for n in self._notices.values() if n["id"] == notice_id), None)
-            if notice is None:
-                raise LookupError("Aviso não encontrado ou já tratado")
-            self._busy.add(notice["key"])
+            event = notice.get("cancel")
+            job = notice.get("job") or {}
+            if job.get("phase") not in ("queued", "connecting"):
+                raise ValueError("Não há verificação em andamento para cancelar")
+            if event:
+                event.set()
+            notice["job"] = {"phase": "cancelled", "detail": "Verificação cancelada"}
+        return {"success": True}
+
+    def accept(self, notice_id, wait=False):
+        """Um clique: verifica em segundo plano, cadastra com conexão automática e conecta."""
+        key, notice = self._find(notice_id)
+        with self._lock:
+            if (notice.get("job") or {}).get("phase") in ("queued", "connecting", "registering"):
+                return {"success": True, "job": dict(notice["job"])}
+            cancel = threading.Event()
+            notice["cancel"] = cancel
+            notice["job"] = {"phase": "connecting", "started_ms": now_ms(), "detail": ""}
+            self._busy.add(key)
+        worker = threading.Thread(target=self._accept_job, args=(key, notice, cancel),
+                                  name="accept-" + notice["kind"], daemon=True)
+        worker.start()
+        if wait:
+            worker.join()
+        with self._lock:
+            return {"success": True, "job": dict(notice.get("job") or {})}
+
+    def _job(self, notice, cancel, **values):
+        with self._lock:
+            if cancel.is_set() or notice.get("cancel") is not cancel:
+                return False
+            notice["job"] = {**(notice.get("job") or {}), **values}
+            return True
+
+    def _accept_job(self, key, notice, cancel):
+        candidate = notice["candidate"]
         try:
-            info = self._probe(notice["candidate"])
+            def waiting(position, total):
+                self._job(notice, cancel, phase="queued", position=position, total=total)
+            info = self.verify(candidate, "accept:" + key, cancel, waiting)
+            if cancel.is_set():
+                return
             if not info.get("ok"):
-                raise RuntimeError("Não é um rádio Meshtastic ou não respondeu: " + info["error"])
+                self._job(notice, cancel, phase="failed", error=info.get("error", "Sem resposta"),
+                          timed_out=bool(info.get("timed_out")))
+                return
+            if not self._job(notice, cancel, phase="registering"):
+                return
             try:
-                source = self.registry.add(notice["candidate"], info)
-            except LookupError:
-                with self._lock:
-                    self._notices.pop(notice["key"], None)
-                raise
-            with self._lock:
-                self._notices.pop(notice["key"], None)
+                source = self.registry.add(candidate, info)
+            except LookupError as exc:
+                self._job(notice, cancel, phase="failed", error=str(exc))
+                return
             active = self.sources.active_radio()
-            return {"success": True, "source": source,
-                    "other_active": active is not None and active != source["id"]}
+            switched = candidate["kind"] == "serial" and self._prefer_usb(source["id"])
+            self._job(notice, cancel, phase="done", source={"id": source["id"], "name": source["name"]},
+                      other_active=active is not None and active != source["id"] and not switched,
+                      switched=switched)
+        except Exception as exc:
+            self._job(notice, cancel, phase="failed", error=(str(exc) or type(exc).__name__)[:160])
         finally:
-            self.busy(notice["key"], False)
+            self.busy(key, False)
+
+    def undo(self, notice_id):
+        """#155: Desfazer remove a conexão adicionada sozinha e não oferece mais o dispositivo."""
+        key, notice = self._find(notice_id)
+        source_id = notice.get("source_id") or ((notice.get("job") or {}).get("source") or {}).get("id")
+        if not source_id:
+            raise ValueError("Nada para desfazer neste aviso")
+        self.sources.disconnect(source_id)
+        self.db.delete_source(source_id)
+        self.db.ignore_device(key)
+        previous = notice.get("previous_id")
+        if notice.get("switched") and previous and (self.db.source(previous) or {}).get("enabled"):
+            try:
+                self.sources.activate(previous)
+            except (ValueError, RuntimeError):
+                pass
+        with self._lock:
+            self._notices.pop(key, None)
+        return {"success": True}
 
 
 class AutoAdd:
@@ -405,6 +636,7 @@ class AutoAdd:
         self._ble = ble
         self._mdns = mdns
         self._lock = threading.RLock()
+        self._cancel = threading.Event()
         self._state = {"running": False, "phase": "idle", "results": [], "finished_ms": 0}
 
     def status(self):
@@ -415,9 +647,14 @@ class AutoAdd:
         with self._lock:
             if self._state["running"]:
                 return self.status()
+            self._cancel = threading.Event()
             self._state = {"running": True, "phase": "Procurando em USB, Wi-Fi e Bluetooth…",
                            "results": [], "finished_ms": 0}
         threading.Thread(target=self.run, name="auto-add-radios", daemon=True).start()
+        return self.status()
+
+    def cancel(self):
+        self._cancel.set()
         return self.status()
 
     def _result(self, candidate, outcome, detail=""):
@@ -426,14 +663,26 @@ class AutoAdd:
                                            "name": candidate["name"], "outcome": outcome,
                                            "detail": detail})
 
+    def _phase(self, text):
+        with self._lock:
+            self._state["phase"] = text
+
+    def _verify(self, key, candidate):
+        if self.watcher:
+            return self.watcher.verify(candidate, "auto:" + key, self._cancel)
+        return bounded_probe(self._probe, candidate, self._cancel)
+
     def run(self):
         with self._lock:
             self._state = {"running": True, "phase": "Procurando em USB, Wi-Fi e Bluetooth…",
                            "results": [], "finished_ms": 0}
+        cancel = self._cancel
         candidates, errors = [], []
         scans = (("USB", lambda: self._usb()), ("Wi-Fi", lambda: self._mdns(4.0)),
                  ("Bluetooth", lambda: self._ble(timeout=5.0, near_only=True)))
         for label, scan in scans:
+            if cancel.is_set():
+                break
             try:
                 candidates.extend(scan())
             except Exception as exc:
@@ -447,9 +696,11 @@ class AutoAdd:
                 self._result(c, "configured", "Já configurado")
             else:
                 pending.append((key, c))
-        with self._lock:
-            self._state["phase"] = "Verificando " + str(len(pending)) + " dispositivo(s)…"
-        for key, c in pending:
+        for index, (key, c) in enumerate(pending, 1):
+            if cancel.is_set():
+                self._result(c, "cancelled", "Cancelado antes da verificação")
+                continue
+            self._phase("Verificando " + str(index) + " de " + str(len(pending)) + ": " + c["name"] + "…")
             if self.watcher:
                 self.watcher.wait_idle(key)
                 if self.registry.configured(c):
@@ -457,7 +708,10 @@ class AutoAdd:
                     continue
                 self.watcher.busy(key)
             try:
-                info = self._probe(c)
+                info = self._verify(key, c)
+                if info.get("cancelled"):
+                    self._result(c, "cancelled", "Cancelado")
+                    continue
                 if not info.get("ok"):
                     self._result(c, "no_response", info.get("error", ""))
                     continue
@@ -472,4 +726,5 @@ class AutoAdd:
                 if self.watcher:
                     self.watcher.busy(key, False)
         with self._lock:
-            self._state.update(running=False, phase="done", errors=errors, finished_ms=now_ms())
+            self._state.update(running=False, phase="cancelled" if cancel.is_set() else "done",
+                               errors=errors, finished_ms=now_ms())
