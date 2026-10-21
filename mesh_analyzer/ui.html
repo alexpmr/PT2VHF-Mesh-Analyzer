@@ -79,7 +79,14 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .card{background:#17212b;border:1px solid var(--line);border-radius:10px;padding:14px}.card h3{margin:0 0 9px;color:#e9d46d;font-size:14px}.muted{color:var(--muted)}.muted small{line-height:1.5}.notice{border:1px solid #8a6c2f;background:#443b2226;padding:9px;border-radius:8px;color:#e4d5a8}
 .tableWrap{overflow:auto;min-height:0;flex:1}.dataTable{border-collapse:collapse;width:100%;font-size:12px}.dataTable th{position:sticky;top:0;background:#1b2b38;color:#cbd6df;padding:9px;text-align:left;white-space:nowrap;border-bottom:1px solid #405668;z-index:2}.dataTable td{padding:9px;border-bottom:1px solid #22313f;white-space:nowrap}.dataTable tr:hover td{background:#1e3140}.dataTable tr[data-node]{cursor:pointer}
 #viewMessages{overflow:hidden}#messageLayout{display:grid;grid-template-columns:285px 1fr;flex:1;min-height:0}.contacts{border-right:1px solid var(--line);overflow:auto;background:#111c27}.contact{display:block;width:100%;padding:11px;text-align:left;border:0;border-bottom:1px solid #2b3b48;border-radius:0}.contact.selected{background:#30465c;border-left:3px solid var(--accent)}
-.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px}.bubble{max-width:75%;padding:7px 10px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}.bubblesNewMessages{align-self:center;margin:-38px 0 6px;position:relative;z-index:2;border-radius:14px;background:#d29b2c;border-color:#d29b2c;color:#1b1b1b;font-weight:700;font-size:11px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)}.bubblesNewMessages[hidden]{display:none}
+.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px}.bubble{max-width:75%;padding:7px 10px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}
+.msgRow{display:flex;align-items:flex-start;gap:6px;max-width:78%;align-self:flex-start;margin-top:6px}.msgRow.tx{align-self:flex-end;justify-content:flex-end}.msgRow.grouped{margin-top:-2px}
+.msgRow .bubble{max-width:100%;min-width:0;border-radius:10px;box-shadow:0 1px 1px #0003}.msgRow.rx .bubble.first{border-top-left-radius:2px}.msgRow.tx .bubble.first{border-top-right-radius:2px}
+.msgAvatar{flex:0 0 28px;margin-top:2px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#111;background:hsl(var(--who-h,200) 60% 62%)}.msgAvatar.spacer{visibility:hidden}
+.msgHead{display:flex;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:2px;font-size:12px}.msgHead b{color:hsl(var(--who-h,200) 70% 68%)}.msgHead span{color:var(--muted,#9fb2bf);font-size:10px;white-space:nowrap}
+.msgQuote{margin:2px 0 5px;padding:4px 8px;border-left:4px solid hsl(var(--who-h,200) 70% 60%);border-radius:6px;background:#0000002e;font-size:12px;display:flex;flex-direction:column}.msgQuote b{color:hsl(var(--who-h,200) 70% 68%);font-size:11px}.msgQuote span{opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="light"] .msgHead b,html[data-theme="light"] .msgQuote b{color:hsl(var(--who-h,200) 65% 33%)}html[data-theme="light"] .msgQuote{background:#00000010}
+.bubblesNewMessages{align-self:center;margin:-38px 0 6px;position:relative;z-index:2;border-radius:14px;background:#d29b2c;border-color:#d29b2c;color:#1b1b1b;font-weight:700;font-size:11px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)}.bubblesNewMessages[hidden]{display:none}
 .radioMenu{position:fixed;z-index:9800;min-width:260px;max-width:min(360px,calc(100vw - 24px));background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #4f6577;border-radius:10px;box-shadow:0 12px 32px #0009;padding:6px}
 .radioMenu[hidden]{display:none}.radioMenu h4{margin:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted,#9fb2bf)}
 .radioMenu button{display:flex;width:100%;align-items:center;gap:8px;text-align:left;background:transparent;border:0;border-radius:7px;padding:8px 10px;color:inherit}
@@ -2359,6 +2366,40 @@ function messageTimeLabel(timestamp,now=new Date()){
    'há '+Math.floor(age/3600)+' hora'+(age<7200?'':'s');
  return {date,label,title:full};
 }
+// #158: balões no estilo WhatsApp: remetente colorido em cima (canais),
+// agrupamento de mensagens seguidas, citação de resposta e horário no rodapé.
+const MESSAGE_GROUP_MS=5*60000;
+function senderHue(key){let h=0;for(const ch of String(key))h=(h*31+ch.charCodeAt(0))>>>0;return h%360;}
+function senderInfo(num){
+ const node=nodes.find(n=>Number(n.node_num)===Number(num));
+ const id=node?.node_id||(num!=null?'!'+(Number(num)>>>0).toString(16).padStart(8,'0'):'');
+ return {name:idName(num),short:node?.short_name||'',id,hue:senderHue(id||num)};
+}
+function parseReplyQuote(text){
+ const m=/^↪ ([^:\n]{1,80}): ([^\n]*)\n([\s\S]*)$/.exec(String(text||''));
+ return m?{author:m[1],excerpt:m[2],body:m[3]}:null;
+}
+function quoteHue(author){
+ // Mesma cor do cabeçalho quando o autor citado é um nó conhecido.
+ const node=nodes.find(n=>[n.long_name,n.short_name,n.friendly_name].includes(author));
+ return node?senderInfo(node.node_num).hue:senderHue(author);
+}
+function messageBubbleHtml(m,i,prev,channelChat,key){
+ const tx=m.direction==='tx',from=tx?'tx':String(m.from_node);
+ const grouped=prev&&(prev.direction==='tx'?'tx':String(prev.from_node))===from&&
+   Math.abs(Number(m.timestamp_ms)-Number(prev.timestamp_ms))<MESSAGE_GROUP_MS;
+ const who=tx?null:senderInfo(m.from_node);
+ const quote=parseReplyQuote(m.text);
+ const head=channelChat&&!tx&&!grouped?'<span class="msgHead"><b>'+esc(who.name)+'</b><span>'+
+   esc([who.short,who.id].filter(Boolean).join(' · '))+'</span></span>':'';
+ const quoted=quote?'<blockquote class="msgQuote" style="--who-h:'+quoteHue(quote.author)+'"><b>'+esc(quote.author)+'</b><span>'+esc(quote.excerpt)+'</span></blockquote>':'';
+ const avatar=channelChat&&!tx?(grouped?'<span class="msgAvatar spacer" aria-hidden="true"></span>':
+   '<span class="msgAvatar" aria-hidden="true">'+esc((who.short||who.name||'?').slice(0,2).toUpperCase())+'</span>'):'';
+ return '<div class="msgRow '+(tx?'tx':'rx')+(grouped?' grouped':'')+'"'+(who?' style="--who-h:'+who.hue+'"':'')+'>'+avatar+
+  '<div tabindex="0" role="button" aria-label="Mensagem'+(who?' de '+esc(who.name):'')+'; abrir ações" data-msg-index="'+i+'" data-msg-key="'+esc(key)+
+  '" class="bubble '+(tx?'tx':'rx')+(grouped?'':' first')+'">'+head+quoted+'<div>'+esc(quote?quote.body:m.text)+'</div><small>'+
+  messageTimeHtml(m.timestamp_ms,new Date(),m.radio_time_ms)+messageStateHtml(m)+'</small></div></div>';
+}
 function messageTimeHtml(timestamp,now=new Date(),radioTimestamp=null){
  const info=messageTimeLabel(timestamp,now);
  if(!info)return 'Data indisponível';
@@ -2444,10 +2485,8 @@ function renderChat(updateConversation=true){
    }
   }
   const lastKey=filtered.length?msgKey(filtered.at(-1),filtered.length-1):'';
-  let html=filtered.map((m,i)=>'<div tabindex="0" role="button" aria-label="Mensagem; abrir ações" data-msg-index="'+i+'" data-msg-key="'+esc(msgKey(m,i))+'" class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
-    esc(m.text)+'</div><small>'+messageTimeHtml(m.timestamp_ms,new Date(),m.radio_time_ms)+
-    (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
-    messageStateHtml(m)+'</small></div>').join('');
+  const channelChat=!currentChat.startsWith('node:');
+  let html=filtered.map((m,i)=>messageBubbleHtml(m,i,filtered[i-1],channelChat,msgKey(m,i))).join('');
   if(pendingHere){
    html+='<div tabindex="0" role="button" aria-label="Mensagem pendente; abrir ações" data-msg-index="pending" data-msg-key="pending" class="bubble tx"><div>'+esc(pendingHere.text)+'</div><small>'+
       (pendingHere.failed?'Falha':'Enviando')+
