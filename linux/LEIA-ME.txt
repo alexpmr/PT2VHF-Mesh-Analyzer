@@ -1,0 +1,20 @@
+PT2VHF Mesh Analyzer — Linux x64
+por Alex, PT2VHF
+
+Requisitos: Linux 64 bits (glibc 2.35+, ex.: Ubuntu 22.04, Debian 12, Fedora 36 ou mais novos)
+e um navegador instalado.
+
+Uso rápido:
+  ./PT2VHF-Mesh-Analyzer
+O serviço local é iniciado e a interface abre no navegador padrão
+(http://127.0.0.1:8789). Para encerrar, feche o processo (Ctrl+C no terminal).
+
+Instalar no menu de aplicativos (sem sudo):
+  ./instalar.sh
+
+Rádio USB/serial: o usuário precisa pertencer ao grupo "dialout"
+(sudo usermod -aG dialout $USER e entrar novamente na sessão).
+Bluetooth LE usa o BlueZ do sistema.
+
+Dados e configurações: ~/.local/share/PT2VHF-Mesh-Analyzer
+A atualização é manual: baixe o pacote novo na página de releases do GitHub.

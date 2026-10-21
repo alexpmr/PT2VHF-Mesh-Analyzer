@@ -1,4 +1,4 @@
-# Meshtastic client and transport integrations. Python 3.11+/Windows 10 1809+ / Windows 11.
+# Meshtastic client and transport integrations. Python 3.11+ / Windows 10 1809+ / Windows 11 / Linux / macOS.
 meshtastic>=2.5,<3
 pyserial>=3.5,<4
 bleak>=0.22,<2
@@ -8,5 +8,5 @@ PyPubSub>=4,<5
 # Offline technical PDF generation
 reportlab>=4.2,<5
 
-# Windows embedded WebView2 desktop shell
-pywebview>=6.2,<7  # WinForms window icon via webview.start(icon=...) since 6.2.
+# Janela desktop nativa (Windows e macOS)
+pywebview>=6.2,<7; sys_platform != "linux"  # Windows WebView2 / macOS WebKit. Linux usa o navegador padrão. Ícone WinForms via webview.start(icon=...) desde 6.2.

@@ -1,6 +1,8 @@
-"""Native Windows desktop shell for the local Meshtastic dashboard.
+"""Native desktop shell for the local Meshtastic dashboard.
 
-No browser fallback: the application must not silently open a browser window.
+Windows uses WebView2 and never falls back to a browser. macOS uses the
+system WebKit (Cocoa). On Linux, app.run() opens the default browser when no
+native WebView backend (GTK/Qt) is available.
 """
 from __future__ import annotations
 
@@ -82,7 +84,7 @@ def open_desktop_window(url: str, profile: Path) -> None:
     try:
         import webview
     except ImportError as exc:
-        raise RuntimeError("Componente desktop WebView2 indisponível. Reinstale o aplicativo.") from exc
+        raise RuntimeError("Componente desktop WebView indisponível. Reinstale o aplicativo.") from exc
 
     # Keep the running WebView2 window grouped with the installed Start-menu
     # and desktop shortcuts, not with Python/Edge.
@@ -110,12 +112,15 @@ def open_desktop_window(url: str, profile: Path) -> None:
     pdf_bridge._window = window
     # Runs on the main thread; returns only after the last desktop window closes.
     # Windows 10 1809+ requires Microsoft Edge WebView2 Runtime (Evergreen), if absent.
+    windows = os.name == "nt"
     try:
-        icon_path = native_window_icon() if os.name == "nt" else None
-        webview.start(gui="edgechromium", debug=False,
+        icon_path = native_window_icon() if windows else None
+        # macOS: Cocoa/WebKit; Linux: GTK or Qt, whichever pywebview finds.
+        webview.start(gui="edgechromium" if windows else None, debug=False,
                       private_mode=False, storage_path=str(profile),
                       icon=str(icon_path) if icon_path else None)
     except Exception as exc:
         raise RuntimeError(
             "Falha ao iniciar WebView2. Verifique o Microsoft Edge WebView2 Runtime."
+            if windows else "Falha ao iniciar a janela nativa (WebView)."
         ) from exc

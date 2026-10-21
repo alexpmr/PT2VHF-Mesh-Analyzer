@@ -1,3 +1,25 @@
+# v0.6.37 — Rádios detectados automaticamente e seletor do rádio ativo
+
+Inclui todo o conteúdo da v0.6.36 (Linux, macOS, horários e rolagem das mensagens), que não chegou a ser publicada separadamente.
+
+- #149: monitoramento em segundo plano de portas USB (ao plugar), anúncios mDNS e BLE próximos (RSSI ≥ −70 dBm, serviço GATT Meshtastic). Rádios USB são verificados pelo handshake Meshtastic antes do aviso. "Adicionar e conectar" verifica, cadastra com o nome lido do rádio, Node ID e conexão automática marcada, e conecta; com outro rádio ativo, o novo fica em espera e o aviso oferece "Usar este agora". "Agora não" vale até o dispositivo sair e voltar; "Nunca" é persistido. Preferência por tipo (USB, Wi-Fi, Bluetooth) em Configurações → Conexões. Portas já cadastradas nunca são abertas e nada é transmitido por RF.
+- #150: botão "Configuração Automática" renomeado para "Detectar automaticamente".
+- #151: botão "Adicionar automaticamente" ao lado de "Adicionar conexão manualmente": varre USB (somente portas com VID USB), mDNS e BLE próximo, verifica cada candidato pelo protocolo Meshtastic e cadastra os que ainda não existem (por porta, host, endereço BLE ou Node ID). Resumo com adicionados, já configurados, sem resposta e erros; execução repetida não duplica.
+- #152: o indicador de conexão abre o seletor do rádio ativo, com somente a conexão ativa e as habilitadas cujo dispositivo está presente (porta COM enumerada, TCP respondendo, BLE visto), sem abrir a porta nem transmitir. A troca fecha o rádio atual e conecta o escolhido; se ele não conectar em 45 s ou der erro, o anterior volta. O escolhido vira o rádio preferido e conecta primeiro no próximo início. Nunca há dois rádios ativos (#139). Reconectar e Gerenciar conexões continuam no menu.
+- O Node ID do rádio passa a ser guardado na conexão quando ela conecta, para evitar cadastro duplicado.
+
+Validação: testes Python (detecção, adição automática, troca com sucesso e com retorno, disponibilidade) e regressão Chromium do seletor, do aviso e do resumo. Aceite com rádios físicos em USB, BLE e Wi-Fi pendente.
+
+# v0.6.36 — Linux, macOS, horários e rolagem das mensagens
+
+- Plataformas: novos pacotes **Linux x64** (`.tar.gz` com executável, ícone e `instalar.sh`) e **macOS** Apple Silicon e Intel (`.dmg`, app com assinatura ad-hoc e permissão de Bluetooth). No macOS a janela usa o WebKit do sistema; no Linux a interface abre no navegador padrão. Atualização interna permanece exclusiva do Windows; nas demais plataformas o botão abre a release.
+- Downloads: o ZIP de código-fonte deixou de ser publicado na release. SHA256SUMS.txt cobre todas as plataformas.
+- #144: o rxTime vem do relógio do rádio; quando ele difere até 15 min do PC, a mensagem usa o horário de recepção local (defasagem do relógio do rádio era a causa provável do “há 3 minutos” fixo). Histórico fora dessa janela preserva o horário original. Horário do rádio persistido em `radio_time_ms` e exibido no detalhe. Horário futuro mostra data/hora absolutas.
+- #145: o refresh periódico só atualiza os horários relativos, sem reconstruir os balões nem mover a rolagem. Ao ler o histórico, a posição é preservada por âncora e novas mensagens mostram “↓ Novas mensagens”; no final da conversa, acompanha automaticamente. Troca de conversa e envio levam ao final.
+- #146: botão da barra superior mostra somente “Atualizado” (verde) ou “Nova Versão” (laranja) após verificação bem-sucedida; “Verificando...” e “Verificação indisponível” como estados neutros. Versões no título do botão e no diálogo.
+
+Validação: testes Python, regressões Chromium (v0.6.34 e v0.6.36) e empacotamento Windows/Linux/macOS no pipeline, com teste da API local em cada pacote. Rádio físico, BLE no macOS/Linux e janela nativa no macOS precisam de aceite em equipamento real.
+
 # v0.6.35 — Aviso de nova versão
 
 - Atualizações: ao detectar versão nova, além do indicador NOVA VERSÃO no menu superior, o diálogo de atualização abre sozinho perguntando "Deseja atualizar agora?", com Atualizar agora / Depois / Abrir release. "Atualizar agora" segue o fluxo existente (download, SHA256, instalação); "Depois" adia a mesma versão por 24 h. Não abre sobre outro diálogo (primeira execução, sem conexão) nem se a atualização já estiver em andamento.

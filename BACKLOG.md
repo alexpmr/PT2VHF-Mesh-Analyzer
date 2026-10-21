@@ -1,3 +1,14 @@
+## v0.6.37 — Implementado nesta entrega
+
+- #149, #150, #151 e #152 implementados com testes automatizados (mocks de rádio e Chromium). Aceite físico pendente: plugar rádio USB real, BLE com PIN de pareamento, troca USB ↔ Wi-Fi com dois rádios reais.
+- Limitações conhecidas: aviso BLE em segundo plano só para rádios próximos (RSSI ≥ −70 dBm); BLE que exija PIN aparece como erro no resumo em vez de solicitar o PIN; a disponibilidade Wi-Fi no seletor depende de o rádio aceitar conexão TCP naquele momento.
+
+## v0.6.36 — Implementado nesta entrega
+
+- Linux x64 e macOS (arm64/x64) adicionados ao pipeline e à release; ZIP de código-fonte removido dos downloads.
+- #144, #145 e #146 implementados com testes automatizados (Python e Chromium). Aceite em campo pendente: confirmar com o rádio do usuário que os horários deixaram de ficar fixos em “há 3 minutos”.
+- Pendências novas: assinatura/notarização Apple, atualização interna no macOS/Linux, janela nativa no Linux (GTK/Qt) e validação de BLE/serial nessas plataformas.
+
 ## v0.6.35 — Implementado nesta entrega
 
 - Aviso de nova versão: pedido do mantenedor para o APRS Client, Sat Tool, Prop Tool, Mesh Analyzer e venus-8. Aqui, o diálogo de atualização existente abre automaticamente ao detectar versão nova; "Depois" adia 24 h.

@@ -79,7 +79,19 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .card{background:#17212b;border:1px solid var(--line);border-radius:10px;padding:14px}.card h3{margin:0 0 9px;color:#e9d46d;font-size:14px}.muted{color:var(--muted)}.muted small{line-height:1.5}.notice{border:1px solid #8a6c2f;background:#443b2226;padding:9px;border-radius:8px;color:#e4d5a8}
 .tableWrap{overflow:auto;min-height:0;flex:1}.dataTable{border-collapse:collapse;width:100%;font-size:12px}.dataTable th{position:sticky;top:0;background:#1b2b38;color:#cbd6df;padding:9px;text-align:left;white-space:nowrap;border-bottom:1px solid #405668;z-index:2}.dataTable td{padding:9px;border-bottom:1px solid #22313f;white-space:nowrap}.dataTable tr:hover td{background:#1e3140}.dataTable tr[data-node]{cursor:pointer}
 #viewMessages{overflow:hidden}#messageLayout{display:grid;grid-template-columns:285px 1fr;flex:1;min-height:0}.contacts{border-right:1px solid var(--line);overflow:auto;background:#111c27}.contact{display:block;width:100%;padding:11px;text-align:left;border:0;border-bottom:1px solid #2b3b48;border-radius:0}.contact.selected{background:#30465c;border-left:3px solid var(--accent)}
-.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px}.bubble{max-width:75%;padding:7px 10px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}.bubble small{display:block;text-align:right;color:#adbdc8;margin-top:4px;font-size:10px}
+.chat{display:flex;flex-direction:column;min-width:0;min-height:0}.chatHeader{padding:12px;background:#1c2b38;border-bottom:1px solid var(--line);font-weight:700}.bubbles{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px}.bubble{max-width:75%;padding:7px 10px;background:#283a48;border-radius:10px;align-self:flex-start;overflow-wrap:anywhere}.bubble.tx{align-self:flex-end;background:#1e5243}.bubblesNewMessages{align-self:center;margin:-38px 0 6px;position:relative;z-index:2;border-radius:14px;background:#d29b2c;border-color:#d29b2c;color:#1b1b1b;font-weight:700;font-size:11px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)}.bubblesNewMessages[hidden]{display:none}
+.radioMenu{position:fixed;z-index:9800;min-width:260px;max-width:min(360px,calc(100vw - 24px));background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #4f6577;border-radius:10px;box-shadow:0 12px 32px #0009;padding:6px}
+.radioMenu[hidden]{display:none}.radioMenu h4{margin:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted,#9fb2bf)}
+.radioMenu button{display:flex;width:100%;align-items:center;gap:8px;text-align:left;background:transparent;border:0;border-radius:7px;padding:8px 10px;color:inherit}
+.radioMenu button:hover:not(:disabled),.radioMenu button:focus-visible{background:#2b4152}.radioMenu button:disabled{opacity:1;cursor:default}
+.radioMenu .radioItemDot{width:9px;height:9px;border-radius:50%;flex:0 0 9px;border:1px solid #7d93a3}.radioMenu .active .radioItemDot{background:#51d887;border-color:#51d887}
+.radioMenu small{margin-left:auto;color:var(--muted,#9fb2bf);font-size:10px}.radioMenu hr{border:0;border-top:1px solid #3a4f60;margin:5px 2px}.radioMenu .muted{padding:6px 10px;margin:0;font-size:12px}
+.deviceNotices{position:fixed;right:16px;bottom:84px;z-index:9700;display:flex;flex-direction:column;gap:10px;max-width:min(380px,calc(100vw - 32px))}
+.deviceNotice{background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #d29b2c;border-radius:12px;box-shadow:0 12px 32px #0009;padding:14px}
+.deviceNotice b{display:block;margin-bottom:4px}.deviceNotice p{margin:0 0 10px;font-size:12px;color:var(--muted,#b7c8d1)}.deviceNotice .actions{display:flex;flex-wrap:wrap;gap:6px}
+html[data-theme] .deviceNotice button.primary:not(.active):not(.danger),html[data-theme] #sourceAddAuto,.deviceNotice .primary,#sourceAddAuto{background:#f3cf48!important;color:#17202a!important;border:2px solid #ffe67d;font-weight:700}
+.autoAddResult ul{margin:8px 0 0;padding-left:18px}.autoAddResult li{margin:3px 0}
+.autodetectPrefs{border:1px solid var(--line,#34495a);border-radius:8px;margin-top:12px;padding:8px 12px;display:flex;flex-wrap:wrap;gap:14px}.autodetectPrefs legend{font-size:12px;color:var(--muted,#9fb2bf);padding:0 4px}.bubble small{display:block;text-align:right;color:#adbdc8;margin-top:4px;font-size:10px}
 .bubble .msgState{display:inline-block;padding-left:5px;font-size:13px}
 .msgState.accepted,.msgState.delivered{color:#34c759}.msgState.working{color:#efd1a2}.msgState.error{color:#f8afaf}
 #messageTxStatus{padding:5px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
@@ -315,7 +327,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.35</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.37</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -376,7 +388,7 @@ try {
 <input id="messageNodeSearch" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nós para mensagem privada" autocomplete="off">
 <button type="button" id="messageNodeSearchClear" aria-label="Limpar pesquisa de nós" title="Limpar pesquisa">×</button>
 <span id="messageNodeSearchCount" role="status" aria-live="polite"></span>
-</div><div class="contactPinned" id="contactPinned" aria-label="Canal primário e favoritos"></div><div class="contacts" id="contacts"></div></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div id="messageReplyPreview" class="messageReplyPreview" hidden><span id="messageReplyLabel"></span><button type="button" id="messageReplyCancel" title="Cancelar resposta">×</button></div>
+</div><div class="contactPinned" id="contactPinned" aria-label="Canal primário e favoritos"></div><div class="contacts" id="contacts"></div></div><div class="chat"><div class="chatHeader" id="chatHeader">Canal primário</div><div class="bubbles" id="bubbles"></div><button type="button" id="bubblesNewMessages" class="bubblesNewMessages" hidden>↓ Novas mensagens</button><div id="messageTxStatus" role="status" aria-live="polite">Verificando conexão TX...</div><div id="messageReplyPreview" class="messageReplyPreview" hidden><span id="messageReplyLabel"></span><button type="button" id="messageReplyCancel" title="Cancelar resposta">×</button></div>
 <div class="composer" style="position:relative"><div class="mentions" id="messageMentions" hidden></div>
 <button id="messageEmojiButton" type="button" title="Inserir emoji" aria-label="Inserir emoji">☺</button>
 <div id="messageEmojiPicker" class="messageEmojiPicker" hidden></div>
@@ -419,12 +431,12 @@ try {
 </div></div></section>
 <section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Conexões</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="general">Geral</button></div>
 <section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Conexões com rádios e serviços</h3><p class="muted">Cadastre várias conexões independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
-<div class="actions"><button type="button" id="sourceAddManual">Adicionar conexão manualmente</button></div><div class="card" id="sourceFormCard"><h3 id="sourceFormTitle">Adicionar conexão</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da conexão</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
+<div class="actions"><button type="button" id="sourceAddManual">Adicionar conexão manualmente</button><button type="button" id="sourceAddAuto" title="Procura rádios Meshtastic em USB, Wi-Fi e Bluetooth e cadastra os que ainda não estão configurados">Adicionar automaticamente</button></div><div id="autoAddResult" class="card autoAddResult" role="status" aria-live="polite" hidden></div><div class="card" id="sourceFormCard"><h3 id="sourceFormTitle">Adicionar conexão</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da conexão</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
 <div class="field src serial"><label for="sourcePort">Porta serial / COM</label><input id="sourcePort" placeholder="COM3" list="serialOptions"><datalist id="serialOptions"></datalist></div>
 <div class="field src tcp mqtt"><label for="sourceHost">Host / Endereço IP</label><input id="sourceHost" placeholder="192.168.1.100"></div><div class="field src tcp mqtt"><label for="sourceTcpPort">Porta TCP</label><input id="sourceTcpPort" type="number" min="1" max="65535" value="4403"></div>
 <div class="field src ble"><label for="sourceAddress">Identificador Bluetooth / endereço BLE</label><input id="sourceAddress" placeholder="Endereço ou UUID do rádio"></div>
 <div class="field src mqtt"><label for="mqttTopic">Tópico MQTT</label><input id="mqttTopic" value="msh/+/2/e/#"></div><div class="field src mqtt"><label for="mqttUsername">Usuário MQTT</label><input id="mqttUsername" autocomplete="off"></div><div class="field src mqtt"><label for="mqttPassword">Senha MQTT</label><input id="mqttPassword" type="password" autocomplete="new-password" placeholder="Em edição: deixe vazio para manter"></div><div class="field src mqtt"><label><input id="mqttTls" type="checkbox"> TLS</label></div>
-<div class="field span2"><label class="sourceAutoLabel">Conectar automaticamente ao iniciar <input id="sourceEnabled" type="checkbox" checked></label></div></div><div class="actions" style="margin-top:13px"><button type="submit" id="sourceSaveButton">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form><div class="card"><h3>Descoberta de rádios e conexões</h3><p class="muted">Busca candidatos USB/Serial, anúncios Bluetooth LE e serviços mDNS na rede local. A descoberta não conecta nem transmite; confirme e salve o dispositivo selecionado.</p><div class="actions"><button type="button" id="scanDevices">Configuração Automática</button><span id="scanStatus" class="muted">Pronto para procurar</span></div><div id="scanResults"></div></div></div></section>
+<div class="field span2"><label class="sourceAutoLabel">Conectar automaticamente ao iniciar <input id="sourceEnabled" type="checkbox" checked></label></div></div><div class="actions" style="margin-top:13px"><button type="submit" id="sourceSaveButton">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form><div class="card"><h3>Descoberta de rádios e conexões</h3><p class="muted">Busca candidatos USB/Serial, anúncios Bluetooth LE e serviços mDNS na rede local. A descoberta não conecta nem transmite; confirme e salve o dispositivo selecionado.</p><div class="actions"><button type="button" id="scanDevices">Detectar automaticamente</button><span id="scanStatus" class="muted">Pronto para procurar</span></div><div id="scanResults"></div><fieldset class="autodetectPrefs"><legend>Avisar quando um rádio novo for detectado</legend><label><input type="checkbox" data-autodetect="serial" checked> USB (ao plugar)</label><label><input type="checkbox" data-autodetect="tcp" checked> Wi-Fi (rede local)</label><label><input type="checkbox" data-autodetect="ble" checked> Bluetooth LE (próximo ao computador)</label></fieldset></div></div></section>
 <section class="settingsPanel" id="settingsLora">
   <div class="card"><h3>Configuração do rádio Meshtastic</h3>
     <p class="muted">Leia os parâmetros reais do dispositivo conectado por USB/Serial, TCP/IP ou BLE. MQTT é apenas uma conexão de dados e não pode configurar rádios. A gravação pode reiniciar o nó e interromper a conexão.</p>
@@ -477,7 +489,7 @@ try {
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.35</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.37</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewAbout"><div class="panels">
@@ -494,7 +506,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.35.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.37.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -519,7 +531,7 @@ try {
 <h3 id="updateTitle">Atualização do Mesh Analyzer</h3><p id="updateSummary"></p>
 <div id="updateNotes"></div><p id="updateProgressText" class="muted"></p><progress id="updateProgress" max="100" value="0" hidden></progress>
 <div class="actions" style="margin-top:15px"><button id="updateApply">Atualizar agora</button><button id="updateLater">Depois / Fechar</button><button id="updateRelease">Abrir release</button></div>
-</div></div><div id="toast" role="status"></div>
+</div></div><div id="toast" role="status"></div><div id="deviceNotices" class="deviceNotices" aria-live="polite"></div><div id="radioMenu" class="radioMenu" role="menu" aria-label="Escolher rádio ativo" hidden></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script>
 'use strict';
@@ -2333,15 +2345,35 @@ function chatNodeMatches(node,query){
          ...(Array.isArray(node.aliases)?node.aliases:[])]
    .some(name=>norm(name).includes(query));
 }
-function messageTimeHtml(timestamp,now=new Date()){
+// #144: cada mensagem usa o próprio timestamp; horário futuro (relógio do
+// rádio adiantado) mostra data/hora absoluta em vez de uma idade inventada.
+function messageTimeLabel(timestamp,now=new Date()){
  const value=Number(timestamp),date=new Date(value);
- if(!value||!Number.isFinite(date.getTime()))return 'Data indisponível';
+ if(!value||!Number.isFinite(date.getTime()))return null;
+ const full=date.toLocaleString('pt-BR');
+ const seconds=Math.floor((now-date)/1000);
+ if(seconds<-60)return {date,label:full,title:full+' · horário à frente do relógio deste computador'};
  const same=date.getFullYear()===now.getFullYear()&&date.getMonth()===now.getMonth()&&date.getDate()===now.getDate();
- let label=date.toLocaleString('pt-BR');
- if(same){const seconds=Math.max(0,Math.floor((now-date)/1000));
-  label=seconds<60?'agora':seconds<3600?'há '+Math.floor(seconds/60)+' minuto'+(seconds<120?'':'s'):
-   'há '+Math.floor(seconds/3600)+' hora'+(seconds<7200?'':'s');}
- return '<time datetime="'+date.toISOString()+'" title="'+esc(date.toLocaleString('pt-BR'))+'">'+esc(label)+'</time>';
+ if(!same)return {date,label:full,title:full};
+ const age=Math.max(0,seconds);
+ const label=age<60?'agora':age<3600?'há '+Math.floor(age/60)+' minuto'+(age<120?'':'s'):
+   'há '+Math.floor(age/3600)+' hora'+(age<7200?'':'s');
+ return {date,label,title:full};
+}
+function messageTimeHtml(timestamp,now=new Date(),radioTimestamp=null){
+ const info=messageTimeLabel(timestamp,now);
+ if(!info)return 'Data indisponível';
+ let title=info.title;
+ const radio=Number(radioTimestamp);
+ if(radio&&Math.abs(radio-info.date.getTime())>=1000)
+  title+=' · relógio do rádio: '+new Date(radio).toLocaleString('pt-BR');
+ return '<time data-ts="'+info.date.getTime()+'" datetime="'+info.date.toISOString()+'" title="'+esc(title)+'">'+esc(info.label)+'</time>';
+}
+function refreshMessageTimes(now=new Date()){
+ $('bubbles').querySelectorAll('time[data-ts]').forEach(el=>{
+  const info=messageTimeLabel(Number(el.dataset.ts),now);
+  if(info&&el.textContent!==info.label)el.textContent=info.label;
+ });
 }
 function renderChat(updateConversation=true){
  const chats=new Set(['channel:0']);
@@ -2395,23 +2427,50 @@ function renderChat(updateConversation=true){
    'Privado · '+nameOf(currentChat):nameOf(currentChat);
  const filtered=messages.filter(m=>chatKey(m)===currentChat).sort((a,b)=>a.timestamp_ms-b.timestamp_ms).slice(-180);
  visibleMessageRows=filtered;
- let html=filtered.map((m,i)=>'<div tabindex="0" role="button" aria-label="Mensagem; abrir ações" data-msg-index="'+i+'" class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
-   esc(m.text)+'</div><small>'+messageTimeHtml(m.timestamp_ms)+
-   (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
-   messageStateHtml(m)+'</small></div>').join('');
- if(pendingChat?.chat===currentChat){
-  html+='<div tabindex="0" role="button" aria-label="Mensagem pendente; abrir ações" data-msg-index="pending" class="bubble tx"><div>'+esc(pendingChat.text)+'</div><small>'+
-     (pendingChat.failed?'Falha':'Enviando')+
-     (pendingChat.failed?'<span class="msgState error">!</span>':
-       '<span class="msgState working" title="Aguardando rádio">◷</span>')+'</small></div>';
+ const box=$('bubbles');
+ const pendingHere=pendingChat?.chat===currentChat?pendingChat:null;
+ const msgKey=(m,i)=>String(m.id??m.packet_key??('i'+i));
+ const signature=currentChat+'\u0001'+filtered.map((m,i)=>[msgKey(m,i),m.state,m.timestamp_ms,m.text].join('\u0002')).join('\u0001')+
+   '\u0001'+(pendingHere?pendingHere.text+'\u0002'+pendingHere.failed:'');
+ // #145: o refresh periódico sem mudanças só atualiza os horários relativos,
+ // sem reconstruir os balões nem mexer na rolagem.
+ if(signature===chatRenderSignature){refreshMessageTimes();}
+ else{
+  const switched=chatRenderedKey!==currentChat||chatForceBottom;
+  const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<=CHAT_BOTTOM_SLACK;
+  let anchorKey=null,anchorOffset=0;
+  if(!switched&&!atBottom){
+   const top=box.getBoundingClientRect().top;
+   for(const el of box.querySelectorAll('[data-msg-key]')){
+    const rect=el.getBoundingClientRect();
+    if(rect.bottom>top){anchorKey=el.dataset.msgKey;anchorOffset=rect.top-top;break;}
+   }
+  }
+  const lastKey=filtered.length?msgKey(filtered.at(-1),filtered.length-1):'';
+  let html=filtered.map((m,i)=>'<div tabindex="0" role="button" aria-label="Mensagem; abrir ações" data-msg-index="'+i+'" data-msg-key="'+esc(msgKey(m,i))+'" class="bubble '+(m.direction==='tx'?'tx':'')+'"><div>'+
+    esc(m.text)+'</div><small>'+messageTimeHtml(m.timestamp_ms,new Date(),m.radio_time_ms)+
+    (m.direction==='rx'?' · '+esc(idName(m.from_node)):'')+
+    messageStateHtml(m)+'</small></div>').join('');
+  if(pendingHere){
+   html+='<div tabindex="0" role="button" aria-label="Mensagem pendente; abrir ações" data-msg-index="pending" data-msg-key="pending" class="bubble tx"><div>'+esc(pendingHere.text)+'</div><small>'+
+      (pendingHere.failed?'Falha':'Enviando')+
+      (pendingHere.failed?'<span class="msgState error">!</span>':
+        '<span class="msgState working" title="Aguardando rádio">◷</span>')+'</small></div>';
+  }
+  box.innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
+  box.querySelectorAll('[data-msg-index]').forEach(el=>{
+   el.onclick=e=>openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,false);
+   el.oncontextmenu=e=>{e.preventDefault();openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,true);};
+   el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openMessageActions(el.dataset.msgIndex,0,0,false);}};
+  });
+  if(switched||atBottom){box.scrollTop=box.scrollHeight;$('bubblesNewMessages').hidden=true;}
+  else{
+   const anchor=anchorKey&&[...box.querySelectorAll('[data-msg-key]')].find(el=>el.dataset.msgKey===anchorKey);
+   if(anchor)box.scrollTop+=anchor.getBoundingClientRect().top-box.getBoundingClientRect().top-anchorOffset;
+   if(lastKey&&lastKey!==chatRenderedLastKey)$('bubblesNewMessages').hidden=false;
+  }
+  chatRenderSignature=signature;chatRenderedKey=currentChat;chatRenderedLastKey=lastKey;chatForceBottom=false;
  }
- $('bubbles').innerHTML=html||'<div class="muted">Nenhuma mensagem nesta conversa.</div>';
- $('bubbles').querySelectorAll('[data-msg-index]').forEach(el=>{
-  el.onclick=e=>openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,false);
-  el.oncontextmenu=e=>{e.preventDefault();openMessageActions(el.dataset.msgIndex,e.clientX,e.clientY,true);};
-  el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openMessageActions(el.dataset.msgIndex,0,0,false);}};
- });
- $('bubbles').scrollTop=$('bubbles').scrollHeight;
  const choices=txRadioSources();
  // Allow the click even without a radio so the user can see why TX is unavailable.
  $('messageSend').disabled=messageSending;
@@ -2424,6 +2483,13 @@ $('messageNodeSearchClear').onclick=()=>{
  $('messageNodeSearch').value='';renderChat(false);$('messageNodeSearch').focus();
 };
 let visibleMessageRows=[],replyMessage=null,actionMessage=null;
+const CHAT_BOTTOM_SLACK=48;
+let chatRenderSignature='',chatRenderedKey='',chatRenderedLastKey='',chatForceBottom=false;
+$('bubbles').addEventListener('scroll',()=>{
+ const box=$('bubbles');
+ if(box.scrollHeight-box.scrollTop-box.clientHeight<=CHAT_BOTTOM_SLACK)$('bubblesNewMessages').hidden=true;
+});
+$('bubblesNewMessages').onclick=()=>{const box=$('bubbles');box.scrollTop=box.scrollHeight;$('bubblesNewMessages').hidden=true;};
 const messageBytes=text=>new TextEncoder().encode(String(text)).length;
 function updateMessageBytes(){
  const used=messageBytes($('messageText').value);
@@ -2503,6 +2569,7 @@ async function sendChatMessage(raw,chat,isRetry=false){
  const channel=chat.startsWith('channel:')?Number(chat.slice(8)):Number($('messageChannel').value);
  messageSending=true;
  pendingChat={chat,text,failed:false};
+ chatForceBottom=true;
  renderChat();
  try{
   await api('/api/messages/send',{source_id:source,to_node:target,text,channel});
@@ -3073,13 +3140,16 @@ setInterval(pollActivity,650);
 function updateVersionState(info){
  monitorState=info;const btn=$('topUpdate');
  btn.className='';let label='';
- if(info.error){btn.classList.add('error');label='VERIFICAÇÃO INDISPONÍVEL';}
- else if(!info.checked_at){btn.classList.add('waiting');label='v'+(info.current||'')+' · verificando...';}
- else if(info.available){btn.classList.add('available');label='NOVA VERSÃO v'+info.latest;}
- else{btn.classList.add('latest');label='v'+info.current+' · ATUALIZADO';}
+ // #146: rótulo sem número de versão; verde/laranja só após verificação
+ // bem-sucedida. As versões ficam no título e nos detalhes da atualização.
+ if(info.error){btn.classList.add('error');label='Verificação indisponível';}
+ else if(!info.checked_at){btn.classList.add('waiting');label='Verificando...';}
+ else if(info.available){btn.classList.add('available');label='Nova Versão';}
+ else{btn.classList.add('latest');label='Atualizado';}
  btn.textContent=label;
  maybePromptUpdate(info);
- btn.title=info.available?'Nova versão disponível. Clique para ver novidades e baixar.':'Clique para verificar a última versão agora';
+ btn.title=info.available?'Nova versão v'+info.latest+' disponível (instalada v'+info.current+'). Clique para ver novidades e atualizar.':
+   'Versão instalada v'+(info.current||'?')+'. Clique para verificar a última versão agora';
  $('updateStatus').textContent=info.error?'Verificação indisponível: '+info.error:
  info.available?'Nova versão '+info.latest+' disponível, instalada '+info.current+'. Clique no indicador para atualizar diretamente.':
  info.checked_at?'Versão '+info.current+' atualizada.':'Aguardando resposta do GitHub.';
@@ -3091,13 +3161,13 @@ function updateVersionState(info){
 async function checkUpdates(manual=false){
  if(manual&&checkingManually)return;
  try{
-  if(manual){checkingManually=true;$('topUpdate').textContent='VERIFICANDO...';}
+  if(manual){checkingManually=true;$('topUpdate').className='waiting';$('topUpdate').textContent='Verificando...';}
   const info=manual?await api('/api/update/check',{}):await api('/api/update/latest');
   updateVersionState(info);
   if(manual)notify(info.error?'GitHub indisponível: '+info.error:
      info.available?'Nova versão '+info.latest+' disponível.':'Nenhuma atualização disponível.',Boolean(info.error));
  }catch(e){
-  $('topUpdate').className='error';$('topUpdate').textContent='VERIFICAÇÃO INDISPONÍVEL';
+  $('topUpdate').className='error';$('topUpdate').textContent='Verificação indisponível';
   $('updateStatus').textContent=e.message;if(manual)notify(e.message,true);
  }finally{checkingManually=false;}
 }
@@ -3138,6 +3208,7 @@ function showUpdateDialog(info,installed=false){
  $('updateProgress').hidden=true;
  $('updateNotes').hidden=false;
  $('updateApply').hidden=notice;
+ $('updateApply').textContent=monitorState?.direct_update===false?'Baixar nova versão':'Atualizar agora';
  $('updateLater').textContent='Depois / Fechar';
  $('updateLater').disabled=false;
  $('updateRelease').hidden=notice;
@@ -3176,6 +3247,8 @@ async function checkUpdateProgress(){
 }
 async function beginUpdateDirect(){
  if(!monitorState?.available||!monitorState.latest||updateInstalling)return;
+ // Linux/macOS: sem instalador interno; baixar o pacote novo pela release.
+ if(monitorState.direct_update===false){window.open(monitorState.release_url||'https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest','_blank');return;}
  updateInstalling=true;currentUpdateNotice=false;
  $('updateTitle').textContent='Atualizando para v'+monitorState.latest;
  $('updateSummary').textContent='Baixando e verificando o pacote oficial do GitHub. Aguarde.';
@@ -3298,11 +3371,168 @@ async function reconnectFromStatus(){
  }catch(e){notify('Reconexão: '+e.message,true);}
  finally{radioRestartBusy=false;}
 }
-$('radioConnectionStatus').onclick=reconnectFromStatus;
+// #152: o indicador abre o seletor do rádio ativo. Só aparecem a conexão
+// ativa e as habilitadas cujo dispositivo está presente agora.
+let radioMenuOpen=false,radioSwitchPoll=null;
+function radioKindLabel(kind){return {serial:'USB',tcp:'Wi-Fi',ble:'Bluetooth'}[kind]||kind;}
+function placeRadioMenu(){
+ const rect=$('radioConnectionStatus').getBoundingClientRect(),menu=$('radioMenu');
+ menu.style.top=Math.round(rect.bottom+6)+'px';
+ menu.style.left=Math.round(Math.max(12,Math.min(rect.left,window.innerWidth-menu.offsetWidth-12)))+'px';
+}
+function renderRadioMenu(list,loading){
+ const menu=$('radioMenu');
+ const items=list.map(r=>'<button type="button" role="menuitemradio" aria-checked="'+(r.active?'true':'false')+'" class="'+(r.active?'active':'')+'" data-radio="'+r.id+'"'+(r.active?' disabled':'')+'>'+
+   '<span class="radioItemDot" aria-hidden="true"></span>'+esc(r.name)+'<small>'+esc(radioKindLabel(r.kind))+(r.active?' · ativo':' · usar este')+'</small></button>').join('');
+ const others=list.filter(r=>!r.active).length;
+ menu.innerHTML='<h4>Rádio ativo</h4>'+(items||'<p class="muted">Nenhum rádio conectado.</p>')+
+   (loading?'<p class="muted">Verificando dispositivos disponíveis…</p>':
+     (list.length&&!others?'<p class="muted">Nenhuma outra conexão disponível no momento.</p>':''))+
+   '<hr>'+(list.some(r=>r.active)?'<button type="button" role="menuitem" data-radio-action="reconnect">Reconectar rádio ativo</button>':'')+
+   '<button type="button" role="menuitem" data-radio-action="manage">Gerenciar conexões…</button>';
+ menu.querySelectorAll('[data-radio]').forEach(b=>b.onclick=()=>chooseRadio(Number(b.dataset.radio)));
+ menu.querySelectorAll('[data-radio-action]').forEach(b=>b.onclick=()=>{
+  closeRadioMenu();
+  if(b.dataset.radioAction==='reconnect')reconnectFromStatus();
+  else{setView('settings');showSettings('sources');}
+ });
+ placeRadioMenu();
+ if(radioMenuOpen&&!menu.contains(document.activeElement))menu.querySelector('button:not(:disabled)')?.focus();
+}
+async function openRadioMenu(){
+ const radios=(state.sources||[]).filter(s=>s.kind!=='mqtt');
+ if(!radios.length){setView('settings');showSettings('sources');notify('Configure uma conexão de rádio para continuar.',true);return;}
+ radioMenuOpen=true;$('radioMenu').hidden=false;
+ $('radioConnectionStatus').setAttribute('aria-expanded','true');
+ const active=radios.filter(s=>s.enabled&&state.connections?.[String(s.id)]?.status==='connected')
+   .map(s=>({id:s.id,name:s.name,kind:s.kind,active:true}));
+ renderRadioMenu(active,true);
+ try{
+  const r=await api('/api/radios/available');
+  if(radioMenuOpen)renderRadioMenu(r.data,false);
+ }catch(e){if(radioMenuOpen)renderRadioMenu(active,false);notify('Rádios disponíveis: '+e.message,true);}
+}
+function closeRadioMenu(){
+ radioMenuOpen=false;$('radioMenu').hidden=true;
+ $('radioConnectionStatus').setAttribute('aria-expanded','false');
+}
+async function chooseRadio(id){
+ const target=(state.sources||[]).find(s=>s.id===id);
+ const busy=messageSending||(pendingChat&&!pendingChat.failed);
+ if(busy&&!confirm('Há mensagem sendo enviada pelo rádio atual. Trocar mesmo assim?'))return;
+ closeRadioMenu();
+ try{
+  await api('/api/radios/activate',{id});
+  $('radioConnectionStatus').dataset.status='checking';
+  $('radioConnectionText').textContent='Trocando para '+(target?.name||'rádio')+'…';
+  clearInterval(radioSwitchPoll);
+  radioSwitchPoll=setInterval(async()=>{
+   try{
+    const r=await api('/api/radios/switch'),sw=r.data;
+    if(sw.phase==='done'){clearInterval(radioSwitchPoll);notify('Rádio ativo: '+(target?.name||id)+'.');await refreshAll();}
+    else if(sw.phase==='failed'){clearInterval(radioSwitchPoll);notify('Troca não concluída ('+(sw.error||'erro')+'). O rádio anterior foi mantido.',true);await refreshAll();}
+   }catch(e){clearInterval(radioSwitchPoll);notify(e.message,true);}
+  },1000);
+ }catch(e){notify('Troca de rádio: '+e.message,true);}
+}
+$('radioConnectionStatus').setAttribute('aria-haspopup','menu');
+$('radioConnectionStatus').onclick=e=>{e.stopPropagation();radioMenuOpen?closeRadioMenu():openRadioMenu();};
 $('radioConnectionStatus').onkeydown=e=>{
- if(e.key==='Enter'||e.key===' '){e.preventDefault();reconnectFromStatus();}
+ if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();radioMenuOpen?closeRadioMenu():openRadioMenu();}
 };
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();
+$('radioMenu').addEventListener('click',e=>e.stopPropagation());
+$('radioMenu').addEventListener('keydown',e=>{
+ const buttons=[...$('radioMenu').querySelectorAll('button:not(:disabled)')],i=buttons.indexOf(document.activeElement);
+ if(e.key==='Escape'){e.preventDefault();closeRadioMenu();$('radioConnectionStatus').focus();}
+ else if(e.key==='ArrowDown'&&buttons.length){e.preventDefault();buttons[(i+1)%buttons.length].focus();}
+ else if(e.key==='ArrowUp'&&buttons.length){e.preventDefault();buttons[(i-1+buttons.length)%buttons.length].focus();}
+});
+document.addEventListener('click',()=>{if(radioMenuOpen)closeRadioMenu();});
+window.addEventListener('resize',()=>{if(radioMenuOpen)placeRadioMenu();});
+
+// #149: aviso ao detectar rádio novo; um clique verifica, cadastra com
+// conexão automática e conecta.
+const deviceNoticeState=new Map();
+let lastDeviceNotices=[];
+function renderDeviceNotices(list=lastDeviceNotices){
+ lastDeviceNotices=list;
+ const ids=new Set(list.map(n=>n.id));
+ for(const n of list)if(!deviceNoticeState.has(n.id))deviceNoticeState.set(n.id,{notice:n,phase:'ask'});
+ for(const [id,entry] of deviceNoticeState)if(!ids.has(id)&&entry.phase==='ask')deviceNoticeState.delete(id);
+ const html=[...deviceNoticeState.entries()].map(([id,e])=>{
+  const n=e.notice,where=radioKindLabel(n.kind)+' · '+esc(n.address);
+  if(e.phase==='working')return '<div class="deviceNotice"><b>Verificando '+esc(n.name)+'…</b><p>'+where+' · confirmando o rádio Meshtastic e conectando.</p></div>';
+  if(e.phase==='added')return '<div class="deviceNotice"><b>'+esc(e.source.name)+' adicionado</b><p>Conexão automática marcada. Outro rádio está ativo; este ficou em espera.</p>'+
+    '<div class="actions"><button type="button" class="primary" data-notice-use="'+id+'">Usar este agora</button><button type="button" data-notice-close="'+id+'">Fechar</button></div></div>';
+  return '<div class="deviceNotice" role="alertdialog" aria-label="Rádio detectado"><b>Rádio Meshtastic detectado</b><p>'+esc(n.name)+' — '+where+'</p>'+
+    '<div class="actions"><button type="button" class="primary" data-notice-add="'+id+'">Adicionar e conectar</button>'+
+    '<button type="button" data-notice-later="'+id+'">Agora não</button><button type="button" data-notice-never="'+id+'">Nunca para este dispositivo</button></div></div>';
+ }).join('');
+ const box=$('deviceNotices');
+ if(box.dataset.html!==html){box.innerHTML=html;box.dataset.html=html;}
+ box.querySelectorAll('[data-notice-add]').forEach(b=>b.onclick=()=>acceptDeviceNotice(b.dataset.noticeAdd));
+ box.querySelectorAll('[data-notice-later],[data-notice-never]').forEach(b=>b.onclick=async()=>{
+  const id=b.dataset.noticeLater||b.dataset.noticeNever;
+  deviceNoticeState.delete(id);renderDeviceNotices(lastDeviceNotices.filter(n=>n.id!==id));
+  try{await api('/api/devices/dismiss',{id,never:!!b.dataset.noticeNever});}catch(e){notify(e.message,true);}
+ });
+ box.querySelectorAll('[data-notice-use]').forEach(b=>b.onclick=()=>{
+  const e=deviceNoticeState.get(b.dataset.noticeUse);deviceNoticeState.delete(b.dataset.noticeUse);
+  renderDeviceNotices();if(e)chooseRadio(e.source.id);
+ });
+ box.querySelectorAll('[data-notice-close]').forEach(b=>b.onclick=()=>{deviceNoticeState.delete(b.dataset.noticeClose);renderDeviceNotices();});
+}
+async function acceptDeviceNotice(id){
+ const entry=deviceNoticeState.get(id);if(!entry)return;
+ entry.phase='working';renderDeviceNotices();
+ try{
+  const r=await api('/api/devices/accept',{id});
+  if(r.other_active){entry.phase='added';entry.source=r.source;}
+  else{deviceNoticeState.delete(id);notify(r.source.name+' adicionado. Conectando…');}
+  await refreshAll();
+ }catch(e){deviceNoticeState.delete(id);notify('Rádio detectado: '+e.message,true);}
+ renderDeviceNotices();
+}
+async function refreshDeviceNotices(){
+ try{const r=await api('/api/devices/detected');renderDeviceNotices(r.data);}catch(e){}
+}
+setInterval(refreshDeviceNotices,4000);
+
+// #151: varre USB, Wi-Fi e BLE e cadastra os rádios novos verificados.
+const autoAddOutcome={added:'adicionado',configured:'já configurado',no_response:'sem resposta Meshtastic',error:'erro'};
+function renderAutoAdd(data){
+ const box=$('autoAddResult');box.hidden=false;
+ $('sourceAddAuto').disabled=!!data.running;
+ if(data.running){box.innerHTML='<b>Adicionar automaticamente</b><p class="muted">'+esc(data.phase||'Procurando…')+'</p>';return;}
+ const count=k=>data.results.filter(r=>r.outcome===k).length;
+ const parts=[count('added')+' adicionada(s)',count('configured')+' já configurada(s)'];
+ if(count('no_response'))parts.push(count('no_response')+' sem resposta Meshtastic');
+ if(count('error'))parts.push(count('error')+' com erro');
+ box.innerHTML='<b>'+(data.results.length?parts.join(' · '):'Nenhum rádio Meshtastic encontrado em USB, Wi-Fi ou Bluetooth próximo.')+'</b>'+
+  (data.results.length?'<ul>'+data.results.map(r=>'<li>'+esc(radioKindLabel(r.kind))+' '+esc(r.address)+' — '+esc(autoAddOutcome[r.outcome]||r.outcome)+
+    (r.detail?' <span class="muted">('+esc(r.detail)+')</span>':'')+'</li>').join('')+'</ul>':'')+
+  ((data.errors||[]).length?'<p class="muted">'+esc(data.errors.join('; '))+'</p>':'');
+}
+$('sourceAddAuto').onclick=async()=>{
+ try{
+  renderAutoAdd((await api('/api/devices/autoadd/start',{})).data);
+  const poll=setInterval(async()=>{
+   try{
+    const r=await api('/api/devices/autoadd');renderAutoAdd(r.data);
+    if(!r.data.running){clearInterval(poll);await refreshAll();}
+   }catch(e){clearInterval(poll);$('sourceAddAuto').disabled=false;notify(e.message,true);}
+  },1000);
+ }catch(e){notify('Adicionar automaticamente: '+e.message,true);}
+};
+document.querySelectorAll('[data-autodetect]').forEach(box=>box.onchange=async()=>{
+ try{await api('/api/system/settings',{device_autodetect:{[box.dataset.autodetect]:box.checked}});notify('Preferência de detecção salva.');}
+ catch(e){box.checked=!box.checked;notify(e.message,true);}
+});
+function syncAutodetectPrefs(){
+ const prefs=state.system?.device_autodetect||{};
+ document.querySelectorAll('[data-autodetect]').forEach(box=>{if(document.activeElement!==box)box.checked=prefs[box.dataset.autodetect]!==false;});
+}
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'),api('/api/messages'),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();syncAutodetectPrefs();
 if(!window._themeFromSQLite && state.system && !settingsPending.has('system')){
  sysLoaded=false;renderSystem();window._themeFromSQLite=true;
 }nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}

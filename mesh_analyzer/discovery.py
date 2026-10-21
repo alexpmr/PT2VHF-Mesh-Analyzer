@@ -44,18 +44,10 @@ class DeviceDiscovery:
                               "verified":False,"method":"USB/Serial enumerado"})
         except Exception as exc:
             errors.append("USB/Serial: "+type(exc).__name__)
-        async def scan_ble():
-            from bleak import BleakScanner
-            devices=await BleakScanner.discover(timeout=5,return_adv=False)
-            return [{"kind":"ble","name":str(d.name or "Bluetooth LE")[:90],
-                     "address":str(d.address),"config":{"address":str(d.address)},
-                     "verified":False,"method":"Anúncio BLE detectado"}
-                    for d in devices if d.address and
-                    ("meshtastic" in str(d.name or "").casefold() or
-                     "mesh" in str(d.name or "").casefold())]
         try:
             # Run from our own daemon thread; never block the HTTP UI.
-            items.extend(asyncio.run(scan_ble()))
+            from .device_detection import scan_ble
+            items.extend(dict(d,verified=False,method="Anúncio BLE Meshtastic detectado") for d in scan_ble(timeout=5.0))
         except Exception as exc:
             errors.append("BLE: "+type(exc).__name__)
         try:
