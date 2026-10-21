@@ -75,7 +75,7 @@ class Platforms(unittest.TestCase):
     def test_linux_and_macos_packages_published_without_source_zip(self):
         for name in ("Linux-x64.tar.gz","macOS-arm64.dmg","macOS-x64.dmg"):
             self.assertIn(name,WORKFLOW)
-        self.assertIn("needs: [package-win10-win11, package-linux, package-macos]",WORKFLOW)
+        self.assertIn("needs: [package-win10-win11, package-linux, package-macos",WORKFLOW)
         self.assertNotIn("Codigo-Fonte",WORKFLOW)
         self.assertIn("NSBluetoothAlwaysUsageDescription",WORKFLOW)
         self.assertTrue((ROOT/"linux"/"instalar.sh").is_file())

@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  packages: write
 jobs:
   package-win10-win11:
     runs-on: windows-2022
@@ -51,6 +52,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.36 no Chrome' }
           node scripts/test_ui_v0637.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.37 no Chrome' }
+          node scripts/test_ui_v0638.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.38 no Chrome' }
       - name: Validar sintaxe do PowerShell de atualização
         shell: pwsh
         run: |
@@ -161,10 +164,35 @@ jobs:
           chmod +x "pkg/$pkg/PT2VHF-Mesh-Analyzer" "pkg/$pkg/instalar.sh"
           tar -C pkg -czf "dist/$pkg.tar.gz" "$pkg"
           cp "dist/$pkg.tar.gz" dist/PT2VHF-Mesh-Analyzer-Linux-x64.tar.gz
+      - name: Gerar pacote .deb (Ubuntu / Linux Mint)
+        run: |
+          version=$(cat VERSION)
+          linux/build_deb.sh dist/PT2VHF-Mesh-Analyzer "$version" dist
+          cp "dist/PT2VHF-Mesh-Analyzer-v$version-amd64.deb" dist/PT2VHF-Mesh-Analyzer-amd64.deb
+          dpkg-deb --info "dist/PT2VHF-Mesh-Analyzer-v$version-amd64.deb"
+          dpkg-deb --contents "dist/PT2VHF-Mesh-Analyzer-v$version-amd64.deb"
+          sudo apt-get install -y -q lintian >/dev/null
+          lintian --fail-on none --no-tag-display-limit "dist/PT2VHF-Mesh-Analyzer-v$version-amd64.deb" || true
+      - name: Testar .deb (instalar, executar, remover e preservar dados)
+        run: |
+          version=$(cat VERSION)
+          sudo apt-get install -y -q "./dist/PT2VHF-Mesh-Analyzer-v$version-amd64.deb"
+          test -x /usr/bin/pt2vhf-mesh-analyzer
+          test -f /usr/share/applications/pt2vhf-mesh-analyzer.desktop
+          pt2vhf-mesh-analyzer --headless --no-browser --port 8799 &
+          pid=$!
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8799/health && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8799/health | grep -q "$version"
+          kill $pid; wait $pid || true
+          sudo apt-get remove -y -q pt2vhf-mesh-analyzer
+          test ! -e /usr/bin/pt2vhf-mesh-analyzer
+          test -f "$HOME/.local/share/PT2VHF-Mesh-Analyzer/mesh-analyzer.sqlite3"
       - uses: actions/upload-artifact@v4
         with:
           name: PT2VHF-Mesh-Analyzer-Linux
-          path: dist/*-Linux-x64.tar.gz
+          path: |
+            dist/*-Linux-x64.tar.gz
+            dist/*-amd64.deb
 
   package-macos:
     strategy:
@@ -212,15 +240,43 @@ jobs:
           mkdir -p dmg
           cp -R "dist/PT2VHF Mesh Analyzer.app" dmg/
           ln -s /Applications dmg/Applications
-          hdiutil create -volname "PT2VHF Mesh Analyzer" -srcfolder dmg -ov -format UDZO "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-${{ matrix.arch }}.dmg"
+          # hdiutil falha de forma intermitente nos runners macOS ("Resource busy").
+          for attempt in 1 2 3; do
+            hdiutil create -volname "PT2VHF Mesh Analyzer" -srcfolder dmg -ov -format UDZO "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-${{ matrix.arch }}.dmg" && break
+            [ "$attempt" = 3 ] && exit 1
+            echo "hdiutil falhou (tentativa $attempt); aguardando para repetir"
+            sleep $((attempt * 15))
+          done
           cp "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-${{ matrix.arch }}.dmg" "dist/PT2VHF-Mesh-Analyzer-macOS-${{ matrix.arch }}.dmg"
       - uses: actions/upload-artifact@v4
         with:
           name: PT2VHF-Mesh-Analyzer-macOS-${{ matrix.arch }}
           path: dist/*-macOS-${{ matrix.arch }}.dmg
 
+  package-container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir imagem (amd64) para teste
+        run: docker build --build-arg VERSION=$(cat VERSION) -t pt2vhf-mesh-analyzer:ci .
+      - name: Testar container (saúde, Host externo, usuário, parada e volume)
+        run: |
+          version=$(cat VERSION)
+          docker volume create meshci >/dev/null
+          docker run -d --name meshci -p 127.0.0.1:18789:8789 -v meshci:/data pt2vhf-mesh-analyzer:ci
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:18789/health && break; sleep 1; done
+          curl -fsS http://127.0.0.1:18789/health | grep -q "$version"
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: 192.168.0.50:8789' http://127.0.0.1:18789/health)" = 403
+          test "$(docker exec meshci id -u)" != 0
+          curl -fsS http://127.0.0.1:18789/api/update/latest | grep -q '"container": true'
+          docker stop -t 15 meshci
+          test "$(docker inspect -f '{{.State.ExitCode}}' meshci)" = 0
+          docker rm meshci
+          docker run --rm -v meshci:/data --entrypoint ls pt2vhf-mesh-analyzer:ci /data | grep -q mesh-analyzer.sqlite3
+
   publish-release:
-    needs: [package-win10-win11, package-linux, package-macos]
+    needs: [package-win10-win11, package-linux, package-macos, package-container]
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -260,6 +316,8 @@ jobs:
             "dist/PT2VHF-Mesh-Analyzer-v$version-Portable-Win11-x64.zip"
             "dist/PT2VHF-Mesh-Analyzer-v$version-Linux-x64.tar.gz"
             dist/PT2VHF-Mesh-Analyzer-Linux-x64.tar.gz
+            "dist/PT2VHF-Mesh-Analyzer-v$version-amd64.deb"
+            dist/PT2VHF-Mesh-Analyzer-amd64.deb
             "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-arm64.dmg"
             dist/PT2VHF-Mesh-Analyzer-macOS-arm64.dmg
             "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-x64.dmg"
@@ -276,3 +334,31 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python scripts/retain_latest_release.py
+
+  publish-container:
+    needs: publish-release
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Definir versão
+        id: version
+        run: echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+      - name: Publicar imagem multi-arquitetura (amd64 + arm64) no GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: VERSION=${{ steps.version.outputs.version }}
+          tags: |
+            ghcr.io/alexpmr/pt2vhf-mesh-analyzer:${{ steps.version.outputs.version }}
+            ghcr.io/alexpmr/pt2vhf-mesh-analyzer:latest

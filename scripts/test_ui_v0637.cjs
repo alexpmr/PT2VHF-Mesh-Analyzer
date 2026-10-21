@@ -29,8 +29,9 @@ const path=require('path');
   await page.route('**/api/radios/activate',r=>{calls.push('activate:'+r.request().postData());return json(r,{success:true,data:{state:'switching'}});});
   await page.route('**/api/radios/switch',r=>json(r,{success:true,data:{phase:'done'}}));
   await page.route('**/api/devices/detected',r=>json(r,{success:true,data:notices}));
-  await page.route('**/api/devices/accept',r=>{calls.push('accept:'+r.request().postData());notices=[];
-    return json(r,{success:true,source:{id:3,name:'VHF3 USB'},other_active:true});});
+  await page.route('**/api/devices/accept',r=>{calls.push('accept:'+r.request().postData());
+    notices=[{...notices[0],job:{phase:'done',source:{id:3,name:'VHF3 USB'},other_active:true}}];
+    return json(r,{success:true,job:{phase:'connecting'}});});
   await page.route('**/api/devices/dismiss',r=>{calls.push('dismiss:'+r.request().postData());return json(r,{success:true});});
   await page.route('**/api/devices/autoadd/start',r=>json(r,{success:true,data:{running:true,phase:'Procurando em USB, Wi-Fi e Bluetooth…',results:[]}}));
   await page.route('**/api/devices/autoadd',r=>json(r,{success:true,data:++autoPolls<2?{running:true,phase:'Verificando 2 dispositivo(s)…',results:[]}:

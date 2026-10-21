@@ -1,0 +1,26 @@
+# PT2VHF Mesh Analyzer em container (#160).
+# Uso: docker compose -f container/docker-compose.yml up -d
+# Interface: http://localhost:8789 (somente no próprio servidor; acesso remoto por
+# túnel SSH, ex.: ssh -L 8789:127.0.0.1:8789 usuario@servidor).
+services:
+  mesh-analyzer:
+    image: ghcr.io/alexpmr/pt2vhf-mesh-analyzer:latest
+    container_name: pt2vhf-mesh-analyzer
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8789:8789"
+    volumes:
+      - mesh-data:/data
+    environment:
+      TZ: America/Sao_Paulo
+    # Rádio USB em servidor Linux: descomente e ajuste o dispositivo.
+    # devices:
+    #   - /dev/ttyUSB0:/dev/ttyUSB0
+    # group_add:
+    #   - dialout
+    # Descoberta mDNS de rádios Wi-Fi na rede local exige a rede do host
+    # (remova "ports" acima ao usar):
+    # network_mode: host
+
+volumes:
+  mesh-data:

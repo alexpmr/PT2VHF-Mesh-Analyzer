@@ -138,12 +138,8 @@ class PacketIngestor:
                     seen=int(float(raw_seen));seen=seen*1000 if 0<seen<10_000_000_000 else seen
                 except (TypeError,ValueError):seen=0
                 self.db.upsert_node(num,source_id,timestamp_ms=seen,**values)
-                # Only trust explicit boolean values received in the radio NodeDB.
-                # Missing flags mean unknown, NOT false.
-                favorite=n.get("isFavorite",n.get("is_favorite",
-                         user.get("isFavorite",user.get("is_favorite"))))
-                if type(favorite) is bool:
-                    self.db.set_node_favorite_from_radio(source_id,num,favorite)
+                # Favoritos do NodeDB são mesclados por SourceManager.sync_favorites_from_radio
+                # (#157), que precisa comparar com o último estado conhecido do rádio.
         except Exception:
             self.db.log("Não foi possível importar o catálogo inicial do rádio", "warning",source_id)
 
@@ -252,6 +248,10 @@ class PacketIngestor:
 # preferido tem prioridade sobre "o primeiro que conectar vence" (#139).
 HANDOVER_TIMEOUT_S=45
 STARTUP_PREFERENCE_S=30
+# #157: favoritos ocupam o NodeDB do rádio e não são descartados por ele.
+FAVORITE_SAFE_LIMIT=50
+FAVORITE_COMMANDS_PER_SYNC=5
+FAVORITE_COMMAND_GAP_S=1
 
 
 class SourceManager:
@@ -346,7 +346,7 @@ class SourceManager:
         self._started_at=time.monotonic()
         preferred=self.db.preferred_radio()
         # O rádio preferido (#152) é o primeiro a tentar conectar.
-        for src in sorted(self.db.sources(public=False),key=lambda s:s["id"]!=preferred):
+        for src in sorted(self.db.sources(public=False),key=lambda s:(s["id"]!=preferred,s["kind"]!="serial")):
             if src["enabled"]:self.connect(src["id"])
 
     def _update_device_name(self,source_id,iface):
@@ -370,21 +370,117 @@ class SourceManager:
                 self.db._db.execute("UPDATE sources SET config=? WHERE id=?",
                                     (json.dumps(config),int(source_id)))
 
-    def sync_favorites_from_radio(self,source_id):
-        """Import only explicit favorite flags from the connected radio NodeDB."""
+    def sync_favorites_from_radio(self,source_id,max_commands=FAVORITE_COMMANDS_PER_SYNC):
+        """#157: mescla os favoritos do NodeDB do rádio com a lista do aplicativo.
+
+        Rádio → app: favorito novo ou alterado no rádio (ex.: pelo celular) entra
+        no app, salvo se o app mudou o mesmo nó depois da última sincronização.
+        App → rádio: diferenças são enviadas com setFavorite/removeFavorite em
+        ritmo controlado (comandos locais, sem RF). Só flags booleanas explícitas
+        do NodeDB contam; ausência de flag não é "não favorito".
+        """
+        sid=int(source_id)
         with self._lock:
-            iface=self._interfaces.get(int(source_id))
+            iface=self._interfaces.get(sid)
         if iface is None:return 0
         entries=getattr(iface,"nodesByNum",None)
         if not isinstance(entries,dict):return 0
-        changed=0
+        radio={};known=set()
         for key,n in list(entries.items()):
             if not isinstance(n,dict):continue
-            value=n.get("isFavorite",n.get("is_favorite"))
             num=number(n.get("num",key))
-            if type(value) is bool and num and self.db.set_node_favorite_from_radio(source_id,num,value):
-                changed+=1
+            if not num:continue
+            known.add(num)
+            user=n.get("user") if isinstance(n.get("user"),dict) else {}
+            value=n.get("isFavorite",n.get("is_favorite",user.get("isFavorite",user.get("is_favorite"))))
+            if type(value) is bool:radio[num]=value
+        src=self.db.source(sid) or {}
+        sync=src.get("config",{}).get("favorite_sync") is not False
+        previous=self.db.radio_favorites(sid)
+        app=self.db.app_favorites() if sync else {}
+        changed=0
+        for num,value in radio.items():
+            before=previous.get(num)
+            mine=app.get(num)
+            if sync and (before is None or before[0]!=value):
+                if mine is None:
+                    if value:
+                        self.db.set_app_favorite(num,True,"radio");changed+=1
+                elif mine["is_favorite"]!=value and before is not None and mine["changed_ms"]<=before[1]:
+                    # Mudou no rádio e o app não mexeu desde a última sincronização.
+                    self.db.set_app_favorite(num,value,"radio");changed+=1
+            if self.db.set_node_favorite_from_radio(sid,num,value) and before is None:changed+=1
+        if sync:self._push_favorites(sid,iface,radio,known,max_commands)
         return changed
+
+    def _push_favorites(self,sid,iface,radio,known,max_commands):
+        app=self.db.app_favorites()
+        local=getattr(iface,"localNode",None)
+        own=number(getattr(local,"nodeNum",None))
+        unknown,todo=[],[]
+        for num,entry in sorted(app.items(),key=lambda x:-x[1]["changed_ms"]):
+            want=entry["is_favorite"]
+            if num==own or radio.get(num)==want:continue
+            if num not in known:
+                if want:unknown.append(num)  # aplicado quando o rádio ouvir o nó
+                continue
+            todo.append((num,want))
+        favorites_on_radio=sum(1 for v in radio.values() if v)
+        limited=False
+        sent=0
+        recent=self.db._rows("SELECT node_num,desired,requested_ms FROM favorite_requests WHERE source_id=?",(sid,))
+        recent={(int(r["node_num"]),bool(r["desired"])):int(r["requested_ms"]) for r in recent}
+        for num,want in todo:
+            if sent>=max_commands:break
+            if want and favorites_on_radio>=FAVORITE_SAFE_LIMIT:
+                limited=True;continue
+            if now_ms()-recent.get((num,want),0)<60000:continue  # aguardando o NodeDB confirmar
+            method=getattr(local,"setFavorite" if want else "removeFavorite",None)
+            if not callable(method):break
+            try:
+                method(num)
+            except Exception as exc:
+                self.db.log("Favorito não enviado ao rádio: "+type(exc).__name__,"warning",sid)
+                break
+            self.db.request_node_favorite(sid,num,want)
+            favorites_on_radio+=1 if want else -1
+            sent+=1
+            if sent<max_commands and self._stop.wait(FAVORITE_COMMAND_GAP_S):break
+        if sent:
+            self.db.log("Favoritos enviados ao rádio: "+str(sent),source_id=sid)
+        if limited:
+            self.db.log("Limite de "+str(FAVORITE_SAFE_LIMIT)+" favoritos no rádio atingido; demais ficam só no app","warning",sid)
+        with self._lock:
+            state=self._states.get(sid)
+            if state is not None:
+                state["favorite_unknown"]=unknown[:500]
+                state["favorite_pending_commands"]=max(0,len(todo)-sent)
+                state["favorite_limited"]=limited
+        return sent
+
+    def set_app_favorite(self,node_num,is_favorite):
+        """#157: favorito do aplicativo; aplica no rádio ativo quando houver um."""
+        if type(is_favorite) is not bool:raise ValueError("Escolha Favoritar ou Desfavoritar")
+        num=number(node_num)
+        if not num or not (0<num<0xffffffff):raise ValueError("Número do nó inválido")
+        self.db.set_app_favorite(num,is_favorite,"app")
+        active=self.active_radio()
+        result={"success":True,"node_num":num,"is_favorite":is_favorite,"radio":None,"status":"app_only"}
+        if active is None:return result
+        src=self.db.source(active) or {}
+        if src.get("config",{}).get("favorite_sync") is False:
+            result.update(radio=active,status="sync_off");return result
+        with self._lock:
+            iface=self._interfaces.get(active)
+        entries=getattr(iface,"nodesByNum",None) if iface else None
+        if isinstance(entries,dict) and not any(number((n or {}).get("num",k))==num for k,n in entries.items() if isinstance(n,dict)):
+            result.update(radio=active,status="unknown_node");return result
+        try:
+            out=self.set_favorite(active,num,is_favorite)
+            result.update(radio=active,status=out["status"],confirmed=out["confirmed"])
+        except (ValueError,RuntimeError) as exc:
+            result.update(radio=active,status="radio_error",error=str(exc)[:160])
+        return result
 
     def set_favorite(self,source_id,node_num,is_favorite):
         """Request a NodeDB favorite change on ONE connected local Meshtastic radio.
@@ -427,12 +523,19 @@ class SourceManager:
         handover=self._handover
         if handover and time.monotonic()<handover["deadline"]:
             return handover["target"]!=id
+        if time.monotonic()-self._started_at>=STARTUP_PREFERENCE_S:
+            return False
         preferred=self.db.preferred_radio()
-        if preferred and preferred!=id and time.monotonic()-self._started_at<STARTUP_PREFERENCE_S:
-            src=self.db.source(preferred)
-            if src and src["enabled"] and src["kind"]!="mqtt":
-                return self._states.get(preferred,{}).get("status")=="connecting"
-        return False
+        src=self.db.source(preferred) if preferred else None
+        if src and src["enabled"] and src["kind"]!="mqtt":
+            return preferred!=id and self._states.get(preferred,{}).get("status")=="connecting"
+        # #155: sem rádio escolhido, a USB tem prioridade ao iniciar o app.
+        mine=self.db.source(id) or {}
+        if mine.get("kind")=="serial" or not self.db.system_settings().get("usb_priority",True):
+            return False
+        return any(s["kind"]=="serial" and s["enabled"] and s["id"]!=id and
+                   self._states.get(s["id"],{}).get("status")=="connecting"
+                   for s in self.db.sources(public=False))
 
     def active_radio(self):
         with self._lock:

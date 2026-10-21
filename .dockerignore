@@ -1,0 +1,10 @@
+.git
+.github
+dist
+build
+tests
+scripts
+windows
+linux
+**/__pycache__
+*.spec
