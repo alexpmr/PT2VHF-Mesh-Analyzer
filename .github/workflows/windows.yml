@@ -212,7 +212,13 @@ jobs:
           mkdir -p dmg
           cp -R "dist/PT2VHF Mesh Analyzer.app" dmg/
           ln -s /Applications dmg/Applications
-          hdiutil create -volname "PT2VHF Mesh Analyzer" -srcfolder dmg -ov -format UDZO "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-${{ matrix.arch }}.dmg"
+          # hdiutil falha de forma intermitente nos runners macOS ("Resource busy").
+          for attempt in 1 2 3; do
+            hdiutil create -volname "PT2VHF Mesh Analyzer" -srcfolder dmg -ov -format UDZO "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-${{ matrix.arch }}.dmg" && break
+            [ "$attempt" = 3 ] && exit 1
+            echo "hdiutil falhou (tentativa $attempt); aguardando para repetir"
+            sleep $((attempt * 15))
+          done
           cp "dist/PT2VHF-Mesh-Analyzer-v$version-macOS-${{ matrix.arch }}.dmg" "dist/PT2VHF-Mesh-Analyzer-macOS-${{ matrix.arch }}.dmg"
       - uses: actions/upload-artifact@v4
         with:
