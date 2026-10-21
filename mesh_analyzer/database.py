@@ -54,6 +54,12 @@ class Database:
                 created_ms INTEGER NOT NULL,
                 updated_ms INTEGER NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS app_favorites (
+                node_num INTEGER PRIMARY KEY,
+                is_favorite INTEGER NOT NULL CHECK(is_favorite IN (0,1)),
+                changed_ms INTEGER NOT NULL,
+                origin TEXT NOT NULL DEFAULT 'app'
+            );
             CREATE TABLE IF NOT EXISTS node_favorites (
                 source_id INTEGER NOT NULL,
                 node_num INTEGER NOT NULL,
@@ -222,6 +228,12 @@ class Database:
             if "friendly_name" not in columns:
                 self._db.execute("ALTER TABLE nodes ADD COLUMN friendly_name TEXT NOT NULL DEFAULT ''")
             self._db.execute("INSERT OR IGNORE INTO settings(key,value) VALUES('retention',?)", (json.dumps(DEFAULT_RETENTION),))
+            # #157: favoritos passam a ser uma lista única do aplicativo; na
+            # migração, une os favoritos já confirmados por qualquer rádio.
+            if self._db.execute("SELECT 1 FROM settings WHERE key='app_favorites_v1'").fetchone() is None:
+                self._db.execute("""INSERT OR IGNORE INTO app_favorites(node_num,is_favorite,changed_ms,origin)
+                  SELECT node_num,1,MAX(confirmed_ms),'radio' FROM node_favorites WHERE is_favorite=1 GROUP BY node_num""")
+                self._db.execute("INSERT INTO settings(key,value) VALUES('app_favorites_v1','1')")
             # Run heavy archival provenance import once, not on every startup.
             migrated=self._db.execute("SELECT 1 FROM settings WHERE key='migrated_node_sources_v1'").fetchone()
             if migrated is None:
@@ -299,8 +311,9 @@ class Database:
         if not isinstance(update, dict):
             raise ValueError("Configuração inválida")
         # node_num: Node ID lido do rádio ao cadastrar (#149/#151), evita duplicatas.
-        allowed = {"serial": {"port", "baudrate", "node_num"}, "tcp": {"host", "port", "node_num"},
-                   "ble": {"address", "node_num"}, "mqtt": {"host", "port", "topic", "username", "password", "tls"}}[kind]
+        allowed = {"serial": {"port", "baudrate", "node_num", "favorite_sync"},
+                   "tcp": {"host", "port", "node_num", "favorite_sync"},
+                   "ble": {"address", "node_num", "favorite_sync"}, "mqtt": {"host", "port", "topic", "username", "password", "tls"}}[kind]
         config = {k: v for k, v in config.items() if k in allowed} if existing and existing["kind"] == kind else {}
         for key, value in update.items():
             if key not in allowed:
@@ -721,6 +734,28 @@ class Database:
             self._db.execute("INSERT OR REPLACE INTO favorite_requests VALUES(?,?,?,?)",
                              (int(source_id),int(node_num),int(value),now_ms()))
 
+    def app_favorites(self):
+        """#157: {node_num: {"is_favorite", "changed_ms", "origin"}}, inclusive remoções."""
+        return {int(r["node_num"]):{"is_favorite":bool(r["is_favorite"]),"changed_ms":int(r["changed_ms"]),
+                                    "origin":r["origin"]}
+                for r in self._rows("SELECT * FROM app_favorites")}
+
+    def set_app_favorite(self,node_num,is_favorite,origin="app",changed_ms=None):
+        if type(is_favorite) is not bool:raise ValueError("Favorito inválido")
+        num=int(node_num)
+        if not 0<num<0xffffffff:raise ValueError("Número do nó inválido")
+        with self._lock,self._db:
+            self._db.execute("""INSERT INTO app_favorites(node_num,is_favorite,changed_ms,origin) VALUES(?,?,?,?)
+              ON CONFLICT(node_num) DO UPDATE SET is_favorite=excluded.is_favorite,
+              changed_ms=excluded.changed_ms,origin=excluded.origin""",
+              (num,int(is_favorite),int(changed_ms or now_ms()),str(origin)[:12]))
+
+    def radio_favorites(self,source_id):
+        """Último estado conhecido do NodeDB de um rádio: {node_num: (favorito, confirmado_ms)}."""
+        return {int(r["node_num"]):(bool(r["is_favorite"]),int(r["confirmed_ms"]))
+                for r in self._rows("SELECT node_num,is_favorite,confirmed_ms FROM node_favorites WHERE source_id=?",
+                                    (int(source_id),))}
+
     def set_node_favorite_from_radio(self,source_id,node_num,is_favorite):
         """Import an EXPLICIT boolean from a radio's NodeDB; never guess a favorite."""
         if type(is_favorite) is not bool:
@@ -748,9 +783,11 @@ class Database:
             num,sid=int(item["node_num"]),int(item["source_id"])
             known_num.setdefault(num,[]).append(sid)
             if item["is_favorite"]:by_num.setdefault(num,[]).append(sid)
+        app=self.app_favorites()
         for r in rows:
             r["aliases"]=json.loads(r["aliases"] or "[]")
             num=int(r["node_num"])
+            r["favorite"]=bool(app.get(num,{}).get("is_favorite"))
             r["favorite_source_ids"]=by_num.get(num,[])
             r["favorite_known_source_ids"]=known_num.get(num,[])
             r["favorite_pending_source_ids"]=[x["source_id"] for x in pending if x["node_num"]==num]

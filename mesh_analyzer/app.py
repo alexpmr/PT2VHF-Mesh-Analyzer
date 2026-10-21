@@ -327,8 +327,13 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json({"success":True,"node":db.set_node_friendly_name(
                         payload.get("node_num"),payload.get("friendly_name",""))})
                 elif path == "/api/nodes/favorite":
-                    self._json(sources.set_favorite(
-                        payload.get("source_id"),payload.get("node_num"),payload.get("is_favorite")))
+                    self._json(sources.set_app_favorite(payload.get("node_num"),payload.get("is_favorite")))
+                elif path == "/api/favorites/sync":
+                    active=sources.active_radio()
+                    if active is None:raise ValueError("Conecte um rádio para sincronizar favoritos")
+                    changed=sources.sync_favorites_from_radio(active,max_commands=20)
+                    self._json({"success":True,"source_id":active,"imported":changed,
+                                "state":sources.snapshot().get(str(active),{})})
                 elif path == "/api/retention/cleanup":
                     self._json({"success":True,"removed":db.cleanup()})
                 elif path == "/api/system/settings":

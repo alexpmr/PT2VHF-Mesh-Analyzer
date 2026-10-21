@@ -85,9 +85,9 @@ class FavoriteRadioTests(unittest.TestCase):
             'data-favorite-toggle', "function favoriteRadio()", "function favoriteNodeState(",
             "async function setFavoriteForNode(", "/api/nodes/favorite",
             "case 'favorite':await setFavoriteForNode",
-            "Favoritar no rádio", "Desfavoritar no rádio",
-            "favorite_source_ids", "favorite_known_source_ids",
+            # v0.6.38 (#157): favorito é do aplicativo; pendência é por rádio.
+            "Favoritar", "Desfavoritar", "node.favorite", "favorite_pending_source_ids",
         ):
             self.assertIn(marker,HTML)
         self.assertIn("ev.stopPropagation()",HTML)
-        self.assertIn("confirmação pendente",HTML)
+        self.assertIn("aguardando confirmação do rádio",HTML)

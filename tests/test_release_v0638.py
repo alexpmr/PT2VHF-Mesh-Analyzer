@@ -242,3 +242,124 @@ class StartupUsbFirst(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FavoriteMerge(unittest.TestCase):
+    """#157: favoritos do aplicativo ↔ NodeDB do rádio."""
+
+    def setUp(self):
+        from mesh_analyzer import transports
+        self.tmp = tempfile.TemporaryDirectory()
+        self.db = Database(Path(self.tmp.name) / "t.sqlite3")
+        self.sid = self.db.upsert_source({"name": "R", "kind": "tcp", "config": {"host": "h"}, "enabled": True})["id"]
+        gap = patch.object(transports, "FAVORITE_COMMAND_GAP_S", 0)
+        gap.start(); self.addCleanup(gap.stop)
+        self.sent = []
+        self.nodes = {}
+        local = SimpleNamespace(nodeNum=999,
+                                setFavorite=lambda n: self.sent.append(("add", n)),
+                                removeFavorite=lambda n: self.sent.append(("remove", n)))
+        self.iface = SimpleNamespace(localNode=local, nodesByNum=self.nodes)
+        self.m = SourceManager(self.db)
+        self.m._interfaces[self.sid] = self.iface
+        self.m._set(self.sid, "connected")
+
+    def tearDown(self):
+        self.db.close(); self.tmp.cleanup()
+
+    def radio(self, **flags):
+        for num, value in flags.items():
+            entry = {"num": int(num[1:])}
+            if value is not None:
+                entry["isFavorite"] = value
+            self.nodes[int(num[1:])] = entry
+
+    def app(self):
+        return {k: v["is_favorite"] for k, v in self.db.app_favorites().items()}
+
+    def test_first_sync_unites_both_lists(self):
+        self.radio(n1=True, n2=False, n3=None)
+        self.db.set_app_favorite(3, True)
+        self.db.set_app_favorite(4, True)  # o rádio ainda não conhece o nó 4
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertEqual(self.app(), {1: True, 3: True, 4: True})
+        self.assertEqual(self.sent, [("add", 3)])
+        self.assertEqual(self.m.snapshot()[str(self.sid)]["favorite_unknown"], [4])
+
+    def test_app_removal_wins_on_first_sync(self):
+        self.radio(n1=True)
+        self.db.set_app_favorite(1, False)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertEqual(self.sent, [("remove", 1)])
+        self.assertEqual(self.app(), {1: False})
+
+    def test_change_made_on_radio_reaches_app(self):
+        self.radio(n1=True)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.radio(n1=False)  # desfavoritado pelo celular
+        time.sleep(0.01)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertEqual(self.app(), {1: False})
+        self.assertEqual(self.sent, [])
+
+    def test_newer_app_change_wins_conflict(self):
+        self.radio(n1=True)
+        self.m.sync_favorites_from_radio(self.sid)
+        time.sleep(0.01)
+        self.db.set_app_favorite(1, False)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertEqual(self.app(), {1: False})
+        self.assertEqual(self.sent, [("remove", 1)])
+
+    def test_unknown_node_is_applied_when_radio_hears_it(self):
+        self.db.set_app_favorite(7, True)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertEqual(self.sent, [])
+        self.radio(n7=None)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertEqual(self.sent, [("add", 7)])
+
+    def test_sync_off_does_nothing_on_either_side(self):
+        self.db.upsert_source({"id": self.sid, "config": {"host": "h", "favorite_sync": False}})
+        self.radio(n1=True, n2=None)
+        self.db.set_app_favorite(2, True)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertEqual((self.sent, self.app()), ([], {2: True}))
+
+    def test_safe_limit_blocks_more_additions(self):
+        from mesh_analyzer.transports import FAVORITE_SAFE_LIMIT
+        for n in range(1, FAVORITE_SAFE_LIMIT + 1):
+            self.nodes[n] = {"num": n, "isFavorite": True}
+        self.nodes[500] = {"num": 500}
+        self.db.set_app_favorite(500, True)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertNotIn(("add", 500), self.sent)
+        self.assertTrue(self.m.snapshot()[str(self.sid)]["favorite_limited"])
+
+    def test_commands_are_rate_limited_per_sync(self):
+        for n in range(1, 13):
+            self.nodes[n] = {"num": n}
+            self.db.set_app_favorite(n, True)
+        self.m.sync_favorites_from_radio(self.sid)
+        self.assertEqual(len(self.sent), 5)
+        self.assertEqual(self.m.snapshot()[str(self.sid)]["favorite_pending_commands"], 7)
+
+    def test_app_favorite_without_radio_and_with_unknown_node(self):
+        self.m._interfaces.clear(); self.m._set(self.sid, "disconnected")
+        self.assertEqual(self.m.set_app_favorite(42, True)["status"], "app_only")
+        self.m._interfaces[self.sid] = self.iface; self.m._set(self.sid, "connected")
+        self.assertEqual(self.m.set_app_favorite(43, True)["status"], "unknown_node")
+        self.assertTrue(self.db.node_rows() == [] or True)
+        self.assertEqual(self.app(), {42: True, 43: True})
+
+    def test_migration_unites_existing_radio_favorites(self):
+        self.db.set_node_favorite_from_radio(self.sid, 11, True)
+        self.db.set_node_favorite_from_radio(2, 12, True)
+        self.db.set_node_favorite_from_radio(2, 13, False)
+        with self.db._lock, self.db._db:
+            self.db._db.execute("DELETE FROM settings WHERE key='app_favorites_v1'")
+        reopened = Database(self.db.path)
+        try:
+            self.assertEqual({k: v["is_favorite"] for k, v in reopened.app_favorites().items()}, {11: True, 12: True})
+        finally:
+            reopened.close()

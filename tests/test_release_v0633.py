@@ -42,9 +42,9 @@ class MessagingAndAbout(unittest.TestCase):
     def test_pinned_primary_and_favorites_only_from_real_radio_flags(self):
         self.assertIn('id="contactPinned"',HTML)
         self.assertIn('contactMarkup(\'channel:0\')',HTML)
-        self.assertIn("n.favorite_source_ids.some",HTML)
-        self.assertIn("selectedRadioId>0",HTML)
-        self.assertIn("★ Favoritos do rádio",HTML)
+        # v0.6.38 (#157): lista única de favoritos do aplicativo.
+        self.assertIn("nodes.filter(n=>n.favorite)",HTML)
+        self.assertIn("★ Favoritos",HTML)
 
     def test_favorite_cache_is_source_scoped_and_only_accepts_bools(self):
         with tempfile.TemporaryDirectory() as folder:
