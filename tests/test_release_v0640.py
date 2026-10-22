@@ -416,5 +416,27 @@ class BlePin(Base):
         self.assertEqual(w.notices()[0]["job"]["source"]["name"], "VHF4 BLE")
 
 
+
+class AdvancedReport(Base):
+    def test_pdf_has_new_sections_without_message_text(self):
+        from mesh_analyzer.reporting import generate
+        from mesh_analyzer.automations import NodeEnrichment
+        AlertCenter(self.db, Mock()); NodeEnrichment(self.db, Mock())
+        self.db.upsert_node(20, 1, timestamp_ms=now_ms(), observed=True, long_name="Morro", role="ROUTER", battery=80)
+        self.db.add_message({"source_id": 1, "packet_key": "s1", "packet_id": "1", "timestamp_ms": now_ms(), "from_node": 20,
+                             "to_node": 0xffffffff, "channel": 0, "direction": "rx", "text": "SEGREDO-NAO-IMPRIMIR", "state": "received"})
+        pdf = generate(self.db, {"period": "24h"}, {})
+        self.assertTrue(pdf.startswith(b"%PDF-"))
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            self.skipTest("pypdf indisponível")
+        text = "\n".join(p.extract_text() for p in PdfReader(io.BytesIO(pdf)).pages)
+        for title in ("10. Saúde dos repetidores", "11. Rotas e nós gargalo", "12. Cobertura observada",
+                      "13. Presença dos nós", "14. Alertas e mensagens do período", "Morro"):
+            self.assertIn(title, text)
+        self.assertNotIn("SEGREDO-NAO-IMPRIMIR", text)
+
+
 if __name__ == "__main__":
     unittest.main()

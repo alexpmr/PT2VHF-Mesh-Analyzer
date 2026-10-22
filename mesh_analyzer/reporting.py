@@ -204,7 +204,8 @@ def generate(db, params=None, connection_status=None):
     table([["Severidade","Nó","Ocorrência"]]+
           [[x["severity"],x["node"],x["description"]] for x in a["alerts"][:45]],
           [usable*.15,usable*.20,usable*.65])
-    heading("10. Recomendações técnicas e próximos testes")
+    _advanced_sections(db, params or {}, heading, paragraph, table, usable)
+    heading("15. Recomendações técnicas e próximos testes")
     for line in [
         "Compare amostras contemporâneas de RSSI/SNR em receptores diferentes e anote BW, SF, CR, frequência e hardware.",
         "Para colisões, correlacione utilização do canal, horários e RX inválido; uma correlação não prova causalidade.",
@@ -214,10 +215,76 @@ def generate(db, params=None, connection_status=None):
         "Dados indisponíveis são explicitamente identificados e não devem ser confundidos com nível zero de ruído ou ausência de problemas."
     ]:
         paragraph("- "+line)
-    heading("11. Proveniência e proteção das informações")
+    heading("16. Proveniência e proteção das informações")
     paragraph("Origem: banco SQLite local independente do MeshMonitor, Home Assistant e Traffic Analyzer legado. "
               "Filtros e versão do aplicativo constam na capa. A geração exclui texto de mensagens "
               "privadas, PSKs, credenciais MQTT, tokens e payloads crus. Apenas agregados e identificadores "
               "de nós necessários ao diagnóstico são usados.")
     pdf.build(story,onFirstPage=_footer,onLaterPages=_footer)
     return output.getvalue()
+
+
+PERIOD_HOURS = {"1h": 1, "6h": 6, "24h": 24, "7d": 168, "30d": 720, "all": 2160}
+
+
+def _advanced_sections(db, params, heading, paragraph, table, usable):
+    """#177: saúde da malha, repetidores, gargalos, cobertura, presença, alertas e mensagens."""
+    from datetime import datetime as _dt
+    from . import insights
+    from .database import now_ms
+    hours = PERIOD_HOURS.get(str(params.get("period") or "all"), 2160)
+    since = now_ms() - hours * 3600000
+    when = lambda ms: _dt.fromtimestamp(ms / 1000).strftime("%d/%m/%Y %H:%M") if ms else "—"
+    rep = insights.repeaters(db, hours)["repeaters"]
+    heading("10. Saúde dos repetidores")
+    paragraph("Nós com papel ROUTER, REPEATER, ROUTER_LATE ou ROUTER_CLIENT. Disponibilidade = horas do período "
+              "em que o nó foi ouvido. Em rotas = traceroutes do período que passaram por ele.")
+    table([["Nó", "Papel", "Disponib.", "Última vez", "Bateria", "Canal", "Airtime", "Em rotas"]] +
+          [[r["name"], r["role"], number(r["availability"], "%"), when(r["last_seen_ms"]),
+            "EXT" if (r["battery"] or 0) > 100 else number(r["battery"], "%", 0),
+            number(r["channel_util"], "%"), number(r["air_util"], "%"), r["route_hops"]] for r in rep[:40]],
+          [usable * w for w in (.22, .12, .1, .16, .1, .1, .1, .1)])
+    routes = insights.routes(db, hours)
+    heading("11. Rotas e nós gargalo")
+    paragraph("%d rotas de traceroute no período. Um gargalo é um nó intermediário presente em muitas rotas; "
+              "se ele parar, essas rotas se quebram." % routes["total_routes"])
+    table([["#", "Nó", "Papel", "Rotas", "% das rotas"]] +
+          [[i + 1, b["name"], b["role"] or "—", b["routes"], number(b["share"], "%")] for i, b in enumerate(routes["bottlenecks"][:20])],
+          [usable * w for w in (.06, .4, .2, .14, .2)])
+    cov = insights.coverage(db, hours)
+    cells = sorted(cov["cells"], key=lambda c: -c["count"])
+    heading("12. Cobertura observada")
+    paragraph("%d recepções diretas (0 salto, sem MQTT) de nós com posição, agrupadas em %d células de ~1 km. "
+              "Mostra onde estão os transmissores que este receptor ouve diretamente e com que qualidade." % (cov["samples"], len(cells)))
+    table([["Célula (lat, lon)", "Recepções", "Nós", "SNR médio", "Melhor SNR", "RSSI médio"]] +
+          [["%.3f, %.3f" % (c["lat"] + c["size"] / 2, c["lon"] + c["size"] / 2), c["count"], c["nodes"],
+            number(c["snr"], " dB"), number(c["best_snr"], " dB"), number(c["rssi"], " dBm", 0)] for c in cells[:25]],
+          [usable * w for w in (.26, .12, .1, .17, .17, .18)])
+    heading("13. Presença dos nós (checagem automática)")
+    has_table = bool(db._rows("SELECT 1 FROM sqlite_master WHERE type='table' AND name='auto_node_queries'"))
+    rows = db._rows("""SELECT q.node_num,q.state,q.attempts,q.sent_ms,q.last_reply_ms,n.long_name,n.short_name,n.node_id
+                       FROM auto_node_queries q LEFT JOIN nodes n ON n.node_num=q.node_num
+                       WHERE q.kind='ping' AND q.sent_ms>=? ORDER BY q.attempts DESC,q.sent_ms DESC LIMIT 40""", (since,)) if has_table else []
+    replied = sum(1 for r in rows if r["state"] == "replied")
+    paragraph("%d nós checados no período: %d responderam, %d sem resposta." % (len(rows), replied, len(rows) - replied))
+    table([["Nó", "Resultado", "Tentativas", "Última checagem", "Última resposta"]] +
+          [[r["long_name"] or r["short_name"] or r["node_id"] or r["node_num"],
+            {"replied": "respondeu", "timeout": "sem resposta", "awaiting_reply": "aguardando"}.get(r["state"], r["state"]),
+            r["attempts"], when(r["sent_ms"]), when(r["last_reply_ms"])] for r in rows],
+          [usable * w for w in (.3, .16, .12, .21, .21)])
+    heading("14. Alertas e mensagens do período")
+    alerts = db._rows("SELECT kind,COUNT(*) AS n FROM alerts WHERE created_ms>=? GROUP BY kind", (since,)) \
+        if db._rows("SELECT 1 FROM sqlite_master WHERE type='table' AND name='alerts'") else []
+    labels = {"silent": "Favorito calado", "battery": "Bateria baixa", "channel": "Canal congestionado",
+              "dm": "Mensagem privada", "mention": "Menção"}
+    msgs = db._rows("SELECT direction,COUNT(*) AS n FROM messages WHERE timestamp_ms>=? GROUP BY direction", (since,))
+    talkers = db._rows("""SELECT m.from_node,COUNT(*) AS n,n.long_name,n.short_name FROM messages m LEFT JOIN nodes n ON n.node_num=m.from_node
+                          WHERE m.timestamp_ms>=? AND m.direction='rx' GROUP BY m.from_node ORDER BY n DESC LIMIT 10""", (since,))
+    counts = {r["direction"]: r["n"] for r in msgs}
+    paragraph("Mensagens: %d recebidas e %d enviadas. O texto das mensagens não é incluído no relatório."
+              % (counts.get("rx", 0), counts.get("tx", 0)))
+    table([["Alerta", "Ocorrências"]] + [[labels.get(r["kind"], r["kind"]), r["n"]] for r in alerts],
+          [usable * .5, usable * .2])
+    table([["Quem mais escreveu", "Mensagens"]] +
+          [[r["long_name"] or r["short_name"] or "!%08x" % (r["from_node"] or 0), r["n"]] for r in talkers],
+          [usable * .5, usable * .2])
