@@ -1018,6 +1018,52 @@ class Database:
     def packet_rows(self,limit=300):
         return self._rows("SELECT id,source_id,packet_id,timestamp_ms,from_node,to_node,port,channel,rx_snr,rx_rssi,hop_start,hop_limit,via_mqtt,encrypted,direction,text_preview FROM packets ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(min(int(limit),3000),))
 
+    def search_messages(self, query="", node=None, days=None, limit=200):
+        """#175: busca no histórico inteiro, sem diferenciar maiúsculas e acentos."""
+        import unicodedata
+        def norm(text):
+            return "".join(c for c in unicodedata.normalize("NFD", str(text or "").casefold())
+                           if unicodedata.category(c) != "Mn")
+        needle = norm(query).strip()
+        where, args = [], []
+        if days:
+            where.append("timestamp_ms>=?"); args.append(now_ms() - int(days) * 86400000)
+        if node is not None:
+            num = int(node)
+            where.append("(from_node=? OR (to_node=? AND direction='tx'))"); args += [num, num]
+        if not needle and node is None:
+            raise ValueError("Informe um texto ou um nó para pesquisar")
+        sql = "SELECT * FROM messages" + (" WHERE " + " AND ".join(where) if where else "") + \
+              " ORDER BY timestamp_ms DESC,id DESC LIMIT 50000"
+        result = []
+        for row in self._rows(sql, tuple(args)):
+            if needle and needle not in norm(row["text"]):
+                continue
+            result.append(row)
+            if len(result) >= min(int(limit), 500):
+                break
+        return result
+
+    def message_context(self, message_id, around=15):
+        """Mensagens antes e depois de uma mensagem, na mesma conversa (#175)."""
+        row = self._rows("SELECT * FROM messages WHERE id=?", (int(message_id),))
+        if not row:
+            raise LookupError("Mensagem não encontrada")
+        m = row[0]
+        broadcast = m["to_node"] in (None, 0xffffffff)
+        if broadcast:
+            cond, args = "(to_node IS NULL OR to_node=4294967295) AND channel=?", [m["channel"]]
+        else:
+            peer = m["from_node"] if m["direction"] == "rx" else m["to_node"]
+            cond = ("((direction='rx' AND from_node=? AND to_node IS NOT NULL AND to_node<>4294967295) "
+                    "OR (direction='tx' AND to_node=?))")
+            args = [peer, peer]
+        before = self._rows("SELECT * FROM messages WHERE " + cond + " AND (timestamp_ms<? OR (timestamp_ms=? AND id<?)) "
+                            "ORDER BY timestamp_ms DESC,id DESC LIMIT ?", tuple(args + [m["timestamp_ms"], m["timestamp_ms"], m["id"], around]))
+        after = self._rows("SELECT * FROM messages WHERE " + cond + " AND (timestamp_ms>? OR (timestamp_ms=? AND id>?)) "
+                           "ORDER BY timestamp_ms,id LIMIT ?", tuple(args + [m["timestamp_ms"], m["timestamp_ms"], m["id"], around]))
+        return {"message": m, "messages": list(reversed(before)) + [m] + after}
+
     def message_rows(self,limit=300):
         return self._rows("SELECT * FROM messages ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(min(int(limit),3000),))
 

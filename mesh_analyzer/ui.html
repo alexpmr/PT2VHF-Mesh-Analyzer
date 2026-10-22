@@ -87,6 +87,15 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .msgQuote{margin:2px 0 5px;padding:4px 8px;border-left:4px solid hsl(var(--who-h,200) 70% 60%);border-radius:6px;background:#0000002e;font-size:12px;display:flex;flex-direction:column}.msgQuote b{color:hsl(var(--who-h,200) 70% 68%);font-size:11px}.msgQuote span{opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-theme="light"] .msgHead b,html[data-theme="light"] .msgQuote b{color:hsl(var(--who-h,200) 65% 33%)}html[data-theme="light"] .msgQuote{background:#00000010}
 .bubblesNewMessages{align-self:center;margin:-38px 0 6px;position:relative;z-index:2;border-radius:14px;background:#d29b2c;border-color:#d29b2c;color:#1b1b1b;font-weight:700;font-size:11px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)}.bubblesNewMessages[hidden]{display:none}
+.messageSearchBox{position:relative;display:flex;gap:6px;align-items:center}.messageSearchBox input{width:min(320px,40vw)}
+.messageSearchResults{position:absolute;top:calc(100% + 6px);right:0;z-index:9500;width:min(520px,92vw);max-height:60vh;overflow:auto;background:var(--card,#1c2b38);border:1px solid var(--line,#4f6577);border-radius:10px;box-shadow:0 12px 32px #0009;padding:6px}
+.messageSearchResults[hidden]{display:none}.messageSearchResults button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:7px;padding:8px 10px;color:inherit}
+.messageSearchResults button:hover,.messageSearchResults button:focus-visible{background:var(--hover,#2b4152)}.messageSearchResults small{display:block;color:var(--muted,#9fb2bf);font-size:11px}
+.messageSearchResults mark,.messageContextDialog mark{background:#f3cf48;color:#111;border-radius:3px;padding:0 2px}
+.messageContextDialog{max-width:min(640px,94vw);width:640px;border:1px solid var(--line,#4f6577);border-radius:12px;background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);padding:16px}
+.messageContextDialog .ctxList{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.messageContextDialog .ctxMsg{padding:6px 10px;border-radius:8px;background:#0000002a;white-space:pre-wrap;overflow-wrap:anywhere}.messageContextDialog .ctxMsg.hit{outline:2px solid #f3cf48}
+.messageContextDialog .ctxMsg small{display:block;color:var(--muted,#9fb2bf);font-size:10px}
 .radioMenu{position:fixed;z-index:9800;min-width:260px;max-width:min(360px,calc(100vw - 24px));background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #4f6577;border-radius:10px;box-shadow:0 12px 32px #0009;padding:6px}
 .radioMenu[hidden]{display:none}.radioMenu h4{margin:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted,#9fb2bf)}
 .radioMenu button{display:flex;width:100%;align-items:center;gap:8px;text-align:left;background:transparent;border:0;border-radius:7px;padding:8px 10px;color:inherit}
@@ -314,7 +323,7 @@ html[data-theme] #autoSaveButton:focus-visible{
 .messageBubbleActions{position:fixed;z-index:6000;background:var(--card);color:var(--ink);
  border:1px solid var(--line);border-radius:7px;padding:5px;box-shadow:0 7px 20px #0006}
 .messageBubbleActions button{display:block;width:100%;text-align:left}
-.bubble[data-msg-index]{cursor:pointer}
+.bubble[data-msg-index]{cursor:pointer}.bubble.searchHit{outline:3px solid #f3cf48}
 .bubble[data-msg-index]:focus-visible{outline:2px solid var(--accent)}
 
 /* Source-confirmed Meshtastic NodeDB favorites: never signal success while pending. */
@@ -393,7 +402,7 @@ try {
 <thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
 <aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></aside>
 </div></section>
-<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contactsPanel"><div class="messageNodeSearchBar">
+<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><div class="messageSearchBox"><input id="messageSearch" type="search" placeholder="Buscar no histórico…" aria-label="Buscar texto em todas as mensagens salvas" autocomplete="off"><select id="messageSearchDays" aria-label="Período da busca"><option value="7">7 dias</option><option value="30">30 dias</option><option value="365">1 ano</option><option value="" selected>Todo o histórico</option></select><div id="messageSearchResults" class="messageSearchResults" role="listbox" hidden></div></div><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contactsPanel"><div class="messageNodeSearchBar">
 <input id="messageNodeSearch" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nós para mensagem privada" autocomplete="off">
 <button type="button" id="messageNodeSearchClear" aria-label="Limpar pesquisa de nós" title="Limpar pesquisa">×</button>
 <span id="messageNodeSearchCount" role="status" aria-live="polite"></span>
@@ -3613,6 +3622,54 @@ window.addEventListener('resize',()=>{if(radioMenuOpen)placeRadioMenu();});
 
 // #149/#155/#156: avisos de rádio detectado. A verificação roda no servidor
 // com prazo, fila Bluetooth e Cancelar; a tela só acompanha o estado.
+// #175: busca no histórico inteiro de mensagens.
+let messageSearchTimer=null;
+function chatTitle(key){return key.startsWith('node:')?'Privado · '+idName(Number(key.slice(5))):key==='channel:0'?'Canal primário':'Canal '+key.slice(8);}
+function highlight(text,query){
+ const plain=String(text||''),q=norm(query).trim();
+ if(!q)return esc(plain);
+ const folded=norm(plain);let out='',i=0,pos;
+ while(q&&(pos=folded.indexOf(q,i))>=0){out+=esc(plain.slice(i,pos))+'<mark>'+esc(plain.slice(pos,pos+q.length))+'</mark>';i=pos+q.length;}
+ return out+esc(plain.slice(i));
+}
+async function runMessageSearch(){
+ const q=$('messageSearch').value.trim(),box=$('messageSearchResults');
+ if(q.length<2){box.hidden=true;return;}
+ try{
+  const r=await api('/api/messages/search?q='+encodeURIComponent(q)+($('messageSearchDays').value?'&days='+$('messageSearchDays').value:''));
+  box.innerHTML=r.data.length?r.data.map(m=>'<button type="button" role="option" data-search-msg="'+m.id+'"><small>'+esc(fmtDate(m.timestamp_ms))+' · '+
+     esc(chatTitle(chatKey(m)))+' · '+esc(m.direction==='tx'?'Você':idName(m.from_node))+'</small>'+highlight(String(m.text).slice(0,180),q)+'</button>').join('')+
+     (r.data.length>=200?'<p class="muted" style="padding:6px 10px">Mostrando as 200 mais recentes; refine a busca.</p>':''):
+   '<p class="muted" style="padding:8px 10px">Nenhuma mensagem encontrada.</p>';
+  box.hidden=false;
+  box.querySelectorAll('[data-search-msg]').forEach(b=>b.onclick=()=>openMessageContext(Number(b.dataset.searchMsg),q));
+ }catch(e){box.innerHTML='<p class="muted" style="padding:8px 10px">'+esc(e.message)+'</p>';box.hidden=false;}
+}
+async function openMessageContext(id,query){
+ $('messageSearchResults').hidden=true;
+ try{
+  const ctx=(await api('/api/messages/context?id='+id)).data,key=chatKey(ctx.message);
+  const dialog=document.createElement('dialog');dialog.className='messageContextDialog';
+  dialog.innerHTML='<b>'+esc(chatTitle(key))+'</b><div class="ctxList">'+ctx.messages.map(m=>'<div class="ctxMsg'+(m.id===id?' hit':'')+'" data-ctx="'+m.id+'"><small>'+
+    esc(fmtDate(m.timestamp_ms))+' · '+esc(m.direction==='tx'?'Você':idName(m.from_node))+'</small>'+highlight(m.text,m.id===id?query:'')+'</div>').join('')+
+   '</div><div class="actions"><button type="button" class="primary" data-ctx-open>Abrir conversa</button><button type="button" data-ctx-close>Fechar</button></div>';
+  document.body.appendChild(dialog);dialog.showModal();
+  dialog.querySelector('.hit')?.scrollIntoView({block:'center'});
+  const close=()=>{dialog.close();dialog.remove();};
+  dialog.querySelector('[data-ctx-close]').onclick=close;
+  dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+  dialog.querySelector('[data-ctx-open]').onclick=()=>{
+   close();currentChat=key;chatRenderSignature='';renderChat();
+   const el=$('bubbles').querySelector('[data-msg-key="'+id+'"]');
+   if(el){el.scrollIntoView({block:'center'});el.classList.add('searchHit');setTimeout(()=>el.classList.remove('searchHit'),2500);}
+   else notify('A mensagem é antiga e não está entre as últimas carregadas na conversa; o contexto acima mostra o trecho.');
+  };
+ }catch(e){notify('Busca: '+e.message,true);}
+}
+$('messageSearch').addEventListener('input',()=>{clearTimeout(messageSearchTimer);messageSearchTimer=setTimeout(runMessageSearch,300);});
+$('messageSearchDays').onchange=runMessageSearch;
+$('messageSearch').addEventListener('keydown',e=>{if(e.key==='Escape'){$('messageSearchResults').hidden=true;}});
+document.addEventListener('click',e=>{if(!e.target.closest?.('.messageSearchBox'))$('messageSearchResults').hidden=true;});
 let lastDeviceNotices=[],deviceNoticeTimer=null;
 const deviceJobActive=n=>['queued','connecting','registering'].includes(n.job?.phase);
 function deviceNoticeHtml(n){

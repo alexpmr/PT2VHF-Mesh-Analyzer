@@ -202,6 +202,15 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/detected":
                     notices=[{k:v for k,v in n.items() if k not in ("candidate","key")} for n in watcher.notices()] if watcher else []
                     self._json({"success":True,"data":notices})
+                elif path == "/api/messages/search":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    node=query.get("node",[""])[0]
+                    days=query.get("days",[""])[0]
+                    self._json({"success":True,"data":db.search_messages(query.get("q",[""])[0][:200],
+                        int(node,0) if node else None,int(days) if days else None)})
+                elif path == "/api/messages/context":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    self._json({"success":True,"data":db.message_context(int(query.get("id",["0"])[0]))})
                 elif path == "/api/backup/status":
                     from .backup import last_restore, pending_restore
                     self._json({"success":True,"pending":pending_restore(profile_dir()),
@@ -256,6 +265,8 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     filters={k:v[0] for k,v in query.items()}
                     self._json(calculate(db,filters,sources.snapshot()))
                 else:self._error("Rota não encontrada",404)
+            except (ValueError,LookupError) as exc:
+                self._error(exc,400)
             except Exception as exc:
                 LOG.exception("Erro GET %s",path)
                 self._error(exc,500)
