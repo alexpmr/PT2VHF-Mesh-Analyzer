@@ -139,7 +139,7 @@ def radios_available(db, sources):
     return sources.available_radios(ble_seen=seen)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None, restart=None, alerts=None):
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None, restart=None, alerts=None, msgauto=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -202,6 +202,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/detected":
                     notices=[{k:v for k,v in n.items() if k not in ("candidate","key")} for n in watcher.notices()] if watcher else []
                     self._json({"success":True,"data":notices})
+                elif path == "/api/msgauto":
+                    if not msgauto:raise ValueError("Mensagens automáticas indisponíveis")
+                    self._json({"success":True,**msgauto.overview()})
                 elif path == "/api/alerts":
                     self._json({"success":True,**alerts.list()} if alerts else {"success":True,"alerts":[],"unread":0})
                 elif path == "/api/alerts/config":
@@ -366,6 +369,19 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/alerts/config":
                     if not alerts:raise ValueError("Alertas indisponíveis")
                     self._json({"success":True,"config":alerts.save(payload)})
+                elif path == "/api/msgauto/config":
+                    self._json({"success":True,"config":msgauto.save_config(payload)})
+                elif path == "/api/msgauto/schedule":
+                    self._json({"success":True,"schedule":msgauto.save_schedule(payload)})
+                elif path == "/api/msgauto/schedule/delete":
+                    self._json(msgauto.delete_schedule(payload["id"]))
+                elif path == "/api/msgauto/reply":
+                    self._json({"success":True,"reply":msgauto.save_reply(payload)})
+                elif path == "/api/msgauto/reply/delete":
+                    self._json(msgauto.delete_reply(payload["id"]))
+                elif path == "/api/msgauto/preview":
+                    sample={"from_node":None,"channel":0,"text":str(payload.get("command",""))}
+                    self._json({"success":True,"text":msgauto.render(str(payload.get("template",""))[:400],sample)})
                 elif path == "/api/alerts/read":
                     if not alerts:raise ValueError("Alertas indisponíveis")
                     self._json(alerts.mark_read())
@@ -476,6 +492,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     autoadd=AutoAdd(db,drivers,watcher)
     from .alerts import AlertCenter
     alerts=AlertCenter(db,drivers)
+    from .msgauto import MessageAutomation
+    msgauto=MessageAutomation(db,drivers)
     server=None
     done=threading.Event()
     try:
@@ -537,6 +555,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 updates.stop()
                 watcher.close()
                 alerts.close()
+                msgauto.close()
                 automation.close()
                 if server:
                     server.shutdown()
@@ -578,7 +597,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
             else:kwargs["start_new_session"]=True
             subprocess.Popen(command,**kwargs)
             threading.Timer(0.5,request_shutdown).start()
-        handler=build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd,request_restart,alerts)
+        handler=build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd,request_restart,alerts,msgauto)
         for attempt in range(60):
             try:
                 server=ThreadingHTTPServer((host,int(port)),handler)
@@ -601,6 +620,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         threading.Thread(target=janitor,name="retention-cleaner",daemon=True).start()
         updates.start()
         alerts.start()
+        msgauto.start()
         # #149: monitoramento de rádios novos só com interface (não em testes headless).
         if desktop and not os.environ.get("PT2VHF_DISABLE_AUTODETECT"):
             watcher.start()
@@ -660,6 +680,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
             updates.stop()
             watcher.close()
             alerts.close()
+            msgauto.close()
             automation.close()
             if server:
                 server.shutdown()

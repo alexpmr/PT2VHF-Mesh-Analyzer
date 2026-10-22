@@ -10,6 +10,7 @@ from unittest.mock import Mock
 
 from mesh_analyzer import backup
 from mesh_analyzer.alerts import AlertCenter
+from mesh_analyzer.msgauto import MessageAutomation
 from mesh_analyzer.database import Database, now_ms
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -158,6 +159,87 @@ class Alerts(Base):
             self.center.save({"battery_below": 150})
         with self.assertRaises(ValueError):
             self.center.save({"email": {"security": "starttls", "evil": 1}})
+
+
+
+class MessageAuto(Base):
+    def setUp(self):
+        super().setUp()
+        self.sources = Mock()
+        self.sources.active_radio.return_value = 1
+        self.sources.snapshot.return_value = {"1": {"local_node_num": 99}}
+        self.sent = []
+        self.sources.send_text.side_effect = lambda sid, to, text, ch: self.sent.append((to, text, ch))
+        self.auto = MessageAutomation(self.db, self.sources, weather=lambda: "25°C")
+
+    def msg(self, i, text, frm=50, to=0xffffffff, ts=None, snr=7.5):
+        key = "1:%d:%d" % (frm, i)
+        self.db.add_packet({"source_id": 1, "packet_id": str(i), "source_packet_key": key, "timestamp_ms": ts or now_ms(),
+                            "from_node": frm, "to_node": to, "port": "TEXT_MESSAGE_APP", "channel": 0, "rx_snr": snr,
+                            "rx_rssi": -90, "hop_start": 3, "hop_limit": 1, "via_mqtt": 0, "encrypted": 0, "direction": "rx",
+                            "text_preview": text, "raw_json": "{}"})
+        self.db.add_message({"source_id": 1, "packet_key": key, "packet_id": str(i), "timestamp_ms": ts or now_ms(),
+                             "from_node": frm, "to_node": to, "channel": 0, "direction": "rx", "text": text, "state": "received"})
+
+    def test_ping_reply_with_variables_and_cooldown(self):
+        self.db.upsert_node(50, 1, timestamp_ms=now_ms(), long_name="Renato", short_name="RK")
+        self.auto.save_reply({"trigger": "ping", "response": "PONG {nome}: SNR {snr}, {saltos} salto(s) {clima}"})
+        self.auto.run_replies()          # primeira execução só marca o ponto de partida
+        self.msg(1, "PING")
+        self.msg(2, "Ping")
+        self.auto.run_replies()
+        self.assertEqual(self.sent, [(None, "PONG Renato: SNR 7.5 dB, 2 salto(s) 25°C", 0)])
+        log = self.auto.overview()["log"]
+        self.assertEqual([l["status"] for l in log], ["skipped", "sent"])
+
+    def test_dm_reply_goes_private_and_scope_filters(self):
+        self.auto.save_reply({"trigger": "clima", "response": "Tempo: {clima}", "scope": "dm"})
+        self.auto.run_replies()
+        self.msg(1, "clima", to=0xffffffff)
+        self.msg(2, "clima", frm=51, to=99)
+        self.auto.run_replies()
+        self.assertEqual(self.sent, [(51, "Tempo: 25°C", 0)])
+
+    def test_never_replies_to_history_or_itself(self):
+        self.auto.save_reply({"trigger": "ping", "response": "pong"})
+        self.auto.run_replies()
+        self.msg(1, "ping", ts=now_ms() - 10 * 60000)
+        self.msg(2, "ping", frm=99)
+        self.auto.run_replies()
+        self.assertEqual(self.sent, [])
+
+    def test_hourly_budget(self):
+        self.auto.save_config({"max_per_hour": 1})
+        self.auto.save_reply({"trigger": "ping", "response": "pong", "cooldown_s": 30})
+        self.auto.run_replies()
+        self.msg(1, "ping", frm=60); self.msg(2, "ping", frm=61)
+        self.auto.run_replies()
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn("Limite", self.auto.overview()["log"][0]["error"])
+
+    def test_schedules_daily_interval_and_once(self):
+        now = now_ms()
+        daily = self.auto.save_schedule({"kind": "daily", "text": "Bom dia {data}", "time_hhmm": "07:00", "weekdays": 127}, now)
+        self.assertTrue(0 < daily["next_ms"] - now <= 86400000 + 3600000)
+        once = self.auto.save_schedule({"kind": "once", "text": "Teste", "target": 77, "at_ms": now + 1000}, now)
+        every = self.auto.save_schedule({"kind": "interval", "text": "Boletim", "interval_min": 30}, now)
+        self.assertEqual(self.auto.run_schedules(now + 2000), 1)
+        self.assertEqual(self.sent, [(77, "Teste", 0)])
+        row = self.db._rows("SELECT * FROM scheduled_messages WHERE id=?", (once["id"],))[0]
+        self.assertEqual((row["enabled"], row["next_ms"]), (0, 0))
+        self.assertEqual(self.auto.run_schedules(now + 31 * 60000), 1)
+        nxt = self.db._rows("SELECT next_ms FROM scheduled_messages WHERE id=?", (every["id"],))[0]["next_ms"]
+        self.assertEqual(nxt, now + 31 * 60000 + 30 * 60000)
+
+    def test_validation(self):
+        with self.assertRaises(ValueError):
+            self.auto.save_schedule({"kind": "interval", "text": "x", "interval_min": 5})
+        with self.assertRaises(ValueError):
+            self.auto.save_schedule({"kind": "once", "text": "x", "at_ms": 1})
+        with self.assertRaises(ValueError):
+            self.auto.save_reply({"trigger": "ping", "response": "x" * 300})
+        self.assertTrue(MessageAutomation.matches({"trigger": "ATENÇÃO", "match": "starts"}, "atencao geral"))
+        self.assertFalse(MessageAutomation.matches({"trigger": "ping", "match": "exact"}, "ping pong"))
 
 
 if __name__ == "__main__":

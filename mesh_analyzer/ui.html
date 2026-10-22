@@ -450,6 +450,34 @@ try {
 <p id="autoStatus" class="muted" role="status">Aguardando estado da automação...</p>
 <h4>Próximas consultas elegíveis</h4><div id="autoQueue" class="muted">Nenhuma consulta selecionada.</div>
 <p class="muted">O rádio conectado é a única fonte TX. MQTT não transmite. Apenas uma consulta pode estar aguardando resposta. ACK não equivale a dados recebidos. Ativar exige ação explícita do usuário.</p>
+</div>
+<div class="card" style="max-width:1020px;margin:16px auto 0" id="msgAutoCard">
+<h3>Mensagens automáticas</h3>
+<p class="muted">Mensagens agendadas e respostas a comandos, enviadas pelo rádio ativo. Todas dividem o mesmo limite de envios por hora, separado das consultas acima.</p>
+<div class="formGrid"><div class="field"><label><input type="checkbox" id="msgAutoEnabled"> Mensagens automáticas ativadas</label></div>
+<div class="field"><label for="msgAutoMax">Máximo de envios por hora</label><input id="msgAutoMax" type="number" min="1" max="60"></div></div>
+<div class="actions"><button type="button" id="msgAutoSaveConfig">Salvar limite</button><span id="msgAutoStatus" class="muted" role="status"></span></div>
+<h4>Mensagens agendadas</h4><div id="scheduleList" class="nodeDetailGrid"></div>
+<form id="scheduleForm" class="formGrid"><input type="hidden" id="schedId">
+<div class="field"><label for="schedName">Nome</label><input id="schedName" placeholder="Ex.: Bom dia"></div>
+<div class="field"><label for="schedKind">Quando</label><select id="schedKind"><option value="daily">Todo dia no horário</option><option value="interval">A cada N minutos</option><option value="once">Uma vez</option></select></div>
+<div class="field sched daily"><label for="schedTime">Horário</label><input id="schedTime" type="time" value="07:00"></div>
+<div class="field sched daily"><label>Dias</label><span id="schedDays">Seg Ter Qua Qui Sex Sáb Dom</span></div>
+<div class="field sched interval"><label for="schedInterval">Intervalo (minutos, mín. 15)</label><input id="schedInterval" type="number" min="15" value="60"></div>
+<div class="field sched once"><label for="schedAt">Data e hora</label><input id="schedAt" type="datetime-local"></div>
+<div class="field"><label for="schedTarget">Para</label><select id="schedTarget"></select></div>
+<div class="field"><label for="schedChannel">Canal</label><input id="schedChannel" type="number" min="0" max="7" value="0"></div>
+<div class="field span2"><label for="schedText">Texto (até 220 bytes; aceita {hora}, {data}, {clima})</label><textarea id="schedText" rows="2"></textarea></div>
+<div class="actions span2"><button type="submit" class="primary">Salvar agendamento</button><button type="button" id="schedNew">Novo</button></div></form>
+<h4>Respostas automáticas a comandos</h4><div id="replyList" class="nodeDetailGrid"></div>
+<form id="replyForm" class="formGrid"><input type="hidden" id="replyId">
+<div class="field"><label for="replyTrigger">Comando recebido</label><input id="replyTrigger" placeholder="Ex.: PING"></div>
+<div class="field"><label for="replyMatch">Comparação</label><select id="replyMatch"><option value="exact">Mensagem igual ao comando</option><option value="starts">Começa com o comando</option><option value="contains">Contém o comando</option></select></div>
+<div class="field"><label for="replyScope">Responder a</label><select id="replyScope"><option value="both">Privadas e canal</option><option value="dm">Só privadas</option><option value="channel">Só canal</option></select></div>
+<div class="field"><label for="replyCooldown">Pausa por remetente (segundos)</label><input id="replyCooldown" type="number" min="30" value="300"></div>
+<div class="field span2"><label for="replyText">Resposta — variáveis: {nome} {curto} {id} {snr} {rssi} {saltos} {hora} {data} {canal} {clima}</label><textarea id="replyText" rows="2" placeholder="PONG {nome}: SNR {snr}, {saltos} salto(s), {hora}"></textarea></div>
+<div class="actions span2"><button type="submit" class="primary">Salvar resposta</button><button type="button" id="replyPreview">Pré-visualizar</button><button type="button" id="replyNew">Novo</button><span id="replyPreviewText" class="muted"></span></div></form>
+<h4>Registro recente</h4><div id="msgAutoLog" class="muted"></div>
 </div></div></section>
 <section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Conexões</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="alerts">Alertas</button><button class="settingsTab" data-panel="general">Geral</button></div>
 <section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Conexões com rádios e serviços</h3><p class="muted">Cadastre várias conexões independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
@@ -670,7 +698,7 @@ async function setView(next,updateUrl=true){
  if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}
  if(next==='stats'){syncStatFilters();fetchStats(false);}
  if(next==='messages')renderChat();
- if(next==='automations')loadAutomation();
+ if(next==='automations'){loadAutomation();loadMsgAuto();}
 }
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 const initialView=location.pathname.startsWith('/configuracoes')?'settings':
@@ -3649,6 +3677,83 @@ window.addEventListener('resize',()=>{if(radioMenuOpen)placeRadioMenu();});
 
 // #149/#155/#156: avisos de rádio detectado. A verificação roda no servidor
 // com prazo, fila Bluetooth e Cancelar; a tela só acompanha o estado.
+// #172/#173: mensagens agendadas e respostas automáticas.
+let msgAutoData={schedules:[],replies:[]};
+const WEEKDAYS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+function scheduleWhen(s){
+ if(s.kind==='once')return 'Uma vez em '+fmtDate(s.at_ms);
+ if(s.kind==='interval')return 'A cada '+s.interval_min+' min';
+ const days=WEEKDAYS.filter((d,i)=>s.weekdays&(1<<i));
+ return 'Às '+s.time_hhmm+(days.length===7?' todo dia':' · '+days.join(', '));
+}
+function targetLabel(t){return t==null?'Canal (todos)':'Privado · '+idName(t);}
+async function loadMsgAuto(){
+ try{
+  const d=await api('/api/msgauto');msgAutoData=d;
+  $('msgAutoEnabled').checked=d.config.enabled;$('msgAutoMax').value=d.config.max_per_hour;
+  $('msgAutoStatus').textContent=d.sent_last_hour+' envio(s) na última hora.';
+  $('schedTarget').innerHTML='<option value="">Canal (todos)</option>'+nodes.slice().sort((a,b)=>idName(a.node_num).localeCompare(idName(b.node_num)))
+   .map(n=>'<option value="'+n.node_num+'">Privado · '+esc(idName(n.node_num))+'</option>').join('');
+  $('scheduleList').innerHTML=d.schedules.map(s=>'<div class="nodeField"><b>'+esc(s.name||s.text.slice(0,30))+(s.enabled?'':' (pausado)')+'</b><span>'+
+   esc(scheduleWhen(s))+' · '+esc(targetLabel(s.target))+(s.next_ms?' · próxima: '+esc(fmtDate(s.next_ms)):'')+(s.last_error?' · '+esc(s.last_error):'')+
+   '</span><span><button type="button" data-sched-edit="'+s.id+'">Editar</button> <button type="button" data-sched-del="'+s.id+'" class="danger">Excluir</button></span></div>').join('')||'<p class="muted">Nenhum agendamento.</p>';
+  $('replyList').innerHTML=d.replies.map(r=>'<div class="nodeField"><b>'+esc(r.trigger)+(r.enabled?'':' (pausado)')+'</b><span>'+esc(r.response)+'</span><span>'+
+   '<button type="button" data-reply-edit="'+r.id+'">Editar</button> <button type="button" data-reply-del="'+r.id+'" class="danger">Excluir</button></span></div>').join('')||'<p class="muted">Nenhuma resposta automática.</p>';
+  $('msgAutoLog').innerHTML=d.log.slice(0,15).map(l=>'<div>'+esc(fmtDate(l.timestamp_ms))+' · '+(l.kind==='reply'?'resposta':'agendada')+' · '+
+   esc({sent:'enviada',skipped:'não enviada',error:'erro'}[l.status]||l.status)+(l.error?' ('+esc(l.error)+')':'')+' — '+esc(l.text.slice(0,80))+'</div>').join('')||'Nenhum envio ainda.';
+  document.querySelectorAll('[data-sched-edit]').forEach(b=>b.onclick=()=>editSchedule(Number(b.dataset.schedEdit)));
+  document.querySelectorAll('[data-reply-edit]').forEach(b=>b.onclick=()=>editReply(Number(b.dataset.replyEdit)));
+  document.querySelectorAll('[data-sched-del]').forEach(b=>b.onclick=async()=>{if(confirm('Excluir este agendamento?')){await api('/api/msgauto/schedule/delete',{id:Number(b.dataset.schedDel)});loadMsgAuto();}});
+  document.querySelectorAll('[data-reply-del]').forEach(b=>b.onclick=async()=>{if(confirm('Excluir esta resposta automática?')){await api('/api/msgauto/reply/delete',{id:Number(b.dataset.replyDel)});loadMsgAuto();}});
+  showScheduleFields();
+ }catch(e){$('msgAutoStatus').textContent='Indisponível: '+e.message;}
+}
+function showScheduleFields(){document.querySelectorAll('.sched').forEach(el=>el.style.display=el.classList.contains($('schedKind').value)?'flex':'none');}
+$('schedKind').onchange=showScheduleFields;
+$('schedDays').innerHTML=WEEKDAYS.map((d,i)=>'<label style="margin-right:6px"><input type="checkbox" data-weekday="'+i+'" checked> '+d+'</label>').join('');
+function resetScheduleForm(){$('scheduleForm').reset();$('schedId').value='';$('schedTime').value='07:00';$('schedInterval').value=60;$('schedChannel').value=0;
+ document.querySelectorAll('[data-weekday]').forEach(b=>b.checked=true);showScheduleFields();}
+function editSchedule(id){
+ const s=msgAutoData.schedules.find(x=>x.id===id);if(!s)return;
+ $('schedId').value=s.id;$('schedName').value=s.name;$('schedKind').value=s.kind;$('schedTime').value=s.time_hhmm||'07:00';
+ $('schedInterval').value=s.interval_min||60;$('schedTarget').value=s.target==null?'':String(s.target);$('schedChannel').value=s.channel;$('schedText').value=s.text;
+ if(s.at_ms){const d=new Date(s.at_ms-new Date().getTimezoneOffset()*60000);$('schedAt').value=d.toISOString().slice(0,16);}
+ document.querySelectorAll('[data-weekday]').forEach(b=>b.checked=!!(s.weekdays&(1<<Number(b.dataset.weekday))));
+ showScheduleFields();$('scheduleForm').scrollIntoView({block:'center'});
+}
+$('schedNew').onclick=resetScheduleForm;
+$('scheduleForm').onsubmit=async e=>{
+ e.preventDefault();
+ let weekdays=0;document.querySelectorAll('[data-weekday]').forEach(b=>{if(b.checked)weekdays|=1<<Number(b.dataset.weekday);});
+ try{
+  await api('/api/msgauto/schedule',{id:Number($('schedId').value)||0,name:$('schedName').value,kind:$('schedKind').value,text:$('schedText').value,
+   target:$('schedTarget').value||null,channel:Number($('schedChannel').value||0),time_hhmm:$('schedTime').value,weekdays,
+   interval_min:Number($('schedInterval').value||0),at_ms:$('schedAt').value?new Date($('schedAt').value).getTime():0});
+  notify('Agendamento salvo.');resetScheduleForm();loadMsgAuto();
+ }catch(err){notify('Agendamento: '+err.message,true);}
+};
+function editReply(id){
+ const r=msgAutoData.replies.find(x=>x.id===id);if(!r)return;
+ $('replyId').value=r.id;$('replyTrigger').value=r.trigger;$('replyMatch').value=r.match;$('replyScope').value=r.scope;
+ $('replyCooldown').value=r.cooldown_s;$('replyText').value=r.response;$('replyForm').scrollIntoView({block:'center'});
+}
+$('replyNew').onclick=()=>{$('replyForm').reset();$('replyId').value='';$('replyCooldown').value=300;$('replyPreviewText').textContent='';};
+$('replyForm').onsubmit=async e=>{
+ e.preventDefault();
+ try{
+  await api('/api/msgauto/reply',{id:Number($('replyId').value)||0,trigger:$('replyTrigger').value,match:$('replyMatch').value,
+   scope:$('replyScope').value,cooldown_s:Number($('replyCooldown').value||300),response:$('replyText').value});
+  notify('Resposta automática salva.');$('replyNew').click();loadMsgAuto();
+ }catch(err){notify('Resposta automática: '+err.message,true);}
+};
+$('replyPreview').onclick=async()=>{
+ try{const r=await api('/api/msgauto/preview',{template:$('replyText').value,command:$('replyTrigger').value});$('replyPreviewText').textContent='Prévia: '+r.text;}
+ catch(e){$('replyPreviewText').textContent=e.message;}
+};
+$('msgAutoSaveConfig').onclick=async()=>{
+ try{await api('/api/msgauto/config',{enabled:$('msgAutoEnabled').checked,max_per_hour:Number($('msgAutoMax').value||10)});notify('Mensagens automáticas salvas.');loadMsgAuto();}
+ catch(e){notify(e.message,true);}
+};
 // #165: alertas da malha (sino na barra superior e aba de configuração).
 let lastAlertId=null,alertPanelOpen=false;
 const alertIcons={silent:'🔕',battery:'🪫',channel:'📶',dm:'✉️',mention:'@'};
