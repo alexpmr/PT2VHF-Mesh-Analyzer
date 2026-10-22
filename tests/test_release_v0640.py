@@ -370,5 +370,51 @@ class Insights(Base):
             insights.terrain_profile((1, 1), (1, 1), elevations=lambda pts: [0] * len(pts))
 
 
+
+class BlePin(Base):
+    def test_validation_and_macos_message(self):
+        from mesh_analyzer import ble_pairing
+        with self.assertRaises(ValueError):
+            ble_pairing.validate("AA:BB:CC:DD:EE:FF", "12ab")
+        out = ble_pairing.pair("AA:BB:CC:DD:EE:FF", "123456", platform="darwin")
+        self.assertEqual(out["status"], "system_dialog")
+
+    def test_linux_bluetoothctl_dialogue(self):
+        import sys
+        from mesh_analyzer import ble_pairing
+        script = self.data / "fake_btctl.py"
+        script.write_text("import sys\n"
+            "for line in sys.stdin:\n"
+            "    line=line.strip()\n"
+            "    if line.startswith('pair'): print('[agent] Enter passkey (number in 0-999999):', flush=True)\n"
+            "    elif line=='654321': print('Pairing successful', flush=True)\n"
+            "    elif line=='000000': print('Failed to pair: org.bluez.Error.AuthenticationFailed', flush=True)\n"
+            "    elif line=='quit': break\n")
+        ok = ble_pairing._pair_linux("AA:BB:CC:DD:EE:FF", "654321", 10, command=(sys.executable, str(script)))
+        self.assertTrue(ok["ok"], ok)
+        bad = ble_pairing._pair_linux("AA:BB:CC:DD:EE:FF", "000000", 10, command=(sys.executable, str(script)))
+        self.assertEqual(bad["status"], "failed")
+
+    def test_card_pairs_then_connects(self):
+        from mesh_analyzer.device_detection import DeviceWatcher
+        sources = Mock(); sources.snapshot.return_value = {}; sources.active_radio.return_value = None
+        sources.queries.status.return_value = []
+        prober = lambda c: {"ok": True, "node_num": 77, "long_name": "VHF4", "short_name": "V4"}
+        w = DeviceWatcher(self.db, sources, prober=prober, usb=lambda: [], ble=lambda **k: [])
+        w._offer({"kind": "ble", "address": "44:1B:F6:70:8A:69", "name": "VHF4_8a68", "config": {"address": "44:1B:F6:70:8A:69"}})
+        nid = w.notices()[0]["id"]
+        with self.assertRaises(ValueError):
+            w.pair(nid, "abc")
+        w.pair(nid, "111111", pairer=lambda a, p: {"ok": False, "error": "Pareamento recusado"})
+        end = time.time() + 3
+        while w.notices()[0]["job"]["phase"] == "pairing" and time.time() < end:
+            time.sleep(0.05)
+        self.assertEqual((w.notices()[0]["job"]["phase"], w.notices()[0]["job"]["needs_pin"]), ("failed", True))
+        w.pair(nid, "123456", pairer=lambda a, p: {"ok": True, "status": "paired"})
+        while w.notices()[0]["job"]["phase"] != "done" and time.time() < end + 3:
+            time.sleep(0.05)
+        self.assertEqual(w.notices()[0]["job"]["source"]["name"], "VHF4 BLE")
+
+
 if __name__ == "__main__":
     unittest.main()

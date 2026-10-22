@@ -4055,7 +4055,7 @@ $('messageSearchDays').onchange=runMessageSearch;
 $('messageSearch').addEventListener('keydown',e=>{if(e.key==='Escape'){$('messageSearchResults').hidden=true;}});
 document.addEventListener('click',e=>{if(!e.target.closest?.('.messageSearchBox'))$('messageSearchResults').hidden=true;});
 let lastDeviceNotices=[],deviceNoticeTimer=null;
-const deviceJobActive=n=>['queued','connecting','registering'].includes(n.job?.phase);
+const deviceJobActive=n=>['queued','pairing','connecting','registering'].includes(n.job?.phase);
 function deviceNoticeHtml(n){
  const where=radioKindLabel(n.kind)+' · '+esc(n.address),job=n.job||{},id=esc(n.id);
  const btn=(attr,label,primary)=>'<button type="button"'+(primary?' class="primary"':'')+' data-notice-'+attr+'="'+id+'">'+label+'</button>';
@@ -4071,23 +4071,32 @@ function deviceNoticeHtml(n){
     (n.kind==='ble'?' Se o rádio pedir PIN, confira a janela de pareamento do Windows (PIN na tela do rádio; 123456 se não tiver tela).':''),btn('cancel','Cancelar'));
  }
  if(job.phase==='registering')return card('Adicionando '+esc(n.name)+'…',where+' · cadastrando e conectando.','');
- if(job.phase==='failed')return card('Não foi possível adicionar '+esc(n.name),esc(job.error||'Sem resposta do rádio.'),
-   btn('add','Tentar de novo',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alert');
+ if(job.phase==='pairing')return card('Pareando '+esc(n.name)+'…',where+' · enviando o PIN ao rádio.',btn('cancel','Cancelar'));
+ // #164: campo de PIN para rádios Bluetooth que pedem pareamento.
+ const pinField=n.kind==='ble'?'<div class="actions"><input type="text" inputmode="numeric" maxlength="8" placeholder="PIN do rádio" aria-label="PIN de pareamento Bluetooth" data-notice-pin-input="'+id+'" style="width:120px">'+
+   btn('pin','Parear com PIN',job.needs_pin)+'</div>':'';
+ if(job.phase==='failed')return card('Não foi possível adicionar '+esc(n.name),esc(job.error||'Sem resposta do rádio.')+
+   (n.kind==='ble'?' Se o rádio pede PIN, digite o código mostrado na tela dele (123456 se não tiver tela).':''),
+   pinField+btn('add','Tentar de novo',!job.needs_pin)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alert');
  if(job.phase==='done'){
   const name=esc(job.source?.name||n.name);
   if(job.other_active)return card(name+' adicionado','Conexão automática marcada. Outro rádio está ativo; este ficou em espera.',btn('use','Usar este agora',true)+btn('close','Fechar'));
   return card(name+' adicionado',job.switched?'Agora é o rádio ativo (prioridade USB).':'Conexão automática marcada; conectando.',btn('close','Fechar'));
  }
  return card('Rádio Meshtastic detectado',esc(n.name)+' — '+where+(job.phase==='cancelled'?' · verificação cancelada.':''),
-   btn('add','Adicionar e conectar',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alertdialog');
+   btn('add','Adicionar e conectar',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo')+pinField,'alertdialog');
 }
 function renderDeviceNotices(list=lastDeviceNotices){
  lastDeviceNotices=list;
  const box=$('deviceNotices'),html=list.map(deviceNoticeHtml).join('');
- if(box.dataset.html!==html){box.innerHTML=html;box.dataset.html=html;}
+ const typing=document.activeElement?.matches?.('[data-notice-pin-input]');
+ if(box.dataset.html!==html&&!typing){box.innerHTML=html;box.dataset.html=html;}
  const call=async(path,id,extra={})=>{try{await api(path,{id,...extra});}catch(e){notify(e.message,true);}await refreshDeviceNotices();};
  const on=(attr,fn)=>box.querySelectorAll('[data-notice-'+attr+']').forEach(b=>b.onclick=()=>fn(b.getAttribute('data-notice-'+attr)));
  on('add',id=>call('/api/devices/accept',id));
+ on('pin',id=>{const pin=box.querySelector('[data-notice-pin-input="'+id+'"]')?.value.trim();
+  if(!/^\d{4,8}$/.test(pin||'')){notify('Digite o PIN de 4 a 8 dígitos mostrado no rádio.',true);return;}
+  call('/api/devices/pair',id,{pin});});
  on('cancel',id=>call('/api/devices/cancel',id));
  on('later',id=>call('/api/devices/dismiss',id));
  on('never',id=>call('/api/devices/dismiss',id,{never:true}));

@@ -99,6 +99,8 @@ const nodes=[
 ];
 const messages=[],currentChat='node:11';
 const chatKey=()=>'',idName=num=>{const n=nodes.find(x=>x.node_num===num);return n?.long_name||n?.short_name||n?.node_id||''};
+// v0.6.40 (#174): nomes de canais usados por renderChat.
+const radioChannels=[],channelLabel=i=>Number(i)===0?'Canal primário':'Canal '+i;
 """ + extract("function chatNodeMatches(","$('messageNodeSearch').addEventListener('input',") + """
 const output=[];
 for(const query of ['jose','casa','VhF','nada','']){
