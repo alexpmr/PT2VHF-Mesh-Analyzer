@@ -1,3 +1,7 @@
+## v0.6.39 — Implementado nesta entrega
+
+- #162 implementado com testes automatizados. Aceite físico pendente: instalação nova no Windows com o rádio ligado na USB antes de abrir (o diálogo não deve aparecer).
+
 ## v0.6.38 — Implementado nesta entrega
 
 - #153, #155, #156, #157, #158, #159 e #160 implementados com testes automatizados.

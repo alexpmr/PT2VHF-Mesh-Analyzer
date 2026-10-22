@@ -37,6 +37,8 @@ TIMEOUT_HINT = {
     "ble": "O rádio não respondeu a tempo pelo Bluetooth. Se ele pedir PIN, confira a janela de "
            "pareamento do Windows (PIN na tela do rádio; 123456 se ele não tiver tela).",
 }
+# #162: na primeira abertura a busca não pode segurar o usuário por muito tempo.
+FIRST_RUN_DEADLINE_S = {"serial": 20, "tcp": 20, "ble": 25}
 USB_POLL_S = 3
 BLE_POLL_S = 45
 
@@ -319,13 +321,13 @@ class DeviceWatcher:
             if token in self._ble_line:
                 self._ble_line.remove(token)
 
-    def verify(self, candidate, token, cancel=None, on_wait=None):
+    def verify(self, candidate, token, cancel=None, on_wait=None, deadline=None):
         """Verificação com prazo, cancelamento e fila Bluetooth."""
         ble = candidate["kind"] == "ble"
         if ble and not self.enter_ble(token, cancel, on_wait):
             return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
         try:
-            return bounded_probe(self._probe, candidate, cancel)
+            return bounded_probe(self._probe, candidate, cancel, deadline)
         finally:
             if ble:
                 self.leave_ble(token)
@@ -637,21 +639,27 @@ class AutoAdd:
         self._mdns = mdns
         self._lock = threading.RLock()
         self._cancel = threading.Event()
-        self._state = {"running": False, "phase": "idle", "results": [], "finished_ms": 0}
+        self._state = {"running": False, "phase": "idle", "results": [], "finished_ms": 0,
+                       "first_run": False, "added": []}
 
     def status(self):
         with self._lock:
             return {**self._state, "results": [dict(r) for r in self._state["results"]]}
 
-    def start(self):
+    def start(self, first_run=False):
         with self._lock:
             if self._state["running"]:
                 return self.status()
             self._cancel = threading.Event()
-            self._state = {"running": True, "phase": "Procurando em USB, Wi-Fi e Bluetooth…",
-                           "results": [], "finished_ms": 0}
-        threading.Thread(target=self.run, name="auto-add-radios", daemon=True).start()
+            self._state = self._initial(first_run)
+        threading.Thread(target=self.run, args=(first_run,), name="auto-add-radios", daemon=True).start()
         return self.status()
+
+    @staticmethod
+    def _initial(first_run):
+        return {"running": True, "first_run": first_run, "added": [], "results": [], "finished_ms": 0,
+                "phase": "Procurando rádios Meshtastic na USB…" if first_run else
+                         "Procurando em USB, Wi-Fi e Bluetooth…"}
 
     def cancel(self):
         self._cancel.set()
@@ -667,19 +675,77 @@ class AutoAdd:
         with self._lock:
             self._state["phase"] = text
 
-    def _verify(self, key, candidate):
+    def _verify(self, key, candidate, deadline=None):
         if self.watcher:
-            return self.watcher.verify(candidate, "auto:" + key, self._cancel)
-        return bounded_probe(self._probe, candidate, self._cancel)
+            return self.watcher.verify(candidate, "auto:" + key, self._cancel, deadline=deadline)
+        return bounded_probe(self._probe, candidate, self._cancel, deadline)
 
-    def run(self):
+    def _added(self, candidate, source, first_run):
         with self._lock:
-            self._state = {"running": True, "phase": "Procurando em USB, Wi-Fi e Bluetooth…",
-                           "results": [], "finished_ms": 0}
+            self._state["added"].append({"id": source["id"], "name": source["name"], "kind": candidate["kind"]})
+        self._result(candidate, "added", source["name"])
+        if first_run and self.watcher:
+            # Mesmo cartão de "adicionado sozinho" do #155, com Desfazer.
+            self.watcher._new_notice(device_key(candidate["kind"], candidate["address"]), candidate,
+                                     source["name"], type="auto_added", source_id=source["id"],
+                                     previous_id=None, switched=False, waiting=False, first_run=True)
+
+    def _allowed(self, candidate, first_run):
+        """Na primeira abertura respeita as preferências por tipo e os dispositivos "Nunca"."""
+        if not first_run:
+            return True
+        key = device_key(candidate["kind"], candidate["address"])
+        prefs = self.db.system_settings()["device_autodetect"]
+        return prefs.get(candidate["kind"], True) and key not in self.db.ignored_devices()
+
+    def _first_run_usb(self):
+        """#162: todas as portas USB verificadas em paralelo; quem responder entra na hora."""
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        ports = []
+        for c in self._usb():
+            if not self._allowed(c, True):
+                continue
+            if self.registry.configured(c):
+                self._result(c, "configured", "Já configurado")
+            else:
+                ports.append(c)
+        if not ports:
+            return 0
+        self._phase("Verificando " + str(len(ports)) + " porta(s) USB…")
+        added = 0
+        with ThreadPoolExecutor(max_workers=min(8, len(ports))) as pool:
+            jobs = {pool.submit(bounded_probe, self._probe, c, self._cancel, FIRST_RUN_DEADLINE_S["serial"]): c
+                    for c in ports}
+            for job in as_completed(jobs):
+                c = jobs[job]
+                info = job.result()
+                if info.get("cancelled"):
+                    self._result(c, "cancelled", "Cancelado")
+                elif not info.get("ok"):
+                    self._result(c, "no_response", info.get("error", ""))
+                else:
+                    try:
+                        self._added(c, self.registry.add(c, info), True)
+                        added += 1
+                    except LookupError:
+                        self._result(c, "configured", "Mesmo rádio já cadastrado por outra conexão")
+        return added
+
+    def run(self, first_run=False):
+        with self._lock:
+            self._state = self._initial(first_run)
         cancel = self._cancel
         candidates, errors = [], []
-        scans = (("USB", lambda: self._usb()), ("Wi-Fi", lambda: self._mdns(4.0)),
-                 ("Bluetooth", lambda: self._ble(timeout=5.0, near_only=True)))
+        scans = [("USB", lambda: self._usb()), ("Wi-Fi", lambda: self._mdns(4.0)),
+                 ("Bluetooth", lambda: self._ble(timeout=5.0, near_only=True))]
+        if first_run:
+            try:
+                if self._first_run_usb() or cancel.is_set():
+                    return self._finish(errors)
+            except Exception as exc:
+                errors.append("USB: " + (str(exc) or type(exc).__name__)[:80])
+            self._phase("Nenhum rádio na USB; procurando no Wi-Fi e no Bluetooth próximo…")
+            scans = scans[1:]
         for label, scan in scans:
             if cancel.is_set():
                 break
@@ -692,6 +758,8 @@ class AutoAdd:
             unique.setdefault(device_key(c["kind"], c["address"]), c)
         pending = []
         for key, c in unique.items():
+            if not self._allowed(c, first_run):
+                continue
             if self.registry.configured(c):
                 self._result(c, "configured", "Já configurado")
             else:
@@ -708,7 +776,7 @@ class AutoAdd:
                     continue
                 self.watcher.busy(key)
             try:
-                info = self._verify(key, c)
+                info = self._verify(key, c, FIRST_RUN_DEADLINE_S.get(c["kind"]) if first_run else None)
                 if info.get("cancelled"):
                     self._result(c, "cancelled", "Cancelado")
                     continue
@@ -716,8 +784,7 @@ class AutoAdd:
                     self._result(c, "no_response", info.get("error", ""))
                     continue
                 try:
-                    source = self.registry.add(c, info)
-                    self._result(c, "added", source["name"])
+                    self._added(c, self.registry.add(c, info), first_run)
                 except LookupError:
                     self._result(c, "configured", "Mesmo rádio já cadastrado por outra conexão")
             except Exception as exc:
@@ -725,6 +792,9 @@ class AutoAdd:
             finally:
                 if self.watcher:
                     self.watcher.busy(key, False)
+        self._finish(errors)
+
+    def _finish(self, errors):
         with self._lock:
-            self._state.update(running=False, phase="cancelled" if cancel.is_set() else "done",
+            self._state.update(running=False, phase="cancelled" if self._cancel.is_set() else "done",
                                errors=errors, finished_ms=now_ms())

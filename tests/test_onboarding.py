@@ -22,10 +22,11 @@ class FirstConnectionTests(unittest.TestCase):
         self.assertIn('id="firstRunConnections"', HTML)
         self.assertIn('id="firstRunLater"', HTML)
         self.assertIn('let firstRunDialogChecked=false,updateNoticeChecked=false;', HTML)
-        self.assertIn('if(firstRunDialogChecked||!updateNoticeChecked||!Array.isArray(state.sources))return;', HTML)
+        # v0.6.39 (#162): a busca automática roda antes do diálogo.
+        self.assertIn('if(firstRunDialogChecked||firstRunSearchBusy||!updateNoticeChecked||!Array.isArray(state.sources))return;', HTML)
         self.assertIn("sessionStorage.setItem('mesh.firstRunShown','yes')", HTML)
         self.assertIn("sessionStorage.getItem('mesh.firstRunShown')", HTML)
-        self.assertIn('if(state.sources.length===0)', HTML)
+        self.assertIn("if(state.sources.length>0){$('firstRunSearch').hidden=true;return;}", HTML)
         self.assertIn('state=results[0];showFirstRunDialogOnce();', HTML)
         self.assertIn("dismissFirstRunDialog();\n setView('settings');\n showSettings('sources');", HTML)
         self.assertIn("$('sourceName').focus();", HTML)
