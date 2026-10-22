@@ -417,6 +417,26 @@ class BlePin(Base):
 
 
 
+class Language(Base):
+    def test_language_setting_defaults_validates_and_persists(self):
+        self.assertEqual(self.db.system_settings()["language"], "pt")
+        self.db.set_system_settings({"language": "es"})
+        self.assertEqual(self.db.system_settings()["language"], "es")
+        with self.assertRaises(ValueError):
+            self.db.set_system_settings({"language": "fr"})
+
+    def test_dictionaries_cover_the_main_interface(self):
+        html = (Path(__file__).resolve().parents[1] / "mesh_analyzer" / "ui.html").read_text(encoding="utf-8")
+        start = html.index("const I18N=") + len("const I18N=")
+        data = json.loads(html[start:html.index(";\n</script>", start)])
+        for key in ("Mapa", "Mensagens", "Configurações", "Salvar conexão", "Backup e restauração", "Alertas ativados"):
+            self.assertIn(key, data["en"])
+        self.assertEqual(data["en"]["Configurações"], "Settings")
+        self.assertEqual(data["es"]["Configurações"], "Configuración")
+        self.assertGreater(len(data["en"]), 350)
+        self.assertGreater(len(data["es"]), 300)
+
+
 class AdvancedReport(Base):
     def test_pdf_has_new_sections_without_message_text(self):
         from mesh_analyzer.reporting import generate

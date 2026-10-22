@@ -367,6 +367,8 @@ class Database:
 
     SYSTEM_DEFAULTS = {"open_browser_on_start": False, "allow_lan_access": False,
                        "update_minutes": 15, "theme": "dark",
+                       # #176: idioma da interface (português, inglês ou espanhol).
+                       "language": "pt",
                        # #149: aviso ao detectar rádio novo, por tipo de conexão.
                        "device_autodetect": {"serial": True, "tcp": True, "ble": True},
                        # #155: USB verificado é adicionado e conectado sem clique e tem
@@ -443,6 +445,8 @@ class Database:
         data["update_minutes"] = n if type(n) is int and 5 <= n <= 1440 else 15
         if data["theme"] not in ("dark", "gray", "light"):
             data["theme"] = "dark"
+        if data["language"] not in ("pt", "en", "es"):
+            data["language"] = "pt"
         detect = data["device_autodetect"] if isinstance(data["device_autodetect"], dict) else {}
         data["device_autodetect"] = {k: detect.get(k, True) is not False for k in ("serial", "tcp", "ble")}
         auto = data["device_autoconnect"] if isinstance(data["device_autoconnect"], dict) else {}
@@ -467,6 +471,8 @@ class Database:
         if "theme" in changes and (not isinstance(changes["theme"], str) or
                                    changes["theme"] not in ("dark", "gray", "light")):
             raise ValueError("Tema deve ser Escuro, Cinza ou Claro")
+        if "language" in changes and changes["language"] not in ("pt", "en", "es"):
+            raise ValueError("Idioma deve ser pt, en ou es")
         if "device_autodetect" in changes:
             detect = changes["device_autodetect"]
             if (not isinstance(detect, dict) or set(detect) - {"serial", "tcp", "ble"}
