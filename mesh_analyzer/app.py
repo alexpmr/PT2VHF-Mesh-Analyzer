@@ -202,6 +202,8 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/detected":
                     notices=[{k:v for k,v in n.items() if k not in ("candidate","key")} for n in watcher.notices()] if watcher else []
                     self._json({"success":True,"data":notices})
+                elif path == "/api/channels":
+                    self._json({"success":True,**sources.channel_list()})
                 elif path == "/api/msgauto":
                     if not msgauto:raise ValueError("Mensagens automáticas indisponíveis")
                     self._json({"success":True,**msgauto.overview()})
@@ -369,6 +371,11 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/alerts/config":
                     if not alerts:raise ValueError("Alertas indisponíveis")
                     self._json({"success":True,"config":alerts.save(payload)})
+                elif path == "/api/channels/save":
+                    active=sources.active_radio()
+                    if active is None:raise ValueError("Conecte um rádio para editar os canais")
+                    self._json(sources.set_channel(active,payload.get("index"),payload.get("name",""),
+                        payload.get("enabled") is not False,payload.get("psk","keep"),payload.get("psk_value","")))
                 elif path == "/api/msgauto/config":
                     self._json({"success":True,"config":msgauto.save_config(payload)})
                 elif path == "/api/msgauto/schedule":

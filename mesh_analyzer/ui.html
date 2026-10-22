@@ -406,7 +406,7 @@ try {
 <thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
 <aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></aside>
 </div></section>
-<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><div class="messageSearchBox"><input id="messageSearch" type="search" placeholder="Buscar no histórico…" aria-label="Buscar texto em todas as mensagens salvas" autocomplete="off"><select id="messageSearchDays" aria-label="Período da busca"><option value="7">7 dias</option><option value="30">30 dias</option><option value="365">1 ano</option><option value="" selected>Todo o histórico</option></select><div id="messageSearchResults" class="messageSearchResults" role="listbox" hidden></div></div><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contactsPanel"><div class="messageNodeSearchBar">
+<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><div class="messageSearchBox"><input id="messageSearch" type="search" placeholder="Buscar no histórico…" aria-label="Buscar texto em todas as mensagens salvas" autocomplete="off"><select id="messageSearchDays" aria-label="Período da busca"><option value="7">7 dias</option><option value="30">30 dias</option><option value="365">1 ano</option><option value="" selected>Todo o histórico</option></select><div id="messageSearchResults" class="messageSearchResults" role="listbox" hidden></div></div><button type="button" id="channelManage" title="Ver e editar os canais do rádio">Canais…</button><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contactsPanel"><div class="messageNodeSearchBar">
 <input id="messageNodeSearch" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nós para mensagem privada" autocomplete="off">
 <button type="button" id="messageNodeSearchClear" aria-label="Limpar pesquisa de nós" title="Limpar pesquisa">×</button>
 <span id="messageNodeSearchCount" role="status" aria-live="polite"></span>
@@ -2541,8 +2541,9 @@ function renderChat(updateConversation=true){
  const chats=new Set(['channel:0']);
  for(const m of messages)chats.add(chatKey(m));
  for(const n of nodes)chats.add('node:'+n.node_num);
- const nameOf=key=>key.startsWith('node:')?idName(Number(key.slice(5))):
-   key==='channel:0'?'Canal primário':'Canal '+key.slice(8);
+ const nameOf=key=>key.startsWith('node:')?idName(Number(key.slice(5))):channelLabel(Number(key.slice(8)));
+ // #174: canais secundários ativos no rádio também aparecem como conversa.
+ for(const c of radioChannels)if(c.index>0&&c.role==='SECONDARY')chats.add('channel:'+c.index);
  const lastByKey=key=>Math.max(0,...messages.filter(m=>chatKey(m)===key).map(m=>Number(m.timestamp_ms)||0));
  const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:lastByKey(b)-lastByKey(a)||a.localeCompare(b));
  const query=norm($('messageNodeSearch').value.trim());
@@ -3677,6 +3678,58 @@ window.addEventListener('resize',()=>{if(radioMenuOpen)placeRadioMenu();});
 
 // #149/#155/#156: avisos de rádio detectado. A verificação roda no servidor
 // com prazo, fila Bluetooth e Cancelar; a tela só acompanha o estado.
+// #174: nomes dos canais do rádio e edição dos secundários.
+let radioChannels=[];
+function channelLabel(i){
+ const c=radioChannels.find(x=>x.index===Number(i)),name=c&&c.name?' · '+c.name:'';
+ return Number(i)===0?'Canal primário'+name:'Canal '+i+name;
+}
+async function refreshChannels(){
+ try{
+  const r=await api('/api/channels');radioChannels=r.channels||[];
+  const sel=$('messageChannel'),old=sel.value;
+  sel.innerHTML=[0,1,2,3,4,5,6,7].map(i=>{const c=radioChannels.find(x=>x.index===i);
+   const off=i>0&&c&&c.role==='DISABLED';return '<option value="'+i+'"'+(off?' disabled':'')+'>'+esc(i===0?'Primário (0)'+(c?.name?' · '+c.name:''):i+(c?.name?' · '+c.name:'')+(off?' (desativado)':''))+'</option>';}).join('');
+  sel.value=old||'0';
+ }catch(e){}
+}
+setInterval(refreshChannels,30000);refreshChannels();
+const encryptionLabel={none:'sem criptografia',default:'chave padrão',simple:'chave simples',custom:'chave própria'};
+async function openChannelManager(){
+ await refreshChannels();
+ const dialog=document.createElement('dialog');dialog.className='messageContextDialog';
+ const live=radioChannels.length>0;
+ dialog.innerHTML='<b>Canais do rádio ativo</b><div class="ctxList">'+(live?radioChannels.map(c=>'<div class="ctxMsg"><small>'+
+   (c.index===0?'Primário (define a malha; não é editado aqui)':'Canal '+c.index)+' · '+esc(c.role==='DISABLED'?'desativado':encryptionLabel[c.encryption]||c.encryption)+'</small>'+
+   esc(c.name||(c.index===0?'(nome padrão do preset)':'—'))+(c.index>0?' <button type="button" data-chan-edit="'+c.index+'">Editar</button>':'')+'</div>').join(''):
+   '<p class="muted">Conecte um rádio para ver os canais.</p>')+'</div><form id="chanForm" class="formGrid" hidden>'+
+  '<input type="hidden" id="chanIndex"><div class="field"><label for="chanName">Nome (até 11 caracteres)</label><input id="chanName" maxlength="11"></div>'+
+  '<div class="field"><label><input type="checkbox" id="chanEnabled" checked> Canal ativado</label></div>'+
+  '<div class="field"><label for="chanPsk">Chave</label><select id="chanPsk"><option value="keep">Manter a atual</option><option value="random">Gerar chave aleatória (32 bytes)</option><option value="default">Chave padrão (pública)</option><option value="custom">Colar chave (base64)</option><option value="none">Sem criptografia</option></select></div>'+
+  '<div class="field"><label for="chanPskValue">Chave em base64</label><input id="chanPskValue" autocomplete="off"></div>'+
+  '<div class="actions span2"><button type="submit" class="primary">Gravar no rádio</button></div><p id="chanResult" class="muted span2"></p></form>'+
+  '<div class="actions"><button type="button" data-chan-close>Fechar</button></div>';
+ document.body.appendChild(dialog);dialog.showModal();
+ const close=()=>{dialog.close();dialog.remove();};
+ dialog.querySelector('[data-chan-close]').onclick=close;dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+ dialog.querySelectorAll('[data-chan-edit]').forEach(b=>b.onclick=()=>{
+  const c=radioChannels.find(x=>x.index===Number(b.dataset.chanEdit));
+  dialog.querySelector('#chanForm').hidden=false;dialog.querySelector('#chanIndex').value=c.index;
+  dialog.querySelector('#chanName').value=c.name;dialog.querySelector('#chanEnabled').checked=c.role!=='DISABLED';
+  dialog.querySelector('#chanPsk').value=c.role==='DISABLED'?'random':'keep';dialog.querySelector('#chanResult').textContent='';
+ });
+ dialog.querySelector('#chanForm').onsubmit=async e=>{
+  e.preventDefault();
+  const q=id=>dialog.querySelector(id),index=Number(q('#chanIndex').value);
+  if(!confirm('Gravar o canal '+index+' no rádio? Rádios que precisam conversar neste canal devem usar o mesmo nome e a mesma chave.'))return;
+  try{
+   const r=await api('/api/channels/save',{index,name:q('#chanName').value.trim(),enabled:q('#chanEnabled').checked,psk:q('#chanPsk').value,psk_value:q('#chanPskValue').value});
+   radioChannels=r.channels||radioChannels;refreshChannels();renderChat();
+   q('#chanResult').textContent='Canal gravado no rádio.'+(r.shared_key?' Chave nova para compartilhar com os outros rádios: '+r.shared_key:'');
+  }catch(err){q('#chanResult').textContent='Não gravado: '+err.message;}
+ };
+}
+$('channelManage').onclick=openChannelManager;
 // #172/#173: mensagens agendadas e respostas automáticas.
 let msgAutoData={schedules:[],replies:[]};
 const WEEKDAYS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
@@ -3816,7 +3869,7 @@ for(const [btn,channel,label] of [['alertTestTg','telegram','Telegram'],['alertT
  };
 // #175: busca no histórico inteiro de mensagens.
 let messageSearchTimer=null;
-function chatTitle(key){return key.startsWith('node:')?'Privado · '+idName(Number(key.slice(5))):key==='channel:0'?'Canal primário':'Canal '+key.slice(8);}
+function chatTitle(key){return key.startsWith('node:')?'Privado · '+idName(Number(key.slice(5))):channelLabel(Number(key.slice(8)));}
 function highlight(text,query){
  const plain=String(text||''),q=norm(query).trim();
  if(!q)return esc(plain);

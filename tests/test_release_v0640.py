@@ -242,5 +242,62 @@ class MessageAuto(Base):
         self.assertFalse(MessageAutomation.matches({"trigger": "ping", "match": "exact"}, "ping pong"))
 
 
+
+class Channels(Base):
+    def setUp(self):
+        super().setUp()
+        from meshtastic.protobuf import channel_pb2
+        from mesh_analyzer.transports import SourceManager
+        self.pb = channel_pb2
+        chans = []
+        for i in range(8):
+            c = channel_pb2.Channel(index=i, role=channel_pb2.Channel.Role.PRIMARY if i == 0 else channel_pb2.Channel.Role.DISABLED)
+            if i == 0:
+                c.settings.psk = b"\x01"
+            chans.append(c)
+        self.written = []
+        self.local = Mock(channels=chans)
+        self.local.writeChannel.side_effect = lambda i: self.written.append(i)
+        self.sid = self.db.upsert_source({"name": "R", "kind": "tcp", "config": {"host": "h"}, "enabled": True})["id"]
+        self.m = SourceManager(self.db)
+        self.m._interfaces[self.sid] = Mock(localNode=self.local)
+        self.m._set(self.sid, "connected")
+
+    def test_list_hides_keys_and_is_cached(self):
+        out = self.m.channel_list()
+        self.assertEqual(out["channels"][0], {"index": 0, "role": "PRIMARY", "name": "", "encryption": "default",
+                                              "uplink": False, "downlink": False})
+        self.assertNotIn("psk", json.dumps(out))
+        self.m._interfaces.clear()
+        self.assertFalse(self.m.channel_list(self.sid)["live"])
+        self.assertEqual(len(self.m.channel_list(self.sid)["channels"]), 8)
+
+    def test_enable_secondary_with_random_key_and_disable(self):
+        out = self.m.set_channel(self.sid, 1, "Emergencia", True, "random")
+        self.assertEqual(self.written, [1])
+        ch = self.local.channels[1]
+        self.assertEqual((ch.role, ch.settings.name, len(ch.settings.psk)), (self.pb.Channel.Role.SECONDARY, "Emergencia", 32))
+        import base64
+        self.assertEqual(base64.b64decode(out["shared_key"]), ch.settings.psk)
+        self.m.set_channel(self.sid, 1, enabled=False)
+        self.assertEqual(self.local.channels[1].role, self.pb.Channel.Role.DISABLED)
+
+    def test_primary_and_invalid_values_are_refused(self):
+        for args in ((0, "X"), (8, "X")):
+            with self.assertRaises(ValueError):
+                self.m.set_channel(self.sid, *args)
+        with self.assertRaises(ValueError):
+            self.m.set_channel(self.sid, 2, "nome comprido demais")
+        with self.assertRaises(ValueError):
+            self.m.set_channel(self.sid, 2, "ok", True, "custom", "abc")
+        self.assertEqual(self.written, [])
+
+    def test_failed_write_restores_channel(self):
+        self.local.writeChannel.side_effect = RuntimeError("falhou")
+        with self.assertRaises(RuntimeError):
+            self.m.set_channel(self.sid, 3, "Teste", True, "default")
+        self.assertEqual(self.local.channels[3].role, self.pb.Channel.Role.DISABLED)
+
+
 if __name__ == "__main__":
     unittest.main()
