@@ -1,3 +1,9 @@
+# v0.6.39 — Primeira abertura detecta, adiciona e conecta o rádio
+
+- #162: ao iniciar com interface e sem conexões cadastradas, o app dispara a busca de primeira abertura antes do diálogo "Configure sua primeira conexão". Etapa 1: todas as portas USB/serial com VID verificadas em paralelo pelo handshake Meshtastic (prazo de 20 s); cada rádio que responde é cadastrado com conexão automática e conectado na hora, com o cartão "adicionado" e Desfazer de #155. Etapa 2 (só se nada responder na USB): mDNS e Bluetooth próximo (prazos de 20/25 s). Respeita as preferências de detecção por tipo e os dispositivos "Nunca". A interface mostra "Procurando rádios Meshtastic…" com Cancelar; o diálogo só abre se nada for encontrado, com o resultado da busca e o novo botão "Procurar novamente". Também vale ao abrir sem conexões depois da primeira vez. Desligado em container e no modo sem interface.
+
+Validação: testes Python (USB em paralelo, sem rede quando a USB encontra, retorno a Wi-Fi/BLE, preferências e "Nunca", cancelamento) e regressão Chromium v0.6.34–v0.6.39. Aceite físico pendente: instalação nova no Windows com rádio já ligado na USB antes de abrir.
+
 # v0.6.38 — Prioridade USB, verificação com Cancelar, favoritos sincronizados, mensagens estilo WhatsApp, ping de presença, .deb e container
 
 - #155: rádio USB novo verificado é cadastrado e conectado sem clique (aviso com Desfazer, que remove a conexão e marca "Nunca"). Prioridade USB > Wi-Fi > Bluetooth: USB plugado (novo ou já cadastrado) assume pela troca segura de #152; troca adiada enquanto houver consulta RF aguardando resposta. No início do app, sem rádio escolhido, a USB conecta primeiro. Preferências "Adicionar e conectar sem perguntar" (USB ligado; Wi-Fi/BLE desligados) e "Dar prioridade ao rádio USB".

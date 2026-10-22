@@ -185,6 +185,8 @@ html[data-theme] .deviceNotice button.primary:not(.active):not(.danger),html[dat
 #messageNoConnectionDialog .actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:9px;margin-top:18px}
 #firstRunDialog{position:fixed;inset:0;z-index:9905;display:none;align-items:center;justify-content:center;padding:16px;background:#040a11d6}
 #firstRunDialog.open{display:flex}
+.firstRunSearch{position:fixed;top:92px;left:50%;transform:translateX(-50%);z-index:9800;display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:calc(100vw - 32px);background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #d29b2c;border-radius:12px;box-shadow:0 12px 32px #0009;padding:12px 16px}
+.firstRunSearch[hidden]{display:none}.firstRunSearch span{color:var(--muted,#b7c8d1);font-size:13px}.firstRunSearchResult{font-size:13px;color:#ffe2a0}
 #firstRunDialog .firstRunBox{width:min(510px,100%);background:#192c37;border:1px solid #708a99;border-radius:12px;box-shadow:0 20px 60px #000b;padding:23px}
 #firstRunDialog h2{margin:0 0 12px;font-size:20px;color:#eff6f9}
 #firstRunDialog p{line-height:1.65;margin:0 0 16px;color:#c5d7df}
@@ -334,7 +336,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.38</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.39</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -496,7 +498,7 @@ try {
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.38</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.39</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewAbout"><div class="panels">
@@ -513,7 +515,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.38.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.39.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -532,13 +534,14 @@ try {
 <div class="firstRunBox">
 <h2 id="firstRunTitle">Configure sua primeira conexão</h2>
 <p id="firstRunMessage">Nenhuma conexão foi cadastrada. Para começar a receber informações da rede Meshtastic, configure uma conexão USB/Serial, Bluetooth LE, Wi-Fi/TCP ou MQTT (somente recepção).</p>
-<div class="actions"><button type="button" id="firstRunLater">Agora não</button><button type="button" class="primary" id="firstRunConnections">Ir para conexões</button></div>
+<p id="firstRunSearchResult" class="firstRunSearchResult" hidden></p>
+<div class="actions"><button type="button" id="firstRunLater">Agora não</button><button type="button" id="firstRunSearchAgain">Procurar novamente</button><button type="button" class="primary" id="firstRunConnections">Ir para conexões</button></div>
 </div></div>
 <div id="updateDialog" role="dialog" aria-modal="true" aria-labelledby="updateTitle"><div class="updateBox">
 <h3 id="updateTitle">Atualização do Mesh Analyzer</h3><p id="updateSummary"></p>
 <div id="updateNotes"></div><p id="updateProgressText" class="muted"></p><progress id="updateProgress" max="100" value="0" hidden></progress>
 <div class="actions" style="margin-top:15px"><button id="updateApply">Atualizar agora</button><button id="updateLater">Depois / Fechar</button><button id="updateRelease">Abrir release</button></div>
-</div></div><div id="toast" role="status"></div><div id="deviceNotices" class="deviceNotices" aria-live="polite"></div><div id="radioMenu" class="radioMenu" role="menu" aria-label="Escolher rádio ativo" hidden></div>
+</div></div><div id="toast" role="status"></div><div id="firstRunSearch" class="firstRunSearch" role="status" aria-live="polite" hidden><b>Procurando rádios Meshtastic…</b><span id="firstRunSearchPhase">USB primeiro, depois Wi-Fi e Bluetooth próximo.</span><button type="button" id="firstRunSearchCancel">Cancelar</button></div><div id="deviceNotices" class="deviceNotices" aria-live="polite"></div><div id="radioMenu" class="radioMenu" role="menu" aria-label="Escolher rádio ativo" hidden></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script>
 'use strict';
@@ -554,18 +557,52 @@ mapSourceFilter='';
 let firstRunDialogChecked=false,updateNoticeChecked=false;
 function rememberFirstRunShown(){try{sessionStorage.setItem('mesh.firstRunShown','yes');}catch(e){}}
 function previouslyShownThisSession(){try{return sessionStorage.getItem('mesh.firstRunShown')==='yes';}catch(e){return false;}}
+function forgetFirstRunShown(){try{sessionStorage.removeItem('mesh.firstRunShown');}catch(e){}}
 function dismissFirstRunDialog(){$('firstRunDialog').classList.remove('open');}
-function showFirstRunDialogOnce(){
- if(firstRunDialogChecked||!updateNoticeChecked||!Array.isArray(state.sources))return;
+// #162: sem conexões, o app procura o rádio (USB primeiro) e conecta sozinho;
+// o diálogo "Configure sua primeira conexão" só aparece se nada for encontrado.
+let firstRunSearchBusy=false;
+function firstRunSearchSummary(d){
+ if(d.phase==='cancelled')return 'Busca cancelada.';
+ const results=d.results||[];
+ if(!results.length)return 'Nenhum rádio encontrado na USB, no Wi-Fi ou no Bluetooth próximo.';
+ const label={no_response:'sem resposta Meshtastic',error:'erro',cancelled:'cancelado',configured:'já configurado'};
+ return 'Nenhum rádio Meshtastic conectado: '+results.slice(0,4).map(r=>radioKindLabel(r.kind)+' '+r.address+' ('+(label[r.outcome]||r.outcome)+')').join(', ')+'.';
+}
+async function showFirstRunDialogOnce(){
+ if(firstRunDialogChecked||firstRunSearchBusy||!updateNoticeChecked||!Array.isArray(state.sources))return;
  if($('updateDialog').classList.contains('active'))return;
  if(previouslyShownThisSession()){firstRunDialogChecked=true;return;}
- if(state.sources.length===0){
-  firstRunDialogChecked=true;
-  rememberFirstRunShown();
-  $('firstRunDialog').classList.add('open');
-  $('firstRunConnections').focus();
+ if(state.sources.length>0){$('firstRunSearch').hidden=true;return;}
+ firstRunSearchBusy=true;
+ let search={};
+ try{search=(await api('/api/devices/autoadd')).data||{};}catch(e){}
+ finally{firstRunSearchBusy=false;}
+ if(search.first_run&&search.running){
+  $('firstRunSearch').hidden=false;
+  $('firstRunSearchPhase').textContent=search.phase||'USB primeiro, depois Wi-Fi e Bluetooth próximo.';
+  return;  // confere de novo no próximo refresh
  }
+ $('firstRunSearch').hidden=true;
+ firstRunDialogChecked=true;
+ if(search.first_run&&(search.added||[]).length)return;  // rádio adicionado e conectando
+ rememberFirstRunShown();
+ $('firstRunSearchResult').hidden=!search.first_run;
+ $('firstRunSearchResult').textContent=search.first_run?firstRunSearchSummary(search):'';
+ $('firstRunDialog').classList.add('open');
+ $('firstRunConnections').focus();
 }
+$('firstRunSearchCancel').onclick=async()=>{
+ try{await api('/api/devices/autoadd/cancel',{});}catch(e){notify(e.message,true);}
+ $('firstRunSearchPhase').textContent='Cancelando…';
+};
+$('firstRunSearchAgain').onclick=async()=>{
+ try{
+  await api('/api/devices/autoadd/start',{first_run:true});
+  dismissFirstRunDialog();forgetFirstRunShown();firstRunDialogChecked=false;
+  $('firstRunSearch').hidden=false;$('firstRunSearchPhase').textContent='Procurando rádios Meshtastic na USB…';
+ }catch(e){notify('Procurar novamente: '+e.message,true);}
+};
 $('firstRunLater').onclick=()=>{dismissFirstRunDialog();};
 $('firstRunConnections').onclick=()=>{
  dismissFirstRunDialog();

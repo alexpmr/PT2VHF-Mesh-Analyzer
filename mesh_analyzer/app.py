@@ -309,7 +309,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json(watcher.dismiss(str(payload.get("id","")),payload.get("never") is True))
                 elif path == "/api/devices/autoadd/start":
                     if not autoadd:raise ValueError("Adição automática indisponível")
-                    self._json({"success":True,"data":autoadd.start()})
+                    self._json({"success":True,"data":autoadd.start(first_run=payload.get("first_run") is True)})
                 elif path == "/api/discovery/start":
                     if not discovery:raise ValueError("Descoberta indisponível")
                     self._json({"success":True,"data":discovery.start()})
@@ -517,6 +517,10 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         # #149: monitoramento de rádios novos só com interface (não em testes headless).
         if desktop and not os.environ.get("PT2VHF_DISABLE_AUTODETECT"):
             watcher.start()
+            # #162: sem nenhuma conexão, procura e conecta o rádio antes do aviso
+            # "Configure sua primeira conexão" (USB primeiro).
+            if not db.sources():
+                autoadd.start(first_run=True)
         server_thread=threading.Thread(target=server.serve_forever,
              kwargs={"poll_interval":0.3},name="mesh-http",daemon=True)
         server_thread.start()
