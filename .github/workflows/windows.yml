@@ -56,6 +56,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.38 no Chrome' }
           node scripts/test_ui_v0639.cjs
           if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.39 no Chrome' }
+          node scripts/test_ui_v0640.cjs
+          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.40 no Chrome' }
       - name: Validar sintaxe do PowerShell de atualização
         shell: pwsh
         run: |

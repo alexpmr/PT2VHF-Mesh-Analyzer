@@ -375,7 +375,7 @@ class DeviceWatcher:
         with self._lock:
             for key in [k for k, n in self._notices.items()
                         if n["kind"] == kind and k not in present and n["type"] == "detected"
-                        and not (n.get("job") or {}).get("phase") in ("queued", "connecting", "registering")]:
+                        and not (n.get("job") or {}).get("phase") in ("queued", "pairing", "connecting", "registering")]:
                 self._notices.pop(key, None)
             # "Agora não" vale até o dispositivo sair e voltar.
             self._snoozed = {k for k in self._snoozed if not k.startswith(kind + ":") or k in present}
@@ -528,7 +528,7 @@ class DeviceWatcher:
 
     def dismiss(self, notice_id, never=False):
         key, notice = self._find(notice_id)
-        if (notice.get("job") or {}).get("phase") in ("queued", "connecting", "registering"):
+        if (notice.get("job") or {}).get("phase") in ("queued", "pairing", "connecting", "registering"):
             self.cancel(notice_id)
         with self._lock:
             self._notices.pop(key, None)
@@ -544,7 +544,7 @@ class DeviceWatcher:
         with self._lock:
             event = notice.get("cancel")
             job = notice.get("job") or {}
-            if job.get("phase") not in ("queued", "connecting"):
+            if job.get("phase") not in ("queued", "pairing", "connecting"):
                 raise ValueError("Não há verificação em andamento para cancelar")
             if event:
                 event.set()
@@ -555,7 +555,7 @@ class DeviceWatcher:
         """Um clique: verifica em segundo plano, cadastra com conexão automática e conecta."""
         key, notice = self._find(notice_id)
         with self._lock:
-            if (notice.get("job") or {}).get("phase") in ("queued", "connecting", "registering"):
+            if (notice.get("job") or {}).get("phase") in ("queued", "pairing", "connecting", "registering"):
                 return {"success": True, "job": dict(notice["job"])}
             cancel = threading.Event()
             notice["cancel"] = cancel
@@ -585,8 +585,9 @@ class DeviceWatcher:
             if cancel.is_set():
                 return
             if not info.get("ok"):
+                # #164: rádio BLE que não respondeu pode estar esperando o PIN de pareamento.
                 self._job(notice, cancel, phase="failed", error=info.get("error", "Sem resposta"),
-                          timed_out=bool(info.get("timed_out")))
+                          timed_out=bool(info.get("timed_out")), needs_pin=candidate["kind"] == "ble")
                 return
             if not self._job(notice, cancel, phase="registering"):
                 return
@@ -604,6 +605,39 @@ class DeviceWatcher:
             self._job(notice, cancel, phase="failed", error=(str(exc) or type(exc).__name__)[:160])
         finally:
             self.busy(key, False)
+
+    def pair(self, notice_id, pin, pairer=None):
+        """#164: pareia o rádio BLE com o PIN digitado e segue para verificar e conectar."""
+        from . import ble_pairing
+        key, notice = self._find(notice_id)
+        if notice["kind"] != "ble":
+            raise ValueError("O PIN só se aplica a rádios Bluetooth")
+        ble_pairing.validate(notice["address"], pin)
+        with self._lock:
+            if (notice.get("job") or {}).get("phase") in ("queued", "pairing", "connecting", "registering"):
+                raise ValueError("Já existe uma verificação em andamento para este rádio")
+            cancel = threading.Event()
+            notice["cancel"] = cancel
+            notice["job"] = {"phase": "pairing", "started_ms": now_ms(), "detail": ""}
+            self._busy.add(key)
+
+        def work():
+            try:
+                result = (pairer or ble_pairing.pair)(notice["address"], pin)
+                if cancel.is_set():
+                    return
+                if not result.get("ok"):
+                    self._job(notice, cancel, phase="failed", error=result.get("error") or "Pareamento recusado",
+                              needs_pin=True)
+                    return
+                self._job(notice, cancel, phase="connecting", detail=result.get("status", ""))
+                self._accept_job(key, notice, cancel)
+            finally:
+                self.busy(key, False)
+
+        threading.Thread(target=work, name="ble-pair", daemon=True).start()
+        with self._lock:
+            return {"success": True, "job": dict(notice["job"])}
 
     def undo(self, notice_id):
         """#155: Desfazer remove a conexão adicionada sozinha e não oferece mais o dispositivo."""

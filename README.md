@@ -1,32 +1,32 @@
-# PT2VHF Mesh Analyzer — v0.6.39
+# PT2VHF Mesh Analyzer — v0.6.40
 
 **Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ / Windows 11 (x64)**, **Linux (x64)** e **macOS (Apple Silicon e Intel)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
 
 ## Downloads
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.39](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.39)**
+**Versão mais recente (publicada após aprovação do pipeline): [v0.6.40](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.40)**
 
 ### Windows 10 / Windows 11 (64 bits)
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.39-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.39/PT2VHF-Mesh-Analyzer-v0.6.39-Setup-Win10-Win11-x64.exe) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.39-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.39/PT2VHF-Mesh-Analyzer-v0.6.39-Portable-Win10-Win11-x64.exe) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.39-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.39/PT2VHF-Mesh-Analyzer-v0.6.39-Portable-Win10-Win11-x64.zip) |
+| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.40-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.40/PT2VHF-Mesh-Analyzer-v0.6.40-Setup-Win10-Win11-x64.exe) |
+| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.40-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.40/PT2VHF-Mesh-Analyzer-v0.6.40-Portable-Win10-Win11-x64.exe) |
+| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.40-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.40/PT2VHF-Mesh-Analyzer-v0.6.40-Portable-Win10-Win11-x64.zip) |
 
 ### macOS
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **macOS Apple Silicon (M1/M2/M3/M4)** | `PT2VHF-Mesh-Analyzer-v0.6.39-macOS-arm64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.39/PT2VHF-Mesh-Analyzer-v0.6.39-macOS-arm64.dmg) |
-| **macOS Intel** | `PT2VHF-Mesh-Analyzer-v0.6.39-macOS-x64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.39/PT2VHF-Mesh-Analyzer-v0.6.39-macOS-x64.dmg) |
+| **macOS Apple Silicon (M1/M2/M3/M4)** | `PT2VHF-Mesh-Analyzer-v0.6.40-macOS-arm64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.40/PT2VHF-Mesh-Analyzer-v0.6.40-macOS-arm64.dmg) |
+| **macOS Intel** | `PT2VHF-Mesh-Analyzer-v0.6.40-macOS-x64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.40/PT2VHF-Mesh-Analyzer-v0.6.40-macOS-x64.dmg) |
 
 ### Linux
 
 | Download | Nome do arquivo | Link |
 |---|---|---|
-| **Ubuntu / Linux Mint (.deb)** | `PT2VHF-Mesh-Analyzer-v0.6.39-amd64.deb` | [Baixar .deb](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.39/PT2VHF-Mesh-Analyzer-v0.6.39-amd64.deb) |
-| **Linux x64 (outras distribuições)** | `PT2VHF-Mesh-Analyzer-v0.6.39-Linux-x64.tar.gz` | [Baixar TAR.GZ](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.39/PT2VHF-Mesh-Analyzer-v0.6.39-Linux-x64.tar.gz) |
+| **Ubuntu / Linux Mint (.deb)** | `PT2VHF-Mesh-Analyzer-v0.6.40-amd64.deb` | [Baixar .deb](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.40/PT2VHF-Mesh-Analyzer-v0.6.40-amd64.deb) |
+| **Linux x64 (outras distribuições)** | `PT2VHF-Mesh-Analyzer-v0.6.40-Linux-x64.tar.gz` | [Baixar TAR.GZ](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.40/PT2VHF-Mesh-Analyzer-v0.6.40-Linux-x64.tar.gz) |
 
 ### Container (servidor, NAS e Raspberry Pi)
 
@@ -42,7 +42,7 @@ Abra `http://localhost:8789` no próprio servidor. Rádio USB em servidor Linux:
 
 | Verificação | Arquivo | Link |
 |---|---|---|
-| **SHA256 (todas as plataformas)** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.39/SHA256SUMS.txt) |
+| **SHA256 (todas as plataformas)** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.40/SHA256SUMS.txt) |
 
 **Links automáticos (última versão):**
 [Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
@@ -53,13 +53,29 @@ Abra `http://localhost:8789` no próprio servidor. Rádio USB em servidor Linux:
 [Linux x64](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Linux-x64.tar.gz) ·
 [Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
-**Requisitos Windows:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.39 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
+**Requisitos Windows:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.40 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
 
 **Requisitos macOS:** macOS 13 Ventura ou superior. Abra o DMG e arraste **PT2VHF Mesh Analyzer** para **Aplicativos**. O app não é assinado/notarizado pela Apple: na primeira abertura, clique com o botão direito → **Abrir** (ou em Ajustes do Sistema → Privacidade e Segurança → **Abrir Mesmo Assim**). O macOS pede permissão de Bluetooth na primeira conexão BLE.
 
-**Requisitos Linux:** distribuição 64 bits com glibc 2.35+ (Ubuntu 22.04, Linux Mint 21, Debian 12, Fedora 36 ou mais novos) e um navegador. **Ubuntu / Linux Mint:** dê dois cliques no `.deb` ou use `sudo apt install ./PT2VHF-Mesh-Analyzer-v0.6.39-amd64.deb`; o atalho aparece no menu e o comando `pt2vhf-mesh-analyzer` fica disponível. Remover o pacote preserva seus dados. **Outras distribuições:** extraia o `.tar.gz` e execute `./PT2VHF-Mesh-Analyzer` (a interface abre no navegador padrão) ou `./instalar.sh` para criar o atalho no menu de aplicativos. Para rádio USB, o usuário deve pertencer ao grupo `dialout`.
+**Requisitos Linux:** distribuição 64 bits com glibc 2.35+ (Ubuntu 22.04, Linux Mint 21, Debian 12, Fedora 36 ou mais novos) e um navegador. **Ubuntu / Linux Mint:** dê dois cliques no `.deb` ou use `sudo apt install ./PT2VHF-Mesh-Analyzer-v0.6.40-amd64.deb`; o atalho aparece no menu e o comando `pt2vhf-mesh-analyzer` fica disponível. Remover o pacote preserva seus dados. **Outras distribuições:** extraia o `.tar.gz` e execute `./PT2VHF-Mesh-Analyzer` (a interface abre no navegador padrão) ou `./instalar.sh` para criar o atalho no menu de aplicativos. Para rádio USB, o usuário deve pertencer ao grupo `dialout`.
 
 **Atualização:** no Windows, a atualização é feita pelo próprio aplicativo. No macOS e no Linux, o aplicativo avisa quando houver versão nova e o botão abre a página da release para baixar o pacote (no `.deb`, instale o novo por cima). No container, atualize a imagem.
+
+### Novidades da v0.6.40
+
+- **Alertas da malha (#165):** sino na barra superior com contador. Avisa quando um favorito fica calado por horas, bateria baixa em repetidores e favoritos, canal congestionado, mensagem privada recebida e menção ao seu rádio. Cada situação gera um único alerta até ser resolvida. Envio opcional por **Telegram** e **e-mail (SMTP)**, com botões de teste. Configurações → Alertas.
+- **Backup e restauração (#166):** um único `.zip` com banco, conexões, favoritos, preferências, automações e histórico. A restauração guarda uma cópia de segurança do banco atual e reinicia o app. Serve para levar tudo para outro computador, servidor ou container. Configurações → Sistema.
+- **Mapa de cobertura (#167):** camada com a qualidade (SNR) das recepções diretas por RF, por área. Menu Ver → Análise da malha.
+- **Linha do tempo do nó (#168):** no detalhe do nó, gráficos de presença, bateria, tensão, SNR, utilização do canal e airtime em 24 h, 7 dias ou 30 dias.
+- **Saúde dos repetidores (#169):** nova aba em Estatísticas com disponibilidade, bateria, canal, participação em rotas e presença de cada ROUTER/REPEATER.
+- **Topologia e gargalos (#170):** rotas de traceroute desenhadas no mapa e a aba Topologia mostra os nós por onde mais passam as rotas.
+- **Perfil de terreno (#171):** no popup de um enlace, **Perfil do terreno** mostra o relevo entre os dois nós, a curvatura da Terra e a 1ª zona de Fresnel, com um veredito sobre a visada.
+- **Mensagens agendadas (#172) e respostas automáticas (#173):** em Automações, agende mensagens (uma vez, todo dia no horário ou a cada N minutos) e crie respostas a comandos como `PING` com variáveis (`{nome}`, `{snr}`, `{saltos}`, `{hora}`, `{clima}`…). Limite de envios por hora e pausa por remetente.
+- **Vários canais (#174):** canais secundários do rádio aparecem como conversas e no seletor de canal; o botão **Canais…** mostra e edita nome, ativação e chave dos canais 1 a 7.
+- **Busca nas mensagens (#175):** campo **Buscar no histórico…** na aba Mensagens, sem diferenciar acentos e maiúsculas, com o trecho da conversa em volta de cada resultado.
+- **English / Español (#176):** idioma da interface em Configurações → Sistema → Aparência. Menus, botões, configurações e diálogos são traduzidos; algumas mensagens de estado continuam em português.
+- **Relatório PDF avançado (#177):** novas seções de repetidores, rotas e gargalos, cobertura, presença e alertas/mensagens (sem o texto das mensagens).
+- **PIN Bluetooth no app (#164):** quando um rádio BLE pede pareamento, o aviso traz o campo **PIN do rádio** e o botão **Parear com PIN** (Windows e Linux; no macOS o próprio sistema pede o PIN).
 
 ### Novidades da v0.6.39
 

@@ -87,6 +87,23 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .msgQuote{margin:2px 0 5px;padding:4px 8px;border-left:4px solid hsl(var(--who-h,200) 70% 60%);border-radius:6px;background:#0000002e;font-size:12px;display:flex;flex-direction:column}.msgQuote b{color:hsl(var(--who-h,200) 70% 68%);font-size:11px}.msgQuote span{opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-theme="light"] .msgHead b,html[data-theme="light"] .msgQuote b{color:hsl(var(--who-h,200) 65% 33%)}html[data-theme="light"] .msgQuote{background:#00000010}
 .bubblesNewMessages{align-self:center;margin:-38px 0 6px;position:relative;z-index:2;border-radius:14px;background:#d29b2c;border-color:#d29b2c;color:#1b1b1b;font-weight:700;font-size:11px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)}.bubblesNewMessages[hidden]{display:none}
+.nodeTimeline{margin-top:12px}.nodeTimeline h4{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.timelineRange{display:inline-flex;gap:4px}.timelineRange button{padding:3px 8px;font-size:11px}
+.chartGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}.chartBox{background:#0000001f;border-radius:8px;padding:8px}.chartBox b{font-size:12px}.chartBox small{color:var(--muted,#9fb2bf);font-size:10px;float:right}
+.chartBox svg{width:100%;height:80px;display:block}.availabilityBar{height:8px;border-radius:4px;background:#0000003a;overflow:hidden;min-width:80px}.availabilityBar i{display:block;height:100%}
+.terrainDialog{width:min(860px,96vw)}.terrainDialog svg{width:100%;height:260px;display:block;background:#0000001f;border-radius:8px}
+.alertBell{position:relative;border-radius:16px;padding:6px 10px;font-size:14px;line-height:1}.alertBell span{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#e5484d;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.alertBell span[hidden]{display:none}.alertPanel{position:fixed;z-index:9800;width:min(380px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #4f6577;border-radius:10px;box-shadow:0 12px 32px #0009;padding:8px}
+.alertPanel[hidden]{display:none}.alertItem{padding:8px 10px;border-radius:8px;border-left:4px solid #d29b2c;margin:4px 0;background:#0000001f}.alertItem.resolved{opacity:.6;border-left-color:#51d887}.alertItem.unread{background:#d29b2c22}
+.alertItem b{display:block}.alertItem small{color:var(--muted,#9fb2bf);font-size:11px}
+.messageSearchBox{position:relative;display:flex;gap:6px;align-items:center}.messageSearchBox input{width:min(320px,40vw)}
+.messageSearchResults{position:absolute;top:calc(100% + 6px);right:0;z-index:9500;width:min(520px,92vw);max-height:60vh;overflow:auto;background:var(--card,#1c2b38);border:1px solid var(--line,#4f6577);border-radius:10px;box-shadow:0 12px 32px #0009;padding:6px}
+.messageSearchResults[hidden]{display:none}.messageSearchResults button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:7px;padding:8px 10px;color:inherit}
+.messageSearchResults button:hover,.messageSearchResults button:focus-visible{background:var(--hover,#2b4152)}.messageSearchResults small{display:block;color:var(--muted,#9fb2bf);font-size:11px}
+.messageSearchResults mark,.messageContextDialog mark{background:#f3cf48;color:#111;border-radius:3px;padding:0 2px}
+.messageContextDialog{max-width:min(640px,94vw);width:640px;border:1px solid var(--line,#4f6577);border-radius:12px;background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);padding:16px}
+.messageContextDialog .ctxList{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.messageContextDialog .ctxMsg{padding:6px 10px;border-radius:8px;background:#0000002a;white-space:pre-wrap;overflow-wrap:anywhere}.messageContextDialog .ctxMsg.hit{outline:2px solid #f3cf48}
+.messageContextDialog .ctxMsg small{display:block;color:var(--muted,#9fb2bf);font-size:10px}
 .radioMenu{position:fixed;z-index:9800;min-width:260px;max-width:min(360px,calc(100vw - 24px));background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #4f6577;border-radius:10px;box-shadow:0 12px 32px #0009;padding:6px}
 .radioMenu[hidden]{display:none}.radioMenu h4{margin:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted,#9fb2bf)}
 .radioMenu button{display:flex;width:100%;align-items:center;gap:8px;text-align:left;background:transparent;border:0;border-radius:7px;padding:8px 10px;color:inherit}
@@ -314,7 +331,7 @@ html[data-theme] #autoSaveButton:focus-visible{
 .messageBubbleActions{position:fixed;z-index:6000;background:var(--card);color:var(--ink);
  border:1px solid var(--line);border-radius:7px;padding:5px;box-shadow:0 7px 20px #0006}
 .messageBubbleActions button{display:block;width:100%;text-align:left}
-.bubble[data-msg-index]{cursor:pointer}
+.bubble[data-msg-index]{cursor:pointer}.linkButton{border:0;background:transparent;color:#83c4ff;text-decoration:underline;cursor:pointer;padding:0}.bubble.searchHit{outline:3px solid #f3cf48}
 .bubble[data-msg-index]:focus-visible{outline:2px solid var(--accent)}
 
 /* Source-confirmed Meshtastic NodeDB favorites: never signal success while pending. */
@@ -326,22 +343,30 @@ html[data-theme] #autoSaveButton:focus-visible{
 html[data-theme] #sourceSaveButton{background:#f3cf48!important;color:#17202a!important;border:2px solid #ffe67d;font-weight:700;padding:9px 16px}#radioConnectionText{display:inline-block;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
 .bubble>div{white-space:pre-wrap;overflow-wrap:anywhere}
 </style>
+<script id="i18n">
+/* #176: dicionários EN/ES indexados pelo texto original em português. */
+const I18N={"en":{"por Alex, PT2VHF · Cliente Meshtastic independente":"by Alex, PT2VHF · Independent Meshtastic client","Explore · Analise · Conecte":"Explore · Analyze · Connect","Navegação principal":"Main navigation","Mapa":"Map","Mensagens":"Messages","Nós":"Nodes","Tráfego":"Traffic","Estatísticas":"Statistics","Automações":"Automations","Configurações":"Settings","Ajuda":"Help","Sobre":"About","Atividade de rádio em tempo real":"Real-time radio activity","TX aceito pela interface, não comprovação de RF":"TX accepted by the interface, not proof of RF","RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto":"RX received via USB/BLE/TCP or MQTT; does not imply direct RF","Conectividade Meshtastic":"Meshtastic connectivity","Consultando conexões de rádio":"Checking radio connections","Verificando rádio...":"Checking radio...","Alertas da malha":"Mesh alerts","Clique para verificar atualização":"Click to check for updates","nós":"nodes","pacotes":"packets","mensagens":"messages","relações observadas":"observed links","Ver ▾":"View ▾","Pesquisar nó...":"Search node...","Pesquisar nó no mapa por nome curto, longo ou ID":"Search node on the map by short name, long name or ID","Limpar pesquisa":"Clear search","Todos":"All","Enquadrar":"Fit","Atualizar":"Refresh","Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.":"Loading map. Map tiles require internet; RF reception and the database keep working offline.","Corte:":"Cutoff:","Máx. (m)":"Max (m)","Opacidade":"Opacity","Tarefas · carregando…":"Tasks · loading…","Expandir ou recolher legenda do mapa":"Expand or collapse map legend","Legenda":"Legend","Atividade recente ·":"Recent activity ·","Histórico":"History","Ícones por papel do nó":"Icons by node role","Amarelo contínuo: recebido via rádio; pode ter intermediários (não comprova RF direto).":"Solid yellow: received via radio; may have intermediates (does not prove direct RF).","Detalhes da topologia":"Topology details","Aguardando pacotes novos...":"Waiting for new packets...","Topologia: aguardando...":"Topology: waiting...","Enlaces conhecidos, mas sem coordenadas suficientes para desenhar a linha":"Known links without enough coordinates to draw the line","Dados preservados no SQLite":"Data preserved in SQLite","Exibição de objetos do mapa":"Map object display","VER":"VIEW","Selecionar tudo":"Select all","Remover tudo":"Clear all","Enlaces":"Links","Animar tráfego":"Animate traffic","CAMADAS E SOBREPOSIÇÕES":"LAYERS AND OVERLAYS","Mostrar nomes curtos":"Show short names","Radar meteorológico":"Weather radar","Opacidade do radar":"Radar opacity","Aguardando radar...":"Waiting for radar...","Relevo sombreado":"Hillshade","Relevo com corte":"Relief with cutoff","ANÁLISE DA MALHA":"MESH ANALYSIS","Cobertura (SNR das recepções diretas)":"Coverage (SNR of direct receptions)","Rotas de traceroute e gargalos":"Traceroute routes and bottlenecks","Período":"Period","7 dias":"7 days","30 dias":"30 days","Referência automática: rádio conectado, nunca nó escolhido manualmente.":"Automatic reference: connected radio, never a manually chosen node.","Distância: aguardando rádio local":"Distance: waiting for local radio","nome, ID, hardware...":"name, ID, hardware...","Pesquisar nós":"Search nodes","Colunas":"Columns","Operações em lote":"Batch operations","Cancelar consultas pendentes":"Cancel pending queries","Resultados por nó":"Results per node","Tráfego ao vivo":"Live traffic","● AO VIVO":"● LIVE","Tipo:":"Type:","nó, ID, tipo...":"node, ID, type...","Pesquisar tráfego":"Search traffic","Pausar":"Pause","Baixar CSV (visível)":"Download CSV (visible)","Hora":"Time","Origem":"Source","Destino":"Destination","Tipo":"Type","Fechar ×":"Close ×","Detalhes do pacote":"Packet details","Privadas e canais · sem dependência do MM":"Direct and channels · no MM dependency","Buscar no histórico…":"Search history…","Buscar texto em todas as mensagens salvas":"Search text in all saved messages","Período da busca":"Search period","1 ano":"1 year","Todo o histórico":"All history","Ver e editar os canais do rádio":"View and edit the radio channels","Canais…":"Channels…","Canal:":"Channel:","Primário (0)":"Primary (0)","Pesquisar nós para mensagem privada":"Search nodes for a direct message","Limpar pesquisa de nós":"Clear node search","Canal primário e favoritos":"Primary channel and favorites","Canal primário":"Primary channel","↓ Novas mensagens":"↓ New messages","Verificando conexão TX...":"Checking TX connection...","Cancelar resposta":"Cancel reply","Inserir emoji":"Insert emoji","Digite uma mensagem RF (até 220 bytes UTF-8)":"Type an RF message (up to 220 UTF-8 bytes)","➤ Enviar":"➤ Send","Responder":"Reply","Reenviar":"Resend","Período:":"Period:","Todo":"All","Nó:":"Node:","Atualizar tudo":"Refresh all","Relatório / PDF":"Report / PDF","Exportar CSV":"Export CSV","Completar e atualizar informações dos nós":"Complete and refresh node information","Consulta informações ausentes ou vencidas dos nós recentemente observados por RF. Novatos têm 3 minutos para anunciar dados espontaneamente. Nós antigos e inacessíveis são preservados no banco, sem tentativas repetidas de transmissão.":"Requests missing or outdated information from nodes recently heard over RF. Newcomers get 3 minutes to announce data on their own. Old and unreachable nodes are kept in the database without repeated transmission attempts.","Automação RF":"RF automation","Ativar consultas automáticas (realiza transmissões RF)":"Enable automatic queries (transmits over RF)","Avaliar a cada (minutos)":"Evaluate every (minutes)","Máximo de consultas por hora":"Maximum queries per hour","Intervalo mínimo entre TX (segundos)":"Minimum interval between TX (seconds)","Consultar nós observados nas últimas (horas)":"Query nodes heard in the last (hours)","Ping de presença: nós calados há mais de (horas)":"Presence ping: nodes silent for more than (hours)","Ping de presença: até nós calados há (horas)":"Presence ping: up to nodes silent for (hours)","Pausar se a utilização do canal passar de (%)":"Pause if channel utilization exceeds (%)","Consultas permitidas":"Allowed queries","Salvar automação":"Save automation","Simular fila (sem TX)":"Simulate queue (no TX)","Executar uma consulta agora":"Run one query now","Atualizar estado":"Refresh status","Aguardando estado da automação...":"Waiting for automation status...","Próximas consultas elegíveis":"Next eligible queries","Nenhuma consulta selecionada.":"No query selected.","O rádio conectado é a única fonte TX. MQTT não transmite. Apenas uma consulta pode estar aguardando resposta. ACK não equivale a dados recebidos. Ativar exige ação explícita do usuário.":"The connected radio is the only TX source. MQTT does not transmit. Only one query can await a reply at a time. ACK does not mean data was received. Enabling requires explicit user action.","Mensagens automáticas":"Automatic messages","Mensagens agendadas e respostas a comandos, enviadas pelo rádio ativo. Todas dividem o mesmo limite de envios por hora, separado das consultas acima.":"Scheduled messages and command replies, sent by the active radio. They all share the same hourly send limit, separate from the queries above.","Mensagens automáticas ativadas":"Automatic messages enabled","Máximo de envios por hora":"Maximum sends per hour","Salvar limite":"Save limit","Mensagens agendadas":"Scheduled messages","Nome":"Name","Ex.: Bom dia":"E.g.: Good morning","Quando":"When","Todo dia no horário":"Every day at","A cada N minutos":"Every N minutes","Uma vez":"Once","Horário":"Time","Dias":"Days","Seg Ter Qua Qui Sex Sáb Dom":"Mon Tue Wed Thu Fri Sat Sun","Intervalo (minutos, mín. 15)":"Interval (minutes, min. 15)","Data e hora":"Date and time","Para":"To","Canal":"Channel","Texto (até 220 bytes; aceita {hora}, {data}, {clima})":"Text (up to 220 bytes; accepts {hora}, {data}, {clima})","Salvar agendamento":"Save schedule","Novo":"New","Respostas automáticas a comandos":"Automatic command replies","Comando recebido":"Received command","Ex.: PING":"E.g.: PING","Comparação":"Match","Mensagem igual ao comando":"Message equals the command","Começa com o comando":"Starts with the command","Contém o comando":"Contains the command","Responder a":"Reply to","Privadas e canal":"Direct and channel","Só privadas":"Direct only","Só canal":"Channel only","Pausa por remetente (segundos)":"Cooldown per sender (seconds)","Resposta — variáveis: {nome} {curto} {id} {snr} {rssi} {saltos} {hora} {data} {canal} {clima}":"Reply — variables: {nome} {curto} {id} {snr} {rssi} {saltos} {hora} {data} {canal} {clima}","Salvar resposta":"Save reply","Pré-visualizar":"Preview","Registro recente":"Recent log","Conexões":"Connections","Dispositivo":"Device","Retenções":"Retention","Sistema":"System","Alertas":"Alerts","Geral":"General","Conexões com rádios e serviços":"Connections to radios and services","Cadastre várias conexões independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.":"Register several independent connections. USB/Serial, Wi-Fi/TCP and BLE are bidirectional; MQTT receives data and does not transmit RF. Do not connect the same physical port to two programs at once.","Adicionar conexão manualmente":"Add connection manually","Procura rádios Meshtastic em USB, Wi-Fi e Bluetooth e cadastra os que ainda não estão configurados":"Searches for Meshtastic radios on USB, Wi-Fi and Bluetooth and registers the ones not yet configured","Adicionar automaticamente":"Add automatically","Adicionar conexão":"Add connection","Nome identificador":"Display name","Ex.: VHF3 USB":"E.g.: VHF3 USB","Tipo da conexão":"Connection type","MQTT (somente RX)":"MQTT (RX only)","Porta serial / COM":"Serial port / COM","Host / Endereço IP":"Host / IP address","Porta TCP":"TCP port","Identificador Bluetooth / endereço BLE":"Bluetooth identifier / BLE address","Endereço ou UUID do rádio":"Radio address or UUID","Tópico MQTT":"MQTT topic","Usuário MQTT":"MQTT user","Senha MQTT":"MQTT password","Em edição: deixe vazio para manter":"Editing: leave empty to keep","Conectar automaticamente ao iniciar":"Connect automatically on startup","Sincronizar favoritos com este rádio":"Sync favorites with this radio","Salvar conexão":"Save connection","Nova conexão / Cancelar edição":"New connection / Cancel editing","Detectar portas USB":"Detect USB ports","Descoberta de rádios e conexões":"Radio and connection discovery","Busca candidatos USB/Serial, anúncios Bluetooth LE e serviços mDNS na rede local. A descoberta não conecta nem transmite; confirme e salve o dispositivo selecionado.":"Looks for USB/Serial candidates, Bluetooth LE advertisements and mDNS services on the local network. Discovery neither connects nor transmits; confirm and save the selected device.","Detectar automaticamente":"Detect automatically","Pronto para procurar":"Ready to search","Avisar quando um rádio novo for detectado":"Notify when a new radio is detected","USB (ao plugar)":"USB (when plugged in)","Wi-Fi (rede local)":"Wi-Fi (local network)","Bluetooth LE (próximo ao computador)":"Bluetooth LE (near the computer)","Adicionar e conectar sem perguntar":"Add and connect without asking","Dar prioridade ao rádio USB":"Prefer the USB radio","Configuração do rádio Meshtastic":"Meshtastic radio configuration","Leia os parâmetros reais do dispositivo conectado por USB/Serial, TCP/IP ou BLE. MQTT é apenas uma conexão de dados e não pode configurar rádios. A gravação pode reiniciar o nó e interromper a conexão.":"Read the actual parameters of the device connected over USB/Serial, TCP/IP or BLE. MQTT is only a data connection and cannot configure radios. Writing may reboot the node and interrupt the connection.","Dispositivo:":"Device:","Ler do rádio":"Read from radio","Selecione um rádio conectado para consultar a configuração.":"Select a connected radio to read its configuration.","Parâmetros disponíveis do dispositivo":"Available device parameters","Altere os campos suportados pelo schema do rádio e revise tudo antes do envio. Campos sensíveis, canais e módulos ficam somente leitura nesta etapa. A gravação é sequencial, não atômica.":"Change the fields supported by the radio schema and review everything before sending. Sensitive fields, channels and modules are read-only here. Writing is sequential, not atomic.","Salvar todas as alterações":"Save all changes","Exportar snapshot sem segredos":"Export snapshot without secrets","Confirmação de envio não equivale a persistência/ACK. Mudanças de frequência, região, rede, Bluetooth ou canais podem interromper comunicação; faça backup e releia após reiniciar.":"A send confirmation is not persistence/ACK. Changes to frequency, region, network, Bluetooth or channels may interrupt communication; back up and re-read after rebooting.","Inventário e parâmetros adicionais (somente leitura)":"Inventory and additional parameters (read-only)","Nenhum rádio consultado.":"No radio read yet.","Retenção individual dos dados":"Per-data retention","Configuração persistente do banco SQLite.":"Persistent SQLite database configuration.","\"Nunca\" é o padrão":"\"Never\" is the default",": nada é apagado automaticamente. Um prazo remove registros anteriores à idade definida; a limpeza executa a cada hora ou pelo botão abaixo.":": nothing is deleted automatically. A period removes records older than the set age; cleanup runs every hour or with the button below.","Salvar retenções":"Save retention","Executar limpeza agora":"Run cleanup now","Mapa e topologia":"Map and topology","Janela de observação":"Observation window","Mínimo de observações":"Minimum observations","Mapa-base":"Base map","OSM / Ruas":"OSM / Streets","Topográfico":"Topographic","Satélite":"Satellite","Claro":"Light","Escuro":"Dark","Brilho (%)":"Brightness (%)","Máximo do slider de relevo (m)":"Relief slider maximum (m)","Cor dos trechos RF":"RF segment color","Espessura dos trechos RF (px)":"RF segment width (px)","Cor MQTT / não RF":"MQTT / non-RF color","Espessura MQTT / não RF (px)":"MQTT / non-RF width (px)","Mostrar linhas":"Show lines","Mostrar nós":"Show nodes","Mostrar waypoints":"Show waypoints","Mapa de calor":"Heatmap","Mostrar somente identificados":"Show identified only","Auto Zoom durante traceroutes":"Auto zoom during traceroutes","Restaurar cores e espessuras":"Restore colors and widths","Relações recebidas por rádio usam linha contínua; o popup diferencia RF direto comprovado, rota e fluxo com caminho desconhecido. MQTT/Internet permanece pontilhado.":"Links received by radio use a solid line; the popup distinguishes proven direct RF, route and flow with unknown path. MQTT/Internet stays dotted.","Temas sonoros":"Sound themes","Sons sintetizados localmente para eventos reais; não inventar retransmissões nem ACKs.":"Locally synthesized sounds for real events; never invents relays or ACKs.","Ativar sonificação da malha":"Enable mesh sonification","Tema":"Theme","Fliperama anos 70":"70s arcade","Discreto":"Subtle","Densidade sonora":"Sound density","Baixa":"Low","Alta":"High","Intervalo mínimo (ms)":"Minimum interval (ms)","Máximo simultâneo":"Maximum simultaneous","Sons de roteamento e traceroute":"Routing and traceroute sounds","Sons de mensagens":"Message sounds","Sons de alertas e falhas":"Alert and failure sounds","Estéreo espacial":"Spatial stereo","Testar tema":"Test theme","Atividade em tempo real no mapa":"Real-time activity on the map","Animar atividade dos nós":"Animate node activity","Realçar origem/resposta":"Highlight source/reply","Realçar retransmissor observado":"Highlight observed relay","Duração do realce":"Highlight duration","Velocidade da animação":"Animation speed","A duração e a velocidade da animação são configuradas aqui, não no menu principal.":"Animation duration and speed are set here, not in the main menu.","Aparência":"Appearance","Tema da interface":"Interface theme","Escuro (#202126)":"Dark (#202126)","Cinza (#333438)":"Gray (#333438)","A alteração é exibida imediatamente. Use Salvar preferências do Sistema para mantê-la.":"The change shows immediately. Use Save System preferences to keep it.","Inicialização":"Startup","Abrir uma página web no navegador ao iniciar":"Open a web page in the browser on startup","Desativado por padrão. A janela própria do PT2VHF Mesh Analyzer abre sempre, mesmo sem navegador.":"Off by default. The PT2VHF Mesh Analyzer window always opens, even without a browser.","Abrir interface local no navegador agora":"Open the local interface in the browser now","Compartilhamento Web na rede":"Web sharing on the network","Permitir acesso de outros computadores pela Web":"Allow access from other computers over the Web","Indisponível nesta versão: o acesso LAN só poderá ser ativado após implementação de autenticação e proteção de todas as APIs. O aplicativo permanece restrito a 127.0.0.1.":"Unavailable in this version: LAN access can only be enabled once authentication protects every API. The app stays restricted to 127.0.0.1.","Atualizações":"Updates","Verificar novas versões a cada":"Check for new versions every","minutos":"minutes","Verificar agora":"Check now","Ver releases":"View releases","Aguardando verificação da versão no GitHub.":"Waiting for the GitHub version check.","Banco de dados e manutenção":"Database and maintenance","Diagnóstico e backup consistente com SQLite WAL. Estes botões não executam limpeza.":"Diagnostics and consistent backup with SQLite WAL. These buttons do not run cleanup.","Atualizar indicadores":"Refresh indicators","Verificar integridade":"Check integrity","Criar backup":"Create backup","Consulte os indicadores quando necessário.":"Check the indicators when needed.","Backup e restauração":"Backup and restore","Um único arquivo .zip com banco, conexões, favoritos, preferências, automações e histórico. Serve para guardar uma cópia ou levar tudo para outro computador, servidor ou container.":"A single .zip file with database, connections, favorites, preferences, automations and history. Use it to keep a copy or move everything to another computer, server or container.","Exportar backup":"Export backup","Restaurar backup…":"Restore backup…","Salvar preferências do Sistema":"Save System preferences","Avaliados a cada minuto. Cada situação gera um único alerta até ser resolvida. Coloque 0 para desligar uma regra.":"Evaluated every minute. Each situation raises a single alert until resolved. Set 0 to turn a rule off.","Alertas ativados":"Alerts enabled","Favorito calado há mais de (horas)":"Favorite silent for more than (hours)","Bateria abaixo de (%) — repetidores e favoritos":"Battery below (%) — repeaters and favorites","Utilização do canal acima de (%)":"Channel utilization above (%)","Mensagem privada recebida":"Direct message received","Menção ao meu rádio no canal":"Mention of my radio in the channel","Enviar alertas pelo Telegram":"Send alerts via Telegram","Token do bot (@BotFather)":"Bot token (@BotFather)","Enviar alertas por e-mail":"Send alerts by e-mail","Servidor SMTP":"SMTP server","Porta":"Port","Segurança":"Security","Nenhuma":"None","Usuário":"User","Senha (de app)":"Password (app password)","Remetente":"Sender","Enviar para":"Send to","Salvar alertas":"Save alerts","Testar Telegram":"Test Telegram","Testar e-mail":"Test e-mail","Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.":"Token and password stay in the app's local database and are never shown back on screen.","Configuração e segurança":"Configuration and security","Banco de dados e configuração:":"Database and configuration:","A interface web local escuta apenas em":"The local web interface listens only on","Salvar configurações":"Save settings","Configurações salvas":"Settings saved","Aplicar no rádio e Salvar conexão continuam ações separadas.":"Apply to radio and Save connection remain separate actions.","DÚVIDAS, DIFICULDADES OU SUGESTÕES?":"QUESTIONS, PROBLEMS OR SUGGESTIONS?","Fale comigo":"Contact me","Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.":"If you need help setting up the program, found a problem or have a suggestion, get in touch.","por Alex, PT2VHF · Cliente Meshtastic independente.":"by Alex, PT2VHF · Independent Meshtastic client.","Veja também a seção":"See also the","para as instruções de uso do aplicativo.":"section for instructions on using the app.","PT2VHF Mesh Analyzer — Ajuda rápida":"PT2VHF Mesh Analyzer — Quick help","1. Abra":"1. Open","Configurações → Conexões":"Settings → Connections","e cadastre o rádio ligado por COM, IP ou Bluetooth.":"and register the radio connected via COM, IP or Bluetooth.","2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.":"2. Enable the connection. While active, received traffic is recorded in SQLite.","para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.":"to chat in the channel or with a specific node. The radio ACK is not a read receipt.","4. Ajuste":"4. Adjust","Configurações → Retenções":"Settings → Retention","para definir por quanto tempo o histórico permanece salvo.":"to set how long the history is kept.","5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.":"5. An MQTT source can record captured envelopes; it does not relay to RF and may receive encrypted payload that is unreadable without the key.","Observação:":"Note:","Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.":"OSM/topographic/satellite base maps require internet; RF data and local analysis stay independent.","Informações do nó":"Node information","Detalhes do nó":"Node details","Nome amigável local":"Local friendly name","Renomear":"Rename","Expandir":"Expand","Reposicionar":"Reposition","Fechar":"Close","Rádio desconectado":"Radio disconnected","Não há conexão ativa com um rádio Meshtastic para enviar mensagens.":"There is no active connection to a Meshtastic radio to send messages.","Conecte o rádio para poder transmitir.":"Connect the radio to be able to transmit.","Ir para Conexões":"Go to Connections","Configure sua primeira conexão":"Set up your first connection","Nenhuma conexão foi cadastrada. Para começar a receber informações da rede Meshtastic, configure uma conexão USB/Serial, Bluetooth LE, Wi-Fi/TCP ou MQTT (somente recepção).":"No connection has been registered. To start receiving Meshtastic network data, set up a USB/Serial, Bluetooth LE, Wi-Fi/TCP or MQTT (receive only) connection.","Agora não":"Not now","Procurar novamente":"Search again","Ir para conexões":"Go to connections","Atualização do Mesh Analyzer":"Mesh Analyzer update","Atualizar agora":"Update now","Depois / Fechar":"Later / Close","Abrir release":"Open release","Procurando rádios Meshtastic…":"Searching for Meshtastic radios…","USB primeiro, depois Wi-Fi e Bluetooth próximo.":"USB first, then Wi-Fi and nearby Bluetooth.","Cancelar":"Cancel","Escolher rádio ativo":"Choose active radio","Idioma":"Language","Idioma da interface":"Interface language","Repetidores":"Repeaters","Topologia":"Topology","Linha do tempo":"Timeline","Favoritos":"Favorites","Salvar":"Save","Excluir":"Delete","Editar":"Edit","Conectar":"Connect","Desconectar":"Disconnect","Ativo":"Active","Desconectado":"Disconnected","Conectado":"Connected","Nunca":"Never","Sim":"Yes","Não":"No","Copiar":"Copy","Perfil de terreno":"Terrain profile","Canais do rádio":"Radio channels","Nenhum alerta.":"No alerts.","Marcar todos como lidos":"Mark all as read","Ignorar":"Ignore"},"es":{"por Alex, PT2VHF · Cliente Meshtastic independente":"por Alex, PT2VHF · Cliente Meshtastic independiente","Explore · Analise · Conecte":"Explora · Analiza · Conecta","Navegação principal":"Navegación principal","Mensagens":"Mensajes","Nós":"Nodos","Tráfego":"Tráfico","Estatísticas":"Estadísticas","Automações":"Automatizaciones","Configurações":"Configuración","Ajuda":"Ayuda","Sobre":"Acerca de","Atividade de rádio em tempo real":"Actividad de radio en tiempo real","TX aceito pela interface, não comprovação de RF":"TX aceptado por la interfaz, no prueba de RF","RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto":"RX recibido por USB/BLE/TCP o MQTT; no implica RF directo","Conectividade Meshtastic":"Conectividad Meshtastic","Consultando conexões de rádio":"Consultando conexiones de radio","Verificando rádio...":"Verificando radio...","Alertas da malha":"Alertas de la malla","Clique para verificar atualização":"Haz clic para buscar actualizaciones","nós":"nodos","pacotes":"paquetes","mensagens":"mensajes","relações observadas":"relaciones observadas","Pesquisar nó...":"Buscar nodo...","Pesquisar nó no mapa por nome curto, longo ou ID":"Buscar nodo en el mapa por nombre corto, largo o ID","Limpar pesquisa":"Limpiar búsqueda","Enquadrar":"Encuadrar","Atualizar":"Actualizar","Carregando mapa. A cartografia requer internet; a recepção RF e o banco continuam funcionando offline.":"Cargando mapa. La cartografía requiere internet; la recepción RF y la base de datos siguen funcionando sin conexión.","Opacidade":"Opacidad","Tarefas · carregando…":"Tareas · cargando…","Expandir ou recolher legenda do mapa":"Expandir o contraer la leyenda del mapa","Legenda":"Leyenda","Atividade recente ·":"Actividad reciente ·","Histórico":"Historial","Ícones por papel do nó":"Iconos por rol del nodo","Amarelo contínuo: recebido via rádio; pode ter intermediários (não comprova RF direto).":"Amarillo continuo: recibido por radio; puede tener intermediarios (no prueba RF directo).","Detalhes da topologia":"Detalles de la topología","Aguardando pacotes novos...":"Esperando paquetes nuevos...","Topologia: aguardando...":"Topología: esperando...","Enlaces conhecidos, mas sem coordenadas suficientes para desenhar a linha":"Enlaces conocidos, pero sin coordenadas suficientes para dibujar la línea","Dados preservados no SQLite":"Datos preservados en SQLite","Exibição de objetos do mapa":"Visualización de objetos del mapa","Selecionar tudo":"Seleccionar todo","Remover tudo":"Quitar todo","Animar tráfego":"Animar tráfico","CAMADAS E SOBREPOSIÇÕES":"CAPAS Y SUPERPOSICIONES","Mostrar nomes curtos":"Mostrar nombres cortos","Opacidade do radar":"Opacidad del radar","Aguardando radar...":"Esperando radar...","Relevo sombreado":"Relieve sombreado","Relevo com corte":"Relieve con corte","ANÁLISE DA MALHA":"ANÁLISIS DE LA MALLA","Cobertura (SNR das recepções diretas)":"Cobertura (SNR de recepciones directas)","Rotas de traceroute e gargalos":"Rutas de traceroute y cuellos de botella","7 dias":"7 días","30 dias":"30 días","Referência automática: rádio conectado, nunca nó escolhido manualmente.":"Referencia automática: radio conectado, nunca un nodo elegido manualmente.","Distância: aguardando rádio local":"Distancia: esperando radio local","nome, ID, hardware...":"nombre, ID, hardware...","Pesquisar nós":"Buscar nodos","Colunas":"Columnas","Operações em lote":"Operaciones en lote","Cancelar consultas pendentes":"Cancelar consultas pendientes","Resultados por nó":"Resultados por nodo","Tráfego ao vivo":"Tráfico en vivo","● AO VIVO":"● EN VIVO","nó, ID, tipo...":"nodo, ID, tipo...","Pesquisar tráfego":"Buscar tráfico","Baixar CSV (visível)":"Descargar CSV (visible)","Origem":"Origen","Fechar ×":"Cerrar ×","Detalhes do pacote":"Detalles del paquete","Privadas e canais · sem dependência do MM":"Privados y canales · sin dependencia de MM","Buscar no histórico…":"Buscar en el historial…","Buscar texto em todas as mensagens salvas":"Buscar texto en todos los mensajes guardados","Período da busca":"Período de búsqueda","1 ano":"1 año","Todo o histórico":"Todo el historial","Ver e editar os canais do rádio":"Ver y editar los canales de la radio","Canais…":"Canales…","Primário (0)":"Primario (0)","Pesquisar nós para mensagem privada":"Buscar nodos para mensaje privado","Limpar pesquisa de nós":"Limpiar búsqueda de nodos","Canal primário e favoritos":"Canal primario y favoritos","Canal primário":"Canal primario","↓ Novas mensagens":"↓ Mensajes nuevos","Verificando conexão TX...":"Verificando conexión TX...","Cancelar resposta":"Cancelar respuesta","Inserir emoji":"Insertar emoji","Digite uma mensagem RF (até 220 bytes UTF-8)":"Escribe un mensaje RF (hasta 220 bytes UTF-8)","Nó:":"Nodo:","Atualizar tudo":"Actualizar todo","Relatório / PDF":"Informe / PDF","Completar e atualizar informações dos nós":"Completar y actualizar información de nodos","Consulta informações ausentes ou vencidas dos nós recentemente observados por RF. Novatos têm 3 minutos para anunciar dados espontaneamente. Nós antigos e inacessíveis são preservados no banco, sem tentativas repetidas de transmissão.":"Consulta información ausente o vencida de los nodos observados recientemente por RF. Los nuevos tienen 3 minutos para anunciar datos espontáneamente. Los nodos antiguos e inaccesibles se conservan en la base de datos, sin intentos repetidos de transmisión.","Automação RF":"Automatización RF","Ativar consultas automáticas (realiza transmissões RF)":"Activar consultas automáticas (realiza transmisiones RF)","Avaliar a cada (minutos)":"Evaluar cada (minutos)","Consultar nós observados nas últimas (horas)":"Consultar nodos observados en las últimas (horas)","Ping de presença: nós calados há mais de (horas)":"Ping de presencia: nodos callados hace más de (horas)","Ping de presença: até nós calados há (horas)":"Ping de presencia: hasta nodos callados hace (horas)","Pausar se a utilização do canal passar de (%)":"Pausar si la utilización del canal supera (%)","Salvar automação":"Guardar automatización","Simular fila (sem TX)":"Simular cola (sin TX)","Executar uma consulta agora":"Ejecutar una consulta ahora","Atualizar estado":"Actualizar estado","Aguardando estado da automação...":"Esperando estado de la automatización...","Próximas consultas elegíveis":"Próximas consultas elegibles","Nenhuma consulta selecionada.":"Ninguna consulta seleccionada.","O rádio conectado é a única fonte TX. MQTT não transmite. Apenas uma consulta pode estar aguardando resposta. ACK não equivale a dados recebidos. Ativar exige ação explícita do usuário.":"La radio conectada es la única fuente TX. MQTT no transmite. Solo una consulta puede estar esperando respuesta. ACK no equivale a datos recibidos. Activar requiere acción explícita del usuario.","Mensagens automáticas":"Mensajes automáticos","Mensagens agendadas e respostas a comandos, enviadas pelo rádio ativo. Todas dividem o mesmo limite de envios por hora, separado das consultas acima.":"Mensajes programados y respuestas a comandos, enviados por la radio activa. Todos comparten el mismo límite de envíos por hora, separado de las consultas anteriores.","Mensagens automáticas ativadas":"Mensajes automáticos activados","Máximo de envios por hora":"Máximo de envíos por hora","Salvar limite":"Guardar límite","Mensagens agendadas":"Mensajes programados","Nome":"Nombre","Ex.: Bom dia":"Ej.: Buenos días","Quando":"Cuándo","Todo dia no horário":"Todos los días a la hora","A cada N minutos":"Cada N minutos","Uma vez":"Una vez","Horário":"Horario","Dias":"Días","Seg Ter Qua Qui Sex Sáb Dom":"Lun Mar Mié Jue Vie Sáb Dom","Data e hora":"Fecha y hora","Texto (até 220 bytes; aceita {hora}, {data}, {clima})":"Texto (hasta 220 bytes; acepta {hora}, {data}, {clima})","Salvar agendamento":"Guardar programación","Novo":"Nuevo","Respostas automáticas a comandos":"Respuestas automáticas a comandos","Comando recebido":"Comando recibido","Ex.: PING":"Ej.: PING","Comparação":"Comparación","Mensagem igual ao comando":"Mensaje igual al comando","Começa com o comando":"Empieza con el comando","Contém o comando":"Contiene el comando","Privadas e canal":"Privados y canal","Só privadas":"Solo privados","Só canal":"Solo canal","Pausa por remetente (segundos)":"Pausa por remitente (segundos)","Resposta — variáveis: {nome} {curto} {id} {snr} {rssi} {saltos} {hora} {data} {canal} {clima}":"Respuesta — variables: {nome} {curto} {id} {snr} {rssi} {saltos} {hora} {data} {canal} {clima}","Salvar resposta":"Guardar respuesta","Pré-visualizar":"Vista previa","Registro recente":"Registro reciente","Conexões":"Conexiones","Retenções":"Retenciones","Geral":"General","Conexões com rádios e serviços":"Conexiones con radios y servicios","Cadastre várias conexões independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.":"Registra varias conexiones independientes. USB/Serial, Wi-Fi/TCP y BLE son bidireccionales; MQTT recibe datos y no transmite RF. No conectes el mismo puerto físico a dos programas a la vez.","Adicionar conexão manualmente":"Agregar conexión manualmente","Procura rádios Meshtastic em USB, Wi-Fi e Bluetooth e cadastra os que ainda não estão configurados":"Busca radios Meshtastic en USB, Wi-Fi y Bluetooth y registra los que aún no están configurados","Adicionar automaticamente":"Agregar automáticamente","Adicionar conexão":"Agregar conexión","Nome identificador":"Nombre identificador","Ex.: VHF3 USB":"Ej.: VHF3 USB","Tipo da conexão":"Tipo de conexión","MQTT (somente RX)":"MQTT (solo RX)","Porta serial / COM":"Puerto serie / COM","Host / Endereço IP":"Host / Dirección IP","Porta TCP":"Puerto TCP","Identificador Bluetooth / endereço BLE":"Identificador Bluetooth / dirección BLE","Endereço ou UUID do rádio":"Dirección o UUID de la radio","Usuário MQTT":"Usuario MQTT","Senha MQTT":"Contraseña MQTT","Em edição: deixe vazio para manter":"En edición: deja vacío para mantener","Conectar automaticamente ao iniciar":"Conectar automáticamente al iniciar","Sincronizar favoritos com este rádio":"Sincronizar favoritos con esta radio","Salvar conexão":"Guardar conexión","Nova conexão / Cancelar edição":"Nueva conexión / Cancelar edición","Detectar portas USB":"Detectar puertos USB","Descoberta de rádios e conexões":"Descubrimiento de radios y conexiones","Busca candidatos USB/Serial, anúncios Bluetooth LE e serviços mDNS na rede local. A descoberta não conecta nem transmite; confirme e salve o dispositivo selecionado.":"Busca candidatos USB/Serie, anuncios Bluetooth LE y servicios mDNS en la red local. El descubrimiento no conecta ni transmite; confirma y guarda el dispositivo seleccionado.","Detectar automaticamente":"Detectar automáticamente","Pronto para procurar":"Listo para buscar","Avisar quando um rádio novo for detectado":"Avisar cuando se detecte una radio nueva","USB (ao plugar)":"USB (al conectar)","Wi-Fi (rede local)":"Wi-Fi (red local)","Bluetooth LE (próximo ao computador)":"Bluetooth LE (cerca del ordenador)","Adicionar e conectar sem perguntar":"Agregar y conectar sin preguntar","Dar prioridade ao rádio USB":"Dar prioridad a la radio USB","Configuração do rádio Meshtastic":"Configuración de la radio Meshtastic","Leia os parâmetros reais do dispositivo conectado por USB/Serial, TCP/IP ou BLE. MQTT é apenas uma conexão de dados e não pode configurar rádios. A gravação pode reiniciar o nó e interromper a conexão.":"Lee los parámetros reales del dispositivo conectado por USB/Serie, TCP/IP o BLE. MQTT es solo una conexión de datos y no puede configurar radios. La escritura puede reiniciar el nodo e interrumpir la conexión.","Ler do rádio":"Leer de la radio","Selecione um rádio conectado para consultar a configuração.":"Selecciona una radio conectada para consultar la configuración.","Parâmetros disponíveis do dispositivo":"Parámetros disponibles del dispositivo","Altere os campos suportados pelo schema do rádio e revise tudo antes do envio. Campos sensíveis, canais e módulos ficam somente leitura nesta etapa. A gravação é sequencial, não atômica.":"Cambia los campos admitidos por el esquema de la radio y revisa todo antes de enviar. Los campos sensibles, canales y módulos son de solo lectura en esta etapa. La escritura es secuencial, no atómica.","Salvar todas as alterações":"Guardar todos los cambios","Exportar snapshot sem segredos":"Exportar instantánea sin secretos","Confirmação de envio não equivale a persistência/ACK. Mudanças de frequência, região, rede, Bluetooth ou canais podem interromper comunicação; faça backup e releia após reiniciar.":"La confirmación de envío no equivale a persistencia/ACK. Cambios de frecuencia, región, red, Bluetooth o canales pueden interrumpir la comunicación; haz una copia y vuelve a leer tras reiniciar.","Inventário e parâmetros adicionais (somente leitura)":"Inventario y parámetros adicionales (solo lectura)","Nenhum rádio consultado.":"Ninguna radio consultada.","Retenção individual dos dados":"Retención individual de los datos","Configuração persistente do banco SQLite.":"Configuración persistente de la base SQLite.","\"Nunca\" é o padrão":"\"Nunca\" es el valor predeterminado",": nada é apagado automaticamente. Um prazo remove registros anteriores à idade definida; a limpeza executa a cada hora ou pelo botão abaixo.":": nada se borra automáticamente. Un plazo elimina registros anteriores a la edad definida; la limpieza se ejecuta cada hora o con el botón de abajo.","Salvar retenções":"Guardar retenciones","Executar limpeza agora":"Ejecutar limpieza ahora","Mapa e topologia":"Mapa y topología","Janela de observação":"Ventana de observación","Mínimo de observações":"Mínimo de observaciones","Mapa-base":"Mapa base","OSM / Ruas":"OSM / Calles","Escuro":"Oscuro","Brilho (%)":"Brillo (%)","Máximo do slider de relevo (m)":"Máximo del control de relieve (m)","Cor dos trechos RF":"Color de los tramos RF","Espessura dos trechos RF (px)":"Grosor de los tramos RF (px)","Cor MQTT / não RF":"Color MQTT / no RF","Espessura MQTT / não RF (px)":"Grosor MQTT / no RF (px)","Mostrar linhas":"Mostrar líneas","Mostrar nós":"Mostrar nodos","Mostrar somente identificados":"Mostrar solo identificados","Auto Zoom durante traceroutes":"Zoom automático durante traceroutes","Restaurar cores e espessuras":"Restaurar colores y grosores","Relações recebidas por rádio usam linha contínua; o popup diferencia RF direto comprovado, rota e fluxo com caminho desconhecido. MQTT/Internet permanece pontilhado.":"Las relaciones recibidas por radio usan línea continua; el popup distingue RF directo comprobado, ruta y flujo con camino desconocido. MQTT/Internet sigue punteado.","Sons sintetizados localmente para eventos reais; não inventar retransmissões nem ACKs.":"Sonidos sintetizados localmente para eventos reales; no inventa retransmisiones ni ACKs.","Ativar sonificação da malha":"Activar sonificación de la malla","Fliperama anos 70":"Arcade de los 70","Volume (%)":"Volumen (%)","Densidade sonora":"Densidad sonora","Baixa":"Baja","Máximo simultâneo":"Máximo simultáneo","Sons de roteamento e traceroute":"Sonidos de enrutamiento y traceroute","Sons de mensagens":"Sonidos de mensajes","Sons de alertas e falhas":"Sonidos de alertas y fallos","Testar tema":"Probar tema","Atividade em tempo real no mapa":"Actividad en tiempo real en el mapa","Animar atividade dos nós":"Animar actividad de los nodos","Realçar origem/resposta":"Resaltar origen/respuesta","Realçar retransmissor observado":"Resaltar retransmisor observado","Duração do realce":"Duración del resaltado","Velocidade da animação":"Velocidad de la animación","A duração e a velocidade da animação são configuradas aqui, não no menu principal.":"La duración y la velocidad de la animación se configuran aquí, no en el menú principal.","Aparência":"Apariencia","Tema da interface":"Tema de la interfaz","Escuro (#202126)":"Oscuro (#202126)","Cinza (#333438)":"Gris (#333438)","A alteração é exibida imediatamente. Use Salvar preferências do Sistema para mantê-la.":"El cambio se muestra de inmediato. Usa Guardar preferencias del Sistema para mantenerlo.","Inicialização":"Inicio","Abrir uma página web no navegador ao iniciar":"Abrir una página web en el navegador al iniciar","Desativado por padrão. A janela própria do PT2VHF Mesh Analyzer abre sempre, mesmo sem navegador.":"Desactivado por defecto. La ventana propia de PT2VHF Mesh Analyzer se abre siempre, incluso sin navegador.","Abrir interface local no navegador agora":"Abrir la interfaz local en el navegador ahora","Compartilhamento Web na rede":"Compartir web en la red","Permitir acesso de outros computadores pela Web":"Permitir acceso de otros ordenadores por la Web","Indisponível nesta versão: o acesso LAN só poderá ser ativado após implementação de autenticação e proteção de todas as APIs. O aplicativo permanece restrito a 127.0.0.1.":"No disponible en esta versión: el acceso LAN solo podrá activarse tras implementar autenticación y protección de todas las APIs. La aplicación sigue restringida a 127.0.0.1.","Atualizações":"Actualizaciones","Verificar novas versões a cada":"Buscar nuevas versiones cada","Verificar agora":"Verificar ahora","Ver releases":"Ver versiones","Aguardando verificação da versão no GitHub.":"Esperando la verificación de versión en GitHub.","Banco de dados e manutenção":"Base de datos y mantenimiento","Diagnóstico e backup consistente com SQLite WAL. Estes botões não executam limpeza.":"Diagnóstico y copia consistente con SQLite WAL. Estos botones no ejecutan limpieza.","Atualizar indicadores":"Actualizar indicadores","Verificar integridade":"Verificar integridad","Criar backup":"Crear copia","Consulte os indicadores quando necessário.":"Consulta los indicadores cuando sea necesario.","Backup e restauração":"Copia de seguridad y restauración","Um único arquivo .zip com banco, conexões, favoritos, preferências, automações e histórico. Serve para guardar uma cópia ou levar tudo para outro computador, servidor ou container.":"Un único archivo .zip con base de datos, conexiones, favoritos, preferencias, automatizaciones e historial. Sirve para guardar una copia o llevar todo a otro ordenador, servidor o contenedor.","Exportar backup":"Exportar copia","Restaurar backup…":"Restaurar copia…","Salvar preferências do Sistema":"Guardar preferencias del Sistema","Avaliados a cada minuto. Cada situação gera um único alerta até ser resolvida. Coloque 0 para desligar uma regra.":"Evaluadas cada minuto. Cada situación genera una única alerta hasta resolverse. Pon 0 para desactivar una regla.","Alertas ativados":"Alertas activadas","Favorito calado há mais de (horas)":"Favorito callado hace más de (horas)","Bateria abaixo de (%) — repetidores e favoritos":"Batería por debajo de (%) — repetidores y favoritos","Utilização do canal acima de (%)":"Utilización del canal por encima de (%)","Mensagem privada recebida":"Mensaje privado recibido","Menção ao meu rádio no canal":"Mención a mi radio en el canal","Enviar alertas pelo Telegram":"Enviar alertas por Telegram","Token do bot (@BotFather)":"Token del bot (@BotFather)","E-mail (SMTP)":"Correo (SMTP)","Enviar alertas por e-mail":"Enviar alertas por correo","Porta":"Puerto","Segurança":"Seguridad","Nenhuma":"Ninguna","Usuário":"Usuario","Senha (de app)":"Contraseña (de aplicación)","Remetente":"Remitente","Enviar para":"Enviar a","Salvar alertas":"Guardar alertas","Testar Telegram":"Probar Telegram","Testar e-mail":"Probar correo","Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.":"El token y la contraseña quedan en la base local de la aplicación y nunca se vuelven a mostrar en pantalla.","Configuração e segurança":"Configuración y seguridad","Banco de dados e configuração:":"Base de datos y configuración:","A interface web local escuta apenas em":"La interfaz web local escucha solo en","Salvar configurações":"Guardar configuración","Configurações salvas":"Configuración guardada","Aplicar no rádio e Salvar conexão continuam ações separadas.":"Aplicar en la radio y Guardar conexión siguen siendo acciones separadas.","DÚVIDAS, DIFICULDADES OU SUGESTÕES?":"¿DUDAS, DIFICULTADES O SUGERENCIAS?","Fale comigo":"Habla conmigo","Se precisar de ajuda para configurar o programa, encontrou algum problema ou tem uma sugestão de melhoria, entre em contato.":"Si necesitas ayuda para configurar el programa, encontraste algún problema o tienes una sugerencia, ponte en contacto.","por Alex, PT2VHF · Cliente Meshtastic independente.":"por Alex, PT2VHF · Cliente Meshtastic independiente.","Veja também a seção":"Consulta también la sección","para as instruções de uso do aplicativo.":"para las instrucciones de uso de la aplicación.","PT2VHF Mesh Analyzer — Ajuda rápida":"PT2VHF Mesh Analyzer — Ayuda rápida","1. Abra":"1. Abre","Configurações → Conexões":"Configuración → Conexiones","e cadastre o rádio ligado por COM, IP ou Bluetooth.":"y registra la radio conectada por COM, IP o Bluetooth.","2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.":"2. Habilita la conexión. Cuando está activa, el tráfico recibido se registra en SQLite.","3. Use":"3. Usa","para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.":"para conversar en el canal o con un nodo específico. El ACK de la radio no equivale a confirmación de lectura.","4. Ajuste":"4. Ajusta","Configurações → Retenções":"Configuración → Retenciones","para definir por quanto tempo o histórico permanece salvo.":"para definir cuánto tiempo se guarda el historial.","5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.":"5. Una fuente MQTT puede registrar sobres capturados; no retransmite a RF y puede recibir carga cifrada ilegible sin clave.","Observação:":"Observación:","Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.":"El mapa base OSM/topográfico/satélite requiere internet; los datos RF y el análisis local siguen siendo independientes.","Informações do nó":"Información del nodo","Detalhes do nó":"Detalles del nodo","Nome amigável local":"Nombre amigable local","Renomear":"Renombrar","Fechar":"Cerrar","Rádio desconectado":"Radio desconectada","Não há conexão ativa com um rádio Meshtastic para enviar mensagens.":"No hay conexión activa con una radio Meshtastic para enviar mensajes.","Conecte o rádio para poder transmitir.":"Conecta la radio para poder transmitir.","Ir para Conexões":"Ir a Conexiones","Configure sua primeira conexão":"Configura tu primera conexión","Nenhuma conexão foi cadastrada. Para começar a receber informações da rede Meshtastic, configure uma conexão USB/Serial, Bluetooth LE, Wi-Fi/TCP ou MQTT (somente recepção).":"No se ha registrado ninguna conexión. Para empezar a recibir datos de la red Meshtastic, configura una conexión USB/Serie, Bluetooth LE, Wi-Fi/TCP o MQTT (solo recepción).","Agora não":"Ahora no","Procurar novamente":"Buscar de nuevo","Ir para conexões":"Ir a conexiones","Atualização do Mesh Analyzer":"Actualización de Mesh Analyzer","Atualizar agora":"Actualizar ahora","Depois / Fechar":"Después / Cerrar","Abrir release":"Abrir versión","Procurando rádios Meshtastic…":"Buscando radios Meshtastic…","USB primeiro, depois Wi-Fi e Bluetooth próximo.":"USB primero, después Wi-Fi y Bluetooth cercano.","Escolher rádio ativo":"Elegir radio activa","Idioma da interface":"Idioma de la interfaz","Topologia":"Topología","Linha do tempo":"Línea de tiempo","Salvar":"Guardar","Excluir":"Eliminar","Ativo":"Activo","Sim":"Sí","Não":"No","Perfil de terreno":"Perfil del terreno","Canais do rádio":"Canales de la radio","Nenhum alerta.":"Ninguna alerta.","Marcar todos como lidos":"Marcar todas como leídas"}};
+</script>
 <script>
 /* First paint uses cached choice; the canonical SQLite preference follows /api/state. */
 try {
  const selected=localStorage.getItem('mesh.ui.theme');
  document.documentElement.dataset.theme=['dark','gray','light'].includes(selected)?selected:'dark';
 } catch(e){document.documentElement.dataset.theme='dark';}
+try {
+ const lang=localStorage.getItem('mesh.ui.lang');
+ if(['en','es'].includes(lang))document.documentElement.lang=lang;
+} catch(e){}
 </script>
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.39</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.40</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
 <div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
-<div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
+<div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="alertBell" class="alertBell" aria-haspopup="true" aria-expanded="false" title="Alertas da malha">🔔<span id="alertCount" hidden></span></button><div id="alertPanel" class="alertPanel" role="dialog" aria-label="Alertas da malha" hidden></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
 
 <section class="view active" id="viewMap">
 <div id="playback">
@@ -374,6 +399,11 @@ try {
 <div id="radarStatus" role="status">Aguardando radar...</div>
 <label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label>
 <label><input id="mapTerrain" type="checkbox"> Relevo com corte</label>
+<div class="verSection">ANÁLISE DA MALHA</div>
+<label><input id="mapCoverage" type="checkbox"> Cobertura (SNR das recepções diretas)</label>
+<label><input id="mapRoutes" type="checkbox"> Rotas de traceroute e gargalos</label>
+<label for="mapInsightHours">Período <select id="mapInsightHours"><option value="24">24 h</option><option value="168" selected>7 dias</option><option value="720">30 dias</option></select></label>
+<div id="insightLegend" class="muted" role="status"></div>
 </div>
 </section>
 <section class="view" id="viewNodes"><div class="toolbar" id="nodesToolbar">
@@ -393,7 +423,7 @@ try {
 <thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
 <aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></aside>
 </div></section>
-<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contactsPanel"><div class="messageNodeSearchBar">
+<section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><div class="messageSearchBox"><input id="messageSearch" type="search" placeholder="Buscar no histórico…" aria-label="Buscar texto em todas as mensagens salvas" autocomplete="off"><select id="messageSearchDays" aria-label="Período da busca"><option value="7">7 dias</option><option value="30">30 dias</option><option value="365">1 ano</option><option value="" selected>Todo o histórico</option></select><div id="messageSearchResults" class="messageSearchResults" role="listbox" hidden></div></div><button type="button" id="channelManage" title="Ver e editar os canais do rádio">Canais…</button><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contactsPanel"><div class="messageNodeSearchBar">
 <input id="messageNodeSearch" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nós para mensagem privada" autocomplete="off">
 <button type="button" id="messageNodeSearchClear" aria-label="Limpar pesquisa de nós" title="Limpar pesquisa">×</button>
 <span id="messageNodeSearchCount" role="status" aria-live="polite"></span>
@@ -437,8 +467,36 @@ try {
 <p id="autoStatus" class="muted" role="status">Aguardando estado da automação...</p>
 <h4>Próximas consultas elegíveis</h4><div id="autoQueue" class="muted">Nenhuma consulta selecionada.</div>
 <p class="muted">O rádio conectado é a única fonte TX. MQTT não transmite. Apenas uma consulta pode estar aguardando resposta. ACK não equivale a dados recebidos. Ativar exige ação explícita do usuário.</p>
+</div>
+<div class="card" style="max-width:1020px;margin:16px auto 0" id="msgAutoCard">
+<h3>Mensagens automáticas</h3>
+<p class="muted">Mensagens agendadas e respostas a comandos, enviadas pelo rádio ativo. Todas dividem o mesmo limite de envios por hora, separado das consultas acima.</p>
+<div class="formGrid"><div class="field"><label><input type="checkbox" id="msgAutoEnabled"> Mensagens automáticas ativadas</label></div>
+<div class="field"><label for="msgAutoMax">Máximo de envios por hora</label><input id="msgAutoMax" type="number" min="1" max="60"></div></div>
+<div class="actions"><button type="button" id="msgAutoSaveConfig">Salvar limite</button><span id="msgAutoStatus" class="muted" role="status"></span></div>
+<h4>Mensagens agendadas</h4><div id="scheduleList" class="nodeDetailGrid"></div>
+<form id="scheduleForm" class="formGrid"><input type="hidden" id="schedId">
+<div class="field"><label for="schedName">Nome</label><input id="schedName" placeholder="Ex.: Bom dia"></div>
+<div class="field"><label for="schedKind">Quando</label><select id="schedKind"><option value="daily">Todo dia no horário</option><option value="interval">A cada N minutos</option><option value="once">Uma vez</option></select></div>
+<div class="field sched daily"><label for="schedTime">Horário</label><input id="schedTime" type="time" value="07:00"></div>
+<div class="field sched daily"><label>Dias</label><span id="schedDays">Seg Ter Qua Qui Sex Sáb Dom</span></div>
+<div class="field sched interval"><label for="schedInterval">Intervalo (minutos, mín. 15)</label><input id="schedInterval" type="number" min="15" value="60"></div>
+<div class="field sched once"><label for="schedAt">Data e hora</label><input id="schedAt" type="datetime-local"></div>
+<div class="field"><label for="schedTarget">Para</label><select id="schedTarget"></select></div>
+<div class="field"><label for="schedChannel">Canal</label><input id="schedChannel" type="number" min="0" max="7" value="0"></div>
+<div class="field span2"><label for="schedText">Texto (até 220 bytes; aceita {hora}, {data}, {clima})</label><textarea id="schedText" rows="2"></textarea></div>
+<div class="actions span2"><button type="submit" class="primary">Salvar agendamento</button><button type="button" id="schedNew">Novo</button></div></form>
+<h4>Respostas automáticas a comandos</h4><div id="replyList" class="nodeDetailGrid"></div>
+<form id="replyForm" class="formGrid"><input type="hidden" id="replyId">
+<div class="field"><label for="replyTrigger">Comando recebido</label><input id="replyTrigger" placeholder="Ex.: PING"></div>
+<div class="field"><label for="replyMatch">Comparação</label><select id="replyMatch"><option value="exact">Mensagem igual ao comando</option><option value="starts">Começa com o comando</option><option value="contains">Contém o comando</option></select></div>
+<div class="field"><label for="replyScope">Responder a</label><select id="replyScope"><option value="both">Privadas e canal</option><option value="dm">Só privadas</option><option value="channel">Só canal</option></select></div>
+<div class="field"><label for="replyCooldown">Pausa por remetente (segundos)</label><input id="replyCooldown" type="number" min="30" value="300"></div>
+<div class="field span2"><label for="replyText">Resposta — variáveis: {nome} {curto} {id} {snr} {rssi} {saltos} {hora} {data} {canal} {clima}</label><textarea id="replyText" rows="2" placeholder="PONG {nome}: SNR {snr}, {saltos} salto(s), {hora}"></textarea></div>
+<div class="actions span2"><button type="submit" class="primary">Salvar resposta</button><button type="button" id="replyPreview">Pré-visualizar</button><button type="button" id="replyNew">Novo</button><span id="replyPreviewText" class="muted"></span></div></form>
+<h4>Registro recente</h4><div id="msgAutoLog" class="muted"></div>
 </div></div></section>
-<section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Conexões</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="general">Geral</button></div>
+<section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Conexões</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="alerts">Alertas</button><button class="settingsTab" data-panel="general">Geral</button></div>
 <section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Conexões com rádios e serviços</h3><p class="muted">Cadastre várias conexões independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
 <div class="actions"><button type="button" id="sourceAddManual">Adicionar conexão manualmente</button><button type="button" id="sourceAddAuto" title="Procura rádios Meshtastic em USB, Wi-Fi e Bluetooth e cadastra os que ainda não estão configurados">Adicionar automaticamente</button></div><div id="autoAddResult" class="card autoAddResult" role="status" aria-live="polite" hidden></div><div class="card" id="sourceFormCard"><h3 id="sourceFormTitle">Adicionar conexão</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da conexão</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
 <div class="field src serial"><label for="sourcePort">Porta serial / COM</label><input id="sourcePort" placeholder="COM3" list="serialOptions"><datalist id="serialOptions"></datalist></div>
@@ -473,6 +531,8 @@ try {
 <div class="card"><h3>Aparência</h3>
  <div class="field"><label for="systemTheme">Tema da interface</label>
  <select id="systemTheme" aria-label="Tema da interface"><option value="dark">Escuro (#202126)</option><option value="gray">Cinza (#333438)</option><option value="light">Claro</option></select></div>
+ <div class="field"><label for="systemLanguage">Idioma</label>
+ <select id="systemLanguage" aria-label="Idioma da interface"><option value="pt">Português</option><option value="en">English</option><option value="es">Español</option></select></div>
  <p class="muted">A alteração é exibida imediatamente. Use Salvar preferências do Sistema para mantê-la.</p>
 </div>
 <div class="card"><h3>Inicialização</h3>
@@ -496,9 +556,34 @@ try {
 <div class="actions"><button type="button" id="dbRefresh">Atualizar indicadores</button>
 <button type="button" id="dbIntegrity">Verificar integridade</button><button type="button" id="dbBackup">Criar backup</button></div>
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
+<div class="card" id="backupCard"><h3>Backup e restauração</h3><p class="muted">Um único arquivo .zip com banco, conexões, favoritos, preferências, automações e histórico. Serve para guardar uma cópia ou levar tudo para outro computador, servidor ou container.</p>
+<div class="actions"><button type="button" id="backupExport" class="primary">Exportar backup</button><button type="button" id="backupRestoreButton">Restaurar backup…</button><input type="file" id="backupRestoreFile" accept=".zip,application/zip" hidden></div>
+<p class="muted" id="backupStatus" role="status"></p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.39</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsAlerts"><div class="card"><h3>Alertas da malha</h3><p class="muted">Avaliados a cada minuto. Cada situação gera um único alerta até ser resolvida. Coloque 0 para desligar uma regra.</p>
+<form id="alertForm" class="formGrid">
+<div class="field span2"><label><input type="checkbox" id="alertEnabled"> Alertas ativados</label></div>
+<div class="field"><label for="alertSilent">Favorito calado há mais de (horas)</label><input id="alertSilent" type="number" min="0" max="720"></div>
+<div class="field"><label for="alertBattery">Bateria abaixo de (%) — repetidores e favoritos</label><input id="alertBattery" type="number" min="0" max="100"></div>
+<div class="field"><label for="alertChannel">Utilização do canal acima de (%)</label><input id="alertChannel" type="number" min="0" max="100"></div>
+<div class="field"><label><input type="checkbox" id="alertDm"> Mensagem privada recebida</label><label><input type="checkbox" id="alertMention"> Menção ao meu rádio no canal</label></div>
+<h4 class="span2">Telegram</h4>
+<div class="field span2"><label><input type="checkbox" id="alertTgEnabled"> Enviar alertas pelo Telegram</label></div>
+<div class="field"><label for="alertTgToken">Token do bot (@BotFather)</label><input id="alertTgToken" type="password" autocomplete="off"></div>
+<div class="field"><label for="alertTgChat">Chat ID</label><input id="alertTgChat" autocomplete="off"></div>
+<h4 class="span2">E-mail (SMTP)</h4>
+<div class="field span2"><label><input type="checkbox" id="alertMailEnabled"> Enviar alertas por e-mail</label></div>
+<div class="field"><label for="alertMailHost">Servidor SMTP</label><input id="alertMailHost" placeholder="smtp.gmail.com"></div>
+<div class="field"><label for="alertMailPort">Porta</label><input id="alertMailPort" type="number" min="1" max="65535"></div>
+<div class="field"><label for="alertMailSecurity">Segurança</label><select id="alertMailSecurity"><option value="starttls">STARTTLS (587)</option><option value="ssl">SSL/TLS (465)</option><option value="none">Nenhuma</option></select></div>
+<div class="field"><label for="alertMailUser">Usuário</label><input id="alertMailUser" autocomplete="off"></div>
+<div class="field"><label for="alertMailPassword">Senha (de app)</label><input id="alertMailPassword" type="password" autocomplete="off"></div>
+<div class="field"><label for="alertMailFrom">Remetente</label><input id="alertMailFrom"></div>
+<div class="field"><label for="alertMailTo">Enviar para</label><input id="alertMailTo"></div>
+<div class="actions span2"><button type="submit" class="primary">Salvar alertas</button><button type="button" id="alertTestTg">Testar Telegram</button><button type="button" id="alertTestMail">Testar e-mail</button><span id="alertFormStatus" class="muted" role="status"></span></div>
+</form><p class="muted">Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.</p></div></section>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.40</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewAbout"><div class="panels">
@@ -515,7 +600,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.39.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.40.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -613,7 +698,69 @@ $('firstRunConnections').onclick=()=>{
 $('firstRunDialog').addEventListener('keydown',event=>{
  if(event.key==='Escape'){event.preventDefault();dismissFirstRunDialog();}
 });
-function notify(txt,isError=false){const t=$('toast');t.textContent=txt;t.style.display='block';t.style.borderColor=isError?'#f48c8c':'#679ab8';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.style.display='none',5600);}
+/* #176: tradução da interface. O HTML e o código continuam em português; o
+   texto visível (nós de texto, placeholder, title, aria-label) é trocado pelo
+   dicionário quando há correspondência exata, inclusive no conteúdo criado
+   depois, via MutationObserver. Textos sem tradução ficam em português. */
+const LANGS=['pt','en','es'];
+let uiLang=LANGS.includes(document.documentElement.lang)?document.documentElement.lang:'pt';
+const i18nText=new WeakMap(),i18nAttrs=new WeakMap(),I18N_ATTRS=['placeholder','title','aria-label'];
+// Texto das mensagens recebidas nunca é traduzido.
+const I18N_SKIP='script,style,textarea,[data-no-i18n],.bubble,[data-search-msg],[data-ctx]';
+function t(text){
+ if(uiLang==='pt'||typeof text!=='string')return text;
+ const dict=I18N[uiLang]||{};const key=text.trim();
+ const hit=dict[key];return hit===undefined?text:text.replace(key,hit);
+}
+function translateTextNode(node){
+ const value=node.nodeValue;if(!value||!value.trim())return;
+ let orig=i18nText.get(node);
+ // Texto alterado pelo app desde a última tradução vira o novo original.
+ if(orig===undefined||(value!==orig.pt&&value!==orig.out))orig={pt:value};
+ const out=uiLang==='pt'?orig.pt:t(orig.pt);orig.out=out;i18nText.set(node,orig);
+ if(value!==out)node.nodeValue=out;
+}
+function translateAttrs(el){
+ let saved=i18nAttrs.get(el);
+ for(const name of I18N_ATTRS){
+  if(!el.hasAttribute(name))continue;
+  const value=el.getAttribute(name);saved=saved||{};
+  let orig=saved[name];
+  if(orig===undefined||(value!==orig.pt&&value!==orig.out))orig={pt:value};
+  const out=uiLang==='pt'?orig.pt:t(orig.pt);orig.out=out;saved[name]=orig;
+  if(value!==out)el.setAttribute(name,out);
+ }
+ if(saved)i18nAttrs.set(el,saved);
+}
+function translatePage(root=document.body){
+ if(!root)return;
+ if(root.nodeType===3){if(!root.parentElement?.closest(I18N_SKIP))translateTextNode(root);return;}
+ if(root.nodeType!==1||root.closest(I18N_SKIP))return;
+ translateAttrs(root);
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT,{acceptNode:n=>
+  n.nodeType===1&&n.matches(I18N_SKIP)?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+ for(let n=walker.nextNode();n;n=walker.nextNode())n.nodeType===3?translateTextNode(n):translateAttrs(n);
+}
+let i18nObserver=null;
+function applyLanguage(lang,persistCache=true){
+ uiLang=LANGS.includes(lang)?lang:'pt';
+ document.documentElement.lang=uiLang==='pt'?'pt-BR':uiLang;
+ if(persistCache)try{localStorage.setItem('mesh.ui.lang',uiLang);}catch(e){}
+ translatePage(document.body);
+ if(!i18nObserver&&uiLang!=='pt'){
+  i18nObserver=new MutationObserver(list=>{
+   if(uiLang==='pt')return;
+   for(const m of list){
+    if(m.type==='childList')m.addedNodes.forEach(n=>translatePage(n));
+    else if(m.type==='characterData')translatePage(m.target);
+    else if(m.type==='attributes')translateAttrs(m.target);
+   }
+  });
+  i18nObserver.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:I18N_ATTRS});
+ }
+}
+applyLanguage(uiLang,false);
+function notify(txt,isError=false){txt=t(String(txt));const t_=$('toast');t_.textContent=txt;t_.style.display='block';t_.style.borderColor=isError?'#f48c8c':'#679ab8';clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t_.style.display='none',5600);}
 async function api(path,body){const o=body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(body)};const r=await fetch(path,o);const d=await r.json();if(!r.ok||d.success===false)throw Error(d.error||d.message||'HTTP '+r.status);return d;}
 const viewPaths={map:'/mapa',nodes:'/nos',traffic:'/trafego',messages:'/mensagens',stats:'/estatisticas',automations:'/automacoes',settings:'/configuracoes/conexoes',help:'/ajuda',about:'/sobre'};
 let autoDirty=false;
@@ -632,13 +779,13 @@ async function setView(next,updateUrl=true){
  if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}
  if(next==='stats'){syncStatFilters();fetchStats(false);}
  if(next==='messages')renderChat();
- if(next==='automations')loadAutomation();
+ if(next==='automations'){loadAutomation();loadMsgAuto();}
 }
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
  Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help'],['/sobre','about']])[location.pathname]||'map');
-const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
+const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['alertas','alerts'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
 const TRAFFIC_LABELS={
  TELEMETRY_APP:'Telemetria',POSITION_APP:'Posição',NODEINFO_APP:'Informações do nó',
  ROUTING_APP:'Roteamento',TEXT_MESSAGE_APP:'Mensagem',TRACEROUTE_APP:'Rastreamento de rota',
@@ -799,7 +946,7 @@ $('saveAllSettings').onclick=async()=>{
       throw Error('Intervalo: 5–1440 minutos');
      const result=await api('/api/system/settings',{
        open_browser_on_start:$('systemOpenBrowser').checked,
-       update_minutes:minutes,allow_lan_access:false,theme:$('systemTheme').value});
+       update_minutes:minutes,allow_lan_access:false,theme:$('systemTheme').value,language:$('systemLanguage').value});
      state.system=result.settings;
     }else if(group==='retention'){
      const data={};document.querySelectorAll('[data-retention]').forEach(
@@ -1168,6 +1315,7 @@ function linkPopupHtml(link,kind){
   line('Último registro',fmtDate(link.last_seen_ms))+
   line(logical?'Pacotes observados':'Observações',link.observations||0)+
   line('Distância',distance)+
+  (left&&right&&validPos(left)&&validPos(right)?'<p><button type="button" data-terrain="'+aNum+','+bNum+'">⛰ Perfil de terreno e zona de Fresnel</button></p>':'')+
   '<p style="font-size:11px;color:#b8c9d4">SNR, RSSI e saltos do enlace: não medidos por aresta neste agregado. Não atribuímos a esta relação métricas de pacotes multissalto.</p></div>';
 }
 function attachLinkPopup(layer,link,kind){
@@ -1175,6 +1323,9 @@ function attachLinkPopup(layer,link,kind){
  layer.on('popupopen',()=>{
    const root=layer.getPopup()?.getElement();
    if(!root)return;
+   root.querySelectorAll('[data-terrain]').forEach(el=>el.addEventListener('click',()=>{
+     const [a,b]=el.dataset.terrain.split(',').map(Number);map.closePopup();openTerrainProfile(a,b);
+   }));
    root.querySelectorAll('[data-link-node]').forEach(el=>el.addEventListener('click',()=>{
      const n=nodes.find(v=>Number(v.node_num)===Number(el.dataset.linkNode));
      if(n){map.closePopup();showNode(n);}
@@ -1628,8 +1779,11 @@ function showNode(n){
  if(!n)return;
  nodeDetailSelected=n.node_num;
  $('nodeDetailTitle').textContent=(n.friendly_name||n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
- $('nodeDetailBody').innerHTML=nodePopupHtml(n);
+ $('nodeDetailBody').innerHTML=nodePopupHtml(n)+'<div class="nodeTimeline"><h4>Linha do tempo <span class="timelineRange">'+
+   [[24,'24 h'],[168,'7 dias'],[720,'30 dias']].map(([h,l])=>'<button type="button" data-timeline="'+h+'">'+l+'</button>').join('')+'</span></h4><div id="nodeTimelineCharts" class="muted">Carregando…</div></div>';
  $('nodeDetailOverlay').classList.add('open');
+ $('nodeDetailBody').querySelectorAll('[data-timeline]').forEach(b=>b.onclick=()=>loadNodeTimeline(n.node_num,Number(b.dataset.timeline)));
+ loadNodeTimeline(n.node_num,24);
  $('nodeDetailBody').querySelectorAll('[data-rf-query]').forEach(b=>b.onclick=()=>runNodeQuery(n.node_num,b.dataset.rfQuery));
  refreshNodeQueryStatus(n.node_num);
  $('nodeRename').onclick=async()=>{
@@ -2475,8 +2629,9 @@ function renderChat(updateConversation=true){
  const chats=new Set(['channel:0']);
  for(const m of messages)chats.add(chatKey(m));
  for(const n of nodes)chats.add('node:'+n.node_num);
- const nameOf=key=>key.startsWith('node:')?idName(Number(key.slice(5))):
-   key==='channel:0'?'Canal primário':'Canal '+key.slice(8);
+ const nameOf=key=>key.startsWith('node:')?idName(Number(key.slice(5))):channelLabel(Number(key.slice(8)));
+ // #174: canais secundários ativos no rádio também aparecem como conversa.
+ for(const c of radioChannels)if(c.index>0&&c.role==='SECONDARY')chats.add('channel:'+c.index);
  const lastByKey=key=>Math.max(0,...messages.filter(m=>chatKey(m)===key).map(m=>Number(m.timestamp_ms)||0));
  const list=[...chats].sort((a,b)=>a==='channel:0'?-1:b==='channel:0'?1:lastByKey(b)-lastByKey(a)||a.localeCompare(b));
  const query=norm($('messageNodeSearch').value.trim());
@@ -2682,7 +2837,7 @@ updateMessageBytes();
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
- ['energia','Energia'],['anomalias','Pontos de atenção']];
+ ['energia','Energia'],['anomalias','Pontos de atenção'],['repetidores','Repetidores'],['topologia','Topologia']];
 let currentStatTab='geral',statData=null,lastStatsFetch=0,statsLoading=false;
 const fmtCount=v=>v==null?'Sem dados':Number(v).toLocaleString('pt-BR');
 const fmtMeasure=(v,u)=>v==null?'Não medido':Number(v).toFixed(1).replace('.',',')+' '+u;
@@ -2699,6 +2854,9 @@ const statBar=(rows)=>'<div style="display:grid;gap:6px">'+rows.slice(0,12).map(
 function renderStats(){
  $('statsTabs').innerHTML=statTabs.map(([key,label])=>'<button class="subtab '+(key===currentStatTab?'active':'')+'" data-tab="'+key+'">'+esc(label)+'</button>').join('');
  $('statsTabs').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>selectStatTab(b.dataset.tab));
+ if(['repetidores','topologia'].includes(currentStatTab)){
+  $('statsContents').innerHTML='<div class="statsCard" id="insightBox">Carregando…</div>';loadInsightTab(currentStatTab);return;
+ }
  const d=statData,c=d?.counts;
  if(!d){$('statsContents').innerHTML='<div class="statsCard">Aguardando dados analíticos do SQLite.</div>';return;}
  const kpis=[
@@ -2951,7 +3109,7 @@ $('statsCSV').onclick=()=>{
  a.href=url;a.download='PT2VHF_Estatisticas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 
-const settingsPaths={sources:'conexoes',lora:'dispositivo',retention:'retencoes',map:'mapa',system:'sistema',general:'geral'};
+const settingsPaths={sources:'conexoes',lora:'dispositivo',retention:'retencoes',map:'mapa',system:'sistema',alerts:'alertas',general:'geral'};
 function showSettings(panel,updateUrl=true){
  document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));
  document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));
@@ -2960,6 +3118,7 @@ function showSettings(panel,updateUrl=true){
  if(panel==='retention'&&!settingsPending.has('retention'))renderRetention();
  if(panel==='lora')renderLoraSources();
  if(panel==='system')renderSystem();
+ if(panel==='alerts')loadAlertConfig();
 }
 document.querySelectorAll('.settingsTab').forEach(b=>b.onclick=()=>showSettings(b.dataset.panel));
 const kindTitles={serial:'USB/Serial',tcp:'Wi-Fi/TCP',ble:'Bluetooth LE',mqtt:'MQTT (RX)'};
@@ -3153,11 +3312,16 @@ function applySystemTheme(theme,persistCache=true){
  document.documentElement.dataset.theme=selected;
  if(persistCache)try{localStorage.setItem('mesh.ui.theme',selected);}catch(e){}
 }
+$('systemLanguage').addEventListener('change',()=>{
+ applyLanguage($('systemLanguage').value);
+ markSettingsDirty('system');
+});
 $('systemTheme').addEventListener('change',()=>{
  applySystemTheme($('systemTheme').value);
  markSettingsDirty('system');
 });
 function renderSystem(){
+ backupStatus();
  const cfg=state.system||{open_browser_on_start:false,allow_lan_access:false,update_minutes:15,theme:'dark'};
  if(!sysLoaded){
   $('systemOpenBrowser').checked=Boolean(cfg.open_browser_on_start);
@@ -3165,6 +3329,8 @@ function renderSystem(){
   $('updateInterval').value=Number(cfg.update_minutes)||15;
   $('systemTheme').value=THEMES.includes(cfg.theme)?cfg.theme:'dark';
   applySystemTheme($('systemTheme').value);
+  $('systemLanguage').value=LANGS.includes(cfg.language)?cfg.language:'pt';
+  applyLanguage($('systemLanguage').value);
   sysLoaded=true;
  }
  $('systemStatus').textContent='Preferências persistidas no perfil da aplicação. Acesso LAN permanece bloqueado.';
@@ -3175,7 +3341,7 @@ $('systemSave').onclick=async()=>{
  try{
   const result=await api('/api/system/settings',{
     open_browser_on_start:$('systemOpenBrowser').checked,
-    update_minutes:minutes,allow_lan_access:false,theme:$('systemTheme').value
+    update_minutes:minutes,allow_lan_access:false,theme:$('systemTheme').value,language:$('systemLanguage').value
   });
   state.system=result.settings;sysLoaded=false;renderSystem();savedSettingsGroup('system');
   notify('Configurações salvas no SQLite. Checagem a cada '+minutes+' minutos.');
@@ -3210,6 +3376,56 @@ $('dbBackup').onclick=async()=>{
   await updateDatabaseHealth(false);
  }catch(e){notify('Falha no backup: '+e.message,true);}
  finally{$('dbBackup').disabled=false;}
+};
+// #166: backup em um clique e restauração com cópia de segurança e reinício.
+async function backupStatus(){
+ try{
+  const r=await api('/api/backup/status'),last=r.last;
+  if(r.pending)$('backupStatus').textContent='Restauração pendente (backup v'+(r.pending.version||'?')+'); será aplicada ao reiniciar.';
+  else if(last)$('backupStatus').textContent=last.status==='applied'?'Última restauração aplicada em '+fmtDate(last.applied_ms)+
+    (last.safety_copy?' · cópia do banco anterior: backups/'+last.safety_copy:''):'Última restauração falhou: '+(last.error||'erro');
+ }catch(e){}
+}
+$('backupExport').onclick=async()=>{
+ $('backupExport').disabled=true;$('backupStatus').textContent='Gerando backup…';
+ try{
+  const b=(await api('/api/backup/export',{})).backup;
+  const size=(Number(b.bytes)/1048576).toFixed(1)+' MB';
+  if(window.pywebview?.api?.save_backup){
+   const saved=await window.pywebview.api.save_backup(b.file);
+   $('backupStatus').textContent=saved?.saved?'Backup salvo: '+saved.filename+' ('+size+').':'Backup gerado em '+b.path+' ('+size+').';
+  }else{
+   const a=document.createElement('a');a.href='/api/backup/download?file='+encodeURIComponent(b.file);a.download=b.file;
+   document.body.appendChild(a);a.click();a.remove();
+   $('backupStatus').textContent='Backup '+b.file+' ('+size+'): '+b.sources+' conexões, '+b.nodes+' nós, '+b.messages+' mensagens. Cópia também em '+b.path+'.';
+  }
+ }catch(e){$('backupStatus').textContent='Falha no backup: '+e.message;notify('Backup: '+e.message,true);}
+ finally{$('backupExport').disabled=false;}
+};
+$('backupRestoreButton').onclick=()=>$('backupRestoreFile').click();
+$('backupRestoreFile').onchange=async()=>{
+ const file=$('backupRestoreFile').files[0];$('backupRestoreFile').value='';
+ if(!file)return;
+ if(!confirm('Restaurar "'+file.name+'"? Os dados atuais serão substituídos pelos do backup (uma cópia de segurança do banco atual fica em backups/).'))return;
+ $('backupStatus').textContent='Enviando e validando '+file.name+'…';
+ try{
+  const r=await fetch('/api/backup/restore',{method:'POST',headers:{'Content-Type':'application/zip','X-PT2VHF-CSRF':csrf},body:file});
+  const d=await r.json();if(!r.ok||!d.success)throw Error(d.error||'HTTP '+r.status);
+  const m=d.pending;
+  $('backupStatus').textContent='Backup válido (v'+(m.version||'?')+', '+fmtDate(m.created_ms)+'): '+m.sources+' conexões, '+m.nodes+' nós, '+m.messages+' mensagens.';
+  if(!confirm('Backup validado. Reiniciar o aplicativo agora para aplicar a restauração?'))
+   {notify('A restauração será aplicada na próxima vez que o aplicativo abrir.');return;}
+  await api('/api/backup/restart',{});
+  $('backupStatus').textContent='Reiniciando para aplicar a restauração…';
+  notify('Reiniciando o Mesh Analyzer…');
+  const started=Date.now();
+  const wait=async()=>{
+   await new Promise(res=>setTimeout(res,1500));
+   try{const h=await fetch('/health',{cache:'no-store'});if(h.ok&&Date.now()-started>3000){location.reload();return;}}catch(e){}
+   if(Date.now()-started<120000)wait();
+  };
+  wait();
+ }catch(e){$('backupStatus').textContent='Restauração recusada: '+e.message;notify('Restauração: '+e.message,true);}
 };
 let activityReady=false,activityBaselines={};
 function blinkActivity(id){
@@ -3559,8 +3775,365 @@ window.addEventListener('resize',()=>{if(radioMenuOpen)placeRadioMenu();});
 
 // #149/#155/#156: avisos de rádio detectado. A verificação roda no servidor
 // com prazo, fila Bluetooth e Cancelar; a tela só acompanha o estado.
+// #168/#169/#170: gráficos SVG simples, sem biblioteca externa.
+function sparkline(points,{color='#4fc3f7',bars=false,unit='',min=null,max=null}={}){
+ if(!points.length)return '<svg viewBox="0 0 300 80"><text x="150" y="44" text-anchor="middle" fill="#8aa0ad" font-size="12">Sem dados no período</text></svg>';
+ const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+ const x0=Math.min(...xs),x1=Math.max(...xs)||x0+1,lo=min??Math.min(...ys),hi=max??Math.max(...ys);
+ const span=(hi-lo)||1,X=x=>4+(x-x0)/((x1-x0)||1)*292,Y=y=>72-(y-lo)/span*62;
+ const label='<text x="296" y="12" text-anchor="end" fill="#8aa0ad" font-size="10">'+esc(hi.toFixed(1)+unit)+'</text><text x="296" y="78" text-anchor="end" fill="#8aa0ad" font-size="10">'+esc(lo.toFixed(1)+unit)+'</text>';
+ if(bars){const w=Math.max(1,292/points.length-1);
+  return '<svg viewBox="0 0 300 80">'+points.map(p=>'<rect x="'+X(p[0]).toFixed(1)+'" y="'+Y(p[1]).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+(72-Y(p[1])).toFixed(1)+'" fill="'+color+'" opacity=".8"><title>'+esc(fmtDate(p[0])+': '+p[1])+'</title></rect>').join('')+label+'</svg>';}
+ return '<svg viewBox="0 0 300 80"><polyline fill="none" stroke="'+color+'" stroke-width="2" points="'+points.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ')+'"/>'+
+  points.map(p=>'<circle cx="'+X(p[0]).toFixed(1)+'" cy="'+Y(p[1]).toFixed(1)+'" r="2" fill="'+color+'"><title>'+esc(fmtDate(p[0])+': '+p[1]+unit)+'</title></circle>').join('')+label+'</svg>';
+}
+async function loadNodeTimeline(num,hours){
+ const box=$('nodeTimelineCharts');if(!box)return;
+ document.querySelectorAll('[data-timeline]').forEach(b=>b.classList.toggle('primary',Number(b.dataset.timeline)===hours));
+ try{
+  const t=(await api('/api/insights/timeline?node='+num+'&hours='+hours)).data;
+  if(nodeDetailSelected!==num)return;
+  const chart=(title,pts,opts)=>'<div class="chartBox"><b>'+esc(title)+'</b><small>'+(pts.length?pts.length+' pontos':'')+'</small>'+sparkline(pts,opts)+'</div>';
+  box.classList.remove('muted');
+  box.innerHTML='<div class="chartGrid">'+chart('Presença (pacotes por intervalo)',t.heard,{bars:true,color:'#51d887',min:0})+
+   chart('Bateria',t.battery,{unit:'%',color:'#f3cf48',min:0,max:100})+chart('Tensão',t.voltage,{unit:' V',color:'#ffb86b'})+
+   chart('SNR recebido',t.snr,{unit:' dB',color:'#4fc3f7'})+chart('Utilização do canal',t.channel_util,{unit:'%',color:'#c792ea',min:0})+
+   chart('Airtime TX',t.air_util,{unit:'%',color:'#f78c6c',min:0})+'</div><p class="muted">'+t.packets+' pacotes no período. Telemetria só aparece quando o nó a transmite.</p>';
+ }catch(e){box.textContent='Linha do tempo indisponível: '+e.message;}
+}
+function insightHours(){return {'1h':1,'6h':6,'24h':24,'7d':168,'30d':720,all:2160}[$('statsPeriod').value]||168;}
+async function loadInsightTab(tab){
+ const box=$('insightBox');
+ try{
+  if(tab==='repetidores'){
+   const r=(await api('/api/insights/repeaters?hours='+insightHours())).data.repeaters;
+   if(currentStatTab!==tab)return;
+   const bar=v=>'<div class="availabilityBar" title="'+v+'%"><i style="width:'+v+'%;background:'+(v>=90?'#51d887':v>=60?'#f3cf48':'#e5484d')+'"></i></div>';
+   box.innerHTML='<h3>Saúde dos repetidores</h3><p class="muted">ROUTER, REPEATER, ROUTER_LATE e ROUTER_CLIENT. Disponibilidade = horas do período em que o nó foi ouvido.</p>'+
+    (r.length?'<div style="overflow-x:auto"><table class="reportTable"><thead><tr><th>Nó</th><th>Papel</th><th>Disponibilidade</th><th>Última vez ouvido</th><th>Bateria</th><th>Tensão</th><th>Canal</th><th>Airtime TX</th><th>Em rotas</th><th>Presença</th></tr></thead><tbody>'+
+     r.map(x=>'<tr data-insight-node="'+x.node+'"><td><button type="button" class="linkButton">'+esc(x.name)+'</button></td><td>'+esc(x.role)+'</td><td>'+bar(x.availability)+' '+x.availability+'%</td><td>'+
+      esc(x.last_seen_ms?age(x.last_seen_ms):'—')+'</td><td>'+(x.battery==null?'—':x.battery>100?'EXT':x.battery+'%')+'</td><td>'+(x.voltage==null?'—':Number(x.voltage).toFixed(2)+' V')+
+      '</td><td>'+(x.channel_util==null?'—':Number(x.channel_util).toFixed(1)+'%')+'</td><td>'+(x.air_util==null?'—':Number(x.air_util).toFixed(1)+'%')+'</td><td>'+x.route_hops+'</td><td>'+
+      esc({replied:'respondeu',timeout:'sem resposta',awaiting_reply:'checando'}[x.presence]||'—')+'</td></tr>').join('')+'</tbody></table></div>':
+     '<p class="muted">Nenhum nó com papel de repetidor conhecido.</p>');
+  }else{
+   const r=(await api('/api/insights/routes?hours='+insightHours())).data;
+   if(currentStatTab!==tab)return;
+   box.innerHTML='<h3>Topologia: nós por onde mais passam as rotas</h3><p class="muted">'+r.total_routes+' rotas de traceroute no período. Gargalo = nó intermediário presente em muitas rotas; se ele cair, essas rotas se quebram.</p>'+
+    (r.bottlenecks.length?'<div style="overflow-x:auto"><table class="reportTable"><thead><tr><th>#</th><th>Nó</th><th>Papel</th><th>Rotas</th><th>% das rotas</th></tr></thead><tbody>'+
+     r.bottlenecks.map((x,i)=>'<tr data-insight-node="'+x.node+'"><td>'+(i+1)+'</td><td><button type="button" class="linkButton">'+esc(x.name)+'</button></td><td>'+esc(x.role||'—')+'</td><td>'+x.routes+
+      '</td><td>'+x.share+'%</td></tr>').join('')+'</tbody></table></div><p class="muted">Ative "Rotas de traceroute e gargalos" no menu Ver do mapa para desenhar as rotas.</p>':
+     '<p class="muted">Sem traceroutes com nós intermediários no período.</p>');
+  }
+  box.querySelectorAll('[data-insight-node] .linkButton').forEach(b=>b.onclick=()=>{
+   const n=nodes.find(v=>Number(v.node_num)===Number(b.closest('tr').dataset.insightNode));if(n)showNode(n);});
+ }catch(e){box.textContent='Análise indisponível: '+e.message;}
+}
+// #167/#170: camadas de cobertura e rotas no mapa.
+let coverageLayer=null,routeLayer=null;
+function snrColor(v){return v>=5?'#2ecc71':v>=0?'#a3d65c':v>=-5?'#f3cf48':v>=-10?'#f39c12':'#e5484d';}
+async function updateInsightLayers(){
+ if(!map)return;
+ coverageLayer=coverageLayer||L.layerGroup().addTo(map);routeLayer=routeLayer||L.layerGroup().addTo(map);
+ coverageLayer.clearLayers();routeLayer.clearLayers();
+ const hours=$('mapInsightHours').value,legend=[];
+ try{
+  if($('mapCoverage').checked){
+   const c=(await api('/api/insights/coverage?hours='+hours)).data;
+   for(const cell of c.cells){
+    L.rectangle([[cell.lat,cell.lon],[cell.lat+cell.size,cell.lon+cell.size]],{color:snrColor(cell.snr),weight:1,fillOpacity:.35,interactive:true})
+     .bindTooltip('SNR médio '+cell.snr+' dB (melhor '+cell.best_snr+')'+(cell.rssi!=null?' · RSSI '+cell.rssi+' dBm':'')+' · '+cell.count+' recepções de '+cell.nodes+' nó(s)').addTo(coverageLayer);
+   }
+   legend.push('Cobertura: '+c.cells.length+' células de '+c.samples+' recepções diretas (verde ≥ 5 dB · amarelo ≈ −5 dB · vermelho < −10 dB).');
+  }
+  if($('mapRoutes').checked){
+   const r=(await api('/api/insights/routes?hours='+hours)).data,byId=new Map(nodes.map(n=>[Number(n.node_num),n]));
+   const hot=new Map(r.bottlenecks.map(b=>[b.node,b.routes])),maxHot=Math.max(1,...hot.values());
+   for(const route of r.routes.slice(0,80))for(const [a,b] of route.edges){
+    const A=byId.get(a),B=byId.get(b);if(!A||!B||!validPos(A)||!validPos(B))continue;
+    L.polyline([[A.latitude,A.longitude],[B.latitude,B.longitude]],{color:'#c792ea',weight:2,opacity:.55})
+     .bindTooltip('Rota '+idName(route.from)+' → '+idName(route.to)+' · '+fmtDate(route.timestamp_ms)).addTo(routeLayer);
+   }
+   for(const [num,count] of hot){const n=byId.get(num);if(!n||!validPos(n))continue;
+    L.circleMarker([n.latitude,n.longitude],{radius:8+14*count/maxHot,color:'#ff5c8a',weight:2,fillOpacity:.25})
+     .bindTooltip('Gargalo: '+idName(num)+' em '+count+' rota(s)').addTo(routeLayer);}
+   legend.push('Rotas: '+Math.min(80,r.routes.length)+' de '+r.total_routes+' traceroutes; círculos rosa = nós intermediários mais usados.');
+  }
+ }catch(e){legend.push('Análise indisponível: '+e.message);}
+ $('insightLegend').textContent=legend.join(' ');
+}
+for(const id of ['mapCoverage','mapRoutes','mapInsightHours'])$(id).addEventListener('change',updateInsightLayers);
+// #171: perfil de terreno do enlace.
+async function openTerrainProfile(a,b){
+ const dialog=document.createElement('dialog');dialog.className='messageContextDialog terrainDialog';
+ dialog.innerHTML='<b>Perfil de terreno: '+esc(idName(a))+' → '+esc(idName(b))+'</b><div class="actions">'+
+  '<label>Frequência (MHz) <input id="terrFreq" type="number" value="915" min="100" max="3000" style="width:90px"></label>'+
+  '<label>Antena A (m) <input id="terrHa" type="number" value="2" min="0" max="300" style="width:70px"></label>'+
+  '<label>Antena B (m) <input id="terrHb" type="number" value="2" min="0" max="300" style="width:70px"></label><button type="button" id="terrRun">Calcular</button></div>'+
+  '<div id="terrBody" class="muted">Consultando elevações (Open-Meteo)…</div><div class="actions"><button type="button" data-terr-close>Fechar</button></div>';
+ document.body.appendChild(dialog);dialog.showModal();
+ const close=()=>{dialog.close();dialog.remove();};
+ dialog.querySelector('[data-terr-close]').onclick=close;dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+ const run=async()=>{
+  const body=dialog.querySelector('#terrBody');body.textContent='Consultando elevações (Open-Meteo)…';
+  try{
+   const q=id=>dialog.querySelector(id).value;
+   const t=(await api('/api/insights/terrain?a='+a+'&b='+b+'&freq='+q('#terrFreq')+'&ha='+q('#terrHa')+'&hb='+q('#terrHb'))).data,P=t.profile;
+   const maxD=t.distance_m,hi=Math.max(...P.map(p=>Math.max(p.terrain_m,p.los_m+p.fresnel_m))),lo=Math.min(...P.map(p=>Math.min(p.terrain_m,p.los_m-p.fresnel_m)));
+   const X=d=>10+d/maxD*780,Y=v=>230-(v-lo)/((hi-lo)||1)*210;
+   const ground='M'+X(0)+',240 '+P.map(p=>'L'+X(p.distance_m).toFixed(1)+','+Y(p.terrain_m).toFixed(1)).join(' ')+' L'+X(maxD)+',240 Z';
+   const upper=P.map(p=>X(p.distance_m).toFixed(1)+','+Y(p.los_m+p.fresnel_m).toFixed(1)).join(' ');
+   const lower=P.map(p=>X(p.distance_m).toFixed(1)+','+Y(p.los_m-p.fresnel_m*.6).toFixed(1)).join(' ');
+   body.classList.remove('muted');
+   body.innerHTML='<svg viewBox="0 0 800 240" role="img" aria-label="Perfil de terreno"><path d="'+ground+'" fill="#7a5c3a" opacity=".85"/>'+
+    '<polyline points="'+upper+'" fill="none" stroke="#4fc3f7" stroke-dasharray="4 4"/><polyline points="'+lower+'" fill="none" stroke="#f3cf48" stroke-dasharray="3 5"/>'+
+    '<line x1="'+X(0)+'" y1="'+Y(P[0].los_m)+'" x2="'+X(maxD)+'" y2="'+Y(P.at(-1).los_m)+'" stroke="#51d887" stroke-width="2"/>'+
+    '<text x="12" y="16" fill="#ddd" font-size="12">'+(t.distance_m/1000).toFixed(2)+' km · terreno com curvatura (k=4/3)</text></svg>'+
+    '<p><b>'+esc(t.verdict)+'</b>'+(t.worst?' Pior ponto a '+(t.worst.distance_m/1000).toFixed(2)+' km: folga de '+t.worst.clearance_m+' m ('+Math.round(t.worst.ratio*100)+'% da zona de Fresnel).':'')+'</p>'+
+    '<p class="muted">Verde: linha de visada · azul: limite da 1ª zona de Fresnel · amarelo: 60% da zona (mínimo recomendado). Elevações aproximadas do modelo digital de terreno; não incluem prédios e vegetação.</p>';
+  }catch(e){body.textContent='Perfil indisponível: '+e.message;}
+ };
+ dialog.querySelector('#terrRun').onclick=run;run();
+}
+// #174: nomes dos canais do rádio e edição dos secundários.
+let radioChannels=[];
+function channelLabel(i){
+ const c=radioChannels.find(x=>x.index===Number(i)),name=c&&c.name?' · '+c.name:'';
+ return Number(i)===0?'Canal primário'+name:'Canal '+i+name;
+}
+async function refreshChannels(){
+ try{
+  const r=await api('/api/channels');radioChannels=r.channels||[];
+  const sel=$('messageChannel'),old=sel.value;
+  sel.innerHTML=[0,1,2,3,4,5,6,7].map(i=>{const c=radioChannels.find(x=>x.index===i);
+   const off=i>0&&c&&c.role==='DISABLED';return '<option value="'+i+'"'+(off?' disabled':'')+'>'+esc(i===0?'Primário (0)'+(c?.name?' · '+c.name:''):i+(c?.name?' · '+c.name:'')+(off?' (desativado)':''))+'</option>';}).join('');
+  sel.value=old||'0';
+ }catch(e){}
+}
+setInterval(refreshChannels,30000);refreshChannels();
+const encryptionLabel={none:'sem criptografia',default:'chave padrão',simple:'chave simples',custom:'chave própria'};
+async function openChannelManager(){
+ await refreshChannels();
+ const dialog=document.createElement('dialog');dialog.className='messageContextDialog';
+ const live=radioChannels.length>0;
+ dialog.innerHTML='<b>Canais do rádio ativo</b><div class="ctxList">'+(live?radioChannels.map(c=>'<div class="ctxMsg"><small>'+
+   (c.index===0?'Primário (define a malha; não é editado aqui)':'Canal '+c.index)+' · '+esc(c.role==='DISABLED'?'desativado':encryptionLabel[c.encryption]||c.encryption)+'</small>'+
+   esc(c.name||(c.index===0?'(nome padrão do preset)':'—'))+(c.index>0?' <button type="button" data-chan-edit="'+c.index+'">Editar</button>':'')+'</div>').join(''):
+   '<p class="muted">Conecte um rádio para ver os canais.</p>')+'</div><form id="chanForm" class="formGrid" hidden>'+
+  '<input type="hidden" id="chanIndex"><div class="field"><label for="chanName">Nome (até 11 caracteres)</label><input id="chanName" maxlength="11"></div>'+
+  '<div class="field"><label><input type="checkbox" id="chanEnabled" checked> Canal ativado</label></div>'+
+  '<div class="field"><label for="chanPsk">Chave</label><select id="chanPsk"><option value="keep">Manter a atual</option><option value="random">Gerar chave aleatória (32 bytes)</option><option value="default">Chave padrão (pública)</option><option value="custom">Colar chave (base64)</option><option value="none">Sem criptografia</option></select></div>'+
+  '<div class="field"><label for="chanPskValue">Chave em base64</label><input id="chanPskValue" autocomplete="off"></div>'+
+  '<div class="actions span2"><button type="submit" class="primary">Gravar no rádio</button></div><p id="chanResult" class="muted span2"></p></form>'+
+  '<div class="actions"><button type="button" data-chan-close>Fechar</button></div>';
+ document.body.appendChild(dialog);dialog.showModal();
+ const close=()=>{dialog.close();dialog.remove();};
+ dialog.querySelector('[data-chan-close]').onclick=close;dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+ dialog.querySelectorAll('[data-chan-edit]').forEach(b=>b.onclick=()=>{
+  const c=radioChannels.find(x=>x.index===Number(b.dataset.chanEdit));
+  dialog.querySelector('#chanForm').hidden=false;dialog.querySelector('#chanIndex').value=c.index;
+  dialog.querySelector('#chanName').value=c.name;dialog.querySelector('#chanEnabled').checked=c.role!=='DISABLED';
+  dialog.querySelector('#chanPsk').value=c.role==='DISABLED'?'random':'keep';dialog.querySelector('#chanResult').textContent='';
+ });
+ dialog.querySelector('#chanForm').onsubmit=async e=>{
+  e.preventDefault();
+  const q=id=>dialog.querySelector(id),index=Number(q('#chanIndex').value);
+  if(!confirm('Gravar o canal '+index+' no rádio? Rádios que precisam conversar neste canal devem usar o mesmo nome e a mesma chave.'))return;
+  try{
+   const r=await api('/api/channels/save',{index,name:q('#chanName').value.trim(),enabled:q('#chanEnabled').checked,psk:q('#chanPsk').value,psk_value:q('#chanPskValue').value});
+   radioChannels=r.channels||radioChannels;refreshChannels();renderChat();
+   q('#chanResult').textContent='Canal gravado no rádio.'+(r.shared_key?' Chave nova para compartilhar com os outros rádios: '+r.shared_key:'');
+  }catch(err){q('#chanResult').textContent='Não gravado: '+err.message;}
+ };
+}
+$('channelManage').onclick=openChannelManager;
+// #172/#173: mensagens agendadas e respostas automáticas.
+let msgAutoData={schedules:[],replies:[]};
+const WEEKDAYS=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+function scheduleWhen(s){
+ if(s.kind==='once')return 'Uma vez em '+fmtDate(s.at_ms);
+ if(s.kind==='interval')return 'A cada '+s.interval_min+' min';
+ const days=WEEKDAYS.filter((d,i)=>s.weekdays&(1<<i));
+ return 'Às '+s.time_hhmm+(days.length===7?' todo dia':' · '+days.join(', '));
+}
+function targetLabel(t){return t==null?'Canal (todos)':'Privado · '+idName(t);}
+async function loadMsgAuto(){
+ try{
+  const d=await api('/api/msgauto');msgAutoData=d;
+  $('msgAutoEnabled').checked=d.config.enabled;$('msgAutoMax').value=d.config.max_per_hour;
+  $('msgAutoStatus').textContent=d.sent_last_hour+' envio(s) na última hora.';
+  $('schedTarget').innerHTML='<option value="">Canal (todos)</option>'+nodes.slice().sort((a,b)=>idName(a.node_num).localeCompare(idName(b.node_num)))
+   .map(n=>'<option value="'+n.node_num+'">Privado · '+esc(idName(n.node_num))+'</option>').join('');
+  $('scheduleList').innerHTML=d.schedules.map(s=>'<div class="nodeField"><b>'+esc(s.name||s.text.slice(0,30))+(s.enabled?'':' (pausado)')+'</b><span>'+
+   esc(scheduleWhen(s))+' · '+esc(targetLabel(s.target))+(s.next_ms?' · próxima: '+esc(fmtDate(s.next_ms)):'')+(s.last_error?' · '+esc(s.last_error):'')+
+   '</span><span><button type="button" data-sched-edit="'+s.id+'">Editar</button> <button type="button" data-sched-del="'+s.id+'" class="danger">Excluir</button></span></div>').join('')||'<p class="muted">Nenhum agendamento.</p>';
+  $('replyList').innerHTML=d.replies.map(r=>'<div class="nodeField"><b>'+esc(r.trigger)+(r.enabled?'':' (pausado)')+'</b><span>'+esc(r.response)+'</span><span>'+
+   '<button type="button" data-reply-edit="'+r.id+'">Editar</button> <button type="button" data-reply-del="'+r.id+'" class="danger">Excluir</button></span></div>').join('')||'<p class="muted">Nenhuma resposta automática.</p>';
+  $('msgAutoLog').innerHTML=d.log.slice(0,15).map(l=>'<div>'+esc(fmtDate(l.timestamp_ms))+' · '+(l.kind==='reply'?'resposta':'agendada')+' · '+
+   esc({sent:'enviada',skipped:'não enviada',error:'erro'}[l.status]||l.status)+(l.error?' ('+esc(l.error)+')':'')+' — '+esc(l.text.slice(0,80))+'</div>').join('')||'Nenhum envio ainda.';
+  document.querySelectorAll('[data-sched-edit]').forEach(b=>b.onclick=()=>editSchedule(Number(b.dataset.schedEdit)));
+  document.querySelectorAll('[data-reply-edit]').forEach(b=>b.onclick=()=>editReply(Number(b.dataset.replyEdit)));
+  document.querySelectorAll('[data-sched-del]').forEach(b=>b.onclick=async()=>{if(confirm('Excluir este agendamento?')){await api('/api/msgauto/schedule/delete',{id:Number(b.dataset.schedDel)});loadMsgAuto();}});
+  document.querySelectorAll('[data-reply-del]').forEach(b=>b.onclick=async()=>{if(confirm('Excluir esta resposta automática?')){await api('/api/msgauto/reply/delete',{id:Number(b.dataset.replyDel)});loadMsgAuto();}});
+  showScheduleFields();
+ }catch(e){$('msgAutoStatus').textContent='Indisponível: '+e.message;}
+}
+function showScheduleFields(){document.querySelectorAll('.sched').forEach(el=>el.style.display=el.classList.contains($('schedKind').value)?'flex':'none');}
+$('schedKind').onchange=showScheduleFields;
+$('schedDays').innerHTML=WEEKDAYS.map((d,i)=>'<label style="margin-right:6px"><input type="checkbox" data-weekday="'+i+'" checked> '+d+'</label>').join('');
+function resetScheduleForm(){$('scheduleForm').reset();$('schedId').value='';$('schedTime').value='07:00';$('schedInterval').value=60;$('schedChannel').value=0;
+ document.querySelectorAll('[data-weekday]').forEach(b=>b.checked=true);showScheduleFields();}
+function editSchedule(id){
+ const s=msgAutoData.schedules.find(x=>x.id===id);if(!s)return;
+ $('schedId').value=s.id;$('schedName').value=s.name;$('schedKind').value=s.kind;$('schedTime').value=s.time_hhmm||'07:00';
+ $('schedInterval').value=s.interval_min||60;$('schedTarget').value=s.target==null?'':String(s.target);$('schedChannel').value=s.channel;$('schedText').value=s.text;
+ if(s.at_ms){const d=new Date(s.at_ms-new Date().getTimezoneOffset()*60000);$('schedAt').value=d.toISOString().slice(0,16);}
+ document.querySelectorAll('[data-weekday]').forEach(b=>b.checked=!!(s.weekdays&(1<<Number(b.dataset.weekday))));
+ showScheduleFields();$('scheduleForm').scrollIntoView({block:'center'});
+}
+$('schedNew').onclick=resetScheduleForm;
+$('scheduleForm').onsubmit=async e=>{
+ e.preventDefault();
+ let weekdays=0;document.querySelectorAll('[data-weekday]').forEach(b=>{if(b.checked)weekdays|=1<<Number(b.dataset.weekday);});
+ try{
+  await api('/api/msgauto/schedule',{id:Number($('schedId').value)||0,name:$('schedName').value,kind:$('schedKind').value,text:$('schedText').value,
+   target:$('schedTarget').value||null,channel:Number($('schedChannel').value||0),time_hhmm:$('schedTime').value,weekdays,
+   interval_min:Number($('schedInterval').value||0),at_ms:$('schedAt').value?new Date($('schedAt').value).getTime():0});
+  notify('Agendamento salvo.');resetScheduleForm();loadMsgAuto();
+ }catch(err){notify('Agendamento: '+err.message,true);}
+};
+function editReply(id){
+ const r=msgAutoData.replies.find(x=>x.id===id);if(!r)return;
+ $('replyId').value=r.id;$('replyTrigger').value=r.trigger;$('replyMatch').value=r.match;$('replyScope').value=r.scope;
+ $('replyCooldown').value=r.cooldown_s;$('replyText').value=r.response;$('replyForm').scrollIntoView({block:'center'});
+}
+$('replyNew').onclick=()=>{$('replyForm').reset();$('replyId').value='';$('replyCooldown').value=300;$('replyPreviewText').textContent='';};
+$('replyForm').onsubmit=async e=>{
+ e.preventDefault();
+ try{
+  await api('/api/msgauto/reply',{id:Number($('replyId').value)||0,trigger:$('replyTrigger').value,match:$('replyMatch').value,
+   scope:$('replyScope').value,cooldown_s:Number($('replyCooldown').value||300),response:$('replyText').value});
+  notify('Resposta automática salva.');$('replyNew').click();loadMsgAuto();
+ }catch(err){notify('Resposta automática: '+err.message,true);}
+};
+$('replyPreview').onclick=async()=>{
+ try{const r=await api('/api/msgauto/preview',{template:$('replyText').value,command:$('replyTrigger').value});$('replyPreviewText').textContent='Prévia: '+r.text;}
+ catch(e){$('replyPreviewText').textContent=e.message;}
+};
+$('msgAutoSaveConfig').onclick=async()=>{
+ try{await api('/api/msgauto/config',{enabled:$('msgAutoEnabled').checked,max_per_hour:Number($('msgAutoMax').value||10)});notify('Mensagens automáticas salvas.');loadMsgAuto();}
+ catch(e){notify(e.message,true);}
+};
+// #165: alertas da malha (sino na barra superior e aba de configuração).
+let lastAlertId=null,alertPanelOpen=false;
+const alertIcons={silent:'🔕',battery:'🪫',channel:'📶',dm:'✉️',mention:'@'};
+async function refreshAlerts(){
+ try{
+  const r=await api('/api/alerts');
+  $('alertCount').hidden=!r.unread;$('alertCount').textContent=r.unread>99?'99+':r.unread;
+  const newest=r.alerts[0]?.id||0;
+  if(lastAlertId!==null)r.alerts.filter(a=>a.id>lastAlertId&&!a.read).slice(0,3).forEach(a=>notify((alertIcons[a.kind]||'⚠')+' '+a.title+' — '+a.text));
+  lastAlertId=Math.max(lastAlertId||0,newest);
+  if(alertPanelOpen)renderAlertPanel(r.alerts);
+ }catch(e){}
+}
+function renderAlertPanel(list){
+ $('alertPanel').innerHTML='<div class="actions" style="justify-content:space-between"><b>Alertas</b><button type="button" id="alertConfigure">Configurar</button></div>'+
+  (list.length?list.slice(0,50).map(a=>'<div class="alertItem'+(a.resolved_ms&&['silent','battery','channel'].includes(a.kind)?' resolved':'')+(a.read?'':' unread')+'"><b>'+
+   (alertIcons[a.kind]||'⚠')+' '+esc(a.title)+'</b>'+esc(a.text)+'<br><small>'+esc(fmtDate(a.created_ms))+
+   (a.resolved_ms&&['silent','battery','channel'].includes(a.kind)?' · resolvido '+esc(fmtDate(a.resolved_ms)):'')+(a.delivery?' · enviado: '+esc(a.delivery):'')+'</small></div>').join(''):
+   '<p class="muted">Nenhum alerta. A malha está tranquila.</p>');
+ $('alertConfigure').onclick=()=>{closeAlertPanel();setView('settings');showSettings('alerts');};
+}
+async function openAlertPanel(){
+ alertPanelOpen=true;const rect=$('alertBell').getBoundingClientRect(),panel=$('alertPanel');
+ panel.hidden=false;panel.style.top=Math.round(rect.bottom+6)+'px';
+ panel.style.left=Math.round(Math.max(12,Math.min(rect.left,window.innerWidth-panel.offsetWidth-12)))+'px';
+ $('alertBell').setAttribute('aria-expanded','true');
+ try{const r=await api('/api/alerts');renderAlertPanel(r.alerts);await api('/api/alerts/read',{});$('alertCount').hidden=true;}catch(e){notify(e.message,true);}
+}
+function closeAlertPanel(){alertPanelOpen=false;$('alertPanel').hidden=true;$('alertBell').setAttribute('aria-expanded','false');}
+$('alertBell').onclick=e=>{e.stopPropagation();alertPanelOpen?closeAlertPanel():openAlertPanel();};
+$('alertPanel').addEventListener('click',e=>e.stopPropagation());
+document.addEventListener('click',()=>{if(alertPanelOpen)closeAlertPanel();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&alertPanelOpen)closeAlertPanel();});
+setInterval(refreshAlerts,15000);refreshAlerts();
+async function loadAlertConfig(){
+ try{
+  const c=(await api('/api/alerts/config')).config;
+  $('alertEnabled').checked=c.enabled;$('alertSilent').value=c.silent_favorite_hours;$('alertBattery').value=c.battery_below;
+  $('alertChannel').value=c.channel_util_above;$('alertDm').checked=c.direct_messages;$('alertMention').checked=c.mentions;
+  $('alertTgEnabled').checked=c.telegram.enabled;$('alertTgToken').value=c.telegram.token;$('alertTgChat').value=c.telegram.chat_id;
+  const m=c.email;$('alertMailEnabled').checked=m.enabled;$('alertMailHost').value=m.host;$('alertMailPort').value=m.port;
+  $('alertMailSecurity').value=m.security;$('alertMailUser').value=m.user;$('alertMailPassword').value=m.password;
+  $('alertMailFrom').value=m.sender;$('alertMailTo').value=m.to;
+ }catch(e){$('alertFormStatus').textContent='Alertas indisponíveis: '+e.message;}
+}
+async function saveAlertConfig(){
+ const num=id=>Number($(id).value||0);
+ await api('/api/alerts/config',{enabled:$('alertEnabled').checked,silent_favorite_hours:num('alertSilent'),battery_below:num('alertBattery'),
+  channel_util_above:num('alertChannel'),direct_messages:$('alertDm').checked,mentions:$('alertMention').checked,
+  telegram:{enabled:$('alertTgEnabled').checked,token:$('alertTgToken').value.trim(),chat_id:$('alertTgChat').value.trim()},
+  email:{enabled:$('alertMailEnabled').checked,host:$('alertMailHost').value.trim(),port:num('alertMailPort')||587,security:$('alertMailSecurity').value,
+   user:$('alertMailUser').value.trim(),password:$('alertMailPassword').value,sender:$('alertMailFrom').value.trim(),to:$('alertMailTo').value.trim()}});
+}
+$('alertForm').onsubmit=async e=>{e.preventDefault();try{await saveAlertConfig();$('alertFormStatus').textContent='Alertas salvos.';await loadAlertConfig();}catch(err){$('alertFormStatus').textContent=err.message;}};
+for(const [btn,channel,label] of [['alertTestTg','telegram','Telegram'],['alertTestMail','email','e-mail']])
+ $(btn).onclick=async()=>{
+  $('alertFormStatus').textContent='Salvando e enviando teste por '+label+'…';
+  try{await saveAlertConfig();await api('/api/alerts/test',{channel});$('alertFormStatus').textContent='Teste enviado por '+label+'. Confira se chegou.';}
+  catch(e){$('alertFormStatus').textContent='Falha no teste por '+label+': '+e.message;}
+ };
+// #175: busca no histórico inteiro de mensagens.
+let messageSearchTimer=null;
+function chatTitle(key){return key.startsWith('node:')?'Privado · '+idName(Number(key.slice(5))):channelLabel(Number(key.slice(8)));}
+function highlight(text,query){
+ const plain=String(text||''),q=norm(query).trim();
+ if(!q)return esc(plain);
+ const folded=norm(plain);let out='',i=0,pos;
+ while(q&&(pos=folded.indexOf(q,i))>=0){out+=esc(plain.slice(i,pos))+'<mark>'+esc(plain.slice(pos,pos+q.length))+'</mark>';i=pos+q.length;}
+ return out+esc(plain.slice(i));
+}
+async function runMessageSearch(){
+ const q=$('messageSearch').value.trim(),box=$('messageSearchResults');
+ if(q.length<2){box.hidden=true;return;}
+ try{
+  const r=await api('/api/messages/search?q='+encodeURIComponent(q)+($('messageSearchDays').value?'&days='+$('messageSearchDays').value:''));
+  box.innerHTML=r.data.length?r.data.map(m=>'<button type="button" role="option" data-search-msg="'+m.id+'"><small>'+esc(fmtDate(m.timestamp_ms))+' · '+
+     esc(chatTitle(chatKey(m)))+' · '+esc(m.direction==='tx'?'Você':idName(m.from_node))+'</small>'+highlight(String(m.text).slice(0,180),q)+'</button>').join('')+
+     (r.data.length>=200?'<p class="muted" style="padding:6px 10px">Mostrando as 200 mais recentes; refine a busca.</p>':''):
+   '<p class="muted" style="padding:8px 10px">Nenhuma mensagem encontrada.</p>';
+  box.hidden=false;
+  box.querySelectorAll('[data-search-msg]').forEach(b=>b.onclick=()=>openMessageContext(Number(b.dataset.searchMsg),q));
+ }catch(e){box.innerHTML='<p class="muted" style="padding:8px 10px">'+esc(e.message)+'</p>';box.hidden=false;}
+}
+async function openMessageContext(id,query){
+ $('messageSearchResults').hidden=true;
+ try{
+  const ctx=(await api('/api/messages/context?id='+id)).data,key=chatKey(ctx.message);
+  const dialog=document.createElement('dialog');dialog.className='messageContextDialog';
+  dialog.innerHTML='<b>'+esc(chatTitle(key))+'</b><div class="ctxList">'+ctx.messages.map(m=>'<div class="ctxMsg'+(m.id===id?' hit':'')+'" data-ctx="'+m.id+'"><small>'+
+    esc(fmtDate(m.timestamp_ms))+' · '+esc(m.direction==='tx'?'Você':idName(m.from_node))+'</small>'+highlight(m.text,m.id===id?query:'')+'</div>').join('')+
+   '</div><div class="actions"><button type="button" class="primary" data-ctx-open>Abrir conversa</button><button type="button" data-ctx-close>Fechar</button></div>';
+  document.body.appendChild(dialog);dialog.showModal();
+  dialog.querySelector('.hit')?.scrollIntoView({block:'center'});
+  const close=()=>{dialog.close();dialog.remove();};
+  dialog.querySelector('[data-ctx-close]').onclick=close;
+  dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+  dialog.querySelector('[data-ctx-open]').onclick=()=>{
+   close();currentChat=key;chatRenderSignature='';renderChat();
+   const el=$('bubbles').querySelector('[data-msg-key="'+id+'"]');
+   if(el){el.scrollIntoView({block:'center'});el.classList.add('searchHit');setTimeout(()=>el.classList.remove('searchHit'),2500);}
+   else notify('A mensagem é antiga e não está entre as últimas carregadas na conversa; o contexto acima mostra o trecho.');
+  };
+ }catch(e){notify('Busca: '+e.message,true);}
+}
+$('messageSearch').addEventListener('input',()=>{clearTimeout(messageSearchTimer);messageSearchTimer=setTimeout(runMessageSearch,300);});
+$('messageSearchDays').onchange=runMessageSearch;
+$('messageSearch').addEventListener('keydown',e=>{if(e.key==='Escape'){$('messageSearchResults').hidden=true;}});
+document.addEventListener('click',e=>{if(!e.target.closest?.('.messageSearchBox'))$('messageSearchResults').hidden=true;});
 let lastDeviceNotices=[],deviceNoticeTimer=null;
-const deviceJobActive=n=>['queued','connecting','registering'].includes(n.job?.phase);
+const deviceJobActive=n=>['queued','pairing','connecting','registering'].includes(n.job?.phase);
 function deviceNoticeHtml(n){
  const where=radioKindLabel(n.kind)+' · '+esc(n.address),job=n.job||{},id=esc(n.id);
  const btn=(attr,label,primary)=>'<button type="button"'+(primary?' class="primary"':'')+' data-notice-'+attr+'="'+id+'">'+label+'</button>';
@@ -3576,23 +4149,32 @@ function deviceNoticeHtml(n){
     (n.kind==='ble'?' Se o rádio pedir PIN, confira a janela de pareamento do Windows (PIN na tela do rádio; 123456 se não tiver tela).':''),btn('cancel','Cancelar'));
  }
  if(job.phase==='registering')return card('Adicionando '+esc(n.name)+'…',where+' · cadastrando e conectando.','');
- if(job.phase==='failed')return card('Não foi possível adicionar '+esc(n.name),esc(job.error||'Sem resposta do rádio.'),
-   btn('add','Tentar de novo',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alert');
+ if(job.phase==='pairing')return card('Pareando '+esc(n.name)+'…',where+' · enviando o PIN ao rádio.',btn('cancel','Cancelar'));
+ // #164: campo de PIN para rádios Bluetooth que pedem pareamento.
+ const pinField=n.kind==='ble'?'<div class="actions"><input type="text" inputmode="numeric" maxlength="8" placeholder="PIN do rádio" aria-label="PIN de pareamento Bluetooth" data-notice-pin-input="'+id+'" style="width:120px">'+
+   btn('pin','Parear com PIN',job.needs_pin)+'</div>':'';
+ if(job.phase==='failed')return card('Não foi possível adicionar '+esc(n.name),esc(job.error||'Sem resposta do rádio.')+
+   (n.kind==='ble'?' Se o rádio pede PIN, digite o código mostrado na tela dele (123456 se não tiver tela).':''),
+   pinField+btn('add','Tentar de novo',!job.needs_pin)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alert');
  if(job.phase==='done'){
   const name=esc(job.source?.name||n.name);
   if(job.other_active)return card(name+' adicionado','Conexão automática marcada. Outro rádio está ativo; este ficou em espera.',btn('use','Usar este agora',true)+btn('close','Fechar'));
   return card(name+' adicionado',job.switched?'Agora é o rádio ativo (prioridade USB).':'Conexão automática marcada; conectando.',btn('close','Fechar'));
  }
  return card('Rádio Meshtastic detectado',esc(n.name)+' — '+where+(job.phase==='cancelled'?' · verificação cancelada.':''),
-   btn('add','Adicionar e conectar',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alertdialog');
+   btn('add','Adicionar e conectar',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo')+pinField,'alertdialog');
 }
 function renderDeviceNotices(list=lastDeviceNotices){
  lastDeviceNotices=list;
  const box=$('deviceNotices'),html=list.map(deviceNoticeHtml).join('');
- if(box.dataset.html!==html){box.innerHTML=html;box.dataset.html=html;}
+ const typing=document.activeElement?.matches?.('[data-notice-pin-input]');
+ if(box.dataset.html!==html&&!typing){box.innerHTML=html;box.dataset.html=html;}
  const call=async(path,id,extra={})=>{try{await api(path,{id,...extra});}catch(e){notify(e.message,true);}await refreshDeviceNotices();};
  const on=(attr,fn)=>box.querySelectorAll('[data-notice-'+attr+']').forEach(b=>b.onclick=()=>fn(b.getAttribute('data-notice-'+attr)));
  on('add',id=>call('/api/devices/accept',id));
+ on('pin',id=>{const pin=box.querySelector('[data-notice-pin-input="'+id+'"]')?.value.trim();
+  if(!/^\d{4,8}$/.test(pin||'')){notify('Digite o PIN de 4 a 8 dígitos mostrado no rádio.',true);return;}
+  call('/api/devices/pair',id,{pin});});
  on('cancel',id=>call('/api/devices/cancel',id));
  on('later',id=>call('/api/devices/dismiss',id));
  on('never',id=>call('/api/devices/dismiss',id,{never:true}));

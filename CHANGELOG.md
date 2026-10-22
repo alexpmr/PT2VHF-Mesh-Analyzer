@@ -1,3 +1,21 @@
+# v0.6.40 — Alertas, backup, análises da malha, mensagens automáticas, canais, busca, EN/ES e PIN Bluetooth
+
+- #164: pareamento BLE com PIN digitado no aviso do dispositivo (`/api/devices/pair`, fase "pairing" cancelável). Windows: pareamento personalizado do WinRT respondendo ao pedido de PIN; Linux: `bluetoothctl` com agente de teclado; macOS: diálogo do sistema. Falha de verificação BLE passa a oferecer o campo de PIN.
+- #165: central de alertas (`alerts`): favorito calado, bateria baixa (repetidores e favoritos), utilização do canal, mensagem privada e menção. Um alerta por situação até ser resolvida; histórico não gera alerta. Sino com contador e painel; envio por Telegram e SMTP (STARTTLS/SSL), segredos mascarados na API, botões de teste.
+- #166: backup `.zip` (manifesto + cópia consistente do SQLite pela API de backup) e restauração em duas etapas: o arquivo é validado e preparado; no reinício, o banco atual é guardado em `backups/pre-restore-*.sqlite3` antes da troca. Upload inválido não descarta uma restauração já preparada. Botão de salvar no app de desktop.
+- #167: camada de cobertura por células com o SNR médio das recepções diretas (sem MQTT, sem saltos).
+- #168: linha do tempo do nó (presença, bateria, tensão, SNR, utilização do canal, airtime) em 24 h / 7 d / 30 d.
+- #169: aba Repetidores em Estatísticas (disponibilidade por horas ouvidas, telemetria, participação em rotas, presença).
+- #170: rotas de traceroute no mapa e aba Topologia com os nós intermediários mais usados (gargalos).
+- #171: perfil de terreno entre dois nós com elevação Open-Meteo, curvatura k=4/3 e 1ª zona de Fresnel.
+- #172/#173: mensagens agendadas (uma vez, diária com dias da semana, intervalo ≥ 15 min) e respostas automáticas (igual/começa/contém; privadas, canal ou ambos; pausa por remetente), variáveis de modelo incluindo `{clima}`, limite comum de envios por hora, nunca responde a mensagens antigas nem aos próprios rádios; registro recente e pré-visualização.
+- #174: lista de canais do rádio ativo (sem expor chaves), canais secundários como conversas, edição dos canais 1–7 (nome, ativação, chave manter/padrão/aleatória/nenhuma/personalizada) com restauração em caso de falha.
+- #175: busca no histórico de mensagens sem acentos/maiúsculas, por período, com contexto da conversa.
+- #176: interface em inglês e espanhol (preferência `language` no Sistema). Tradução no navegador por dicionário, inclusive de conteúdo criado depois; textos das mensagens nunca são traduzidos; textos sem tradução ficam em português.
+- #177: relatório PDF com seções de repetidores, rotas/gargalos, cobertura, presença e alertas/mensagens (sem conteúdo das mensagens).
+
+Validação: testes Python (backup/restauração, busca, alertas, automação de mensagens, canais, análises, PIN, PDF, idioma) e regressão Chromium v0.6.34–v0.6.40. Não testado ao vivo neste ambiente: Open-Meteo (`{clima}` e perfil de terreno) e pareamento BLE com PIN em Windows/Linux reais.
+
 # v0.6.39 — Primeira abertura detecta, adiciona e conecta o rádio
 
 - #162: ao iniciar com interface e sem conexões cadastradas, o app dispara a busca de primeira abertura antes do diálogo "Configure sua primeira conexão". Etapa 1: todas as portas USB/serial com VID verificadas em paralelo pelo handshake Meshtastic (prazo de 20 s); cada rádio que responde é cadastrado com conexão automática e conectado na hora, com o cartão "adicionado" e Desfazer de #155. Etapa 2 (só se nada responder na USB): mDNS e Bluetooth próximo (prazos de 20/25 s). Respeita as preferências de detecção por tipo e os dispositivos "Nunca". A interface mostra "Procurando rádios Meshtastic…" com Cancelar; o diálogo só abre se nada for encontrado, com o resultado da busca e o novo botão "Procurar novamente". Também vale ao abrir sem conexões depois da primeira vez. Desligado em container e no modo sem interface.

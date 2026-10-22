@@ -44,11 +44,31 @@ class PDFExportBridge:
     may reach disk through an explicit user-chosen native save destination.
     """
 
-    def __init__(self):
+    def __init__(self, profile=None):
         # This must NOT be public: pywebview traverses public js_api fields
         # recursively, which exposes WinForms/WebView2 native COM objects and
         # can crash the new instance during the automatic updater restart.
         self._window = None
+        self._profile = profile
+
+    def save_backup(self, file_name: str) -> dict:
+        """#166: copia um backup já gerado em backups/ para o local escolhido."""
+        import shutil
+        from .backup import backup_file
+        source = backup_file(Path(self._profile), file_name)
+        if self._window is None:
+            raise RuntimeError("Janela nativa não disponível")
+        import webview
+        result = self._window.create_file_dialog(
+            webview.SAVE_DIALOG, save_filename=source.name,
+            file_types=("Backup do Mesh Analyzer (*.zip)",))
+        if not result:
+            return {"saved": False, "cancelled": True}
+        dest = Path(result[0] if isinstance(result, (tuple, list)) else result)
+        if dest.suffix.lower() != ".zip":
+            dest = dest.with_suffix(".zip")
+        shutil.copyfile(source, dest)
+        return {"saved": True, "filename": dest.name, "size": dest.stat().st_size}
 
     def save_pdf(self, data_base64: str, suggested_name: str = "") -> dict:
         import base64
@@ -96,7 +116,7 @@ def open_desktop_window(url: str, profile: Path) -> None:
         except (AttributeError, OSError):
             pass  # The branded EXE resource still supplies the taskbar icon.
 
-    pdf_bridge = PDFExportBridge()
+    pdf_bridge = PDFExportBridge(profile)
     window = webview.create_window(
         "PT2VHF Mesh Analyzer",
         url=url,

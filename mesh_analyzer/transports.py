@@ -819,6 +819,81 @@ class SourceManager:
             with self._lock:self._interfaces.pop(id,None)
 
 
+    # --- #174: canais -----------------------------------------------------------
+    @staticmethod
+    def _psk_kind(psk):
+        psk=bytes(psk or b"")
+        if not psk:return "none"
+        if len(psk)==1:return "default" if psk==b"\x01" else "simple"
+        return "custom"
+
+    def channel_list(self,source_id=None):
+        """Canais do rádio ativo (ou do indicado); sem expor a chave."""
+        sid=int(source_id or self.active_radio() or 0)
+        if not sid:
+            return {"source_id":None,"live":False,"channels":[]}
+        with self._lock:
+            iface=self._interfaces.get(sid)
+        local=getattr(iface,"localNode",None) if iface else None
+        chans=getattr(local,"channels",None) if local else None
+        if chans:
+            from meshtastic.protobuf import channel_pb2
+            rows=[{"index":int(c.index),"role":channel_pb2.Channel.Role.Name(c.role),
+                   "name":str(c.settings.name or ""),"encryption":self._psk_kind(c.settings.psk),
+                   "uplink":bool(c.settings.uplink_enabled),"downlink":bool(c.settings.downlink_enabled)}
+                  for c in chans]
+            self.db._set_setting("channels:%d"%sid,rows)
+            return {"source_id":sid,"live":True,"channels":rows}
+        return {"source_id":sid,"live":False,"channels":self.db._setting("channels:%d"%sid,[]) or []}
+
+    def set_channel(self,source_id,index,name="",enabled=True,psk="keep",psk_value=""):
+        """Grava um canal secundário (1–7). Devolve a chave nova quando gerada, para compartilhar."""
+        import base64,os as _os
+        sid=int(source_id)
+        index=int(index)
+        if not 1<=index<=7:
+            raise ValueError("Só os canais secundários (1 a 7) podem ser editados aqui; o primário define a malha")
+        name=str(name or "").strip()
+        if len(name.encode("utf-8"))>11:
+            raise ValueError("Nome do canal: até 11 caracteres")
+        if psk not in ("keep","default","random","none","custom"):
+            raise ValueError("Chave: manter, padrão, aleatória, nenhuma ou personalizada")
+        with self._config_lock:
+            with self._lock:
+                iface=self._interfaces.get(sid)
+            local=getattr(iface,"localNode",None) if iface else None
+            chans=getattr(local,"channels",None) if local else None
+            if not chans or index>=len(chans):
+                raise ValueError("Rádio desconectado ou canais ainda não sincronizados")
+            from meshtastic.protobuf import channel_pb2
+            ch=chans[index]
+            original=channel_pb2.Channel();original.CopyFrom(ch)
+            shared=""
+            if enabled:
+                if psk=="keep" and ch.role==channel_pb2.Channel.Role.DISABLED:psk="random"
+                if psk=="default":ch.settings.psk=b"\x01"
+                elif psk=="none":ch.settings.psk=b""
+                elif psk=="random":
+                    ch.settings.psk=_os.urandom(32);shared=base64.b64encode(ch.settings.psk).decode()
+                elif psk=="custom":
+                    try:key=base64.b64decode(str(psk_value).strip(),validate=True)
+                    except Exception:raise ValueError("Chave personalizada em base64 inválida") from None
+                    if len(key) not in (16,32):raise ValueError("Chave personalizada deve ter 16 ou 32 bytes")
+                    ch.settings.psk=key
+                ch.settings.name=name
+                ch.role=channel_pb2.Channel.Role.SECONDARY
+            else:
+                ch.role=channel_pb2.Channel.Role.DISABLED
+            try:
+                local.writeChannel(index)
+            except Exception:
+                ch.CopyFrom(original)
+                raise
+        self.db.log("Canal %d %s"%(index,"gravado: "+name if enabled else "desativado"),source_id=sid)
+        result=self.channel_list(sid)
+        result.update(success=True,shared_key=shared)
+        return result
+
     def radio_config(self, source_id):
         """Read local device configuration; MQTT cannot manage radio hardware."""
         from .device_config import read_device

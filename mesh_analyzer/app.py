@@ -139,7 +139,7 @@ def radios_available(db, sources):
     return sources.available_radios(ble_seen=seen)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None):
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None, restart=None, alerts=None, msgauto=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -202,6 +202,60 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/detected":
                     notices=[{k:v for k,v in n.items() if k not in ("candidate","key")} for n in watcher.notices()] if watcher else []
                     self._json({"success":True,"data":notices})
+                elif path.startswith("/api/insights/"):
+                    from . import insights
+                    q={k:v[0] for k,v in urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).items()}
+                    hours=int(q.get("hours") or 24)
+                    kind=path.rsplit("/",1)[1]
+                    if kind=="timeline":data=insights.node_timeline(db,int(q["node"],0),hours)
+                    elif kind=="repeaters":data=insights.repeaters(db,hours)
+                    elif kind=="coverage":data=insights.coverage(db,hours,float(q.get("cell") or 0.01))
+                    elif kind=="routes":data=insights.routes(db,hours)
+                    elif kind=="terrain":
+                        pos={}
+                        for key in ("a","b"):
+                            row=db._rows("SELECT latitude,longitude FROM nodes WHERE node_num=?",(int(q[key],0),))
+                            if not row or row[0]["latitude"] is None:raise ValueError("Os dois nós precisam ter posição conhecida")
+                            pos[key]=(row[0]["latitude"],row[0]["longitude"])
+                        data=insights.terrain_profile(pos["a"],pos["b"],float(q.get("freq") or 915),
+                            float(q.get("ha") or 2),float(q.get("hb") or 2))
+                    else:raise LookupError("Análise desconhecida")
+                    self._json({"success":True,"data":data})
+                elif path == "/api/channels":
+                    self._json({"success":True,**sources.channel_list()})
+                elif path == "/api/msgauto":
+                    if not msgauto:raise ValueError("Mensagens automáticas indisponíveis")
+                    self._json({"success":True,**msgauto.overview()})
+                elif path == "/api/alerts":
+                    self._json({"success":True,**alerts.list()} if alerts else {"success":True,"alerts":[],"unread":0})
+                elif path == "/api/alerts/config":
+                    if not alerts:raise ValueError("Alertas indisponíveis")
+                    self._json({"success":True,"config":alerts.config(public=True)})
+                elif path == "/api/messages/search":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    node=query.get("node",[""])[0]
+                    days=query.get("days",[""])[0]
+                    self._json({"success":True,"data":db.search_messages(query.get("q",[""])[0][:200],
+                        int(node,0) if node else None,int(days) if days else None)})
+                elif path == "/api/messages/context":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    self._json({"success":True,"data":db.message_context(int(query.get("id",["0"])[0]))})
+                elif path == "/api/backup/status":
+                    from .backup import last_restore, pending_restore
+                    self._json({"success":True,"pending":pending_restore(profile_dir()),
+                                "last":last_restore(profile_dir()),"container":in_container()})
+                elif path == "/api/backup/download":
+                    from .backup import backup_file
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    file=backup_file(profile_dir(),query.get("file",[""])[0])
+                    body=file.read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type","application/zip")
+                    self.send_header("Content-Disposition","attachment; filename="+file.name)
+                    self.send_header("X-Content-Type-Options","nosniff")
+                    self.send_header("Cache-Control","no-store")
+                    self.send_header("Content-Length",str(len(body)))
+                    self.end_headers();self.wfile.write(body)
                 elif path == "/api/devices/autoadd":
                     self._json({"success":True,"data":autoadd.status() if autoadd else {"running":False,"phase":"idle","results":[]}})
                 elif path == "/api/discovery":self._json({"success":True,"data":discovery.snapshot() if discovery else {"running":False,"items":[],"errors":["Serviço indisponível"]}})
@@ -240,6 +294,8 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     filters={k:v[0] for k,v in query.items()}
                     self._json(calculate(db,filters,sources.snapshot()))
                 else:self._error("Rota não encontrada",404)
+            except (ValueError,LookupError) as exc:
+                self._error(exc,400)
             except Exception as exc:
                 LOG.exception("Erro GET %s",path)
                 self._error(exc,500)
@@ -254,6 +310,13 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 host=self.headers.get("Host","")
                 if origin and urllib.parse.urlparse(origin).netloc!=host:
                     return self._error("Origem não autorizada",403)
+                if path == "/api/backup/restore":
+                    # #166: o .zip vem como corpo bruto (não cabe no limite de JSON).
+                    if "application/zip" not in self.headers.get("Content-Type",""):
+                        return self._error("Envie o arquivo .zip do backup",415)
+                    from .backup import stage_restore
+                    meta=stage_restore(profile_dir(),self.rfile,int(self.headers.get("Content-Length","0")))
+                    return self._json({"success":True,"pending":meta})
                 if "application/json" not in self.headers.get("Content-Type",""):
                     return self._error("Content-Type application/json necessário",415)
                 size=int(self.headers.get("Content-Length","0"))
@@ -295,6 +358,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/accept":
                     if not watcher:raise ValueError("Detecção automática indisponível")
                     self._json(watcher.accept(str(payload.get("id",""))))
+                elif path == "/api/devices/pair":
+                    if not watcher:raise ValueError("Detecção automática indisponível")
+                    self._json(watcher.pair(str(payload.get("id","")),str(payload.get("pin",""))))
                 elif path == "/api/devices/cancel":
                     if not watcher:raise ValueError("Detecção automática indisponível")
                     self._json(watcher.cancel(str(payload.get("id",""))))
@@ -324,6 +390,42 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/retention":
                     result=db.set_retention(payload)
                     self._json({"success":True,"retention":result})
+                elif path == "/api/alerts/config":
+                    if not alerts:raise ValueError("Alertas indisponíveis")
+                    self._json({"success":True,"config":alerts.save(payload)})
+                elif path == "/api/channels/save":
+                    active=sources.active_radio()
+                    if active is None:raise ValueError("Conecte um rádio para editar os canais")
+                    self._json(sources.set_channel(active,payload.get("index"),payload.get("name",""),
+                        payload.get("enabled") is not False,payload.get("psk","keep"),payload.get("psk_value","")))
+                elif path == "/api/msgauto/config":
+                    self._json({"success":True,"config":msgauto.save_config(payload)})
+                elif path == "/api/msgauto/schedule":
+                    self._json({"success":True,"schedule":msgauto.save_schedule(payload)})
+                elif path == "/api/msgauto/schedule/delete":
+                    self._json(msgauto.delete_schedule(payload["id"]))
+                elif path == "/api/msgauto/reply":
+                    self._json({"success":True,"reply":msgauto.save_reply(payload)})
+                elif path == "/api/msgauto/reply/delete":
+                    self._json(msgauto.delete_reply(payload["id"]))
+                elif path == "/api/msgauto/preview":
+                    sample={"from_node":None,"channel":0,"text":str(payload.get("command",""))}
+                    self._json({"success":True,"text":msgauto.render(str(payload.get("template",""))[:400],sample)})
+                elif path == "/api/alerts/read":
+                    if not alerts:raise ValueError("Alertas indisponíveis")
+                    self._json(alerts.mark_read())
+                elif path == "/api/alerts/test":
+                    if not alerts:raise ValueError("Alertas indisponíveis")
+                    self._json(alerts.test(str(payload.get("channel",""))))
+                elif path == "/api/backup/export":
+                    from .backup import export_backup
+                    self._json({"success":True,"backup":export_backup(db,profile_dir())})
+                elif path == "/api/backup/cancel":
+                    from .backup import cancel_restore
+                    cancel_restore(profile_dir());self._json({"success":True})
+                elif path == "/api/backup/restart":
+                    if not restart:raise ValueError("Reinício indisponível")
+                    restart();self._json({"success":True})
                 elif path == "/api/db/backup":
                     self._json({"success":True,"backup":db.backup()})
                 elif path == "/api/nodes/delete":
@@ -400,7 +502,11 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         desktop=True):
     """A private loopback backend serves the desktop WebView2 window."""
     data=profile_dir()
+    from .backup import apply_pending_restore
+    restored=apply_pending_restore(database or (data/"mesh-analyzer.sqlite3"))  # #166
     db=Database(database or (data/"mesh-analyzer.sqlite3"))
+    if restored:db.log("Restauração de backup: "+restored.get("status",""),
+                       "info" if restored.get("status")=="applied" else "error")
     db.recover_node_roles()
     drivers=SourceManager(db)
     updates=ReleaseMonitor(db)
@@ -413,6 +519,10 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     from .device_detection import AutoAdd, DeviceWatcher
     watcher=DeviceWatcher(db,drivers)
     autoadd=AutoAdd(db,drivers,watcher)
+    from .alerts import AlertCenter
+    alerts=AlertCenter(db,drivers)
+    from .msgauto import MessageAutomation
+    msgauto=MessageAutomation(db,drivers)
     server=None
     done=threading.Event()
     try:
@@ -473,6 +583,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 done.set()
                 updates.stop()
                 watcher.close()
+                alerts.close()
+                msgauto.close()
                 automation.close()
                 if server:
                     server.shutdown()
@@ -499,8 +611,30 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 LOG.exception("Update shutdown incomplete; keeping current version running")
         threading.Thread(target=update_shutdown_coordinator,
                          name="update-clean-shutdown",daemon=True).start()
-        server=ThreadingHTTPServer((host,int(port)),
-                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd))
+        def request_restart():
+            """#166: reabre o app (aplicando a restauração pendente) e encerra este processo."""
+            from .backup import restart_command
+            from .updater import restart_environment
+            env=restart_environment();env["PT2VHF_RESTARTED"]="1"
+            command=restart_command()+updater.restart_arguments
+            if in_container():
+                # O container reinicia o processo (restart: unless-stopped).
+                threading.Timer(0.5,request_shutdown).start();return
+            import subprocess
+            kwargs={"env":env,"cwd":os.getcwd()}
+            if os.name=="nt":kwargs["creationflags"]=getattr(subprocess,"DETACHED_PROCESS",0)|getattr(subprocess,"CREATE_NEW_PROCESS_GROUP",0)
+            else:kwargs["start_new_session"]=True
+            subprocess.Popen(command,**kwargs)
+            threading.Timer(0.5,request_shutdown).start()
+        handler=build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd,request_restart,alerts,msgauto)
+        for attempt in range(60):
+            try:
+                server=ThreadingHTTPServer((host,int(port)),handler)
+                break
+            except OSError:
+                # Reaberto pelo próprio app: espera a instância anterior liberar a porta.
+                if not os.environ.get("PT2VHF_RESTARTED") or attempt==59:raise
+                time.sleep(0.5)
         server.daemon_threads=True
         address="http://127.0.0.1:"+str(server.server_address[1])
         updater.health_url=address+"/health"
@@ -514,6 +648,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 except Exception:LOG.exception("Falha no job de retenção")
         threading.Thread(target=janitor,name="retention-cleaner",daemon=True).start()
         updates.start()
+        alerts.start()
+        msgauto.start()
         # #149: monitoramento de rádios novos só com interface (não em testes headless).
         if desktop and not os.environ.get("PT2VHF_DISABLE_AUTODETECT"):
             watcher.start()
@@ -572,6 +708,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
             done.set()
             updates.stop()
             watcher.close()
+            alerts.close()
+            msgauto.close()
             automation.close()
             if server:
                 server.shutdown()

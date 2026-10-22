@@ -26,8 +26,9 @@ class NativeBridgeSafetyTests(unittest.TestCase):
         # Verify that the only public entry point is the expected callable.
         # Do not rely on unstable private pywebview.util module functions.
         exposed=[name for name in dir(bridge) if not name.startswith("_")]
-        self.assertEqual(exposed, ["save_pdf"])
-        self.assertTrue(callable(getattr(bridge, "save_pdf")))
+        # v0.6.40 (#166): save_backup também é só um método; o perfil é privado.
+        self.assertEqual(exposed, ["save_backup", "save_pdf"])
+        self.assertTrue(all(callable(getattr(bridge, name)) for name in exposed))
 
     def test_desktop_window_reference_is_private(self):
         content=(Path(__file__).parents[1]/"mesh_analyzer"/"desktop.py").read_text(encoding="utf-8")
