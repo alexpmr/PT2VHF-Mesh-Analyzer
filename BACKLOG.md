@@ -1,3 +1,9 @@
+## v0.6.40 — Implementado nesta entrega
+
+- #164 a #177 implementados com testes automatizados.
+- Aceite físico pendente: PIN Bluetooth em Windows e Linux com rádio real; alertas por Telegram e e-mail com contas reais; mensagens agendadas e respostas automáticas em malha real; edição de canais no rádio; perfil de terreno e `{clima}` (dependem do Open-Meteo); restauração de backup entre Windows, Linux e container.
+- Limitações conhecidas: a tradução EN/ES cobre menus, botões, configurações e diálogos; parte das mensagens de estado geradas dinamicamente continua em português. Login para acesso pela rede e aplicativo de celular ficaram para depois.
+
 ## v0.6.39 — Implementado nesta entrega
 
 - #162 implementado com testes automatizados. Aceite físico pendente: instalação nova no Windows com o rádio ligado na USB antes de abrir (o diálogo não deve aparecer).
