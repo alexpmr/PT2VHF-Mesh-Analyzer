@@ -299,5 +299,76 @@ class Channels(Base):
         self.assertEqual(self.local.channels[3].role, self.pb.Channel.Role.DISABLED)
 
 
+
+class Insights(Base):
+    def pkt(self, i, frm, ts, port="TEXT_MESSAGE_APP", snr=None, hops=(3, 3), raw="{}", to=0xffffffff, mqtt=0):
+        self.db.add_packet({"source_id": 1, "packet_id": str(i), "source_packet_key": "p%d" % i, "timestamp_ms": ts,
+                            "from_node": frm, "to_node": to, "port": port, "channel": 0, "rx_snr": snr, "rx_rssi": -100 if snr is not None else None,
+                            "hop_start": hops[0], "hop_limit": hops[1], "via_mqtt": mqtt, "encrypted": 0, "direction": "rx",
+                            "text_preview": "", "raw_json": raw})
+
+    def test_node_timeline_series(self):
+        from mesh_analyzer import insights
+        now = now_ms()
+        for h in range(5):
+            self.db.add_rf_sample(1, 7, now - h * 3600000, battery=90 - h, voltage=4.0, channel_util=10 + h)
+            self.pkt(h, 7, now - h * 3600000, snr=5.0 - h)
+        t = insights.node_timeline(self.db, 7, 24, now)
+        self.assertEqual(t["bucket_ms"], 1800000)
+        self.assertEqual(len(t["battery"]), 5)
+        self.assertEqual(sum(c for _, c in t["heard"]), 5)
+        self.assertEqual(t["snr"][-1][1], 5.0)
+        self.assertEqual(insights.node_timeline(self.db, 7, 720, now)["bucket_ms"], 43200000)
+
+    def test_repeater_availability_and_route_count(self):
+        from mesh_analyzer import insights
+        now = now_ms()
+        self.db.upsert_node(20, 1, timestamp_ms=now - 2 * 3600000, observed=True, long_name="Morro", role="ROUTER")
+        with self.db._lock, self.db._db:
+            self.db._db.execute("UPDATE nodes SET first_seen_ms=? WHERE node_num=20", (now - 10 * 3600000,))
+        for h in (1, 3, 5, 7, 9):
+            self.pkt(100 + h, 20, now - h * 3600000 - 1000)
+        raw = json.dumps({"from": 30, "to": 10, "decoded": {"portnum": "TRACEROUTE_APP", "route": [20]}})
+        self.pkt(200, 30, now - 600000, port="TRACEROUTE_APP", raw=raw, to=10)
+        r = insights.repeaters(self.db, 24, now)["repeaters"][0]
+        self.assertEqual((r["name"], r["route_hops"]), ("Morro", 1))
+        self.assertAlmostEqual(r["availability"], 50.0, delta=10)
+
+    def test_routes_and_bottlenecks(self):
+        from mesh_analyzer import insights
+        now = now_ms()
+        for i, route in enumerate(([20], [20, 21], [21])):
+            raw = json.dumps({"from": 30 + i, "to": 10, "decoded": {"portnum": "TRACEROUTE_APP", "route": route}})
+            self.pkt(300 + i, 30 + i, now - 1000 * i, port="TRACEROUTE_APP", raw=raw, to=10)
+        r = insights.routes(self.db, 24, now)
+        self.assertEqual(r["total_routes"], 3)
+        self.assertEqual({b["node"]: b["routes"] for b in r["bottlenecks"]}, {20: 2, 21: 2})
+
+    def test_coverage_uses_only_direct_rf_with_position(self):
+        from mesh_analyzer import insights
+        now = now_ms()
+        self.db.upsert_node(40, 1, timestamp_ms=now, latitude=-15.801, longitude=-47.889)
+        self.db.upsert_node(41, 1, timestamp_ms=now)  # sem posição
+        self.pkt(1, 40, now, snr=6.0, hops=(3, 3))
+        self.pkt(2, 40, now, snr=-2.0, hops=(3, 3))
+        self.pkt(3, 40, now, snr=9.0, hops=(3, 2))   # multissalto: não conta
+        self.pkt(4, 40, now, snr=9.0, mqtt=1)          # MQTT: não conta
+        self.pkt(5, 41, now, snr=1.0)
+        c = insights.coverage(self.db, 24, 0.01, now)
+        self.assertEqual(len(c["cells"]), 1)
+        self.assertEqual((c["cells"][0]["snr"], c["cells"][0]["count"], c["cells"][0]["best_snr"]), (2.0, 2, 6.0))
+
+    def test_terrain_profile_fresnel(self):
+        from mesh_analyzer import insights
+        flat = insights.terrain_profile((-15.8, -47.9), (-15.8, -47.85), 915, 30, 30, samples=20, elevations=lambda pts: [1000.0] * len(pts))
+        self.assertIn("Visada livre", flat["verdict"])
+        hill = insights.terrain_profile((-15.8, -47.9), (-15.8, -47.85), 915, 2, 2, samples=20,
+                                        elevations=lambda pts: [1000.0 + (200 if 8 <= i <= 11 else 0) for i in range(len(pts))])
+        self.assertIn("Sem visada", hill["verdict"])
+        self.assertAlmostEqual(flat["distance_m"], 5355, delta=60)
+        with self.assertRaises(ValueError):
+            insights.terrain_profile((1, 1), (1, 1), elevations=lambda pts: [0] * len(pts))
+
+
 if __name__ == "__main__":
     unittest.main()

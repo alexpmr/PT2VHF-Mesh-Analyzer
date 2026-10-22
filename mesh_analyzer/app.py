@@ -202,6 +202,25 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/detected":
                     notices=[{k:v for k,v in n.items() if k not in ("candidate","key")} for n in watcher.notices()] if watcher else []
                     self._json({"success":True,"data":notices})
+                elif path.startswith("/api/insights/"):
+                    from . import insights
+                    q={k:v[0] for k,v in urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).items()}
+                    hours=int(q.get("hours") or 24)
+                    kind=path.rsplit("/",1)[1]
+                    if kind=="timeline":data=insights.node_timeline(db,int(q["node"],0),hours)
+                    elif kind=="repeaters":data=insights.repeaters(db,hours)
+                    elif kind=="coverage":data=insights.coverage(db,hours,float(q.get("cell") or 0.01))
+                    elif kind=="routes":data=insights.routes(db,hours)
+                    elif kind=="terrain":
+                        pos={}
+                        for key in ("a","b"):
+                            row=db._rows("SELECT latitude,longitude FROM nodes WHERE node_num=?",(int(q[key],0),))
+                            if not row or row[0]["latitude"] is None:raise ValueError("Os dois nós precisam ter posição conhecida")
+                            pos[key]=(row[0]["latitude"],row[0]["longitude"])
+                        data=insights.terrain_profile(pos["a"],pos["b"],float(q.get("freq") or 915),
+                            float(q.get("ha") or 2),float(q.get("hb") or 2))
+                    else:raise LookupError("Análise desconhecida")
+                    self._json({"success":True,"data":data})
                 elif path == "/api/channels":
                     self._json({"success":True,**sources.channel_list()})
                 elif path == "/api/msgauto":

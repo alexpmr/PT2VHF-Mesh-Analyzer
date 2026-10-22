@@ -87,6 +87,10 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .msgQuote{margin:2px 0 5px;padding:4px 8px;border-left:4px solid hsl(var(--who-h,200) 70% 60%);border-radius:6px;background:#0000002e;font-size:12px;display:flex;flex-direction:column}.msgQuote b{color:hsl(var(--who-h,200) 70% 68%);font-size:11px}.msgQuote span{opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-theme="light"] .msgHead b,html[data-theme="light"] .msgQuote b{color:hsl(var(--who-h,200) 65% 33%)}html[data-theme="light"] .msgQuote{background:#00000010}
 .bubblesNewMessages{align-self:center;margin:-38px 0 6px;position:relative;z-index:2;border-radius:14px;background:#d29b2c;border-color:#d29b2c;color:#1b1b1b;font-weight:700;font-size:11px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)}.bubblesNewMessages[hidden]{display:none}
+.nodeTimeline{margin-top:12px}.nodeTimeline h4{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.timelineRange{display:inline-flex;gap:4px}.timelineRange button{padding:3px 8px;font-size:11px}
+.chartGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}.chartBox{background:#0000001f;border-radius:8px;padding:8px}.chartBox b{font-size:12px}.chartBox small{color:var(--muted,#9fb2bf);font-size:10px;float:right}
+.chartBox svg{width:100%;height:80px;display:block}.availabilityBar{height:8px;border-radius:4px;background:#0000003a;overflow:hidden;min-width:80px}.availabilityBar i{display:block;height:100%}
+.terrainDialog{width:min(860px,96vw)}.terrainDialog svg{width:100%;height:260px;display:block;background:#0000001f;border-radius:8px}
 .alertBell{position:relative;border-radius:16px;padding:6px 10px;font-size:14px;line-height:1}.alertBell span{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#e5484d;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
 .alertBell span[hidden]{display:none}.alertPanel{position:fixed;z-index:9800;width:min(380px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #4f6577;border-radius:10px;box-shadow:0 12px 32px #0009;padding:8px}
 .alertPanel[hidden]{display:none}.alertItem{padding:8px 10px;border-radius:8px;border-left:4px solid #d29b2c;margin:4px 0;background:#0000001f}.alertItem.resolved{opacity:.6;border-left-color:#51d887}.alertItem.unread{background:#d29b2c22}
@@ -327,7 +331,7 @@ html[data-theme] #autoSaveButton:focus-visible{
 .messageBubbleActions{position:fixed;z-index:6000;background:var(--card);color:var(--ink);
  border:1px solid var(--line);border-radius:7px;padding:5px;box-shadow:0 7px 20px #0006}
 .messageBubbleActions button{display:block;width:100%;text-align:left}
-.bubble[data-msg-index]{cursor:pointer}.bubble.searchHit{outline:3px solid #f3cf48}
+.bubble[data-msg-index]{cursor:pointer}.linkButton{border:0;background:transparent;color:#83c4ff;text-decoration:underline;cursor:pointer;padding:0}.bubble.searchHit{outline:3px solid #f3cf48}
 .bubble[data-msg-index]:focus-visible{outline:2px solid var(--accent)}
 
 /* Source-confirmed Meshtastic NodeDB favorites: never signal success while pending. */
@@ -387,6 +391,11 @@ try {
 <div id="radarStatus" role="status">Aguardando radar...</div>
 <label><input id="mapHillshade" type="checkbox"> Relevo sombreado</label>
 <label><input id="mapTerrain" type="checkbox"> Relevo com corte</label>
+<div class="verSection">ANÁLISE DA MALHA</div>
+<label><input id="mapCoverage" type="checkbox"> Cobertura (SNR das recepções diretas)</label>
+<label><input id="mapRoutes" type="checkbox"> Rotas de traceroute e gargalos</label>
+<label for="mapInsightHours">Período <select id="mapInsightHours"><option value="24">24 h</option><option value="168" selected>7 dias</option><option value="720">30 dias</option></select></label>
+<div id="insightLegend" class="muted" role="status"></div>
 </div>
 </section>
 <section class="view" id="viewNodes"><div class="toolbar" id="nodesToolbar">
@@ -1234,6 +1243,7 @@ function linkPopupHtml(link,kind){
   line('Último registro',fmtDate(link.last_seen_ms))+
   line(logical?'Pacotes observados':'Observações',link.observations||0)+
   line('Distância',distance)+
+  (left&&right&&validPos(left)&&validPos(right)?'<p><button type="button" data-terrain="'+aNum+','+bNum+'">⛰ Perfil de terreno e zona de Fresnel</button></p>':'')+
   '<p style="font-size:11px;color:#b8c9d4">SNR, RSSI e saltos do enlace: não medidos por aresta neste agregado. Não atribuímos a esta relação métricas de pacotes multissalto.</p></div>';
 }
 function attachLinkPopup(layer,link,kind){
@@ -1241,6 +1251,9 @@ function attachLinkPopup(layer,link,kind){
  layer.on('popupopen',()=>{
    const root=layer.getPopup()?.getElement();
    if(!root)return;
+   root.querySelectorAll('[data-terrain]').forEach(el=>el.addEventListener('click',()=>{
+     const [a,b]=el.dataset.terrain.split(',').map(Number);map.closePopup();openTerrainProfile(a,b);
+   }));
    root.querySelectorAll('[data-link-node]').forEach(el=>el.addEventListener('click',()=>{
      const n=nodes.find(v=>Number(v.node_num)===Number(el.dataset.linkNode));
      if(n){map.closePopup();showNode(n);}
@@ -1694,8 +1707,11 @@ function showNode(n){
  if(!n)return;
  nodeDetailSelected=n.node_num;
  $('nodeDetailTitle').textContent=(n.friendly_name||n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
- $('nodeDetailBody').innerHTML=nodePopupHtml(n);
+ $('nodeDetailBody').innerHTML=nodePopupHtml(n)+'<div class="nodeTimeline"><h4>Linha do tempo <span class="timelineRange">'+
+   [[24,'24 h'],[168,'7 dias'],[720,'30 dias']].map(([h,l])=>'<button type="button" data-timeline="'+h+'">'+l+'</button>').join('')+'</span></h4><div id="nodeTimelineCharts" class="muted">Carregando…</div></div>';
  $('nodeDetailOverlay').classList.add('open');
+ $('nodeDetailBody').querySelectorAll('[data-timeline]').forEach(b=>b.onclick=()=>loadNodeTimeline(n.node_num,Number(b.dataset.timeline)));
+ loadNodeTimeline(n.node_num,24);
  $('nodeDetailBody').querySelectorAll('[data-rf-query]').forEach(b=>b.onclick=()=>runNodeQuery(n.node_num,b.dataset.rfQuery));
  refreshNodeQueryStatus(n.node_num);
  $('nodeRename').onclick=async()=>{
@@ -2749,7 +2765,7 @@ updateMessageBytes();
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
- ['energia','Energia'],['anomalias','Pontos de atenção']];
+ ['energia','Energia'],['anomalias','Pontos de atenção'],['repetidores','Repetidores'],['topologia','Topologia']];
 let currentStatTab='geral',statData=null,lastStatsFetch=0,statsLoading=false;
 const fmtCount=v=>v==null?'Sem dados':Number(v).toLocaleString('pt-BR');
 const fmtMeasure=(v,u)=>v==null?'Não medido':Number(v).toFixed(1).replace('.',',')+' '+u;
@@ -2766,6 +2782,9 @@ const statBar=(rows)=>'<div style="display:grid;gap:6px">'+rows.slice(0,12).map(
 function renderStats(){
  $('statsTabs').innerHTML=statTabs.map(([key,label])=>'<button class="subtab '+(key===currentStatTab?'active':'')+'" data-tab="'+key+'">'+esc(label)+'</button>').join('');
  $('statsTabs').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>selectStatTab(b.dataset.tab));
+ if(['repetidores','topologia'].includes(currentStatTab)){
+  $('statsContents').innerHTML='<div class="statsCard" id="insightBox">Carregando…</div>';loadInsightTab(currentStatTab);return;
+ }
  const d=statData,c=d?.counts;
  if(!d){$('statsContents').innerHTML='<div class="statsCard">Aguardando dados analíticos do SQLite.</div>';return;}
  const kpis=[
@@ -3678,6 +3697,126 @@ window.addEventListener('resize',()=>{if(radioMenuOpen)placeRadioMenu();});
 
 // #149/#155/#156: avisos de rádio detectado. A verificação roda no servidor
 // com prazo, fila Bluetooth e Cancelar; a tela só acompanha o estado.
+// #168/#169/#170: gráficos SVG simples, sem biblioteca externa.
+function sparkline(points,{color='#4fc3f7',bars=false,unit='',min=null,max=null}={}){
+ if(!points.length)return '<svg viewBox="0 0 300 80"><text x="150" y="44" text-anchor="middle" fill="#8aa0ad" font-size="12">Sem dados no período</text></svg>';
+ const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+ const x0=Math.min(...xs),x1=Math.max(...xs)||x0+1,lo=min??Math.min(...ys),hi=max??Math.max(...ys);
+ const span=(hi-lo)||1,X=x=>4+(x-x0)/((x1-x0)||1)*292,Y=y=>72-(y-lo)/span*62;
+ const label='<text x="296" y="12" text-anchor="end" fill="#8aa0ad" font-size="10">'+esc(hi.toFixed(1)+unit)+'</text><text x="296" y="78" text-anchor="end" fill="#8aa0ad" font-size="10">'+esc(lo.toFixed(1)+unit)+'</text>';
+ if(bars){const w=Math.max(1,292/points.length-1);
+  return '<svg viewBox="0 0 300 80">'+points.map(p=>'<rect x="'+X(p[0]).toFixed(1)+'" y="'+Y(p[1]).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+(72-Y(p[1])).toFixed(1)+'" fill="'+color+'" opacity=".8"><title>'+esc(fmtDate(p[0])+': '+p[1])+'</title></rect>').join('')+label+'</svg>';}
+ return '<svg viewBox="0 0 300 80"><polyline fill="none" stroke="'+color+'" stroke-width="2" points="'+points.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ')+'"/>'+
+  points.map(p=>'<circle cx="'+X(p[0]).toFixed(1)+'" cy="'+Y(p[1]).toFixed(1)+'" r="2" fill="'+color+'"><title>'+esc(fmtDate(p[0])+': '+p[1]+unit)+'</title></circle>').join('')+label+'</svg>';
+}
+async function loadNodeTimeline(num,hours){
+ const box=$('nodeTimelineCharts');if(!box)return;
+ document.querySelectorAll('[data-timeline]').forEach(b=>b.classList.toggle('primary',Number(b.dataset.timeline)===hours));
+ try{
+  const t=(await api('/api/insights/timeline?node='+num+'&hours='+hours)).data;
+  if(nodeDetailSelected!==num)return;
+  const chart=(title,pts,opts)=>'<div class="chartBox"><b>'+esc(title)+'</b><small>'+(pts.length?pts.length+' pontos':'')+'</small>'+sparkline(pts,opts)+'</div>';
+  box.classList.remove('muted');
+  box.innerHTML='<div class="chartGrid">'+chart('Presença (pacotes por intervalo)',t.heard,{bars:true,color:'#51d887',min:0})+
+   chart('Bateria',t.battery,{unit:'%',color:'#f3cf48',min:0,max:100})+chart('Tensão',t.voltage,{unit:' V',color:'#ffb86b'})+
+   chart('SNR recebido',t.snr,{unit:' dB',color:'#4fc3f7'})+chart('Utilização do canal',t.channel_util,{unit:'%',color:'#c792ea',min:0})+
+   chart('Airtime TX',t.air_util,{unit:'%',color:'#f78c6c',min:0})+'</div><p class="muted">'+t.packets+' pacotes no período. Telemetria só aparece quando o nó a transmite.</p>';
+ }catch(e){box.textContent='Linha do tempo indisponível: '+e.message;}
+}
+function insightHours(){return {'1h':1,'6h':6,'24h':24,'7d':168,'30d':720,all:2160}[$('statsPeriod').value]||168;}
+async function loadInsightTab(tab){
+ const box=$('insightBox');
+ try{
+  if(tab==='repetidores'){
+   const r=(await api('/api/insights/repeaters?hours='+insightHours())).data.repeaters;
+   if(currentStatTab!==tab)return;
+   const bar=v=>'<div class="availabilityBar" title="'+v+'%"><i style="width:'+v+'%;background:'+(v>=90?'#51d887':v>=60?'#f3cf48':'#e5484d')+'"></i></div>';
+   box.innerHTML='<h3>Saúde dos repetidores</h3><p class="muted">ROUTER, REPEATER, ROUTER_LATE e ROUTER_CLIENT. Disponibilidade = horas do período em que o nó foi ouvido.</p>'+
+    (r.length?'<div style="overflow-x:auto"><table class="reportTable"><thead><tr><th>Nó</th><th>Papel</th><th>Disponibilidade</th><th>Última vez ouvido</th><th>Bateria</th><th>Tensão</th><th>Canal</th><th>Airtime TX</th><th>Em rotas</th><th>Presença</th></tr></thead><tbody>'+
+     r.map(x=>'<tr data-insight-node="'+x.node+'"><td><button type="button" class="linkButton">'+esc(x.name)+'</button></td><td>'+esc(x.role)+'</td><td>'+bar(x.availability)+' '+x.availability+'%</td><td>'+
+      esc(x.last_seen_ms?age(x.last_seen_ms):'—')+'</td><td>'+(x.battery==null?'—':x.battery>100?'EXT':x.battery+'%')+'</td><td>'+(x.voltage==null?'—':Number(x.voltage).toFixed(2)+' V')+
+      '</td><td>'+(x.channel_util==null?'—':Number(x.channel_util).toFixed(1)+'%')+'</td><td>'+(x.air_util==null?'—':Number(x.air_util).toFixed(1)+'%')+'</td><td>'+x.route_hops+'</td><td>'+
+      esc({replied:'respondeu',timeout:'sem resposta',awaiting_reply:'checando'}[x.presence]||'—')+'</td></tr>').join('')+'</tbody></table></div>':
+     '<p class="muted">Nenhum nó com papel de repetidor conhecido.</p>');
+  }else{
+   const r=(await api('/api/insights/routes?hours='+insightHours())).data;
+   if(currentStatTab!==tab)return;
+   box.innerHTML='<h3>Topologia: nós por onde mais passam as rotas</h3><p class="muted">'+r.total_routes+' rotas de traceroute no período. Gargalo = nó intermediário presente em muitas rotas; se ele cair, essas rotas se quebram.</p>'+
+    (r.bottlenecks.length?'<div style="overflow-x:auto"><table class="reportTable"><thead><tr><th>#</th><th>Nó</th><th>Papel</th><th>Rotas</th><th>% das rotas</th></tr></thead><tbody>'+
+     r.bottlenecks.map((x,i)=>'<tr data-insight-node="'+x.node+'"><td>'+(i+1)+'</td><td><button type="button" class="linkButton">'+esc(x.name)+'</button></td><td>'+esc(x.role||'—')+'</td><td>'+x.routes+
+      '</td><td>'+x.share+'%</td></tr>').join('')+'</tbody></table></div><p class="muted">Ative "Rotas de traceroute e gargalos" no menu Ver do mapa para desenhar as rotas.</p>':
+     '<p class="muted">Sem traceroutes com nós intermediários no período.</p>');
+  }
+  box.querySelectorAll('[data-insight-node] .linkButton').forEach(b=>b.onclick=()=>{
+   const n=nodes.find(v=>Number(v.node_num)===Number(b.closest('tr').dataset.insightNode));if(n)showNode(n);});
+ }catch(e){box.textContent='Análise indisponível: '+e.message;}
+}
+// #167/#170: camadas de cobertura e rotas no mapa.
+let coverageLayer=null,routeLayer=null;
+function snrColor(v){return v>=5?'#2ecc71':v>=0?'#a3d65c':v>=-5?'#f3cf48':v>=-10?'#f39c12':'#e5484d';}
+async function updateInsightLayers(){
+ if(!map)return;
+ coverageLayer=coverageLayer||L.layerGroup().addTo(map);routeLayer=routeLayer||L.layerGroup().addTo(map);
+ coverageLayer.clearLayers();routeLayer.clearLayers();
+ const hours=$('mapInsightHours').value,legend=[];
+ try{
+  if($('mapCoverage').checked){
+   const c=(await api('/api/insights/coverage?hours='+hours)).data;
+   for(const cell of c.cells){
+    L.rectangle([[cell.lat,cell.lon],[cell.lat+cell.size,cell.lon+cell.size]],{color:snrColor(cell.snr),weight:1,fillOpacity:.35,interactive:true})
+     .bindTooltip('SNR médio '+cell.snr+' dB (melhor '+cell.best_snr+')'+(cell.rssi!=null?' · RSSI '+cell.rssi+' dBm':'')+' · '+cell.count+' recepções de '+cell.nodes+' nó(s)').addTo(coverageLayer);
+   }
+   legend.push('Cobertura: '+c.cells.length+' células de '+c.samples+' recepções diretas (verde ≥ 5 dB · amarelo ≈ −5 dB · vermelho < −10 dB).');
+  }
+  if($('mapRoutes').checked){
+   const r=(await api('/api/insights/routes?hours='+hours)).data,byId=new Map(nodes.map(n=>[Number(n.node_num),n]));
+   const hot=new Map(r.bottlenecks.map(b=>[b.node,b.routes])),maxHot=Math.max(1,...hot.values());
+   for(const route of r.routes.slice(0,80))for(const [a,b] of route.edges){
+    const A=byId.get(a),B=byId.get(b);if(!A||!B||!validPos(A)||!validPos(B))continue;
+    L.polyline([[A.latitude,A.longitude],[B.latitude,B.longitude]],{color:'#c792ea',weight:2,opacity:.55})
+     .bindTooltip('Rota '+idName(route.from)+' → '+idName(route.to)+' · '+fmtDate(route.timestamp_ms)).addTo(routeLayer);
+   }
+   for(const [num,count] of hot){const n=byId.get(num);if(!n||!validPos(n))continue;
+    L.circleMarker([n.latitude,n.longitude],{radius:8+14*count/maxHot,color:'#ff5c8a',weight:2,fillOpacity:.25})
+     .bindTooltip('Gargalo: '+idName(num)+' em '+count+' rota(s)').addTo(routeLayer);}
+   legend.push('Rotas: '+Math.min(80,r.routes.length)+' de '+r.total_routes+' traceroutes; círculos rosa = nós intermediários mais usados.');
+  }
+ }catch(e){legend.push('Análise indisponível: '+e.message);}
+ $('insightLegend').textContent=legend.join(' ');
+}
+for(const id of ['mapCoverage','mapRoutes','mapInsightHours'])$(id).addEventListener('change',updateInsightLayers);
+// #171: perfil de terreno do enlace.
+async function openTerrainProfile(a,b){
+ const dialog=document.createElement('dialog');dialog.className='messageContextDialog terrainDialog';
+ dialog.innerHTML='<b>Perfil de terreno: '+esc(idName(a))+' → '+esc(idName(b))+'</b><div class="actions">'+
+  '<label>Frequência (MHz) <input id="terrFreq" type="number" value="915" min="100" max="3000" style="width:90px"></label>'+
+  '<label>Antena A (m) <input id="terrHa" type="number" value="2" min="0" max="300" style="width:70px"></label>'+
+  '<label>Antena B (m) <input id="terrHb" type="number" value="2" min="0" max="300" style="width:70px"></label><button type="button" id="terrRun">Calcular</button></div>'+
+  '<div id="terrBody" class="muted">Consultando elevações (Open-Meteo)…</div><div class="actions"><button type="button" data-terr-close>Fechar</button></div>';
+ document.body.appendChild(dialog);dialog.showModal();
+ const close=()=>{dialog.close();dialog.remove();};
+ dialog.querySelector('[data-terr-close]').onclick=close;dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+ const run=async()=>{
+  const body=dialog.querySelector('#terrBody');body.textContent='Consultando elevações (Open-Meteo)…';
+  try{
+   const q=id=>dialog.querySelector(id).value;
+   const t=(await api('/api/insights/terrain?a='+a+'&b='+b+'&freq='+q('#terrFreq')+'&ha='+q('#terrHa')+'&hb='+q('#terrHb'))).data,P=t.profile;
+   const maxD=t.distance_m,hi=Math.max(...P.map(p=>Math.max(p.terrain_m,p.los_m+p.fresnel_m))),lo=Math.min(...P.map(p=>Math.min(p.terrain_m,p.los_m-p.fresnel_m)));
+   const X=d=>10+d/maxD*780,Y=v=>230-(v-lo)/((hi-lo)||1)*210;
+   const ground='M'+X(0)+',240 '+P.map(p=>'L'+X(p.distance_m).toFixed(1)+','+Y(p.terrain_m).toFixed(1)).join(' ')+' L'+X(maxD)+',240 Z';
+   const upper=P.map(p=>X(p.distance_m).toFixed(1)+','+Y(p.los_m+p.fresnel_m).toFixed(1)).join(' ');
+   const lower=P.map(p=>X(p.distance_m).toFixed(1)+','+Y(p.los_m-p.fresnel_m*.6).toFixed(1)).join(' ');
+   body.classList.remove('muted');
+   body.innerHTML='<svg viewBox="0 0 800 240" role="img" aria-label="Perfil de terreno"><path d="'+ground+'" fill="#7a5c3a" opacity=".85"/>'+
+    '<polyline points="'+upper+'" fill="none" stroke="#4fc3f7" stroke-dasharray="4 4"/><polyline points="'+lower+'" fill="none" stroke="#f3cf48" stroke-dasharray="3 5"/>'+
+    '<line x1="'+X(0)+'" y1="'+Y(P[0].los_m)+'" x2="'+X(maxD)+'" y2="'+Y(P.at(-1).los_m)+'" stroke="#51d887" stroke-width="2"/>'+
+    '<text x="12" y="16" fill="#ddd" font-size="12">'+(t.distance_m/1000).toFixed(2)+' km · terreno com curvatura (k=4/3)</text></svg>'+
+    '<p><b>'+esc(t.verdict)+'</b>'+(t.worst?' Pior ponto a '+(t.worst.distance_m/1000).toFixed(2)+' km: folga de '+t.worst.clearance_m+' m ('+Math.round(t.worst.ratio*100)+'% da zona de Fresnel).':'')+'</p>'+
+    '<p class="muted">Verde: linha de visada · azul: limite da 1ª zona de Fresnel · amarelo: 60% da zona (mínimo recomendado). Elevações aproximadas do modelo digital de terreno; não incluem prédios e vegetação.</p>';
+  }catch(e){body.textContent='Perfil indisponível: '+e.message;}
+ };
+ dialog.querySelector('#terrRun').onclick=run;run();
+}
 // #174: nomes dos canais do rádio e edição dos secundários.
 let radioChannels=[];
 function channelLabel(i){
