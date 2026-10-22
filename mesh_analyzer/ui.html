@@ -496,6 +496,9 @@ try {
 <div class="actions"><button type="button" id="dbRefresh">Atualizar indicadores</button>
 <button type="button" id="dbIntegrity">Verificar integridade</button><button type="button" id="dbBackup">Criar backup</button></div>
 <p class="muted" id="dbHealthText" role="status">Consulte os indicadores quando necessário.</p></div>
+<div class="card" id="backupCard"><h3>Backup e restauração</h3><p class="muted">Um único arquivo .zip com banco, conexões, favoritos, preferências, automações e histórico. Serve para guardar uma cópia ou levar tudo para outro computador, servidor ou container.</p>
+<div class="actions"><button type="button" id="backupExport" class="primary">Exportar backup</button><button type="button" id="backupRestoreButton">Restaurar backup…</button><input type="file" id="backupRestoreFile" accept=".zip,application/zip" hidden></div>
+<p class="muted" id="backupStatus" role="status"></p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
 <section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.39</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
@@ -3158,6 +3161,7 @@ $('systemTheme').addEventListener('change',()=>{
  markSettingsDirty('system');
 });
 function renderSystem(){
+ backupStatus();
  const cfg=state.system||{open_browser_on_start:false,allow_lan_access:false,update_minutes:15,theme:'dark'};
  if(!sysLoaded){
   $('systemOpenBrowser').checked=Boolean(cfg.open_browser_on_start);
@@ -3210,6 +3214,56 @@ $('dbBackup').onclick=async()=>{
   await updateDatabaseHealth(false);
  }catch(e){notify('Falha no backup: '+e.message,true);}
  finally{$('dbBackup').disabled=false;}
+};
+// #166: backup em um clique e restauração com cópia de segurança e reinício.
+async function backupStatus(){
+ try{
+  const r=await api('/api/backup/status'),last=r.last;
+  if(r.pending)$('backupStatus').textContent='Restauração pendente (backup v'+(r.pending.version||'?')+'); será aplicada ao reiniciar.';
+  else if(last)$('backupStatus').textContent=last.status==='applied'?'Última restauração aplicada em '+fmtDate(last.applied_ms)+
+    (last.safety_copy?' · cópia do banco anterior: backups/'+last.safety_copy:''):'Última restauração falhou: '+(last.error||'erro');
+ }catch(e){}
+}
+$('backupExport').onclick=async()=>{
+ $('backupExport').disabled=true;$('backupStatus').textContent='Gerando backup…';
+ try{
+  const b=(await api('/api/backup/export',{})).backup;
+  const size=(Number(b.bytes)/1048576).toFixed(1)+' MB';
+  if(window.pywebview?.api?.save_backup){
+   const saved=await window.pywebview.api.save_backup(b.file);
+   $('backupStatus').textContent=saved?.saved?'Backup salvo: '+saved.filename+' ('+size+').':'Backup gerado em '+b.path+' ('+size+').';
+  }else{
+   const a=document.createElement('a');a.href='/api/backup/download?file='+encodeURIComponent(b.file);a.download=b.file;
+   document.body.appendChild(a);a.click();a.remove();
+   $('backupStatus').textContent='Backup '+b.file+' ('+size+'): '+b.sources+' conexões, '+b.nodes+' nós, '+b.messages+' mensagens. Cópia também em '+b.path+'.';
+  }
+ }catch(e){$('backupStatus').textContent='Falha no backup: '+e.message;notify('Backup: '+e.message,true);}
+ finally{$('backupExport').disabled=false;}
+};
+$('backupRestoreButton').onclick=()=>$('backupRestoreFile').click();
+$('backupRestoreFile').onchange=async()=>{
+ const file=$('backupRestoreFile').files[0];$('backupRestoreFile').value='';
+ if(!file)return;
+ if(!confirm('Restaurar "'+file.name+'"? Os dados atuais serão substituídos pelos do backup (uma cópia de segurança do banco atual fica em backups/).'))return;
+ $('backupStatus').textContent='Enviando e validando '+file.name+'…';
+ try{
+  const r=await fetch('/api/backup/restore',{method:'POST',headers:{'Content-Type':'application/zip','X-PT2VHF-CSRF':csrf},body:file});
+  const d=await r.json();if(!r.ok||!d.success)throw Error(d.error||'HTTP '+r.status);
+  const m=d.pending;
+  $('backupStatus').textContent='Backup válido (v'+(m.version||'?')+', '+fmtDate(m.created_ms)+'): '+m.sources+' conexões, '+m.nodes+' nós, '+m.messages+' mensagens.';
+  if(!confirm('Backup validado. Reiniciar o aplicativo agora para aplicar a restauração?'))
+   {notify('A restauração será aplicada na próxima vez que o aplicativo abrir.');return;}
+  await api('/api/backup/restart',{});
+  $('backupStatus').textContent='Reiniciando para aplicar a restauração…';
+  notify('Reiniciando o Mesh Analyzer…');
+  const started=Date.now();
+  const wait=async()=>{
+   await new Promise(res=>setTimeout(res,1500));
+   try{const h=await fetch('/health',{cache:'no-store'});if(h.ok&&Date.now()-started>3000){location.reload();return;}}catch(e){}
+   if(Date.now()-started<120000)wait();
+  };
+  wait();
+ }catch(e){$('backupStatus').textContent='Restauração recusada: '+e.message;notify('Restauração: '+e.message,true);}
 };
 let activityReady=false,activityBaselines={};
 function blinkActivity(id){

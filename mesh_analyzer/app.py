@@ -139,7 +139,7 @@ def radios_available(db, sources):
     return sources.available_radios(ble_seen=seen)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None):
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None, restart=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -202,6 +202,22 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/detected":
                     notices=[{k:v for k,v in n.items() if k not in ("candidate","key")} for n in watcher.notices()] if watcher else []
                     self._json({"success":True,"data":notices})
+                elif path == "/api/backup/status":
+                    from .backup import last_restore, pending_restore
+                    self._json({"success":True,"pending":pending_restore(profile_dir()),
+                                "last":last_restore(profile_dir()),"container":in_container()})
+                elif path == "/api/backup/download":
+                    from .backup import backup_file
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    file=backup_file(profile_dir(),query.get("file",[""])[0])
+                    body=file.read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type","application/zip")
+                    self.send_header("Content-Disposition","attachment; filename="+file.name)
+                    self.send_header("X-Content-Type-Options","nosniff")
+                    self.send_header("Cache-Control","no-store")
+                    self.send_header("Content-Length",str(len(body)))
+                    self.end_headers();self.wfile.write(body)
                 elif path == "/api/devices/autoadd":
                     self._json({"success":True,"data":autoadd.status() if autoadd else {"running":False,"phase":"idle","results":[]}})
                 elif path == "/api/discovery":self._json({"success":True,"data":discovery.snapshot() if discovery else {"running":False,"items":[],"errors":["Serviço indisponível"]}})
@@ -254,6 +270,13 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 host=self.headers.get("Host","")
                 if origin and urllib.parse.urlparse(origin).netloc!=host:
                     return self._error("Origem não autorizada",403)
+                if path == "/api/backup/restore":
+                    # #166: o .zip vem como corpo bruto (não cabe no limite de JSON).
+                    if "application/zip" not in self.headers.get("Content-Type",""):
+                        return self._error("Envie o arquivo .zip do backup",415)
+                    from .backup import stage_restore
+                    meta=stage_restore(profile_dir(),self.rfile,int(self.headers.get("Content-Length","0")))
+                    return self._json({"success":True,"pending":meta})
                 if "application/json" not in self.headers.get("Content-Type",""):
                     return self._error("Content-Type application/json necessário",415)
                 size=int(self.headers.get("Content-Length","0"))
@@ -324,6 +347,15 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/retention":
                     result=db.set_retention(payload)
                     self._json({"success":True,"retention":result})
+                elif path == "/api/backup/export":
+                    from .backup import export_backup
+                    self._json({"success":True,"backup":export_backup(db,profile_dir())})
+                elif path == "/api/backup/cancel":
+                    from .backup import cancel_restore
+                    cancel_restore(profile_dir());self._json({"success":True})
+                elif path == "/api/backup/restart":
+                    if not restart:raise ValueError("Reinício indisponível")
+                    restart();self._json({"success":True})
                 elif path == "/api/db/backup":
                     self._json({"success":True,"backup":db.backup()})
                 elif path == "/api/nodes/delete":
@@ -400,7 +432,11 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         desktop=True):
     """A private loopback backend serves the desktop WebView2 window."""
     data=profile_dir()
+    from .backup import apply_pending_restore
+    restored=apply_pending_restore(database or (data/"mesh-analyzer.sqlite3"))  # #166
     db=Database(database or (data/"mesh-analyzer.sqlite3"))
+    if restored:db.log("Restauração de backup: "+restored.get("status",""),
+                       "info" if restored.get("status")=="applied" else "error")
     db.recover_node_roles()
     drivers=SourceManager(db)
     updates=ReleaseMonitor(db)
@@ -499,8 +535,30 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 LOG.exception("Update shutdown incomplete; keeping current version running")
         threading.Thread(target=update_shutdown_coordinator,
                          name="update-clean-shutdown",daemon=True).start()
-        server=ThreadingHTTPServer((host,int(port)),
-                                  build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd))
+        def request_restart():
+            """#166: reabre o app (aplicando a restauração pendente) e encerra este processo."""
+            from .backup import restart_command
+            from .updater import restart_environment
+            env=restart_environment();env["PT2VHF_RESTARTED"]="1"
+            command=restart_command()+updater.restart_arguments
+            if in_container():
+                # O container reinicia o processo (restart: unless-stopped).
+                threading.Timer(0.5,request_shutdown).start();return
+            import subprocess
+            kwargs={"env":env,"cwd":os.getcwd()}
+            if os.name=="nt":kwargs["creationflags"]=getattr(subprocess,"DETACHED_PROCESS",0)|getattr(subprocess,"CREATE_NEW_PROCESS_GROUP",0)
+            else:kwargs["start_new_session"]=True
+            subprocess.Popen(command,**kwargs)
+            threading.Timer(0.5,request_shutdown).start()
+        handler=build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd,request_restart)
+        for attempt in range(60):
+            try:
+                server=ThreadingHTTPServer((host,int(port)),handler)
+                break
+            except OSError:
+                # Reaberto pelo próprio app: espera a instância anterior liberar a porta.
+                if not os.environ.get("PT2VHF_RESTARTED") or attempt==59:raise
+                time.sleep(0.5)
         server.daemon_threads=True
         address="http://127.0.0.1:"+str(server.server_address[1])
         updater.health_url=address+"/health"
