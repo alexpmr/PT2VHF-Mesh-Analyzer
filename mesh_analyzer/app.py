@@ -139,7 +139,7 @@ def radios_available(db, sources):
     return sources.available_radios(ble_seen=seen)
 
 
-def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None, restart=None):
+def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None, restart=None, alerts=None):
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
         def log_message(self,fmt,*args):
@@ -202,6 +202,11 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/detected":
                     notices=[{k:v for k,v in n.items() if k not in ("candidate","key")} for n in watcher.notices()] if watcher else []
                     self._json({"success":True,"data":notices})
+                elif path == "/api/alerts":
+                    self._json({"success":True,**alerts.list()} if alerts else {"success":True,"alerts":[],"unread":0})
+                elif path == "/api/alerts/config":
+                    if not alerts:raise ValueError("Alertas indisponíveis")
+                    self._json({"success":True,"config":alerts.config(public=True)})
                 elif path == "/api/messages/search":
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
                     node=query.get("node",[""])[0]
@@ -358,6 +363,15 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/retention":
                     result=db.set_retention(payload)
                     self._json({"success":True,"retention":result})
+                elif path == "/api/alerts/config":
+                    if not alerts:raise ValueError("Alertas indisponíveis")
+                    self._json({"success":True,"config":alerts.save(payload)})
+                elif path == "/api/alerts/read":
+                    if not alerts:raise ValueError("Alertas indisponíveis")
+                    self._json(alerts.mark_read())
+                elif path == "/api/alerts/test":
+                    if not alerts:raise ValueError("Alertas indisponíveis")
+                    self._json(alerts.test(str(payload.get("channel",""))))
                 elif path == "/api/backup/export":
                     from .backup import export_backup
                     self._json({"success":True,"backup":export_backup(db,profile_dir())})
@@ -460,6 +474,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     from .device_detection import AutoAdd, DeviceWatcher
     watcher=DeviceWatcher(db,drivers)
     autoadd=AutoAdd(db,drivers,watcher)
+    from .alerts import AlertCenter
+    alerts=AlertCenter(db,drivers)
     server=None
     done=threading.Event()
     try:
@@ -520,6 +536,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 done.set()
                 updates.stop()
                 watcher.close()
+                alerts.close()
                 automation.close()
                 if server:
                     server.shutdown()
@@ -561,7 +578,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
             else:kwargs["start_new_session"]=True
             subprocess.Popen(command,**kwargs)
             threading.Timer(0.5,request_shutdown).start()
-        handler=build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd,request_restart)
+        handler=build_handler(db,drivers,csrf,doc,updates,updater,request_shutdown,ui_ready_event,automation,discovery,watcher,autoadd,request_restart,alerts)
         for attempt in range(60):
             try:
                 server=ThreadingHTTPServer((host,int(port)),handler)
@@ -583,6 +600,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 except Exception:LOG.exception("Falha no job de retenção")
         threading.Thread(target=janitor,name="retention-cleaner",daemon=True).start()
         updates.start()
+        alerts.start()
         # #149: monitoramento de rádios novos só com interface (não em testes headless).
         if desktop and not os.environ.get("PT2VHF_DISABLE_AUTODETECT"):
             watcher.start()
@@ -641,6 +659,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
             done.set()
             updates.stop()
             watcher.close()
+            alerts.close()
             automation.close()
             if server:
                 server.shutdown()

@@ -87,6 +87,10 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
 .msgQuote{margin:2px 0 5px;padding:4px 8px;border-left:4px solid hsl(var(--who-h,200) 70% 60%);border-radius:6px;background:#0000002e;font-size:12px;display:flex;flex-direction:column}.msgQuote b{color:hsl(var(--who-h,200) 70% 68%);font-size:11px}.msgQuote span{opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html[data-theme="light"] .msgHead b,html[data-theme="light"] .msgQuote b{color:hsl(var(--who-h,200) 65% 33%)}html[data-theme="light"] .msgQuote{background:#00000010}
 .bubblesNewMessages{align-self:center;margin:-38px 0 6px;position:relative;z-index:2;border-radius:14px;background:#d29b2c;border-color:#d29b2c;color:#1b1b1b;font-weight:700;font-size:11px;padding:5px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35)}.bubblesNewMessages[hidden]{display:none}
+.alertBell{position:relative;border-radius:16px;padding:6px 10px;font-size:14px;line-height:1}.alertBell span{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#e5484d;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.alertBell span[hidden]{display:none}.alertPanel{position:fixed;z-index:9800;width:min(380px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:var(--card,#1c2b38);color:var(--ink,#e8f0f4);border:1px solid #4f6577;border-radius:10px;box-shadow:0 12px 32px #0009;padding:8px}
+.alertPanel[hidden]{display:none}.alertItem{padding:8px 10px;border-radius:8px;border-left:4px solid #d29b2c;margin:4px 0;background:#0000001f}.alertItem.resolved{opacity:.6;border-left-color:#51d887}.alertItem.unread{background:#d29b2c22}
+.alertItem b{display:block}.alertItem small{color:var(--muted,#9fb2bf);font-size:11px}
 .messageSearchBox{position:relative;display:flex;gap:6px;align-items:center}.messageSearchBox input{width:min(320px,40vw)}
 .messageSearchResults{position:absolute;top:calc(100% + 6px);right:0;z-index:9500;width:min(520px,92vw);max-height:60vh;overflow:auto;background:var(--card,#1c2b38);border:1px solid var(--line,#4f6577);border-radius:10px;box-shadow:0 12px 32px #0009;padding:6px}
 .messageSearchResults[hidden]{display:none}.messageSearchResults button{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:7px;padding:8px 10px;color:inherit}
@@ -350,7 +354,7 @@ try {
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
 <div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
-<div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
+<div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="alertBell" class="alertBell" aria-haspopup="true" aria-expanded="false" title="Alertas da malha">🔔<span id="alertCount" hidden></span></button><div id="alertPanel" class="alertPanel" role="dialog" aria-label="Alertas da malha" hidden></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
 
 <section class="view active" id="viewMap">
 <div id="playback">
@@ -447,7 +451,7 @@ try {
 <h4>Próximas consultas elegíveis</h4><div id="autoQueue" class="muted">Nenhuma consulta selecionada.</div>
 <p class="muted">O rádio conectado é a única fonte TX. MQTT não transmite. Apenas uma consulta pode estar aguardando resposta. ACK não equivale a dados recebidos. Ativar exige ação explícita do usuário.</p>
 </div></div></section>
-<section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Conexões</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="general">Geral</button></div>
+<section class="view" id="viewSettings"><div class="settingsTabs"><button class="settingsTab active" data-panel="sources">Conexões</button><button class="settingsTab" data-panel="lora">Dispositivo</button><button class="settingsTab" data-panel="retention">Retenções</button><button class="settingsTab" data-panel="map">Mapa</button><button class="settingsTab" data-panel="system">Sistema</button><button class="settingsTab" data-panel="alerts">Alertas</button><button class="settingsTab" data-panel="general">Geral</button></div>
 <section class="settingsPanel active" id="settingsSources"><div class="card"><h3>Conexões com rádios e serviços</h3><p class="muted">Cadastre várias conexões independentes. USB/Serial, Wi-Fi/TCP e BLE são bidirecionais; MQTT recebe dados e não transmite RF na v0.6.0. Não conecte a mesma porta física a dois programas ao mesmo tempo.</p><div class="sourceList" id="sourceCards"></div></div>
 <div class="actions"><button type="button" id="sourceAddManual">Adicionar conexão manualmente</button><button type="button" id="sourceAddAuto" title="Procura rádios Meshtastic em USB, Wi-Fi e Bluetooth e cadastra os que ainda não estão configurados">Adicionar automaticamente</button></div><div id="autoAddResult" class="card autoAddResult" role="status" aria-live="polite" hidden></div><div class="card" id="sourceFormCard"><h3 id="sourceFormTitle">Adicionar conexão</h3><form id="sourceForm"><input type="hidden" id="sourceId"><div class="formGrid"><div class="field"><label for="sourceName">Nome identificador</label><input id="sourceName" required placeholder="Ex.: VHF3 USB"></div><div class="field"><label for="sourceKind">Tipo da conexão</label><select id="sourceKind"><option value="serial">USB / Serial (COM)</option><option value="tcp">Wi-Fi / TCP/IP</option><option value="ble">Bluetooth LE</option><option value="mqtt">MQTT (somente RX)</option></select></div>
 <div class="field src serial"><label for="sourcePort">Porta serial / COM</label><input id="sourcePort" placeholder="COM3" list="serialOptions"><datalist id="serialOptions"></datalist></div>
@@ -510,6 +514,28 @@ try {
 <p class="muted" id="backupStatus" role="status"></p></div>
 <div class="actions"><button id="systemSave">Salvar preferências do Sistema</button><span class="muted" id="systemStatus"></span></div>
 </section>
+<section class="settingsPanel" id="settingsAlerts"><div class="card"><h3>Alertas da malha</h3><p class="muted">Avaliados a cada minuto. Cada situação gera um único alerta até ser resolvida. Coloque 0 para desligar uma regra.</p>
+<form id="alertForm" class="formGrid">
+<div class="field span2"><label><input type="checkbox" id="alertEnabled"> Alertas ativados</label></div>
+<div class="field"><label for="alertSilent">Favorito calado há mais de (horas)</label><input id="alertSilent" type="number" min="0" max="720"></div>
+<div class="field"><label for="alertBattery">Bateria abaixo de (%) — repetidores e favoritos</label><input id="alertBattery" type="number" min="0" max="100"></div>
+<div class="field"><label for="alertChannel">Utilização do canal acima de (%)</label><input id="alertChannel" type="number" min="0" max="100"></div>
+<div class="field"><label><input type="checkbox" id="alertDm"> Mensagem privada recebida</label><label><input type="checkbox" id="alertMention"> Menção ao meu rádio no canal</label></div>
+<h4 class="span2">Telegram</h4>
+<div class="field span2"><label><input type="checkbox" id="alertTgEnabled"> Enviar alertas pelo Telegram</label></div>
+<div class="field"><label for="alertTgToken">Token do bot (@BotFather)</label><input id="alertTgToken" type="password" autocomplete="off"></div>
+<div class="field"><label for="alertTgChat">Chat ID</label><input id="alertTgChat" autocomplete="off"></div>
+<h4 class="span2">E-mail (SMTP)</h4>
+<div class="field span2"><label><input type="checkbox" id="alertMailEnabled"> Enviar alertas por e-mail</label></div>
+<div class="field"><label for="alertMailHost">Servidor SMTP</label><input id="alertMailHost" placeholder="smtp.gmail.com"></div>
+<div class="field"><label for="alertMailPort">Porta</label><input id="alertMailPort" type="number" min="1" max="65535"></div>
+<div class="field"><label for="alertMailSecurity">Segurança</label><select id="alertMailSecurity"><option value="starttls">STARTTLS (587)</option><option value="ssl">SSL/TLS (465)</option><option value="none">Nenhuma</option></select></div>
+<div class="field"><label for="alertMailUser">Usuário</label><input id="alertMailUser" autocomplete="off"></div>
+<div class="field"><label for="alertMailPassword">Senha (de app)</label><input id="alertMailPassword" type="password" autocomplete="off"></div>
+<div class="field"><label for="alertMailFrom">Remetente</label><input id="alertMailFrom"></div>
+<div class="field"><label for="alertMailTo">Enviar para</label><input id="alertMailTo"></div>
+<div class="actions span2"><button type="submit" class="primary">Salvar alertas</button><button type="button" id="alertTestTg">Testar Telegram</button><button type="button" id="alertTestMail">Testar e-mail</button><span id="alertFormStatus" class="muted" role="status"></span></div>
+</form><p class="muted">Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.</p></div></section>
 <section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.39</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
@@ -650,7 +676,7 @@ document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>s
 const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
  Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help'],['/sobre','about']])[location.pathname]||'map');
-const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
+const initialSettingsPanel=Object.fromEntries([['conexoes','sources'],['fontes','sources'],['dispositivo','lora'],['retencoes','retention'],['mapa','map'],['sistema','system'],['alertas','alerts'],['geral','general']])[location.pathname.split('/')[2]]||'sources';
 const TRAFFIC_LABELS={
  TELEMETRY_APP:'Telemetria',POSITION_APP:'Posição',NODEINFO_APP:'Informações do nó',
  ROUTING_APP:'Roteamento',TEXT_MESSAGE_APP:'Mensagem',TRACEROUTE_APP:'Rastreamento de rota',
@@ -2963,7 +2989,7 @@ $('statsCSV').onclick=()=>{
  a.href=url;a.download='PT2VHF_Estatisticas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 
-const settingsPaths={sources:'conexoes',lora:'dispositivo',retention:'retencoes',map:'mapa',system:'sistema',general:'geral'};
+const settingsPaths={sources:'conexoes',lora:'dispositivo',retention:'retencoes',map:'mapa',system:'sistema',alerts:'alertas',general:'geral'};
 function showSettings(panel,updateUrl=true){
  document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active',b.dataset.panel===panel));
  document.querySelectorAll('.settingsPanel').forEach(el=>el.classList.toggle('active',el.id==='settings'+panel[0].toUpperCase()+panel.slice(1)));
@@ -2972,6 +2998,7 @@ function showSettings(panel,updateUrl=true){
  if(panel==='retention'&&!settingsPending.has('retention'))renderRetention();
  if(panel==='lora')renderLoraSources();
  if(panel==='system')renderSystem();
+ if(panel==='alerts')loadAlertConfig();
 }
 document.querySelectorAll('.settingsTab').forEach(b=>b.onclick=()=>showSettings(b.dataset.panel));
 const kindTitles={serial:'USB/Serial',tcp:'Wi-Fi/TCP',ble:'Bluetooth LE',mqtt:'MQTT (RX)'};
@@ -3622,6 +3649,66 @@ window.addEventListener('resize',()=>{if(radioMenuOpen)placeRadioMenu();});
 
 // #149/#155/#156: avisos de rádio detectado. A verificação roda no servidor
 // com prazo, fila Bluetooth e Cancelar; a tela só acompanha o estado.
+// #165: alertas da malha (sino na barra superior e aba de configuração).
+let lastAlertId=null,alertPanelOpen=false;
+const alertIcons={silent:'🔕',battery:'🪫',channel:'📶',dm:'✉️',mention:'@'};
+async function refreshAlerts(){
+ try{
+  const r=await api('/api/alerts');
+  $('alertCount').hidden=!r.unread;$('alertCount').textContent=r.unread>99?'99+':r.unread;
+  const newest=r.alerts[0]?.id||0;
+  if(lastAlertId!==null)r.alerts.filter(a=>a.id>lastAlertId&&!a.read).slice(0,3).forEach(a=>notify((alertIcons[a.kind]||'⚠')+' '+a.title+' — '+a.text));
+  lastAlertId=Math.max(lastAlertId||0,newest);
+  if(alertPanelOpen)renderAlertPanel(r.alerts);
+ }catch(e){}
+}
+function renderAlertPanel(list){
+ $('alertPanel').innerHTML='<div class="actions" style="justify-content:space-between"><b>Alertas</b><button type="button" id="alertConfigure">Configurar</button></div>'+
+  (list.length?list.slice(0,50).map(a=>'<div class="alertItem'+(a.resolved_ms&&['silent','battery','channel'].includes(a.kind)?' resolved':'')+(a.read?'':' unread')+'"><b>'+
+   (alertIcons[a.kind]||'⚠')+' '+esc(a.title)+'</b>'+esc(a.text)+'<br><small>'+esc(fmtDate(a.created_ms))+
+   (a.resolved_ms&&['silent','battery','channel'].includes(a.kind)?' · resolvido '+esc(fmtDate(a.resolved_ms)):'')+(a.delivery?' · enviado: '+esc(a.delivery):'')+'</small></div>').join(''):
+   '<p class="muted">Nenhum alerta. A malha está tranquila.</p>');
+ $('alertConfigure').onclick=()=>{closeAlertPanel();setView('settings');showSettings('alerts');};
+}
+async function openAlertPanel(){
+ alertPanelOpen=true;const rect=$('alertBell').getBoundingClientRect(),panel=$('alertPanel');
+ panel.hidden=false;panel.style.top=Math.round(rect.bottom+6)+'px';
+ panel.style.left=Math.round(Math.max(12,Math.min(rect.left,window.innerWidth-panel.offsetWidth-12)))+'px';
+ $('alertBell').setAttribute('aria-expanded','true');
+ try{const r=await api('/api/alerts');renderAlertPanel(r.alerts);await api('/api/alerts/read',{});$('alertCount').hidden=true;}catch(e){notify(e.message,true);}
+}
+function closeAlertPanel(){alertPanelOpen=false;$('alertPanel').hidden=true;$('alertBell').setAttribute('aria-expanded','false');}
+$('alertBell').onclick=e=>{e.stopPropagation();alertPanelOpen?closeAlertPanel():openAlertPanel();};
+$('alertPanel').addEventListener('click',e=>e.stopPropagation());
+document.addEventListener('click',()=>{if(alertPanelOpen)closeAlertPanel();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&alertPanelOpen)closeAlertPanel();});
+setInterval(refreshAlerts,15000);refreshAlerts();
+async function loadAlertConfig(){
+ try{
+  const c=(await api('/api/alerts/config')).config;
+  $('alertEnabled').checked=c.enabled;$('alertSilent').value=c.silent_favorite_hours;$('alertBattery').value=c.battery_below;
+  $('alertChannel').value=c.channel_util_above;$('alertDm').checked=c.direct_messages;$('alertMention').checked=c.mentions;
+  $('alertTgEnabled').checked=c.telegram.enabled;$('alertTgToken').value=c.telegram.token;$('alertTgChat').value=c.telegram.chat_id;
+  const m=c.email;$('alertMailEnabled').checked=m.enabled;$('alertMailHost').value=m.host;$('alertMailPort').value=m.port;
+  $('alertMailSecurity').value=m.security;$('alertMailUser').value=m.user;$('alertMailPassword').value=m.password;
+  $('alertMailFrom').value=m.sender;$('alertMailTo').value=m.to;
+ }catch(e){$('alertFormStatus').textContent='Alertas indisponíveis: '+e.message;}
+}
+async function saveAlertConfig(){
+ const num=id=>Number($(id).value||0);
+ await api('/api/alerts/config',{enabled:$('alertEnabled').checked,silent_favorite_hours:num('alertSilent'),battery_below:num('alertBattery'),
+  channel_util_above:num('alertChannel'),direct_messages:$('alertDm').checked,mentions:$('alertMention').checked,
+  telegram:{enabled:$('alertTgEnabled').checked,token:$('alertTgToken').value.trim(),chat_id:$('alertTgChat').value.trim()},
+  email:{enabled:$('alertMailEnabled').checked,host:$('alertMailHost').value.trim(),port:num('alertMailPort')||587,security:$('alertMailSecurity').value,
+   user:$('alertMailUser').value.trim(),password:$('alertMailPassword').value,sender:$('alertMailFrom').value.trim(),to:$('alertMailTo').value.trim()}});
+}
+$('alertForm').onsubmit=async e=>{e.preventDefault();try{await saveAlertConfig();$('alertFormStatus').textContent='Alertas salvos.';await loadAlertConfig();}catch(err){$('alertFormStatus').textContent=err.message;}};
+for(const [btn,channel,label] of [['alertTestTg','telegram','Telegram'],['alertTestMail','email','e-mail']])
+ $(btn).onclick=async()=>{
+  $('alertFormStatus').textContent='Salvando e enviando teste por '+label+'…';
+  try{await saveAlertConfig();await api('/api/alerts/test',{channel});$('alertFormStatus').textContent='Teste enviado por '+label+'. Confira se chegou.';}
+  catch(e){$('alertFormStatus').textContent='Falha no teste por '+label+': '+e.message;}
+ };
 // #175: busca no histórico inteiro de mensagens.
 let messageSearchTimer=null;
 function chatTitle(key){return key.startsWith('node:')?'Privado · '+idName(Number(key.slice(5))):key==='channel:0'?'Canal primário':'Canal '+key.slice(8);}
