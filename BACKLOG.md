@@ -1,3 +1,8 @@
+## v0.6.42 — Implementado nesta entrega
+
+- Elevações por tiles Terrarium (correção do erro do Open-Meteo relatado em uso real nas ferramentas #179/#180). Testado aqui com tiles reais.
+- Aceite pendente: rodar enlace e survey no Windows do usuário e comparar com enlaces conhecidos da malha.
+
 ## v0.6.41 — Implementado nesta entrega
 
 - #179 e #180 implementados com testes automatizados.

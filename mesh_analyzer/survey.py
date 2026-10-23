@@ -7,9 +7,10 @@
 - Análise de melhor ponto: dentro de um polígono desenhado no mapa, procura os
   pontos mais altos, separados entre si, do mais alto para o mais baixo.
 
-As elevações vêm do Open-Meteo (modelo digital de terreno Copernicus, ~90 m) e
-ficam guardadas no SQLite, de modo que pontos já analisados funcionam sem
-internet. Não incluem prédios nem vegetação.
+As elevações vêm dos tiles de terreno Terrarium (AWS Open Data; SRTM e outros,
+~30–40 m por pixel), com o Open-Meteo como alternativa. Tiles e pontos ficam
+guardados localmente, de modo que áreas já analisadas funcionam sem internet.
+Não incluem prédios nem vegetação.
 """
 from __future__ import annotations
 
@@ -23,8 +24,8 @@ from .database import now_ms
 EARTH_R = 6371000.0
 K_FACTOR = 4 / 3
 CACHE_DECIMALS = 4            # ~11 m: bem abaixo da resolução do modelo de terreno
-FETCH_BATCH = 100             # coordenadas por consulta ao Open-Meteo
-MAX_FETCH_POINTS = 4000       # proteção contra consultas exageradas
+FETCH_BATCH = 1000            # pontos por lote enviado à fonte de elevação
+MAX_FETCH_POINTS = 8000       # proteção contra consultas exageradas
 MAX_AREA_KM2 = 5000.0
 LARGE_AREA_KM2 = 1000.0
 
@@ -142,27 +143,190 @@ def polygon_metrics(polygon):
 
 
 # --- elevações -----------------------------------------------------------------
+TILE_URL = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+TILE_MAX_ZOOM = 12            # ~38 m por pixel no equador
+TILE_MAX_COUNT = 80           # por consulta; acima disso a zoom diminui
+USER_AGENT = "PT2VHF-Mesh-Analyzer (+https://github.com/alexpmr/PT2VHF-Mesh-Analyzer)"
+
+
+def _reason(exc):
+    """Motivo curto e legível de uma falha de rede."""
+    import urllib.error
+    if isinstance(exc, urllib.error.HTTPError):
+        return "HTTP %d%s" % (exc.code, " (limite de uso do serviço atingido)" if exc.code == 429 else "")
+    if isinstance(exc, urllib.error.URLError):
+        exc = exc.reason
+    text = str(exc) or type(exc).__name__
+    if "CERTIFICATE_VERIFY_FAILED" in text:
+        return "certificado HTTPS não reconhecido (" + text[:80] + ")"
+    if "timed out" in text.lower():
+        return "tempo esgotado"
+    return text[:120]
+
+
+def _http_get(url, timeout=20):
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=timeout) as resp:
+        return resp.read()
+
+
 def _fetch_open_meteo(points):
-    lats = ",".join("%.4f" % p[0] for p in points)
-    lons = ",".join("%.4f" % p[1] for p in points)
-    url = "https://api.open-meteo.com/v1/elevation?latitude=" + lats + "&longitude=" + lons
-    try:
-        with urllib.request.urlopen(url, timeout=20) as resp:
-            values = [float(x) for x in json.loads(resp.read())["elevation"]]
-    except Exception as exc:
-        raise RuntimeError("Não foi possível consultar as elevações do terreno (Open-Meteo). Verifique a "
-                           "conexão com a internet; pontos já analisados continuam disponíveis sem ela.") from exc
-    if len(values) != len(points):
-        raise RuntimeError("Resposta de elevação incompleta")
+    values = []
+    for i in range(0, len(points), 100):    # o serviço aceita até 100 coordenadas por consulta
+        chunk = points[i:i + 100]
+        url = ("https://api.open-meteo.com/v1/elevation?latitude=" + ",".join("%.4f" % p[0] for p in chunk)
+               + "&longitude=" + ",".join("%.4f" % p[1] for p in chunk))
+        try:
+            data = [float(x) for x in json.loads(_http_get(url))["elevation"]]
+        except Exception as exc:
+            raise RuntimeError("Open-Meteo: " + _reason(exc)) from exc
+        if len(data) != len(chunk):
+            raise RuntimeError("Open-Meteo: resposta incompleta")
+        values += data
     return values
+
+
+def _png_rgb(data):
+    """Decodifica PNG 8 bits RGB/RGBA sem entrelaçamento (formato dos tiles Terrarium)."""
+    import struct
+    import zlib
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError("tile de elevação inválido")
+    pos, idat, width = 8, [], 0
+    while pos < len(data):
+        length, kind = struct.unpack(">I4s", data[pos:pos + 8])
+        body = data[pos + 8:pos + 8 + length]
+        if kind == b"IHDR":
+            width, height, depth, color, _, _, interlace = struct.unpack(">IIBBBBB", body)
+            if depth != 8 or color not in (2, 6) or interlace:
+                raise ValueError("formato de tile de elevação não suportado")
+            bpp = 3 if color == 2 else 4
+        elif kind == b"IDAT":
+            idat.append(body)
+        elif kind == b"IEND":
+            break
+        pos += 12 + length
+    raw = zlib.decompress(b"".join(idat))
+    stride = width * bpp
+    rows, prev, pos = [], bytearray(stride), 0
+    for _ in range(height):
+        ftype, line = raw[pos], bytearray(raw[pos + 1:pos + 1 + stride])
+        pos += 1 + stride
+        if ftype == 1:
+            for i in range(bpp, stride):
+                line[i] = (line[i] + line[i - bpp]) & 255
+        elif ftype == 2:
+            line = bytearray((a + b) & 255 for a, b in zip(line, prev))
+        elif ftype == 3:
+            for i in range(stride):
+                line[i] = (line[i] + ((line[i - bpp] if i >= bpp else 0) + prev[i]) // 2) & 255
+        elif ftype == 4:
+            for i in range(stride):
+                a = line[i - bpp] if i >= bpp else 0
+                b, c = prev[i], prev[i - bpp] if i >= bpp else 0
+                p = a + b - c
+                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+                line[i] = (line[i] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
+        rows.append(line)
+        prev = line
+    return width, bpp, rows
+
+
+class TerrainTiles:
+    """Elevação a partir dos tiles Terrarium (AWS Open Data: SRTM, GMTED, ETOPO e outros), sem chave e
+    sem limite diário. Os tiles ficam guardados em disco para uso sem internet."""
+
+    def __init__(self, cache_dir=None, getter=None):
+        self.cache_dir = cache_dir
+        self.getter = getter or _http_get
+        self.decoded = {}
+
+    def _tile(self, z, x, y):
+        key = (z, x, y)
+        if key in self.decoded:
+            return self.decoded[key]
+        path = None
+        data = None
+        if self.cache_dir:
+            from pathlib import Path
+            path = Path(self.cache_dir) / str(z) / str(x) / ("%d.png" % y)
+            if path.exists():
+                data = path.read_bytes()
+        if data is None:
+            try:
+                data = self.getter(TILE_URL.format(z=z, x=x, y=y))
+            except Exception as exc:
+                raise RuntimeError("tiles de terreno: " + _reason(exc)) from exc
+            if path is not None:
+                try:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(data)
+                except OSError:
+                    pass
+        width, bpp, rows = _png_rgb(data)
+        grid = [[(r[i] * 256 + r[i + 1] + r[i + 2] / 256) - 32768 for i in range(0, width * bpp, bpp)] for r in rows]
+        if len(self.decoded) > 120:
+            self.decoded.clear()
+        self.decoded[key] = grid
+        return grid
+
+    @staticmethod
+    def _pixel(lat, lon, z):
+        n = 256 * 2 ** z
+        lat = max(-85.0511, min(85.0511, lat))
+        x = (lon + 180) / 360 * n
+        y = (1 - math.log(math.tan(math.radians(lat)) + 1 / math.cos(math.radians(lat))) / math.pi) / 2 * n
+        return x, y
+
+    def _zoom(self, points):
+        for z in range(TILE_MAX_ZOOM, 5, -1):
+            tiles = {(int(px // 256), int(py // 256)) for px, py in (self._pixel(p[0], p[1], z) for p in points)}
+            if len(tiles) <= TILE_MAX_COUNT:
+                return z
+        return 6
+
+    def _value(self, z, gx, gy):
+        n = 2 ** z
+        tx, ty = int(gx // 256) % n, min(n - 1, max(0, int(gy // 256)))
+        return self._tile(z, tx, ty)[int(gy) % 256][int(gx) % 256]
+
+    def __call__(self, points):
+        z = self._zoom(points)
+        out = []
+        for lat, lon in points:
+            px, py = self._pixel(lat, lon, z)
+            # Interpolação bilinear entre os centros dos quatro pixels vizinhos.
+            x0, y0 = math.floor(px - 0.5), math.floor(py - 0.5)
+            fx, fy = px - 0.5 - x0, py - 0.5 - y0
+            v00, v10 = self._value(z, x0, y0), self._value(z, x0 + 1, y0)
+            v01, v11 = self._value(z, x0, y0 + 1), self._value(z, x0 + 1, y0 + 1)
+            out.append((v00 * (1 - fx) + v10 * fx) * (1 - fy) + (v01 * (1 - fx) + v11 * fx) * fy)
+        return out
+
+
+def default_fetcher(cache_dir=None):
+    """Tiles de terreno primeiro; Open-Meteo só se os tiles falharem."""
+    tiles = TerrainTiles(cache_dir)
+
+    def fetch(points):
+        try:
+            return tiles(points)
+        except RuntimeError as tile_error:
+            try:
+                return _fetch_open_meteo(points)
+            except RuntimeError as om_error:
+                raise RuntimeError("Não foi possível obter as elevações do terreno (%s; %s). Verifique a conexão "
+                                   "com a internet; pontos já analisados continuam disponíveis sem ela."
+                                   % (tile_error, om_error)) from om_error
+    return fetch
 
 
 class Elevations:
     """Elevações com cache no SQLite, consultadas em lotes."""
 
-    def __init__(self, db, fetch=None):
+    def __init__(self, db, fetch=None, cache_dir=None):
         self.db = db
-        self.fetch = fetch or _fetch_open_meteo
+        self.fetch = fetch or default_fetcher(cache_dir)
         self.fetched = 0
         with db._lock, db._db:
             db._db.execute("CREATE TABLE IF NOT EXISTS elevation_cache (key TEXT PRIMARY KEY, "
@@ -192,8 +356,6 @@ class Elevations:
                 self.db._db.executemany("INSERT OR REPLACE INTO elevation_cache(key,elevation,fetched_ms) VALUES(?,?,?)",
                                         [(k, v, stamp) for k, v in zip(chunk, values)])
             known.update(zip(chunk, values))
-            if i + FETCH_BATCH < len(missing):
-                time.sleep(0.05)
         return [known[k] for k in keys]
 
 
@@ -363,7 +525,7 @@ def link_analysis(elevations, a, b, params=None, observed=None):
                    "rx_dbm": round(rx, 1), "sensitivity_dbm": sens, "margin_db": round(margin, 1), "snr_db": round(snr, 1)},
         "verdict": verdict, "verdict_label": VERDICTS[verdict], "reason": reason, "obstruction": obstruction,
         "suggestion": suggestion, "observed": observed,
-        "notes": "Elevações do modelo digital de terreno (~90 m); não incluem prédios, árvores nem a altura de torres. "
+        "notes": "Elevações do modelo digital de terreno (~30–40 m); não incluem prédios, árvores nem a altura de torres. "
                  "Difração por gume de faca (Deygout); o resultado é uma estimativa para planejamento.",
     }
 
@@ -391,7 +553,7 @@ def observed_link(db, own_nodes, node_a, node_b, days=30):
 
 
 # --- melhor ponto (#180) -------------------------------------------------------
-def best_points(elevations, polygon, reference=None, count=10, grid_points=900):
+def best_points(elevations, polygon, reference=None, count=10, grid_points=2500):
     shape = polygon_metrics(polygon)
     area = shape["area_km2"]
     if area < 0.001:

@@ -1,3 +1,11 @@
+# v0.6.42 — Elevações por tiles de terreno
+
+- #179/#180: as consultas ao Open-Meteo falhavam no computador do usuário (enlace e survey), com uma mensagem que escondia o motivo. Fonte principal passa a ser os tiles Terrarium (`s3.amazonaws.com/elevation-tiles-prod`, zoom até 12, interpolação bilinear, decodificador PNG próprio sem dependências novas), com cache dos tiles em `terrain-tiles/` no perfil do app, além do cache de pontos no SQLite. Open-Meteo como alternativa, dividido em lotes de 100 coordenadas e com User-Agent. Erros com o motivo (HTTP, limite 429, tempo esgotado, certificado) das duas fontes.
+- Survey de melhor ponto com ~2.500 amostras na grade (antes 900).
+- O perfil de terreno do popup de enlace (#171) usa a mesma fonte e o mesmo cache.
+
+Validação: testes Python (decodificador PNG com todos os filtros, interpolação, cache em disco offline, escolha de zoom, alternativa Open-Meteo e mensagens de erro) e regressão Chromium v0.6.34–v0.6.41; teste real com tiles: enlace de 28 km e survey de 1.666 km² no DF (ponto mais alto 1.344 m) pela API do app, com PDF.
+
 # v0.6.41 — Análise de enlace entre 2 pontos e melhor ponto para instalar nó
 
 - #179: ferramenta no menu Ver do mapa. Pontos por clique, nó ou coordenadas, arrastáveis. Perfil com 40–256 amostras pelo grande círculo, curvatura k = 4/3, 1ª zona de Fresnel e faixa de 60%. Orçamento do enlace: EIRP, perda em espaço livre, difração por gume de faca (Deygout, ITU-R P.526), sinal estimado, sensibilidade por preset LoRa (SF/BW, NF 6 dB), margem e SNR. Veredito Viável (margem ≥ 10 dB com visada), Marginal (margem 0–10 dB ou sem visada) ou Inviável (margem negativa), com o motivo e o pior obstáculo no mapa. Altura mínima de antena em A, em B ou nas duas para liberar 60% da zona de Fresnel. Valores do rádio ativo (região, preset, potência). SNR/RSSI medianos observados quando uma ponta é rádio próprio. PDF. O botão do popup de enlace abre a nova análise.
