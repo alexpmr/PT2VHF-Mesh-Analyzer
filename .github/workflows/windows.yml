@@ -182,6 +182,8 @@ jobs:
       - name: Testar .deb (instalar, executar, remover e preservar dados)
         run: |
           version=$(cat VERSION)
+          # Índice de pacotes da imagem do runner pode estar desatualizado (apt sai com 100 ao baixar dependências).
+          sudo apt-get update -q
           sudo apt-get install -y -q "./dist/PT2VHF-Mesh-Analyzer-v$version-amd64.deb"
           test -x /usr/bin/pt2vhf-mesh-analyzer
           test -f /usr/share/applications/pt2vhf-mesh-analyzer.desktop
