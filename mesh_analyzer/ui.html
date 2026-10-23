@@ -382,7 +382,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.42</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.43</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -608,7 +608,7 @@ try {
 <div class="field"><label for="alertMailTo">Enviar para</label><input id="alertMailTo"></div>
 <div class="actions span2"><button type="submit" class="primary">Salvar alertas</button><button type="button" id="alertTestTg">Testar Telegram</button><button type="button" id="alertTestMail">Testar e-mail</button><span id="alertFormStatus" class="muted" role="status"></span></div>
 </form><p class="muted">Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.</p></div></section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.42</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.43</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewAbout"><div class="panels">
@@ -625,7 +625,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.42.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.43.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -4606,7 +4606,7 @@ function deviceNoticeHtml(n){
  if(job.phase==='connecting'){
   const secs=job.started_ms?Math.max(0,Math.round((Date.now()-job.started_ms)/1000)):0;
   return card('Verificando '+esc(n.name)+'…',where+' · confirmando o rádio Meshtastic'+(secs?' ('+secs+' s)':'')+'.'+
-    (n.kind==='ble'?' Se o rádio pedir PIN, confira a janela de pareamento do Windows (PIN na tela do rádio; 123456 se não tiver tela).':''),btn('cancel','Cancelar'));
+    (n.kind==='ble'?' Rádios sem PIN são pareados automaticamente; se este pedir PIN, o campo aparece aqui.':''),btn('cancel','Cancelar'));
  }
  if(job.phase==='registering')return card('Adicionando '+esc(n.name)+'…',where+' · cadastrando e conectando.','');
  if(job.phase==='pairing')return card('Pareando '+esc(n.name)+'…',where+' · enviando o PIN ao rádio.',btn('cancel','Cancelar'));
@@ -4614,15 +4614,15 @@ function deviceNoticeHtml(n){
  const pinField=n.kind==='ble'?'<div class="actions"><input type="text" inputmode="numeric" maxlength="8" placeholder="PIN do rádio" aria-label="PIN de pareamento Bluetooth" data-notice-pin-input="'+id+'" style="width:120px">'+
    btn('pin','Parear com PIN',job.needs_pin)+'</div>':'';
  if(job.phase==='failed')return card('Não foi possível adicionar '+esc(n.name),esc(job.error||'Sem resposta do rádio.')+
-   (n.kind==='ble'?' Se o rádio pede PIN, digite o código mostrado na tela dele (123456 se não tiver tela).':''),
-   pinField+btn('add','Tentar de novo',!job.needs_pin)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alert');
+   (n.kind==='ble'&&job.needs_pin?' Digite o PIN mostrado na tela do rádio (123456 se ele não tiver tela).':''),
+   (job.needs_pin?pinField:'')+btn('add','Tentar de novo',!job.needs_pin)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alert');
  if(job.phase==='done'){
   const name=esc(job.source?.name||n.name);
   if(job.other_active)return card(name+' adicionado','Conexão automática marcada. Outro rádio está ativo; este ficou em espera.',btn('use','Usar este agora',true)+btn('close','Fechar'));
   return card(name+' adicionado',job.switched?'Agora é o rádio ativo (prioridade USB).':'Conexão automática marcada; conectando.',btn('close','Fechar'));
  }
  return card('Rádio Meshtastic detectado',esc(n.name)+' — '+where+(job.phase==='cancelled'?' · verificação cancelada.':''),
-   btn('add','Adicionar e conectar',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo')+pinField,'alertdialog');
+   btn('add','Adicionar e conectar',true)+btn('later','Agora não')+btn('never','Nunca para este dispositivo'),'alertdialog');
 }
 function renderDeviceNotices(list=lastDeviceNotices){
  lastDeviceNotices=list;

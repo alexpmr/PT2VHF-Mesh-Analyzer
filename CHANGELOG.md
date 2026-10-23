@@ -1,3 +1,9 @@
+# v0.6.43 — Bluetooth sem PIN pareado e incluído sem clique
+
+- #164 (relato de uso real): rádios sem PIN definido não eram pareados nem incluídos. `ble_pairing.pair()` aceita PIN ausente: no Windows aceita o pareamento por confirmação ("Just Works") e devolve `pin_required` quando o rádio pede código; no Linux o `bluetoothctl` usa agente KeyboardDisplay, confirma pedidos sim/não e devolve `pin_required` ao pedido de passkey; no macOS segue com o diálogo do sistema. `DeviceWatcher.verify()` pareia sem PIN antes de verificar qualquer rádio Bluetooth (aviso, "Adicionar automaticamente", primeira abertura). Rádio BLE próximo e novo é pareado, verificado e cadastrado sem clique quando "Adicionar e conectar sem perguntar → Bluetooth" está ligado (novo padrão, aplicado uma vez também a perfis antigos); se pedir PIN, o aviso já abre com o campo de PIN. O campo de PIN deixa de aparecer em rádios que parearam sem código.
+
+Validação: testes Python (sem PIN → cadastrado sem clique, pede PIN → campo de PIN, preferência desligada, clique no aviso, falha após pareamento sem pedir PIN, PIN digitado sem novo pareamento, diálogos do bluetoothctl, migração da preferência) e regressão Chromium v0.6.34–v0.6.41. Aceite físico pendente: rádio sem PIN e rádio com PIN no Windows.
+
 # v0.6.42 — Elevações por tiles de terreno
 
 - #179/#180: as consultas ao Open-Meteo falhavam no computador do usuário (enlace e survey), com uma mensagem que escondia o motivo. Fonte principal passa a ser os tiles Terrarium (`s3.amazonaws.com/elevation-tiles-prod`, zoom até 12, interpolação bilinear, decodificador PNG próprio sem dependências novas), com cache dos tiles em `terrain-tiles/` no perfil do app, além do cache de pontos no SQLite. Open-Meteo como alternativa, dividido em lotes de 100 coordenadas e com User-Agent. Erros com o motivo (HTTP, limite 429, tempo esgotado, certificado) das duas fontes.
