@@ -255,11 +255,17 @@ class DeviceWatcher:
     prazo, fila Bluetooth e Cancelar.
     """
 
-    def __init__(self, db, sources, prober=probe, usb=usb_serial_ports, ble=scan_ble):
+    def __init__(self, db, sources, prober=probe, usb=usb_serial_ports, ble=scan_ble, pairer=None):
         self.db = db
         self.sources = sources
         self.registry = Registry(db, sources)
         self._probe = prober
+        # #164: pareamento sem PIN antes de verificar rádios Bluetooth. Só com o rádio de verdade
+        # (prober padrão); nos testes com prober simulado não há adaptador para parear.
+        if pairer is None and prober is probe:
+            from . import ble_pairing
+            pairer = ble_pairing.pair
+        self._pair = pairer
         self._usb = usb
         self._ble = ble
         self._lock = threading.RLock()
@@ -321,13 +327,34 @@ class DeviceWatcher:
             if token in self._ble_line:
                 self._ble_line.remove(token)
 
-    def verify(self, candidate, token, cancel=None, on_wait=None, deadline=None):
-        """Verificação com prazo, cancelamento e fila Bluetooth."""
+    def verify(self, candidate, token, cancel=None, on_wait=None, deadline=None, pair=True):
+        """Verificação com prazo, cancelamento e fila Bluetooth.
+
+        Rádios Bluetooth são pareados antes, sem PIN (#164): quem não tem PIN definido
+        pareia e segue direto; quem pede PIN volta com needs_pin para o app pedir o código.
+        """
         ble = candidate["kind"] == "ble"
         if ble and not self.enter_ble(token, cancel, on_wait):
             return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
         try:
-            return bounded_probe(self._probe, candidate, cancel, deadline)
+            paired = None
+            if ble and pair and self._pair is not None:
+                try:
+                    result = self._pair(candidate["address"], None)
+                except Exception as exc:
+                    result = {"ok": False, "status": "error", "error": str(exc)[:160]}
+                if result.get("status") == "pin_required":
+                    return {"ok": False, "needs_pin": True, "error": result.get("error") or "O rádio pede PIN"}
+                if cancel is not None and cancel.is_set():
+                    return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
+                paired = bool(result.get("ok"))
+                if not paired:
+                    LOG.info("Pareamento BLE sem PIN não concluído (%s); tentando conectar assim mesmo",
+                             result.get("error") or result.get("status"))
+            info = bounded_probe(self._probe, candidate, cancel, deadline)
+            if ble and paired is not None:
+                info = {**info, "paired": paired}
+            return info
         finally:
             if ble:
                 self.leave_ble(token)
@@ -477,7 +504,39 @@ class DeviceWatcher:
             LOG.debug("Varredura BLE indisponível: %s", exc)
             return
         self._drop_missing("ble", {device_key("ble", d["address"]) for d in found})
+        auto = self._settings()["device_autoconnect"].get("ble")
         for candidate in found:
+            if auto and self._new_candidate(candidate):
+                self._auto_ble(candidate)
+            else:
+                self._offer(candidate)
+
+    def _new_candidate(self, candidate):
+        key = device_key(candidate["kind"], candidate["address"])
+        with self._lock:
+            if key in self._notices or key in self._snoozed or key in self._busy:
+                return False
+        return key not in self.db.ignored_devices() and not self.registry.configured(candidate)
+
+    def _auto_ble(self, candidate):
+        """#164: rádio Bluetooth sem PIN é pareado, verificado e incluído sem clique.
+        Se ele pedir PIN, o aviso aparece já com o campo de PIN."""
+        key = device_key("ble", candidate["address"])
+        self.busy(key)
+        try:
+            info = self.verify(candidate, "watch:" + key)
+        finally:
+            self.busy(key, False)
+        if info.get("ok"):
+            self._auto_add(candidate, info)
+        elif info.get("needs_pin"):
+            self._offer(candidate)
+            with self._lock:
+                notice = self._notices.get(key)
+                if notice is not None:
+                    notice["job"] = {"phase": "failed", "error": info.get("error", ""), "needs_pin": True,
+                                     "started_ms": now_ms()}
+        elif not info.get("cancelled"):
             self._offer(candidate)
 
     def _start_mdns(self):
@@ -576,18 +635,20 @@ class DeviceWatcher:
             notice["job"] = {**(notice.get("job") or {}), **values}
             return True
 
-    def _accept_job(self, key, notice, cancel):
+    def _accept_job(self, key, notice, cancel, pair=True):
         candidate = notice["candidate"]
         try:
             def waiting(position, total):
                 self._job(notice, cancel, phase="queued", position=position, total=total)
-            info = self.verify(candidate, "accept:" + key, cancel, waiting)
+            info = self.verify(candidate, "accept:" + key, cancel, waiting, pair=pair)
             if cancel.is_set():
                 return
             if not info.get("ok"):
-                # #164: rádio BLE que não respondeu pode estar esperando o PIN de pareamento.
+                # #164: campo de PIN só quando o rádio pediu PIN, ou quando o pareamento automático
+                # não pôde ser feito e a falha ainda pode ser de PIN.
+                needs_pin = candidate["kind"] == "ble" and (bool(info.get("needs_pin")) or not info.get("paired"))
                 self._job(notice, cancel, phase="failed", error=info.get("error", "Sem resposta"),
-                          timed_out=bool(info.get("timed_out")), needs_pin=candidate["kind"] == "ble")
+                          timed_out=bool(info.get("timed_out")), needs_pin=needs_pin)
                 return
             if not self._job(notice, cancel, phase="registering"):
                 return
@@ -631,7 +692,7 @@ class DeviceWatcher:
                               needs_pin=True)
                     return
                 self._job(notice, cancel, phase="connecting", detail=result.get("status", ""))
-                self._accept_job(key, notice, cancel)
+                self._accept_job(key, notice, cancel, pair=False)
             finally:
                 self.busy(key, False)
 

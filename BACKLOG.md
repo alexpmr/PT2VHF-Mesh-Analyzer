@@ -1,3 +1,7 @@
+## v0.6.43 — Implementado nesta entrega
+
+- #164: pareamento sem PIN e inclusão automática de rádios Bluetooth sem PIN definido. Aceite físico pendente no Windows (rádio sem PIN e rádio com PIN).
+
 ## v0.6.42 — Implementado nesta entrega
 
 - Elevações por tiles Terrarium (correção do erro do Open-Meteo relatado em uso real nas ferramentas #179/#180). Testado aqui com tiles reais.

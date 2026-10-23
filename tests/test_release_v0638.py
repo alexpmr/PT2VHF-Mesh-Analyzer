@@ -196,7 +196,8 @@ class UsbPriority(Base):
         self.assertEqual(len(self.db.sources()), 1)
 
     def test_autoconnect_preferences_validate(self):
-        self.assertEqual(self.db.system_settings()["device_autoconnect"], {"serial": True, "tcp": False, "ble": False})
+        # v0.6.43 (#164): Bluetooth sem PIN também entra sem clique por padrão.
+        self.assertEqual(self.db.system_settings()["device_autoconnect"], {"serial": True, "tcp": False, "ble": True})
         self.db.set_system_settings({"device_autoconnect": {"tcp": True}})
         self.assertTrue(self.db.system_settings()["device_autoconnect"]["tcp"])
         with self.assertRaises(ValueError):

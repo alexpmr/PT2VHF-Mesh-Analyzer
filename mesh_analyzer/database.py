@@ -249,6 +249,18 @@ class Database:
                     last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),
                     observed=MAX(observed,excluded.observed)""")
                 self._db.execute("INSERT INTO settings(key,value) VALUES('migrated_node_sources_v1','true')")
+            # v0.6.43 (#164): Bluetooth sem PIN passa a entrar sem clique. Uma única vez, liga a
+            # opção também em perfis que gravaram o padrão antigo (desligado) ao mexer em outra.
+            if self._db.execute("SELECT 1 FROM settings WHERE key='ble_autoconnect_v0643'").fetchone() is None:
+                row = self._db.execute("SELECT value FROM settings WHERE key='system'").fetchone()
+                try:
+                    stored = json.loads(row[0]) if row else None
+                except (TypeError, ValueError):
+                    stored = None
+                if isinstance(stored, dict) and isinstance(stored.get("device_autoconnect"), dict):
+                    stored["device_autoconnect"]["ble"] = True
+                    self._db.execute("UPDATE settings SET value=? WHERE key='system'", (json.dumps(stored),))
+                self._db.execute("INSERT INTO settings(key,value) VALUES('ble_autoconnect_v0643','1')")
 
     def close(self):
         with self._lock:
@@ -372,8 +384,9 @@ class Database:
                        # #149: aviso ao detectar rádio novo, por tipo de conexão.
                        "device_autodetect": {"serial": True, "tcp": True, "ble": True},
                        # #155: USB verificado é adicionado e conectado sem clique e tem
-                       # prioridade sobre Wi-Fi/BLE; Wi-Fi e BLE mantêm o aviso por padrão.
-                       "device_autoconnect": {"serial": True, "tcp": False, "ble": False},
+                       # prioridade sobre Wi-Fi/BLE. #164: Bluetooth sem PIN também é pareado
+                       # e incluído sem clique; Wi-Fi mantém o aviso por padrão.
+                       "device_autoconnect": {"serial": True, "tcp": False, "ble": True},
                        "usb_priority": True}
 
     def ui_preferences(self):

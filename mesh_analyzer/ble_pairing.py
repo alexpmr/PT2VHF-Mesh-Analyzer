@@ -8,6 +8,9 @@ esperando o diálogo do sistema, às vezes escondido atrás da janela do app.
   respondendo ao pedido de PIN com o código informado no app.
 - Linux: bluetoothctl com agente de teclado, enviando o PIN quando pedido.
 - macOS: o próprio sistema mostra o diálogo de pareamento ao conectar.
+
+Rádios sem PIN definido (modo "NO_PIN") pareiam sem código: `pair(endereço)`
+sem PIN pareia direto e devolve status "pin_required" quando o rádio pede um.
 """
 from __future__ import annotations
 
@@ -29,9 +32,17 @@ def validate(address: str, pin: str) -> tuple[str, str]:
     return str(address or "").strip(), pin
 
 
-def pair(address: str, pin: str, timeout: float = 40.0, platform: str | None = None) -> dict:
-    """Pareia o endereço com o PIN. Devolve {"ok", "status", "error"}."""
-    address, pin = validate(address, pin)
+PIN_REQUIRED = {"ok": False, "status": "pin_required",
+                "error": "Este rádio pede PIN: digite o código mostrado na tela dele (123456 se ele não tiver tela)."}
+
+
+def pair(address: str, pin: str | None = None, timeout: float = 40.0, platform: str | None = None) -> dict:
+    """Pareia o endereço; sem PIN, pareia rádios que não exigem código.
+    Devolve {"ok", "status", "error"}; status "pin_required" quando o rádio pede PIN."""
+    if pin is None:
+        address = str(address or "").strip()
+    else:
+        address, pin = validate(address, pin)
     platform = platform or sys.platform
     try:
         if platform == "win32":
@@ -39,7 +50,7 @@ def pair(address: str, pin: str, timeout: float = 40.0, platform: str | None = N
         if platform.startswith("linux"):
             return _pair_linux(address, pin, timeout)
         return {"ok": True, "status": "system_dialog",
-                "error": "No macOS o próprio sistema pede o PIN ao conectar; digite-o no diálogo do macOS."}
+                "error": "" if pin is None else "No macOS o próprio sistema pede o PIN ao conectar; digite-o no diálogo do macOS."}
     except asyncio.TimeoutError:
         return {"ok": False, "status": "timeout", "error": "O rádio não respondeu ao pareamento a tempo"}
     except Exception as exc:
@@ -58,12 +69,16 @@ async def _pair_windows(address: str, pin: str) -> dict:
     if info.pairing.is_paired:
         return {"ok": True, "status": "already_paired", "error": ""}
     custom = info.pairing.custom
+    asked_pin = []
 
     def on_request(sender, args):
         if args.pairing_kind == DevicePairingKinds.PROVIDE_PIN:
+            if pin is None:
+                asked_pin.append(True)   # sem resposta: o Windows cancela e o app pede o PIN
+                return
             args.accept_with_pin(pin)
         else:
-            args.accept()
+            args.accept()                # "Just Works" / confirmação: rádio sem PIN definido
 
     token = custom.add_pairing_requested(on_request)
     try:
@@ -73,6 +88,8 @@ async def _pair_windows(address: str, pin: str) -> dict:
         custom.remove_pairing_requested(token)
     if result.status in (DevicePairingResultStatus.PAIRED, DevicePairingResultStatus.ALREADY_PAIRED):
         return {"ok": True, "status": "paired", "error": ""}
+    if asked_pin:
+        return dict(PIN_REQUIRED)
     return {"ok": False, "status": "failed",
             "error": "Pareamento recusado (%s). Confira o PIN na tela do rádio." % getattr(result.status, "name", result.status)}
 
@@ -97,15 +114,21 @@ def _pair_linux(address: str, pin: str, timeout: float, command=("bluetoothctl",
         proc.stdin.flush()
 
     try:
-        for cmd in ("agent KeyboardOnly", "default-agent", "pair " + address):
+        for cmd in ("agent KeyboardDisplay", "default-agent", "pair " + address):
             send(cmd)
             time.sleep(0.3)
-        sent_pin, end = False, time.monotonic() + timeout
+        sent_pin, sent, end = False, [], time.monotonic() + timeout
         while time.monotonic() < end and not done.is_set():
             text = "".join(lines)
             if not sent_pin and re.search(r"(Enter passkey|Enter PIN|Passkey)", text, re.I):
+                if pin is None:
+                    send("no")
+                    return dict(PIN_REQUIRED)
                 send(pin)
                 sent_pin = True
+            if re.search(r"Confirm passkey|Request confirmation|Authorize service", text, re.I) and "yes" not in sent:
+                send("yes")          # rádio sem PIN: só confirmação
+                sent.append("yes")
             if re.search(r"Pairing successful|AlreadyExists|already paired", text, re.I):
                 send("trust " + address)
                 return {"ok": True, "status": "paired", "error": ""}
