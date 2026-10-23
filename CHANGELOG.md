@@ -1,3 +1,12 @@
+# v0.6.41 — Análise de enlace entre 2 pontos e melhor ponto para instalar nó
+
+- #179: ferramenta no menu Ver do mapa. Pontos por clique, nó ou coordenadas, arrastáveis. Perfil com 40–256 amostras pelo grande círculo, curvatura k = 4/3, 1ª zona de Fresnel e faixa de 60%. Orçamento do enlace: EIRP, perda em espaço livre, difração por gume de faca (Deygout, ITU-R P.526), sinal estimado, sensibilidade por preset LoRa (SF/BW, NF 6 dB), margem e SNR. Veredito Viável (margem ≥ 10 dB com visada), Marginal (margem 0–10 dB ou sem visada) ou Inviável (margem negativa), com o motivo e o pior obstáculo no mapa. Altura mínima de antena em A, em B ou nas duas para liberar 60% da zona de Fresnel. Valores do rádio ativo (região, preset, potência). SNR/RSSI medianos observados quando uma ponta é rádio próprio. PDF. O botão do popup de enlace abre a nova análise.
+- #180: polígono desenhado no mapa (até 100 vértices, desfazer, fechar no primeiro vértice/duplo clique/Concluir, arrastar, inserir e remover vértices). Grade de ~900 amostras ajustada à área (limite 5.000 km², aviso acima de 1.000 km²), só topos locais (encostas do mesmo morro não entram), refinamento em volta de cada topo e separação mínima proporcional à área. Ranking do mais alto para o mais baixo (empate: mais perto da referência), indicação de ponto na borda, referência opcional, enlace de cada ponto, surveys salvos, CSV e PDF com mapa de relevo, tabela e perfis.
+- Elevações do Open-Meteo em lotes de 100, com cache no SQLite (`elevation_cache`).
+- Teste v0.6.38 do Chromium: corrigida uma falha intermitente causada pela atualização periódica dos nós durante o teste.
+
+Validação: testes Python (orçamento, curvatura, obstáculo, cache offline, topos distintos, borda, referência, limites, surveys salvos, PDF, valores do rádio) e regressão Chromium v0.6.34–v0.6.41, com o servidor real e terreno sintético. Não testado aqui: elevações reais do Open-Meteo (bloqueado neste ambiente).
+
 # v0.6.40 — Alertas, backup, análises da malha, mensagens automáticas, canais, busca, EN/ES e PIN Bluetooth
 
 - #164: pareamento BLE com PIN digitado no aviso do dispositivo (`/api/devices/pair`, fase "pairing" cancelável). Windows: pareamento personalizado do WinRT respondendo ao pedido de PIN; Linux: `bluetoothctl` com agente de teclado; macOS: diálogo do sistema. Falha de verificação BLE passa a oferecer o campo de PIN.

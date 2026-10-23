@@ -140,8 +140,34 @@ def radios_available(db, sources):
 
 
 def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates=None, updater=None, shutdown=None, ready_event=None, automation=None, discovery=None, watcher=None, autoadd=None, restart=None, alerts=None, msgauto=None):
+    elevation_cache=[]
+    def elevations():
+        # #179/#180: elevações do terreno com cache no SQLite.
+        if not elevation_cache:
+            from .survey import Elevations
+            elevation_cache.append(Elevations(db))
+        return elevation_cache[0]
+    def own_nodes():
+        own={int(s["local_node_num"]) for s in sources.snapshot().values() if s.get("local_node_num")}
+        own|={int(s["config"]["node_num"]) for s in db.sources(public=False) if s["config"].get("node_num")}
+        return own
+    def survey_link(item):
+        from . import survey
+        node=lambda v:int(v,0) if isinstance(v,str) and v else (int(v) if isinstance(v,int) else None)
+        observed=survey.observed_link(db,own_nodes(),node(item.get("node_a")),node(item.get("node_b")))
+        return survey.link_analysis(elevations(),item.get("a"),item.get("b"),item.get("params") or {},observed)
     class Handler(BaseHTTPRequestHandler):
         server_version="PT2VHF-Mesh-Analyzer/" + __version__
+
+        def _pdf(self,body,filename):
+            self.send_response(200)
+            self.send_header("Content-Type","application/pdf")
+            self.send_header("Content-Disposition","attachment; filename="+filename)
+            self.send_header("X-Content-Type-Options","nosniff")
+            self.send_header("Cache-Control","no-store")
+            self.send_header("Content-Length",str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
         def log_message(self,fmt,*args):
             if not str(self.path).startswith("/api/"):
                 LOG.info("HTTP %s", fmt % args)
@@ -237,6 +263,10 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     days=query.get("days",[""])[0]
                     self._json({"success":True,"data":db.search_messages(query.get("q",[""])[0][:200],
                         int(node,0) if node else None,int(days) if days else None)})
+                elif path == "/api/survey/defaults":
+                    from . import survey
+                    self._json({"success":True,"radio":survey.radio_defaults(sources),"presets":list(survey.PRESETS),
+                                "saved":survey.saved_surveys(db)})
                 elif path == "/api/messages/context":
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
                     self._json({"success":True,"data":db.message_context(int(query.get("id",["0"])[0]))})
@@ -408,6 +438,31 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json({"success":True,"reply":msgauto.save_reply(payload)})
                 elif path == "/api/msgauto/reply/delete":
                     self._json(msgauto.delete_reply(payload["id"]))
+                elif path == "/api/survey/link":
+                    self._json({"success":True,"data":survey_link(payload)})
+                elif path == "/api/survey/best":
+                    from . import survey
+                    self._json({"success":True,"data":survey.best_points(elevations(),payload.get("polygon"),
+                        payload.get("reference"),payload.get("count") or 10)})
+                elif path == "/api/survey/save":
+                    from . import survey
+                    self._json({"success":True,"item":survey.save_survey(db,payload),"saved":survey.saved_surveys(db)})
+                elif path == "/api/survey/delete":
+                    from . import survey
+                    survey.delete_survey(db,payload.get("id"))
+                    self._json({"success":True,"saved":survey.saved_surveys(db)})
+                elif path == "/api/survey/pdf":
+                    from . import survey, survey_pdf
+                    name=str(payload.get("name") or "")[:60]
+                    if payload.get("kind")=="link":
+                        body=survey_pdf.link_pdf(survey_link(payload),name)
+                        return self._pdf(body,"PT2VHF-Analise-de-Enlace.pdf")
+                    result=survey.best_points(elevations(),payload.get("polygon"),payload.get("reference"),payload.get("count") or 10)
+                    links=[]
+                    for item in (payload.get("links") or [])[:20]:
+                        links.append({"rank":item.get("rank"),"target":str(item.get("target") or "B")[:40],"link":survey_link(item)})
+                    body=survey_pdf.survey_pdf(result,name,links,survey_pdf.nearby_nodes(db,result))
+                    return self._pdf(body,"PT2VHF-Survey-Melhor-Ponto.pdf")
                 elif path == "/api/msgauto/preview":
                     sample={"from_node":None,"channel":0,"text":str(payload.get("command",""))}
                     self._json({"success":True,"text":msgauto.render(str(payload.get("template",""))[:400],sample)})

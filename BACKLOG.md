@@ -1,3 +1,9 @@
+## v0.6.41 — Implementado nesta entrega
+
+- #179 e #180 implementados com testes automatizados.
+- Aceite pendente: conferir com elevações reais (Open-Meteo) em enlaces conhecidos da malha e um survey numa região com morros; validar o veredito contra enlaces que funcionam e que não funcionam na prática.
+- Limitações conhecidas: o modelo de terreno (~90 m) não inclui prédios, árvores e torres; o mapa do PDF é um esquema de relevo (sem a cartografia de fundo); a classificação por visibilidade (quantos nós cada ponto enxerga) ficou como evolução.
+
 ## v0.6.40 — Implementado nesta entrega
 
 - #164 a #177 implementados com testes automatizados.

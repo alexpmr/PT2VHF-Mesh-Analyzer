@@ -78,6 +78,6 @@ class NodeRoleTests(unittest.TestCase):
         self.assertEqual((data['zero'],data['text'],data['unknown']),('CLIENT','CLIENT_BASE','UNKNOWN'))
         self.assertIn('#2ecc71',data['recent']['html']);self.assertIn('#e9a94d',data['old']['html'])
         self.assertEqual(data['recent']['iconAnchor'],[17,17])
-        self.assertIn("marker.on('click',()=>showNode(n))",HTML)
+        self.assertIn("marker.on('click',()=>{if(mapToolNodeClick(n))return;showNode(n);})",HTML)
         self.assertIn("marker.on('contextmenu'",HTML)
         self.assertIn('L.marker(point,{icon:nodeRoleIcon(n)',HTML)

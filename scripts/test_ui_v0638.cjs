@@ -75,9 +75,11 @@ const path=require('path');
    await setView('nodes');selectedNodeCols.add('presence');renderNodes();
    r.presence=[...document.querySelectorAll('#nodesRows tr')].map(tr=>tr.innerText);
    r.starEnabled=!document.querySelector('[data-favorite-toggle="'+0x11aa22bb+'"]').disabled;
+   // O refreshAll periódico (setInterval com a função original) pode recarregar `nodes` durante a espera.
+   const silentNode=nodes[0];
    document.querySelector('[data-favorite-toggle="'+0x11aa22bb+'"]').click();
    await new Promise(res=>setTimeout(res,300));
-   r.dim=presenceSilent(nodes[0]);
+   r.dim=presenceSilent(silentNode);
    await setView('automations');await loadAutomation();
    r.kinds=[...document.querySelectorAll('[data-auto-kind]')].map(x=>x.dataset.autoKind);
    r.presenceFields=[$('autoPresenceSilent').value,$('autoPresenceWindow').value,$('autoChannelBusy').value];
