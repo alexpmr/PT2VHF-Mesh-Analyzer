@@ -91,7 +91,8 @@ def link_story(link, title):
     w = link.get("worst")
     if w:
         rows.append(["Pior ponto", "%s de A (%s)" % (_km(w["distance_m"]), _coord(w["lat"], w["lon"])),
-                     "Folga / Fresnel livre", "%s / %d%%" % (number(w["clearance_m"], " m"), round(w["ratio"] * 100))])
+                     "Folga / Fresnel livre", "%s / %s" % (number(w["clearance_m"], " m"),
+                                                  "0% (sem visada)" if w["ratio"] < 0 else "%d%%" % round(w["ratio"] * 100))])
     s = link.get("suggestion")
     if s:
         fmt = lambda v: "acima de 300 m" if v is None else number(v, " m")

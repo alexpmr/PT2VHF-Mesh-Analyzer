@@ -1,3 +1,7 @@
+# v0.6.44 — Ajuste na análise de enlace
+
+- #179: com a linha de visada bloqueada, "Fresnel livre" mostrava porcentagens negativas (ex.: −234%). Passa a mostrar "0% (sem visada)" e quantos metros o terreno fica acima da linha, na tela e no PDF.
+
 # v0.6.43 — Bluetooth sem PIN pareado e incluído sem clique
 
 - #164 (relato de uso real): rádios sem PIN definido não eram pareados nem incluídos. `ble_pairing.pair()` aceita PIN ausente: no Windows aceita o pareamento por confirmação ("Just Works") e devolve `pin_required` quando o rádio pede código; no Linux o `bluetoothctl` usa agente KeyboardDisplay, confirma pedidos sim/não e devolve `pin_required` ao pedido de passkey; no macOS segue com o diálogo do sistema. `DeviceWatcher.verify()` pareia sem PIN antes de verificar qualquer rádio Bluetooth (aviso, "Adicionar automaticamente", primeira abertura). Rádio BLE próximo e novo é pareado, verificado e cadastrado sem clique quando "Adicionar e conectar sem perguntar → Bluetooth" está ligado (novo padrão, aplicado uma vez também a perfis antigos); se pedir PIN, o aviso já abre com o campo de PIN. O campo de PIN deixa de aparecer em rádios que parearam sem código.
