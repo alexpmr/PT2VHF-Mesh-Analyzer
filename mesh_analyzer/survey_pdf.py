@@ -230,7 +230,7 @@ def survey_pdf(result, name="", links=(), nodes=()):
                      "Borda da área: o terreno sobe fora do polígono" if p.get("edge") else "Topo"])
     story.append(_grid(rows, [USABLE * w for w in (0.05, 0.1, 0.14, 0.1, 0.11, 0.2, 0.3)]))
     story.append(Spacer(1, 3 * mm))
-    story.append(Paragraph("Elevações do modelo digital de terreno (~90 m), sem prédios, árvores ou torres. Confirme o "
+    story.append(Paragraph("Elevações do modelo digital de terreno (~30–40 m), sem prédios, árvores ou torres. Confirme o "
                            "acesso, a posse e a infraestrutura do local antes de instalar.", ST["TextMesh"]))
     for item in links:
         story.append(PageBreak())

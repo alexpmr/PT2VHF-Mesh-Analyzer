@@ -15,7 +15,7 @@ def hills(points):
         out.append(800+300*math.exp(-((la+15.80)**2+(lo+47.90)**2)/0.01**2)+150*math.exp(-((la+15.77)**2+(lo+47.87)**2)/0.006**2)
                    +40*math.exp(-((la+15.83)**2+(lo+47.93)**2)/0.004**2))
     return out
-s._fetch_open_meteo=hills
+s.default_fetcher=lambda cache_dir=None: hills
 sys.argv=['launch.py']+sys.argv[1:]
 runpy.run_path('launch.py',run_name='__main__')
 `;
@@ -88,8 +88,8 @@ runpy.run_path('launch.py',run_name='__main__')
   // Clique na linha da tabela destaca o marcador; enlace do ponto 2 até a referência entra no PDF.
   await page.click('tr[data-survey-rank="2"] td:first-child');
   out.highlight=await page.evaluate(()=>!!mapTool.pointMarkers[1].getElement()?.classList.contains('active'));
-  await page.click('[data-survey-link="1"]');await page.click('[data-survey-link-row="1"] [data-sl-run]');
-  await page.waitForSelector('[data-survey-link-row="1"] .verdictBadge',{timeout:15000});
+  await page.click('[data-survey-link="2"]');await page.click('[data-survey-link-row="2"] [data-sl-run]');
+  await page.waitForSelector('[data-survey-link-row="2"] .verdictBadge',{timeout:15000});
   out.surveyPdf=await page.evaluate(async()=>{
    const res=await fetch('/api/survey/pdf',{method:'POST',headers:{'Content-Type':'application/json','X-PT2VHF-CSRF':csrf},body:JSON.stringify(surveyPdfPayload())});
    return {type:res.headers.get('Content-Type'),size:(await res.arrayBuffer()).byteLength,links:surveyPdfPayload().links.length};

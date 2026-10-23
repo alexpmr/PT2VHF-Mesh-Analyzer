@@ -145,7 +145,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
         # #179/#180: elevações do terreno com cache no SQLite.
         if not elevation_cache:
             from .survey import Elevations
-            elevation_cache.append(Elevations(db))
+            elevation_cache.append(Elevations(db,cache_dir=profile_dir()/"terrain-tiles"))
         return elevation_cache[0]
     def own_nodes():
         own={int(s["local_node_num"]) for s in sources.snapshot().values() if s.get("local_node_num")}
@@ -244,7 +244,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                             if not row or row[0]["latitude"] is None:raise ValueError("Os dois nós precisam ter posição conhecida")
                             pos[key]=(row[0]["latitude"],row[0]["longitude"])
                         data=insights.terrain_profile(pos["a"],pos["b"],float(q.get("freq") or 915),
-                            float(q.get("ha") or 2),float(q.get("hb") or 2))
+                            float(q.get("ha") or 2),float(q.get("hb") or 2),elevations=elevations().get)
                     else:raise LookupError("Análise desconhecida")
                     self._json({"success":True,"data":data})
                 elif path == "/api/channels":
