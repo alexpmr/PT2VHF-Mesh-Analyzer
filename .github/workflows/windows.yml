@@ -30,7 +30,19 @@ jobs:
           if (!(Test-Path 'branding/mesh-analyzer.png')) { throw 'PNG da marca ausente' }
       - name: Validar SQLite, fontes, RF simulado e API local
         shell: pwsh
-        run: python -m unittest discover -s tests -v
+        run: |
+          $env:PYTHONIOENCODING = 'utf-8'
+          python -m unittest discover -s tests -v *> unittest.log
+          $code = $LASTEXITCODE
+          Get-Content unittest.log | Write-Host
+          if ($code -ne 0) {
+            # Falhas também como anotação: o resumo fica legível pela API sem baixar o log.
+            $text = (Select-String -Path unittest.log -Pattern '^(FAIL|ERROR):' -Context 0,30 | Out-String)
+            if ($text.Length -gt 6000) { $text = $text.Substring(0, 6000) }
+            $text = $text -replace '%','%25' -replace "`r",'' -replace "`n",'%0A'
+            Write-Host "::error title=unittest::$text"
+            exit 1
+          }
       - name: Validar sintaxe JavaScript da interface
         shell: pwsh
         run: |
@@ -46,20 +58,17 @@ jobs:
         run: |
           npm install --prefix "$env:RUNNER_TEMP/mesh-ui-deps" playwright@1.58.2
           $env:NODE_PATH = "$env:RUNNER_TEMP/mesh-ui-deps/node_modules"
-          node scripts/test_ui_v0634.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface no Chrome' }
-          node scripts/test_ui_v0636.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.36 no Chrome' }
-          node scripts/test_ui_v0637.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.37 no Chrome' }
-          node scripts/test_ui_v0638.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.38 no Chrome' }
-          node scripts/test_ui_v0639.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.39 no Chrome' }
-          node scripts/test_ui_v0640.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.40 no Chrome' }
-          node scripts/test_ui_v0641.cjs
-          if ($LASTEXITCODE -ne 0) { throw 'Regressao da interface v0.6.41 no Chrome' }
+          foreach ($name in 'test_ui_v0634','test_ui_v0636','test_ui_v0637','test_ui_v0638','test_ui_v0639','test_ui_v0640','test_ui_v0641') {
+            $out = node "scripts/$name.cjs" 2>&1 | Out-String
+            $code = $LASTEXITCODE
+            Write-Host $out
+            if ($code -ne 0) {
+              $tail = $out.Substring([Math]::Max(0, $out.Length - 4000))
+              $tail = $tail -replace '%','%25' -replace "`r",'' -replace "`n",'%0A'
+              Write-Host "::error title=$name::$tail"
+              throw "Regressao da interface no Chrome: $name"
+            }
+          }
       - name: Validar sintaxe do PowerShell de atualização
         shell: pwsh
         run: |

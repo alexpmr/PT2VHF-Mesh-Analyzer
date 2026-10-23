@@ -35,6 +35,12 @@ runpy.run_path('launch.py',run_name='__main__')
   page.on('pageerror',e=>errors.push(String(e)));
   if(process.env.MESH_LEAFLET_PATH)await page.route('**/leaflet.js',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(process.env.MESH_LEAFLET_PATH,'utf8')}));
   await page.route(/tile|arcgisonline/,r=>r.fulfill({status:204,body:''}));
+  // Num computador real (CI no Windows) a busca de primeira abertura e os avisos de rádio detectado
+  // podem aparecer por cima do mapa durante os cliques; aqui eles não fazem parte do teste.
+  const idle={success:true,data:{first_run:false,running:false,phase:'done',results:[],added:[]}};
+  await page.route('**/api/devices/autoadd',r=>r.fulfill({contentType:'application/json',body:JSON.stringify(idle)}));
+  await page.route('**/api/devices/autoadd/start',r=>r.fulfill({contentType:'application/json',body:JSON.stringify(idle)}));
+  await page.route('**/api/devices/detected',r=>r.fulfill({contentType:'application/json',body:JSON.stringify({success:true,data:[]})}));
   await page.goto('http://127.0.0.1:8806/mapa');
   await page.waitForFunction(()=>typeof openLinkTool==='function'&&map!==null);
   await page.evaluate(()=>{firstRunDialogChecked=true;dismissFirstRunDialog();$('firstRunSearch').hidden=true;map.setView([-15.80,-47.90],12,{animate:false});});
