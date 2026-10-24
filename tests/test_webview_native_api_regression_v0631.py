@@ -27,7 +27,7 @@ class NativeBridgeSafetyTests(unittest.TestCase):
         # Do not rely on unstable private pywebview.util module functions.
         exposed=[name for name in dir(bridge) if not name.startswith("_")]
         # v0.6.40 (#166): save_backup também é só um método; o perfil é privado.
-        self.assertEqual(exposed, ["save_backup", "save_pdf"])
+        self.assertEqual(exposed, ["save_backup", "save_diagnostic", "save_pdf"])  # #198: diagnóstico .zip
         self.assertTrue(all(callable(getattr(bridge, name)) for name in exposed))
 
     def test_desktop_window_reference_is_private(self):

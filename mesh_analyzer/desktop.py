@@ -70,6 +70,25 @@ class PDFExportBridge:
         shutil.copyfile(source, dest)
         return {"saved": True, "filename": dest.name, "size": dest.stat().st_size}
 
+    def save_diagnostic(self, file_name: str) -> dict:
+        """#198: copia o diagnóstico gerado em diagnostics/ para o local escolhido."""
+        import shutil
+        from .diagnostics import diagnostic_file
+        source = diagnostic_file(Path(self._profile), file_name)
+        if self._window is None:
+            raise RuntimeError("Janela nativa não disponível")
+        import webview
+        result = self._window.create_file_dialog(
+            webview.SAVE_DIALOG, save_filename=source.name,
+            file_types=("Diagnóstico do Mesh Analyzer (*.zip)",))
+        if not result:
+            return {"saved": False, "cancelled": True}
+        dest = Path(result[0] if isinstance(result, (tuple, list)) else result)
+        if dest.suffix.lower() != ".zip":
+            dest = dest.with_suffix(".zip")
+        shutil.copyfile(source, dest)
+        return {"saved": True, "filename": dest.name, "size": dest.stat().st_size}
+
     def save_pdf(self, data_base64: str, suggested_name: str = "") -> dict:
         import base64
         if not isinstance(data_base64, str) or len(data_base64) > 24_000_000:
