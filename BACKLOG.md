@@ -1,3 +1,8 @@
+## v0.6.47 — Implementado nesta entrega
+
+- #191: conexão Bluetooth mais tolerante no Windows; conectar antes de parear; erros por etapa. Aceite físico pendente com os rádios do relato (sem PIN, que conectam no celular).
+- #189: escolher no topo a conexão (rádio ou MQTT) cujos dados aparecem em todas as abas.
+
 ## v0.6.46 — Implementado nesta entrega
 
 - #190 etapa 2 do MeshCore: colisões de prefixo, caminhos e mudanças de caminho, traceroute com SNR por trecho, vizinhos de repetidores, painel de repetidor (login, status, CLI), gestão de contatos e canais, anúncio, protocolo no mapa e presets MeshCore no planejamento.

@@ -1,9 +1,13 @@
-"""v0.6.43 (#164): rádio Bluetooth sem PIN definido é pareado e incluído sem clique."""
+"""v0.6.43 (#164): rádio Bluetooth sem PIN definido é incluído sem clique.
+
+v0.6.47 (#191): a conexão é tentada antes sem parear, como no celular; o pareamento
+só acontece quando o rádio exige (e o que pede PIN abre o campo de PIN)."""
 import sys
 import tempfile
 import time
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 from mesh_analyzer import ble_pairing
@@ -24,6 +28,7 @@ class Base(unittest.TestCase):
         self.sources.active_radio.return_value = None
         self.sources.queries.status.return_value = []
         self.pairs = []
+        self.unpaired = []
 
     def tearDown(self):
         self.db.close()
@@ -34,23 +39,30 @@ class Base(unittest.TestCase):
             self.pairs.append((address, pin))
             return {"ok": pair_status in ("paired", "already_paired"), "status": pair_status,
                     "error": "Este rádio pede PIN" if pair_status == "pin_required" else ""}
-        prober = (lambda c: {"ok": True, "node_num": 77, "long_name": "VHF4", "short_name": "V4"}) if probe_ok else \
-                 (lambda c: {"ok": False, "error": "Sem resposta"})
-        return DeviceWatcher(self.db, self.sources, prober=prober, usb=lambda: [], ble=lambda **k: [dict(CAND)], pairer=pairer)
+
+        def prober(c):
+            if not probe_ok:
+                return {"ok": False, "error": "Sem resposta"}
+            if pair_status == "pin_required":   # rádio com PIN: sem parear, a leitura é recusada
+                return {"ok": False, "auth": True, "error": "Bluetooth: o rádio exige pareamento"}
+            return {"ok": True, "node_num": 77, "long_name": "VHF4", "short_name": "V4"}
+        pairing = SimpleNamespace(is_paired=lambda a: False, unpair=lambda a: self.unpaired.append(a) or True)
+        return DeviceWatcher(self.db, self.sources, prober=prober, usb=lambda: [], ble=lambda **k: [dict(CAND)],
+                             pairer=pairer, pairing=pairing)
 
 
 class NoPinRadio(Base):
-    def test_detected_radio_without_pin_is_paired_and_added_without_click(self):
+    def test_detected_radio_without_pin_is_added_without_click_and_without_pairing(self):
         w = self.watcher("paired")
         w._check_ble()
-        self.assertEqual(self.pairs, [(ADDR, None)])
+        self.assertEqual(self.pairs, [])          # #191: conecta direto, como o celular
         sources = self.db.sources()
         self.assertEqual([s["name"] for s in sources], ["VHF4 BLE"])
         self.assertEqual(w.notices()[0]["type"], "auto_added")
         self.sources.connect.assert_called_once_with(sources[0]["id"])
         w._check_ble()                       # já cadastrado: não duplica nem pareia de novo
         self.assertEqual(len(self.db.sources()), 1)
-        self.assertEqual(len(self.pairs), 1)
+        self.assertEqual(self.pairs, [])
 
     def test_radio_asking_for_pin_shows_the_pin_field_instead(self):
         w = self.watcher("pin_required")
@@ -68,14 +80,14 @@ class NoPinRadio(Base):
         self.assertEqual(self.pairs, [])
         self.assertNotIn("job", w.notices()[0])
 
-    def test_click_on_notice_pairs_without_pin_and_adds(self):
+    def test_click_on_notice_adds_radio_without_pin(self):
         self.db.set_system_settings({"device_autoconnect": {"ble": False}})
         w = self.watcher("paired")
         w._offer(dict(CAND))
         w.accept(w.notices()[0]["id"], wait=True)
         job = w.notices()[0]["job"]
         self.assertEqual((job["phase"], job["source"]["name"]), ("done", "VHF4 BLE"))
-        self.assertEqual(self.pairs, [(ADDR, None)])
+        self.assertEqual(self.pairs, [])
 
     def test_failure_after_successful_pairing_does_not_ask_for_pin(self):
         self.db.set_system_settings({"device_autoconnect": {"ble": False}})
@@ -83,6 +95,9 @@ class NoPinRadio(Base):
         w._offer(dict(CAND))
         w.accept(w.notices()[0]["id"], wait=True)
         self.assertEqual((w.notices()[0]["job"]["phase"], w.notices()[0]["job"]["needs_pin"]), ("failed", False))
+        self.assertEqual(self.pairs, [(ADDR, None)])   # tentou parear depois da falha...
+        self.assertEqual(self.unpaired, [ADDR])         # ...e desfez o pareamento que não ajudou
+        self.assertIn("pareado sem PIN", w.notices()[0]["job"]["error"])
 
     def test_pairing_with_typed_pin_does_not_pair_again_without_pin(self):
         self.db.set_system_settings({"device_autoconnect": {"ble": False}})
