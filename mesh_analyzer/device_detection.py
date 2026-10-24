@@ -367,51 +367,40 @@ class DeviceWatcher:
     def verify(self, candidate, token, cancel=None, on_wait=None, deadline=None, pair=True):
         """Verificação com prazo, cancelamento e fila Bluetooth.
 
-        #191: rádios Bluetooth conectam primeiro sem parear, como no celular. Só se
-        a conexão falhar e o rádio ainda não estiver pareado, o app pareia sem PIN
-        (quem pede PIN volta com needs_pin) e tenta mais uma vez. Pareamento criado
-        aqui que não resolveu é desfeito; o que já existia no sistema é mantido.
+        #164/#191: rádio Bluetooth ainda não pareado é pareado sem PIN antes de conectar
+        (quem pede PIN volta com needs_pin). No teste de campo, parear primeiro funcionou
+        (v0.6.46) e conectar antes deixava o Windows recusando o pareamento depois
+        (v0.6.47-0.6.49). Pareamentos existentes nunca são removidos.
         """
         ble = candidate["kind"] == "ble"
         if ble and not self.enter_ble(token, cancel, on_wait):
             return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
         try:
+            paired, note = None, ""
+            if ble and pair and self._pair is not None:
+                paired = bool(self._pairing.is_paired(candidate["address"]))
+                if not paired:
+                    try:
+                        result = self._pair(candidate["address"], None)
+                    except Exception as exc:
+                        result = {"ok": False, "status": "error", "error": str(exc)[:160]}
+                    if result.get("status") == "pin_required":
+                        return {"ok": False, "needs_pin": True, "error": result.get("error") or "O rádio pede PIN"}
+                    if cancel is not None and cancel.is_set():
+                        return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
+                    paired = bool(result.get("ok"))
+                    if not paired:
+                        note = " · pareamento sem PIN: " + (result.get("error") or result.get("status") or "sem resposta")
+                        LOG.info("Pareamento BLE sem PIN não concluído (%s); tentando conectar assim mesmo", note)
             info = bounded_probe(self._probe, candidate, cancel, deadline)
-            if not ble or not pair or self._pair is None or info.get("ok") or info.get("cancelled") \
-                    or (cancel is not None and cancel.is_set()):
+            if paired is None:
                 return info
-            return self._ble_retry(candidate, info, cancel, deadline)
+            if info.get("ok") or info.get("cancelled"):
+                return {**info, "paired": paired}
+            return {**info, "paired": paired, "error": info.get("error", "") + note}
         finally:
             if ble:
                 self.leave_ble(token)
-
-    def _ble_retry(self, candidate, first, cancel, deadline):
-        ble_pairing = self._pairing
-        address = candidate["address"]
-        paired = ble_pairing.is_paired(address)
-        # v0.6.49: pareamento que já existia no sistema fica como está (remover não ajudou no
-        # teste de campo e poderia desfazer um pareamento feito à mão).
-        if paired:
-            return {**first, "paired": True}
-        try:
-            result = self._pair(address, None)
-        except Exception as exc:
-            result = {"ok": False, "status": "error", "error": str(exc)[:160]}
-        if result.get("status") == "pin_required":
-            return {"ok": False, "needs_pin": True, "error": result.get("error") or "O rádio pede PIN"}
-        if cancel is not None and cancel.is_set():
-            return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
-        if not result.get("ok"):
-            note = result.get("error") or result.get("status") or "sem resposta"
-            return {**first, "paired": False, "error": first.get("error", "") + " · pareamento sem PIN: " + note}
-        again = bounded_probe(self._probe, candidate, cancel, deadline)
-        if again.get("ok") or again.get("cancelled"):
-            return {**again, "paired": True}
-        if not first.get("auth") and result.get("status") == "paired":
-            ble_pairing.unpair(address)  # não ajudou: deixa o Windows como estava
-        # "paired" True: o pareamento sem PIN funcionou, então a falha não é de PIN.
-        return {**again, "paired": True,
-                "error": again.get("error", "") + " · pareado sem PIN e tentado de novo, também sem resposta"}
 
     def notices(self):
         with self._lock:

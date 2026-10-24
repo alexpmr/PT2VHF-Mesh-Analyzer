@@ -1,3 +1,10 @@
+# v0.6.50 — Bluetooth: parear antes de conectar, nome do rádio e modelo do adaptador
+
+- #191: `DeviceWatcher.verify()` volta a parear sem PIN antes de conectar quando o rádio não está pareado (`is_paired()`), e nunca remove nem desfaz pareamento. Evidência de campo: na v0.6.46, 5 de 7 rádios parearam e falharam só por tempo (`TimeoutError`, já tratado pelo `ble_link` da v0.6.47); da v0.6.47 em diante, conectar antes fazia o Windows recusar o pareamento (`FAILED`) e devolver `Unreachable`.
+- O resultado do "Adicionar automaticamente" mostra o nome anunciado pelo rádio junto do endereço.
+- `ble_pairing._windows_adapter_model()`: modelo, estado e InstanceId do rádio Bluetooth via `Get-PnpDevice` (o nome do WinRT é o nome Bluetooth do PC).
+- Testes: `tests/test_release_v0650.py`; testes da v0.6.43 e v0.6.47 voltam à ordem "parear antes de conectar"; `test_ui_v0648` confere nome e modelo.
+
 # v0.6.49 — Uma conexão de cada vez e diagnóstico Bluetooth
 
 - #189/#194:

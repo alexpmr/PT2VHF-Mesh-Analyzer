@@ -151,33 +151,29 @@ class Verify(unittest.TestCase):
     OK = {"ok": True, "node_num": 5}
     FAIL = {"ok": False, "error": "Bluetooth: falhou ao abrir a conexão — tempo esgotado (20 s)"}
 
-    def test_connects_first_without_touching_pairing(self):
-        self.assertTrue(self.watcher([self.OK]).verify(dict(CAND), "t")["ok"])
-        self.assertEqual(self.calls, ["probe"])
+    # v0.6.50: volta a parear antes de conectar (só quem não está pareado) e nunca desfaz pareamento.
+    def test_unpaired_radio_is_paired_before_connecting(self):
+        info = self.watcher([self.OK]).verify(dict(CAND), "t")
+        self.assertEqual((info["ok"], info["paired"], self.calls), (True, True, ["pair", "probe"]))
 
     def test_existing_pairing_is_kept(self):
-        # v0.6.49: remover o pareamento do sistema não ajudou em campo; agora ele fica.
         info = self.watcher([self.FAIL], paired=True).verify(dict(CAND), "t")
         self.assertEqual((info["ok"], info["paired"], self.calls), (False, True, ["probe"]))
 
-    def test_pairing_kept_when_radio_has_a_saved_pin(self):
-        cand = {**CAND, "config": {"address": ADDR, "pin": "123456"}}
-        info = self.watcher([self.FAIL], paired=True).verify(cand, "t")
-        self.assertEqual((info["ok"], self.calls), (False, ["probe"]))
-
-    def test_radio_requiring_pairing_is_paired_then_connected(self):
-        info = self.watcher([{**self.FAIL, "auth": True}, self.OK]).verify(dict(CAND), "t")
-        self.assertTrue(info["ok"])
-        self.assertEqual(self.calls, ["probe", "pair", "probe"])
+    def test_failure_after_pairing_keeps_the_pairing(self):
+        info = self.watcher([self.FAIL]).verify(dict(CAND), "t")
+        self.assertEqual((info["paired"], self.calls), (True, ["pair", "probe"]))
 
     def test_radio_with_pin_opens_the_pin_field(self):
-        info = self.watcher([{**self.FAIL, "auth": True}], pair_status="pin_required").verify(dict(CAND), "t")
+        info = self.watcher([], pair_status="pin_required").verify(dict(CAND), "t")
         self.assertTrue(info["needs_pin"])
+        self.assertEqual(self.calls, ["pair"])
 
     def test_failed_pairing_is_reported_with_the_connection_error(self):
         info = self.watcher([self.FAIL], pair_status="failed").verify(dict(CAND), "t")
         self.assertIn("tempo esgotado", info["error"])
         self.assertIn("pareamento sem PIN", info["error"])
+        self.assertEqual(self.calls, ["pair", "probe"])
 
 
 class ViewSource(unittest.TestCase):
