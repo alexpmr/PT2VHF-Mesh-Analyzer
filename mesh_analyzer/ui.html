@@ -110,7 +110,7 @@ html[data-theme="light"] .msgHead b,html[data-theme="light"] .msgQuote b{color:h
 .radioMenu button{display:flex;width:100%;align-items:center;gap:8px;text-align:left;background:transparent;border:0;border-radius:7px;padding:8px 10px;color:inherit}
 .radioMenu button:hover:not(:disabled),.radioMenu button:focus-visible{background:#2b4152}.radioMenu button:disabled{opacity:1;cursor:default}
 .radioMenu .radioItemDot{width:9px;height:9px;border-radius:50%;flex:0 0 9px;border:1px solid #7d93a3}.radioMenu .active .radioItemDot{background:#51d887;border-color:#51d887}
-.radioMenu small{margin-left:auto;color:var(--muted,#9fb2bf);font-size:10px}.viewSourceChip{order:3;flex:0 0 auto;margin-left:6px;border-radius:999px;padding:4px 10px;border:1px solid #a06cff;background:#2a2140;color:#e9ddff;font-size:12px;white-space:nowrap}
+.radioMenu small{margin-left:auto;color:var(--muted,#9fb2bf);font-size:10px}.viewSourceChip{order:3;flex:0 0 auto;margin-left:4px;border-radius:999px;padding:4px 9px;border:1px solid #a06cff;background:#2a2140;color:#e9ddff;font-size:12px;white-space:nowrap}
 .viewSourceChip[hidden]{display:none}.viewSourceChip small{opacity:.75}
 .radioMenu hr{border:0;border-top:1px solid #3a4f60;margin:5px 2px}.radioMenu .muted{padding:6px 10px;margin:0;font-size:12px}
 .deviceNotices{position:fixed;right:16px;bottom:84px;z-index:9700;display:flex;flex-direction:column;gap:10px;max-width:min(380px,calc(100vw - 32px))}
@@ -388,7 +388,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.48</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.49</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -635,7 +635,7 @@ try {
 <div class="field"><label for="alertMailTo">Enviar para</label><input id="alertMailTo"></div>
 <div class="actions span2"><button type="submit" class="primary">Salvar alertas</button><button type="button" id="alertTestTg">Testar Telegram</button><button type="button" id="alertTestMail">Testar e-mail</button><span id="alertFormStatus" class="muted" role="status"></span></div>
 </form><p class="muted">Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.</p></div></section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.48</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.49</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewAbout"><div class="panels">
@@ -652,7 +652,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.48.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.49.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -755,7 +755,7 @@ $('firstRunDialog').addEventListener('keydown',event=>{
    dicionário quando há correspondência exata, inclusive no conteúdo criado
    depois, via MutationObserver. Textos sem tradução ficam em português. */
 // #190: textos da etapa 2 do MeshCore (sem sobrescrever traduções existentes).
-for(const [lang,extra] of Object.entries({"en": {"MESHCORE": "MESHCORE", "Protocolo": "Protocol", "Só Meshtastic": "Meshtastic only", "Só MeshCore": "MeshCore only", "Destacar nós MeshCore (anel violeta)": "Highlight MeshCore nodes (violet ring)", "Caminhos dos contatos MeshCore": "MeshCore contact paths", "Meshtastic — completar e atualizar informações dos nós": "Meshtastic — complete and refresh node information", "MeshCore — telemetria e status periódicos": "MeshCore — periodic telemetry and status", "Mensagens automáticas (Meshtastic e MeshCore)": "Automatic messages (Meshtastic and MeshCore)", "Coleta MeshCore ativada (realiza transmissões RF)": "MeshCore collection enabled (performs RF transmissions)", "Máximo de pedidos por hora": "Maximum requests per hour", "Intervalo mínimo entre pedidos (segundos)": "Minimum interval between requests (seconds)", "Contatos monitorados": "Monitored contacts", "Contato": "Contact", "Pedido": "Request", "Telemetria": "Telemetry", "Status do repetidor": "Repeater status", "A cada (minutos, mín. 15)": "Every (minutes, min. 15)", "Senha (opcional)": "Password (optional)", "Adicionar contato": "Add contact", "Salvar coleta MeshCore": "Save MeshCore collection", "Coletar agora": "Collect now", "Últimas leituras": "Latest readings", "Nenhum contato monitorado.": "No monitored contacts.", "Nenhuma leitura ainda.": "No readings yet.", "Rádio MeshCore": "MeshCore radio", "Mudanças de caminho": "Path changes", "Canais": "Channels", "Gravar canal": "Save channel", "Anunciar agora (vizinhos)": "Advertise now (neighbours)", "Anunciar para toda a malha": "Advertise to the whole mesh", "Link do meu contato": "My contact link", "Contadores do rádio": "Radio counters", "Adicionar contatos novos automaticamente": "Add new contacts automatically", "Status": "Status", "Vizinhos": "Neighbours", "Traceroute": "Traceroute", "Login": "Login", "Comando…": "Command…", "Redescobrir caminho": "Rediscover path", "Zerar caminho": "Reset path", "Remover contato": "Remove contact", "Últimas respostas": "Latest replies", "Posição": "Slot", "Nome": "Name", "Prefixo": "Prefix", "Bytes": "Bytes", "Nós": "Nodes", "Quando": "When", "Antes": "Before", "Depois": "After", "Tipo": "Type", "Último anúncio": "Last advert", "Carregando MeshCore…": "Loading MeshCore…", "Rádio desconectado: mostrando os dados guardados.": "Radio disconnected: showing stored data.", "Mostrar dados de": "Show data from", "Todas as conexões": "All connections", "Vendo": "Viewing", "Informar PIN…": "Enter PIN…", "Pareando…": "Pairing…"}, "es": {"Protocolo": "Protocolo", "Só Meshtastic": "Solo Meshtastic", "Só MeshCore": "Solo MeshCore", "Destacar nós MeshCore (anel violeta)": "Resaltar nodos MeshCore (anillo violeta)", "Caminhos dos contatos MeshCore": "Rutas de los contactos MeshCore", "Meshtastic — completar e atualizar informações dos nós": "Meshtastic — completar y actualizar información de los nodos", "MeshCore — telemetria e status periódicos": "MeshCore — telemetría y estado periódicos", "Mensagens automáticas (Meshtastic e MeshCore)": "Mensajes automáticos (Meshtastic y MeshCore)", "Coleta MeshCore ativada (realiza transmissões RF)": "Recolección MeshCore activada (realiza transmisiones RF)", "Máximo de pedidos por hora": "Máximo de solicitudes por hora", "Intervalo mínimo entre pedidos (segundos)": "Intervalo mínimo entre solicitudes (segundos)", "Contatos monitorados": "Contactos monitoreados", "Contato": "Contacto", "Pedido": "Solicitud", "Telemetria": "Telemetría", "Status do repetidor": "Estado del repetidor", "A cada (minutos, mín. 15)": "Cada (minutos, mín. 15)", "Senha (opcional)": "Contraseña (opcional)", "Adicionar contato": "Agregar contacto", "Salvar coleta MeshCore": "Guardar recolección MeshCore", "Coletar agora": "Recolectar ahora", "Últimas leituras": "Últimas lecturas", "Nenhum contato monitorado.": "Ningún contacto monitoreado.", "Nenhuma leitura ainda.": "Aún no hay lecturas.", "Rádio MeshCore": "Radio MeshCore", "Mudanças de caminho": "Cambios de ruta", "Canais": "Canales", "Gravar canal": "Guardar canal", "Anunciar agora (vizinhos)": "Anunciar ahora (vecinos)", "Anunciar para toda a malha": "Anunciar a toda la malla", "Link do meu contato": "Enlace de mi contacto", "Contadores do rádio": "Contadores de la radio", "Adicionar contatos novos automaticamente": "Agregar contactos nuevos automáticamente", "Status": "Estado", "Vizinhos": "Vecinos", "Comando…": "Comando…", "Redescobrir caminho": "Redescubrir ruta", "Zerar caminho": "Reiniciar ruta", "Remover contato": "Quitar contacto", "Últimas respostas": "Últimas respuestas", "Posição": "Posición", "Nome": "Nombre", "Prefixo": "Prefijo", "Nós": "Nodos", "Quando": "Cuándo", "Antes": "Antes", "Depois": "Después", "Tipo": "Tipo", "Último anúncio": "Último anuncio", "Carregando MeshCore…": "Cargando MeshCore…", "Rádio desconectado: mostrando os dados guardados.": "Radio desconectada: mostrando los datos guardados.", "Mostrar dados de": "Mostrar datos de", "Todas as conexões": "Todas las conexiones", "Vendo": "Viendo", "Informar PIN…": "Ingresar PIN…", "Pareando…": "Emparejando…"}}))for(const [k,v] of Object.entries(extra))if(!(k in I18N[lang]))I18N[lang][k]=v;
+for(const [lang,extra] of Object.entries({"en": {"MESHCORE": "MESHCORE", "Protocolo": "Protocol", "Só Meshtastic": "Meshtastic only", "Só MeshCore": "MeshCore only", "Destacar nós MeshCore (anel violeta)": "Highlight MeshCore nodes (violet ring)", "Caminhos dos contatos MeshCore": "MeshCore contact paths", "Meshtastic — completar e atualizar informações dos nós": "Meshtastic — complete and refresh node information", "MeshCore — telemetria e status periódicos": "MeshCore — periodic telemetry and status", "Mensagens automáticas (Meshtastic e MeshCore)": "Automatic messages (Meshtastic and MeshCore)", "Coleta MeshCore ativada (realiza transmissões RF)": "MeshCore collection enabled (performs RF transmissions)", "Máximo de pedidos por hora": "Maximum requests per hour", "Intervalo mínimo entre pedidos (segundos)": "Minimum interval between requests (seconds)", "Contatos monitorados": "Monitored contacts", "Contato": "Contact", "Pedido": "Request", "Telemetria": "Telemetry", "Status do repetidor": "Repeater status", "A cada (minutos, mín. 15)": "Every (minutes, min. 15)", "Senha (opcional)": "Password (optional)", "Adicionar contato": "Add contact", "Salvar coleta MeshCore": "Save MeshCore collection", "Coletar agora": "Collect now", "Últimas leituras": "Latest readings", "Nenhum contato monitorado.": "No monitored contacts.", "Nenhuma leitura ainda.": "No readings yet.", "Rádio MeshCore": "MeshCore radio", "Mudanças de caminho": "Path changes", "Canais": "Channels", "Gravar canal": "Save channel", "Anunciar agora (vizinhos)": "Advertise now (neighbours)", "Anunciar para toda a malha": "Advertise to the whole mesh", "Link do meu contato": "My contact link", "Contadores do rádio": "Radio counters", "Adicionar contatos novos automaticamente": "Add new contacts automatically", "Status": "Status", "Vizinhos": "Neighbours", "Traceroute": "Traceroute", "Login": "Login", "Comando…": "Command…", "Redescobrir caminho": "Rediscover path", "Zerar caminho": "Reset path", "Remover contato": "Remove contact", "Últimas respostas": "Latest replies", "Posição": "Slot", "Nome": "Name", "Prefixo": "Prefix", "Bytes": "Bytes", "Nós": "Nodes", "Quando": "When", "Antes": "Before", "Depois": "After", "Tipo": "Type", "Último anúncio": "Last advert", "Carregando MeshCore…": "Loading MeshCore…", "Rádio desconectado: mostrando os dados guardados.": "Radio disconnected: showing stored data.", "Mostrar dados de": "Show data from", "Todas as conexões": "All connections", "Vendo": "Viewing", "Informar PIN…": "Enter PIN…", "Pareando…": "Pairing…", "Conectando…": "Connecting…", "Tentar outro PIN…": "Try another PIN…", "Adicionado ✓": "Added ✓"}, "es": {"Protocolo": "Protocolo", "Só Meshtastic": "Solo Meshtastic", "Só MeshCore": "Solo MeshCore", "Destacar nós MeshCore (anel violeta)": "Resaltar nodos MeshCore (anillo violeta)", "Caminhos dos contatos MeshCore": "Rutas de los contactos MeshCore", "Meshtastic — completar e atualizar informações dos nós": "Meshtastic — completar y actualizar información de los nodos", "MeshCore — telemetria e status periódicos": "MeshCore — telemetría y estado periódicos", "Mensagens automáticas (Meshtastic e MeshCore)": "Mensajes automáticos (Meshtastic y MeshCore)", "Coleta MeshCore ativada (realiza transmissões RF)": "Recolección MeshCore activada (realiza transmisiones RF)", "Máximo de pedidos por hora": "Máximo de solicitudes por hora", "Intervalo mínimo entre pedidos (segundos)": "Intervalo mínimo entre solicitudes (segundos)", "Contatos monitorados": "Contactos monitoreados", "Contato": "Contacto", "Pedido": "Solicitud", "Telemetria": "Telemetría", "Status do repetidor": "Estado del repetidor", "A cada (minutos, mín. 15)": "Cada (minutos, mín. 15)", "Senha (opcional)": "Contraseña (opcional)", "Adicionar contato": "Agregar contacto", "Salvar coleta MeshCore": "Guardar recolección MeshCore", "Coletar agora": "Recolectar ahora", "Últimas leituras": "Últimas lecturas", "Nenhum contato monitorado.": "Ningún contacto monitoreado.", "Nenhuma leitura ainda.": "Aún no hay lecturas.", "Rádio MeshCore": "Radio MeshCore", "Mudanças de caminho": "Cambios de ruta", "Canais": "Canales", "Gravar canal": "Guardar canal", "Anunciar agora (vizinhos)": "Anunciar ahora (vecinos)", "Anunciar para toda a malha": "Anunciar a toda la malla", "Link do meu contato": "Enlace de mi contacto", "Contadores do rádio": "Contadores de la radio", "Adicionar contatos novos automaticamente": "Agregar contactos nuevos automáticamente", "Status": "Estado", "Vizinhos": "Vecinos", "Comando…": "Comando…", "Redescobrir caminho": "Redescubrir ruta", "Zerar caminho": "Reiniciar ruta", "Remover contato": "Quitar contacto", "Últimas respostas": "Últimas respuestas", "Posição": "Posición", "Nome": "Nombre", "Prefixo": "Prefijo", "Nós": "Nodos", "Quando": "Cuándo", "Antes": "Antes", "Depois": "Después", "Tipo": "Tipo", "Último anúncio": "Último anuncio", "Carregando MeshCore…": "Cargando MeshCore…", "Rádio desconectado: mostrando os dados guardados.": "Radio desconectada: mostrando los datos guardados.", "Mostrar dados de": "Mostrar datos de", "Todas as conexões": "Todas las conexiones", "Vendo": "Viendo", "Informar PIN…": "Ingresar PIN…", "Pareando…": "Emparejando…", "Conectando…": "Conectando…", "Tentar outro PIN…": "Probar otro PIN…", "Adicionado ✓": "Agregado ✓"}}))for(const [k,v] of Object.entries(extra))if(!(k in I18N[lang]))I18N[lang][k]=v;
 const LANGS=['pt','en','es'];
 let uiLang=LANGS.includes(document.documentElement.lang)?document.documentElement.lang:'pt';
 const i18nText=new WeakMap(),i18nAttrs=new WeakMap(),I18N_ATTRS=['placeholder','title','aria-label'];
@@ -3496,7 +3496,8 @@ function blinkActivity(id){
 async function pollActivity(){
  try{
   const r=await api('/api/activity'),latest={};
-  for(const src of state.sources||[]){
+  // #189: com uma conexão escolhida no topo, TX/RX piscam só com ela.
+  for(const src of (state.sources||[]).filter(s=>!viewSource||String(s.id)===viewSource)){
    const c=r.sources?.[String(src.id)]||{},old=activityBaselines[String(src.id)]||{};
    const rx=Number(c.rx_seq||0),tx=Number(c.tx_seq||0);
    latest[String(src.id)]={rx,tx};
@@ -3710,12 +3711,14 @@ function updateRadioConnectionIndicator(){
  const yes=connected.length>0;
  pill.dataset.status=yes?'connected':'disconnected';
  $('radioConnectionText').textContent=yes?connected[0].name:'desconectado';
- // #194: com outra conexão escolhida em "Mostrar dados de", a barra mostra a conexão vista
- // e o rádio que transmite fica entre parênteses.
+ // #194: com uma conexão escolhida em "Mostrar dados de", a barra mostra só ela; o rádio
+ // que transmite fica no título e no menu.
  const seen=viewSourceInfo();
- if(seen&&!(yes&&String(seen.id)===String(connected[0].id))){
-  $('radioConnectionText').textContent=seen.name+' · '+viewKindLabel(seen)+(yes?' (TX: '+connected[0].name+')':'');
-  pill.dataset.view='other';
+ if(seen){
+  const live=state.connections?.[String(seen.id)]?.status==='connected';
+  $('radioConnectionText').textContent=seen.name+' · '+viewKindLabel(seen);
+  pill.dataset.status=live?'connected':'disconnected';
+  pill.dataset.view=seen.kind==='mqtt'||!(yes&&String(seen.id)===String(connected[0].id))?'other':'radio';
  }else delete pill.dataset.view;
  const lines=sources.length?sources.map(s=>{
   const c=state.connections?.[String(s.id)]||{};
@@ -3724,7 +3727,8 @@ function updateRadioConnectionIndicator(){
   const detail=c.status==='error'&&c.error?' — '+c.error:'';
   return s.name+' ('+s.kind+'): '+status+detail;
  }):['Nenhum rádio configurado. Cadastre uma conexão em Configurações → Conexões.'];
- pill.title=lines.join('\n')+'\nConexões MQTT não contam como rádio conectado.';
+ pill.title=(seen?'Mostrando só os dados de '+seen.name+(yes?'. Rádio que transmite: '+connected[0].name:'')+'.\n':'')+
+   lines.join('\n')+'\nConexões MQTT não contam como rádio conectado.';
  pill.setAttribute('aria-label',(yes?'Rádio conectado. ':'Rádio desconectado. ')+
      (yes?connected.map(s=>s.name).join(', '):'Verifique Configurações → Conexões'));
 }
@@ -3774,7 +3778,7 @@ function updateViewSourceChip(){
   chip.onclick=()=>setViewSource('');$('radioConnectionStatus').after(chip);
  }
  const s=viewSourceInfo();chip.hidden=!s;
- if(s)chip.innerHTML='✕ <span>Todas as conexões</span>';
+ if(s){chip.textContent='✕';chip.setAttribute('aria-label','Voltar a todas as conexões');}
 }
 function setViewSource(id,reload=true){
  viewSource=id?String(id):'';
@@ -4937,15 +4941,43 @@ function renderAutoAdd(data){
   const pin=prompt('PIN do rádio '+b.dataset.autoaddPin+' (aparece na tela do rádio; 123456 se ele não tiver tela):','');
   if(!pin)return;
   try{await api('/api/devices/pair-address',{address:b.dataset.autoaddPin,pin:pin.trim(),name:b.dataset.name});
-   b.disabled=true;b.textContent='Pareando…';notify('Pareando com o PIN. Acompanhe no aviso do rádio.');refreshDeviceNotices();}
+   b.disabled=true;b.textContent='Pareando…';refreshDeviceNotices();followPinJob(b);}
   catch(err){notify('PIN: '+err.message,true);}
  };
  box.innerHTML='<b>'+(data.results.length?parts.join(' · '):'Nenhum rádio Meshtastic encontrado em USB, Wi-Fi ou Bluetooth próximo.')+'</b>'+
   (data.results.length?'<ul>'+data.results.map(r=>'<li>'+esc(radioKindLabel(r.kind))+' '+esc(r.address)+' — '+esc(autoAddOutcome[r.outcome]||r.outcome)+
     (r.detail?' <span class="muted">('+esc(r.detail)+')</span>':'')+
     (r.kind==='ble'&&r.outcome==='no_response'?' <button type="button" data-autoadd-pin="'+esc(r.address)+'" data-name="'+esc(r.name||'')+'">Informar PIN…</button>':'')+'</li>').join('')+'</ul>':'')+
+  bleDiagnosis(data)+
   (data.results.some(r=>r.kind==='ble'&&r.outcome==='no_response')?'<p class="muted">Rádios Meshtastic no modo Bluetooth padrão pedem PIN mesmo sem você ter definido um: ele aparece na tela do rádio (123456 nos rádios sem tela). O celular só pede na primeira vez.</p>':'')+
   ((data.errors||[]).length?'<p class="muted">'+esc(data.errors.join('; '))+'</p>':'');
+}
+// v0.6.49: o resultado do PIN aparece na própria linha (antes ficava parado em "Pareando…").
+function bleDiagnosis(data){
+ const failed=data.results.filter(r=>r.kind==='ble'&&r.outcome==='no_response'),a=data.ble_adapter;
+ if(!failed.length)return '';
+ let html='';
+ if(a)html+='<p class="muted">Adaptador Bluetooth do computador: '+(a.present===false?'<b>nenhum encontrado</b>':
+   esc(a.name||'sem nome')+(a.le===false?' · <b>sem suporte a Bluetooth LE</b>':'')+(a.central===false?' · <b>não conecta a dispositivos BLE (papel central)</b>':''))+'</p>';
+ if(failed.every(r=>/Unreachable|pareamento sem PIN: Pareamento recusado/i.test(r.detail||'')))
+  html+='<p class="warn">O Windows não conseguiu abrir conexão com nenhum rádio Bluetooth, nem para parear. Quando isso acontece com todos os rádios, a causa costuma estar no adaptador ou no driver Bluetooth do computador. '+
+   'Para confirmar, no mesmo PC abra <b>client.meshtastic.org</b> no Chrome ou Edge e conecte por Bluetooth: se lá também falhar, o problema não está no aplicativo.</p>';
+ return html;
+}
+function followPinJob(button){
+ const address=button.dataset.autoaddPin.toUpperCase(),end=Date.now()+180000;
+ let note=button.nextElementSibling;
+ if(!note||!note.classList.contains('pinJob')){note=document.createElement('span');note.className='pinJob muted';button.after(note);}
+ note.textContent='';
+ const timer=setInterval(async()=>{
+  let n;try{n=(await api('/api/devices/detected')).data.find(x=>String(x.address).toUpperCase()===address);}catch(e){return;}
+  const job=n?.job||{},phase=job.phase;
+  if(phase==='done'){clearInterval(timer);button.textContent='Adicionado ✓';note.textContent='';refreshAll();return;}
+  if(phase==='failed'||Date.now()>end){
+   clearInterval(timer);button.disabled=false;button.textContent='Tentar outro PIN…';
+   note.textContent=' '+(job.error||'Sem resposta do rádio');return;}
+  button.textContent=phase==='connecting'||phase==='registering'?'Conectando…':'Pareando…';
+ },1000);
 }
 $('sourceAddAuto').onclick=async()=>{
  try{
@@ -4976,7 +5008,7 @@ $('usbPriority').onchange=async()=>{
  try{await api('/api/system/settings',{usb_priority:$('usbPriority').checked});notify('Prioridade USB '+($('usbPriority').checked?'ativada.':'desativada.'));}
  catch(e){$('usbPriority').checked=!$('usbPriority').checked;notify(e.message,true);}
 };
-async function refreshAll(){try{const results=await Promise.all([api('/api/state'),api('/api/nodes'),api('/api/packets'+viewQuery()),api('/api/messages'+viewQuery()),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();syncAutodetectPrefs();
+async function refreshAll(){try{const results=await Promise.all([api('/api/state'+viewQuery()),api('/api/nodes'),api('/api/packets'+viewQuery()),api('/api/messages'+viewQuery()),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();syncAutodetectPrefs();
 if(!window._themeFromSQLite && state.system && !settingsPending.has('system')){
  sysLoaded=false;renderSystem();window._themeFromSQLite=true;
 }nodeSources=results[5].data;refreshMapSourceOptions();if(!sysLoaded&&$('settingsSystem').classList.contains('active'))renderSystem();nodes=results[1].data;packets=results[2].data;messages=results[3].data;links=results[4].data;waypoints=results[6].data;communications=results[7].data;nodeHops=results[8].data;applyViewSource();updateViewSourceChip();const count=state.counts||{},connections=Object.values(state.connections||{}).filter(x=>x.status==='connected');$('summaryNodes').textContent=count.nodes||0;$('summaryPackets').textContent=count.packets||0;$('summaryMessages').textContent=count.messages||0;$('summaryLinks').textContent=(Number(count.links)||0)+(Number(count.communications)||0);renderMap();zoomToNewestTraceroute();pulseNewPackets(packets);renderNodes();renderPackets();if(view==='stats'){syncStatFilters();renderStats();}if(view==='messages')renderChat();if(view==='settings'){if($('settingsSources').classList.contains('active'))renderSources();else if($('settingsRetention').classList.contains('active')&&!settingsPending.has('retention'))renderRetention();else if($('settingsLora').classList.contains('active'))renderLoraSources();else if($('settingsSystem').classList.contains('active'))renderSystem();}announceWindowReady();}catch(err){notify('Erro ao consultar banco/serviço: '+err.message,true);}}

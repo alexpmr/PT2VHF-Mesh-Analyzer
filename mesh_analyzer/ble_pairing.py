@@ -137,6 +137,38 @@ def unpair(address: str, platform: str | None = None) -> bool:
     return False
 
 
+def adapter_info(platform: str | None = None) -> dict | None:
+    """#191: adaptador Bluetooth do computador (nome, suporte a BLE e ao papel central)."""
+    platform = platform or sys.platform
+    try:
+        if platform == "win32":
+            return asyncio.run(asyncio.wait_for(_windows_adapter(), 10))
+        if platform.startswith("linux"):
+            out = subprocess.run(["bluetoothctl", "show"], capture_output=True, text=True, timeout=8).stdout
+            name = re.search(r"Name:\s*(.+)", out)
+            return {"present": bool(out.strip()), "name": name.group(1).strip() if name else "",
+                    "powered": bool(re.search(r"Powered:\s*yes", out))}
+    except Exception as exc:
+        return {"present": None, "error": (str(exc) or type(exc).__name__)[:120]}
+    return None
+
+
+async def _windows_adapter():
+    from winrt.windows.devices.bluetooth import BluetoothAdapter
+    adapter = await BluetoothAdapter.get_default_async()
+    if adapter is None:
+        return {"present": False}
+    info = {"present": True, "le": bool(adapter.is_low_energy_supported),
+            "central": bool(adapter.is_central_role_supported)}
+    try:
+        from winrt.windows.devices.enumeration import DeviceInformation
+        device = await DeviceInformation.create_from_id_async(adapter.device_id)
+        info["name"] = str(device.name or "")
+    except Exception:
+        info["name"] = ""
+    return info
+
+
 async def _windows_device(address):
     from winrt.windows.devices.bluetooth import BluetoothLEDevice
     return await BluetoothLEDevice.from_bluetooth_address_async(int(address.replace(":", ""), 16))

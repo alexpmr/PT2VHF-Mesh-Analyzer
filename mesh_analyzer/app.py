@@ -250,7 +250,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self.send_header("Cache-Control","no-cache")
                     self.send_header("Content-Length",str(len(content)));self.end_headers();self.wfile.write(content)
                 elif path == "/health":self._json({"success":True,"version":__version__,"database":"ok","update_nonce":os.environ.get("PT2VHF_UPDATE_NONCE",""),"ui_ready":bool(ready_event and ready_event.is_set())})
-                elif path == "/api/state":self._json({"success":True,"version":__version__,"sources":db.sources(),"connections":sources.snapshot(),"counts":db.stats(),"retention":db.retention(),"system":db.system_settings()})
+                elif path == "/api/state":self._json({"success":True,"version":__version__,"sources":db.sources(),"connections":sources.snapshot(),"counts":db.stats(view_source(self.path)),"retention":db.retention(),"system":db.system_settings()})
                 elif path == "/api/nodes":self._json({"success":True,"data":db.node_rows()})
                 elif path == "/api/nodes/hops":self._json({"success":True,"data":db.node_hop_rows()})
                 elif path == "/api/nodes/sources":

@@ -368,10 +368,9 @@ class DeviceWatcher:
         """Verificação com prazo, cancelamento e fila Bluetooth.
 
         #191: rádios Bluetooth conectam primeiro sem parear, como no celular. Só se
-        a conexão falhar o app mexe no pareamento: pareia sem PIN o rádio que exige
-        (quem pede PIN volta com needs_pin) ou remove um pareamento do sistema que
-        esteja atrapalhando, e tenta mais uma vez. Pareamento criado aqui que não
-        resolveu é desfeito.
+        a conexão falhar e o rádio ainda não estiver pareado, o app pareia sem PIN
+        (quem pede PIN volta com needs_pin) e tenta mais uma vez. Pareamento criado
+        aqui que não resolveu é desfeito; o que já existia no sistema é mantido.
         """
         ble = candidate["kind"] == "ble"
         if ble and not self.enter_ble(token, cancel, on_wait):
@@ -390,16 +389,8 @@ class DeviceWatcher:
         ble_pairing = self._pairing
         address = candidate["address"]
         paired = ble_pairing.is_paired(address)
-        if paired and not first.get("auth") and not candidate.get("config", {}).get("pin"):
-            # Pareamento sem PIN guardado num rádio que não pediu: pode ser o que trava o Windows.
-            if not ble_pairing.unpair(address):
-                return {**first, "paired": True}
-            LOG.info("Pareamento BLE de %s removido para nova tentativa (#191)", address)
-            again = bounded_probe(self._probe, candidate, cancel, deadline)
-            if again.get("ok") or again.get("cancelled"):
-                return {**again, "paired": False}
-            return {**again, "paired": False,
-                    "error": again.get("error", "") + " · pareamento antigo removido; também falhou sem ele"}
+        # v0.6.49: pareamento que já existia no sistema fica como está (remover não ajudou no
+        # teste de campo e poderia desfazer um pareamento feito à mão).
         if paired:
             return {**first, "paired": True}
         try:
@@ -808,7 +799,7 @@ class AutoAdd:
     """#151: varre USB, Wi-Fi e BLE e cadastra todos os rádios novos verificados."""
 
     def __init__(self, db, sources, watcher=None, prober=probe, usb=usb_serial_ports,
-                 ble=scan_ble, mdns=scan_mdns):
+                 ble=scan_ble, mdns=scan_mdns, adapter=None):
         self.db = db
         self.registry = Registry(db, sources)
         self.watcher = watcher
@@ -816,6 +807,9 @@ class AutoAdd:
         self._usb = usb
         self._ble = ble
         self._mdns = mdns
+        if adapter is None and prober is probe:
+            from .ble_pairing import adapter_info as adapter
+        self._adapter = adapter or (lambda: None)
         self._lock = threading.RLock()
         self._cancel = threading.Event()
         self._state = {"running": False, "phase": "idle", "results": [], "finished_ms": 0,
@@ -975,5 +969,8 @@ class AutoAdd:
 
     def _finish(self, errors):
         with self._lock:
+            ble_failed = any(r["kind"] == "ble" and r["outcome"] == "no_response" for r in self._state["results"])
+        adapter = self._adapter() if ble_failed else None   # #191: ajuda a separar rádio x computador
+        with self._lock:
             self._state.update(running=False, phase="cancelled" if self._cancel.is_set() else "done",
-                               errors=errors, finished_ms=now_ms())
+                               errors=errors, finished_ms=now_ms(), ble_adapter=adapter)

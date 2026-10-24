@@ -1107,7 +1107,17 @@ class Database:
     def event_rows(self,limit=80):
         return self._rows("SELECT * FROM events ORDER BY timestamp_ms DESC LIMIT ?",(min(int(limit),500),))
 
-    def stats(self):
+    def stats(self, source_id=None):
+        """Totais do banco; com source_id (#189), só o que chegou por aquela conexão."""
         with self._lock:
-            def count(table):return int(self._db.execute("SELECT COUNT(*) FROM "+table).fetchone()[0])
+            def count(table):
+                if source_id is None or table=="sources":
+                    return int(self._db.execute("SELECT COUNT(*) FROM "+table).fetchone()[0])
+                if table=="nodes":
+                    return int(self._db.execute("SELECT COUNT(DISTINCT node_num) FROM node_sources WHERE source_id=? AND observed=1",
+                                                (int(source_id),)).fetchone()[0])
+                cols={r[1] for r in self._db.execute("PRAGMA table_info("+table+")")}
+                if "source_id" not in cols:
+                    return int(self._db.execute("SELECT COUNT(*) FROM "+table).fetchone()[0])
+                return int(self._db.execute("SELECT COUNT(*) FROM "+table+" WHERE source_id=?",(int(source_id),)).fetchone()[0])
             return {k:count(k) for k in ("nodes","packets","messages","positions","traces","links","events","sources","waypoints","communications")}

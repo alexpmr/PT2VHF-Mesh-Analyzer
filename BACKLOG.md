@@ -1,3 +1,8 @@
+## v0.6.49 — Implementado nesta entrega
+
+- #189/#194: com uma conexão escolhida, barra, contadores e luzes TX/RX mostram só ela.
+- #191: resultado do PIN na linha, adaptador Bluetooth e orientação de diagnóstico. Pendente: teste no client.meshtastic.org no PC do relato (o Windows não abre conexão com nenhum rádio, nem para parear).
+
 ## v0.6.48 — Implementado nesta entrega
 
 - #194: barra superior mostra a conexão escolhida em "Mostrar dados de".
