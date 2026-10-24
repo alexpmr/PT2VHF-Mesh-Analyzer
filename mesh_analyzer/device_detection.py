@@ -763,6 +763,27 @@ class DeviceWatcher:
         with self._lock:
             return {"success": True, "job": dict(notice["job"])}
 
+    def pair_address(self, address, pin, name="", pairer=None):
+        """#191: PIN digitado num resultado do "Adicionar automaticamente".
+
+        Abre (ou reaproveita) o aviso do rádio e segue o mesmo caminho do PIN digitado
+        no aviso: pareia com o código, verifica e cadastra.
+        """
+        from . import ble_pairing
+        address = str(address or "").strip().upper()
+        ble_pairing.validate(address, pin)
+        candidate = {"kind": "ble", "address": address, "name": str(name or address)[:90],
+                     "config": {"address": address}}
+        if self.registry.configured(candidate):
+            raise ValueError("Este rádio já está cadastrado")
+        key = device_key("ble", address)
+        with self._lock:
+            self._snoozed.discard(key)
+            notice = self._notices.get(key)
+        if notice is None:
+            notice = self._new_notice(key, candidate, candidate["name"])
+        return self.pair(notice["id"], pin, pairer=pairer)
+
     def undo(self, notice_id):
         """#155: Desfazer remove a conexão adicionada sozinha e não oferece mais o dispositivo."""
         key, notice = self._find(notice_id)

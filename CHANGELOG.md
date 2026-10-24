@@ -1,3 +1,9 @@
+# v0.6.48 — Barra superior com a conexão vista e PIN no "Adicionar automaticamente"
+
+- #194: `updateRadioConnectionIndicator()` mostra a conexão escolhida em "Mostrar dados de" (nome · tipo, com o rádio TX entre parênteses) e `data-view="other"` com cor violeta. O selo vira o botão "✕ Todas as conexões", com `order:3`; antes ele ia para o início do cabeçalho flex, fora da vista.
+- #191: os resultados BLE "sem resposta" do "Adicionar automaticamente" ganham "Informar PIN…", que chama `/api/devices/pair-address` → `DeviceWatcher.pair_address()` (abre ou reaproveita o aviso e segue o fluxo de PIN da v0.6.43), mais uma dica sobre o PIN padrão do Meshtastic.
+- Testes: `tests/test_release_v0648.py` e `scripts/test_ui_v0648.cjs`; `test_ui_v0647` ajustado para o novo texto do selo.
+
 # v0.6.47 — Bluetooth mais tolerante e visualização por conexão
 
 - #191: novo `ble_link.py`. `MeshtasticBLE` substitui o `connect()` da `BLEInterface`:

@@ -51,7 +51,7 @@ const path=require('path');
   out.all=await page.evaluate(()=>({nodes:nodes.length,map:mapSourceFilter,stats:statsFilters().source,stored:localStorage.getItem('mesh.viewSource')}));
   if(process.env.MESH_DEBUG)console.log(JSON.stringify(out,null,1));
   assert.deepEqual(out.menu,['Todas as conexões','PT2VHF-4 - Móvel USB','Platorm MQTT']);
-  assert.deepEqual(out.mqtt.nodes,[2,3]);assert(out.mqtt.chip.includes('Platorm'));
+  assert.deepEqual(out.mqtt.nodes,[2,3]);assert(out.mqtt.chip.includes('Todas as conexões'));  // v0.6.48: o nome vai na barra (#194)
   assert.equal(out.mqtt.map,'28');assert.equal(out.mqtt.stats,'28');assert.equal(out.mqtt.stored,'28');
   assert(out.requested,'packets/messages filtered on the server');
   assert.deepEqual(out.all,{nodes:3,map:'',stats:'all',stored:null});
