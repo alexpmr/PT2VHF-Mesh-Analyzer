@@ -24,7 +24,9 @@ const path=require('path');
   const json=(r,body)=>r.fulfill({contentType:'application/json',body:JSON.stringify(body)});
   await page.route('**/api/devices/autoadd',r=>json(r,{success:true,data:{first_run:false,running:false,phase:'done',results:[],added:[]}}));
   await page.route('**/api/state',async r=>{
-   const real=await (await r.fetch()).json();
+   // No fim do teste o servidor é encerrado com a página ainda atualizando: sem isso, o
+   // fetch recusado vira exceção não tratada e derruba o Node (falha só na teardown).
+   let real;try{real=await (await r.fetch()).json();}catch(e){return r.abort().catch(()=>{});}
    real.sources=[{id:26,name:'PT2VHF-4 - Móvel',kind:'serial',enabled:true,config:{port:'COM5'}},
                  {id:28,name:'Platorm',kind:'mqtt',enabled:true,config:{}}];
    real.connections={'26':{status:'connected',tx_capable:true,local_node_num:1},'28':{status:'connected'}};
