@@ -151,6 +151,48 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
         own={int(s["local_node_num"]) for s in sources.snapshot().values() if s.get("local_node_num")}
         own|={int(s["config"]["node_num"]) for s in db.sources(public=False) if s["config"].get("node_num")}
         return own
+    def meshcore_overview(source=None):
+        sid,iface=sources.meshcore_interface(source)
+        if sid is None and source:sid=int(source)
+        if sid is None:
+            known=[x["id"] for x in db.sources(public=False) if (x.get("config") or {}).get("protocol")=="meshcore"]
+            sid=known[0] if known else None
+        auto=getattr(sources,"meshcore_auto",None)
+        result={"connected":iface is not None,"source_id":sid,
+                "automation":auto.overview() if auto else None}
+        if sid is not None:result.update(sources.meshcore.overview(sid))
+        return result
+
+    def meshcore_action(payload):
+        """Operações MeshCore no rádio conectado (#190). Algumas esperam resposta da malha (até ~1 min)."""
+        sid,iface=sources.meshcore_interface(payload.get("source_id"))
+        if iface is None:raise ValueError("Conecte um rádio MeshCore para usar esta função")
+        action=str(payload.get("action") or "")
+        node=payload.get("node")
+        node=int(node,0) if isinstance(node,str) else node
+        simple={"reset_path":"reset_path","discover":"path_discovery","status":"status","telemetry":"telemetry",
+                "neighbours":"neighbours","trace":"trace","remove":"remove_contact"}
+        if action in simple:
+            if not node:raise ValueError("Escolha o contato")
+            result=getattr(iface,simple[action])(node)
+            db.log("MeshCore: "+action+" para !%08x"%int(node),source_id=sid)
+            return result
+        if action=="login":
+            auto=getattr(sources,"meshcore_auto",None)
+            password=payload.get("password")
+            if password is None and auto:password=auto._passwords(db).get(str(int(node)),"")
+            result=iface.login(node,password or "")
+            if payload.get("remember") and auto:auto.set_password(node,password or "")
+            return result
+        if action=="cli":return iface.cli(node,payload.get("command"))
+        if action=="advert":return iface.send_advert(payload.get("flood") is True)
+        if action=="autoadd":return iface.autoadd(payload.get("enabled") if "enabled" in payload else None)
+        if action=="channels":return {"channels":iface.channels()}
+        if action=="set_channel":return iface.set_channel(payload.get("index"),payload.get("name"))
+        if action=="uri":return iface.contact_uri(node)
+        if action=="stats":return iface.stats()
+        raise ValueError("Operação MeshCore desconhecida")
+
     def survey_link(item):
         from . import survey
         node=lambda v:int(v,0) if isinstance(v,str) and v else (int(v) if isinstance(v,int) else None)
@@ -249,6 +291,15 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json({"success":True,"data":data})
                 elif path == "/api/channels":
                     self._json({"success":True,**sources.channel_list()})
+                elif path == "/api/meshcore":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    self._json({"success":True,**meshcore_overview(query.get("source",[None])[0])})
+                elif path == "/api/meshcore/results":
+                    query={k:v[0] for k,v in urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).items()}
+                    sid,_=sources.meshcore_interface()
+                    sid=int(query.get("source") or sid or 0)
+                    self._json({"success":True,"data":sources.meshcore.results(sid,int(query.get("node") or 0,0) or None,
+                        query.get("kind") or None,min(200,int(query.get("limit") or 50)))})
                 elif path == "/api/msgauto":
                     if not msgauto:raise ValueError("Mensagens automáticas indisponíveis")
                     self._json({"success":True,**msgauto.overview()})
@@ -265,7 +316,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                         int(node,0) if node else None,int(days) if days else None)})
                 elif path == "/api/survey/defaults":
                     from . import survey
-                    self._json({"success":True,"radio":survey.radio_defaults(sources),"presets":list(survey.PRESETS),
+                    radio=survey.radio_defaults(sources)
+                    presets=list(survey.PRESETS)+([radio["preset"]] if radio["preset"] not in survey.PRESETS else [])
+                    self._json({"success":True,"radio":radio,"presets":presets,
                                 "saved":survey.saved_surveys(db)})
                 elif path == "/api/messages/context":
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
@@ -440,6 +493,19 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json(msgauto.delete_reply(payload["id"]))
                 elif path == "/api/survey/link":
                     self._json({"success":True,"data":survey_link(payload)})
+                elif path == "/api/meshcore/action":
+                    self._json({"success":True,"data":meshcore_action(payload)})
+                elif path == "/api/meshcore/automation":
+                    auto=getattr(sources,"meshcore_auto",None)
+                    if not auto:raise ValueError("Coleta MeshCore indisponível")
+                    if "password" in payload:
+                        auto.set_password(payload.get("node_num"),payload.get("password"))
+                    else:auto.save(payload)
+                    self._json({"success":True,**auto.overview()})
+                elif path == "/api/meshcore/automation/run":
+                    auto=getattr(sources,"meshcore_auto",None)
+                    if not auto:raise ValueError("Coleta MeshCore indisponível")
+                    self._json({"success":True,"result":auto.tick()})
                 elif path == "/api/survey/best":
                     from . import survey
                     self._json({"success":True,"data":survey.best_points(elevations(),payload.get("polygon"),
@@ -578,6 +644,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     alerts=AlertCenter(db,drivers)
     from .msgauto import MessageAutomation
     msgauto=MessageAutomation(db,drivers)
+    from .meshcore_data import MeshCoreAutomation
+    drivers.meshcore_auto=MeshCoreAutomation(db,drivers)
     server=None
     done=threading.Event()
     try:
@@ -640,6 +708,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
                 watcher.close()
                 alerts.close()
                 msgauto.close()
+                drivers.meshcore_auto.close()
                 automation.close()
                 if server:
                     server.shutdown()
@@ -705,6 +774,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
         updates.start()
         alerts.start()
         msgauto.start()
+        drivers.meshcore_auto.start()
         # #149: monitoramento de rádios novos só com interface (não em testes headless).
         if desktop and not os.environ.get("PT2VHF_DISABLE_AUTODETECT"):
             watcher.start()
@@ -765,6 +835,7 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
             watcher.close()
             alerts.close()
             msgauto.close()
+            drivers.meshcore_auto.close()
             automation.close()
             if server:
                 server.shutdown()

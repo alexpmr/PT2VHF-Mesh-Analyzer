@@ -297,6 +297,8 @@ html[data-theme="light"] .sourceCard p{color:var(--muted)}
 html[data-theme="light"] #radioConnectionStatus[data-status="connected"]{background:#d9f2e1!important;color:#086535!important}
 .mesh-role-marker{background:transparent!important;border:0!important;line-height:0}
 .mesh-role-marker svg{display:block;filter:drop-shadow(0 2px 3px #0008)}
+.nodeMeshcore{margin:12px 0;padding:10px;border:1px solid #a06cff66;border-radius:8px}.nodeMeshcore .actions{flex-wrap:wrap}
+.mesh-proto-mc svg{border-radius:50%;box-shadow:0 0 0 3px #a06cff}
 .mesh-role-marker:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%}
 .roleLegend{margin:6px 0}.roleLegend summary{cursor:pointer}.roleLegendItem{display:flex;align-items:center;gap:6px;white-space:nowrap}
 .roleLegendItem svg{width:24px;height:24px;flex:none}#nodeRoleLegend{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;max-height:185px;overflow:auto;margin-top:6px}
@@ -383,7 +385,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.45</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.46</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -427,6 +429,11 @@ try {
 <label><input id="mapRoutes" type="checkbox"> Rotas de traceroute e gargalos</label>
 <label for="mapInsightHours">Período <select id="mapInsightHours"><option value="24">24 h</option><option value="168" selected>7 dias</option><option value="720">30 dias</option></select></label>
 <div id="insightLegend" class="muted" role="status"></div>
+<div class="verSection">MESHCORE</div>
+<label for="mapProtocol">Protocolo <select id="mapProtocol"><option value="">Todos</option><option value="meshtastic">Só Meshtastic</option><option value="meshcore">Só MeshCore</option></select></label>
+<label><input id="mapMeshcoreRing" type="checkbox" checked> Destacar nós MeshCore (anel violeta)</label>
+<label><input id="mapMeshcorePaths" type="checkbox"> Caminhos dos contatos MeshCore</label>
+<div id="mcPathLegend" class="muted" role="status"></div>
 <div class="verSection">PLANEJAMENTO</div>
 <button type="button" id="mapToolLink" class="verTool">📏 Analisar enlace entre 2 pontos</button>
 <button type="button" id="mapToolSurvey" class="verTool">⛰ Melhor ponto para instalar nó</button>
@@ -471,7 +478,7 @@ try {
 <section class="view" id="viewAutomations"><div class="toolbar"><h2>Automações</h2></div>
 <div class="panels">
 <div class="card" style="max-width:1020px;margin:auto">
-<h3>Completar e atualizar informações dos nós</h3>
+<h3>Meshtastic — completar e atualizar informações dos nós</h3>
 <p class="muted">Consulta informações ausentes ou vencidas dos nós recentemente observados por RF. Novatos têm 3 minutos para anunciar dados espontaneamente. Nós antigos e inacessíveis são preservados no banco, sem tentativas repetidas de transmissão.</p>
 <form id="autoForm">
 <div class="field"><label for="autoEnabled">Automação RF</label>
@@ -494,8 +501,22 @@ try {
 <h4>Próximas consultas elegíveis</h4><div id="autoQueue" class="muted">Nenhuma consulta selecionada.</div>
 <p class="muted">O rádio conectado é a única fonte TX. MQTT não transmite. Apenas uma consulta pode estar aguardando resposta. ACK não equivale a dados recebidos. Ativar exige ação explícita do usuário.</p>
 </div>
+<div class="card" style="max-width:1020px;margin:16px auto 0" id="mcAutoCard">
+<h3>MeshCore — telemetria e status periódicos</h3>
+<p class="muted">Pede telemetria ou status a contatos escolhidos do rádio MeshCore conectado (repetidores, sensores ou companions com telemetria liberada). Se o nó pedir senha, informe a de convidado ou de admin: ela fica guardada só neste computador. Sem resposta, a próxima tentativa recua: 15 min, 30 min, 1 h… até 12 h.</p>
+<div class="formGrid"><div class="field"><label><input type="checkbox" id="mcAutoEnabled"> Coleta MeshCore ativada (realiza transmissões RF)</label></div>
+<div class="field"><label for="mcAutoMax">Máximo de pedidos por hora</label><input id="mcAutoMax" type="number" min="1" max="30" value="6"></div>
+<div class="field"><label for="mcAutoGap">Intervalo mínimo entre pedidos (segundos)</label><input id="mcAutoGap" type="number" min="30" max="3600" value="120"></div></div>
+<h4>Contatos monitorados</h4><div id="mcAutoTargets"></div>
+<div class="formGrid"><div class="field"><label for="mcAutoNode">Contato</label><select id="mcAutoNode"></select></div>
+<div class="field"><label for="mcAutoKind">Pedido</label><select id="mcAutoKind"><option value="telemetry">Telemetria</option><option value="status">Status do repetidor</option></select></div>
+<div class="field"><label for="mcAutoEvery">A cada (minutos, mín. 15)</label><input id="mcAutoEvery" type="number" min="15" value="60"></div>
+<div class="field"><label for="mcAutoPass">Senha (opcional)</label><input id="mcAutoPass" type="password" maxlength="15" autocomplete="off"></div></div>
+<div class="actions"><button type="button" id="mcAutoAdd">Adicionar contato</button><button type="button" id="mcAutoSave" class="primary">Salvar coleta MeshCore</button><button type="button" id="mcAutoRun">Coletar agora</button><span id="mcAutoStatus" class="muted" role="status"></span></div>
+<h4>Últimas leituras</h4><div id="mcAutoResults" class="muted"></div>
+</div>
 <div class="card" style="max-width:1020px;margin:16px auto 0" id="msgAutoCard">
-<h3>Mensagens automáticas</h3>
+<h3>Mensagens automáticas (Meshtastic e MeshCore)</h3>
 <p class="muted">Mensagens agendadas e respostas a comandos, enviadas pelo rádio ativo. Todas dividem o mesmo limite de envios por hora, separado das consultas acima.</p>
 <div class="formGrid"><div class="field"><label><input type="checkbox" id="msgAutoEnabled"> Mensagens automáticas ativadas</label></div>
 <div class="field"><label for="msgAutoMax">Máximo de envios por hora</label><input id="msgAutoMax" type="number" min="1" max="60"></div></div>
@@ -611,7 +632,7 @@ try {
 <div class="field"><label for="alertMailTo">Enviar para</label><input id="alertMailTo"></div>
 <div class="actions span2"><button type="submit" class="primary">Salvar alertas</button><button type="button" id="alertTestTg">Testar Telegram</button><button type="button" id="alertTestMail">Testar e-mail</button><span id="alertFormStatus" class="muted" role="status"></span></div>
 </form><p class="muted">Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.</p></div></section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.45</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.46</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><div class="settingsSaveFooter"><button type="button" id="saveAllSettings" disabled>Salvar configurações</button>
 <span id="settingsSaveStatus" role="status" class="muted">Configurações salvas</span>
 <small class="muted">Aplicar no rádio e Salvar conexão continuam ações separadas.</small></div></section>
 <section class="view" id="viewAbout"><div class="panels">
@@ -628,7 +649,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.45.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.46.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -730,6 +751,8 @@ $('firstRunDialog').addEventListener('keydown',event=>{
    texto visível (nós de texto, placeholder, title, aria-label) é trocado pelo
    dicionário quando há correspondência exata, inclusive no conteúdo criado
    depois, via MutationObserver. Textos sem tradução ficam em português. */
+// #190: textos da etapa 2 do MeshCore (sem sobrescrever traduções existentes).
+for(const [lang,extra] of Object.entries({"en": {"MESHCORE": "MESHCORE", "Protocolo": "Protocol", "Só Meshtastic": "Meshtastic only", "Só MeshCore": "MeshCore only", "Destacar nós MeshCore (anel violeta)": "Highlight MeshCore nodes (violet ring)", "Caminhos dos contatos MeshCore": "MeshCore contact paths", "Meshtastic — completar e atualizar informações dos nós": "Meshtastic — complete and refresh node information", "MeshCore — telemetria e status periódicos": "MeshCore — periodic telemetry and status", "Mensagens automáticas (Meshtastic e MeshCore)": "Automatic messages (Meshtastic and MeshCore)", "Coleta MeshCore ativada (realiza transmissões RF)": "MeshCore collection enabled (performs RF transmissions)", "Máximo de pedidos por hora": "Maximum requests per hour", "Intervalo mínimo entre pedidos (segundos)": "Minimum interval between requests (seconds)", "Contatos monitorados": "Monitored contacts", "Contato": "Contact", "Pedido": "Request", "Telemetria": "Telemetry", "Status do repetidor": "Repeater status", "A cada (minutos, mín. 15)": "Every (minutes, min. 15)", "Senha (opcional)": "Password (optional)", "Adicionar contato": "Add contact", "Salvar coleta MeshCore": "Save MeshCore collection", "Coletar agora": "Collect now", "Últimas leituras": "Latest readings", "Nenhum contato monitorado.": "No monitored contacts.", "Nenhuma leitura ainda.": "No readings yet.", "Rádio MeshCore": "MeshCore radio", "Mudanças de caminho": "Path changes", "Canais": "Channels", "Gravar canal": "Save channel", "Anunciar agora (vizinhos)": "Advertise now (neighbours)", "Anunciar para toda a malha": "Advertise to the whole mesh", "Link do meu contato": "My contact link", "Contadores do rádio": "Radio counters", "Adicionar contatos novos automaticamente": "Add new contacts automatically", "Status": "Status", "Vizinhos": "Neighbours", "Traceroute": "Traceroute", "Login": "Login", "Comando…": "Command…", "Redescobrir caminho": "Rediscover path", "Zerar caminho": "Reset path", "Remover contato": "Remove contact", "Últimas respostas": "Latest replies", "Posição": "Slot", "Nome": "Name", "Prefixo": "Prefix", "Bytes": "Bytes", "Nós": "Nodes", "Quando": "When", "Antes": "Before", "Depois": "After", "Tipo": "Type", "Último anúncio": "Last advert", "Carregando MeshCore…": "Loading MeshCore…", "Rádio desconectado: mostrando os dados guardados.": "Radio disconnected: showing stored data."}, "es": {"Protocolo": "Protocolo", "Só Meshtastic": "Solo Meshtastic", "Só MeshCore": "Solo MeshCore", "Destacar nós MeshCore (anel violeta)": "Resaltar nodos MeshCore (anillo violeta)", "Caminhos dos contatos MeshCore": "Rutas de los contactos MeshCore", "Meshtastic — completar e atualizar informações dos nós": "Meshtastic — completar y actualizar información de los nodos", "MeshCore — telemetria e status periódicos": "MeshCore — telemetría y estado periódicos", "Mensagens automáticas (Meshtastic e MeshCore)": "Mensajes automáticos (Meshtastic y MeshCore)", "Coleta MeshCore ativada (realiza transmissões RF)": "Recolección MeshCore activada (realiza transmisiones RF)", "Máximo de pedidos por hora": "Máximo de solicitudes por hora", "Intervalo mínimo entre pedidos (segundos)": "Intervalo mínimo entre solicitudes (segundos)", "Contatos monitorados": "Contactos monitoreados", "Contato": "Contacto", "Pedido": "Solicitud", "Telemetria": "Telemetría", "Status do repetidor": "Estado del repetidor", "A cada (minutos, mín. 15)": "Cada (minutos, mín. 15)", "Senha (opcional)": "Contraseña (opcional)", "Adicionar contato": "Agregar contacto", "Salvar coleta MeshCore": "Guardar recolección MeshCore", "Coletar agora": "Recolectar ahora", "Últimas leituras": "Últimas lecturas", "Nenhum contato monitorado.": "Ningún contacto monitoreado.", "Nenhuma leitura ainda.": "Aún no hay lecturas.", "Rádio MeshCore": "Radio MeshCore", "Mudanças de caminho": "Cambios de ruta", "Canais": "Canales", "Gravar canal": "Guardar canal", "Anunciar agora (vizinhos)": "Anunciar ahora (vecinos)", "Anunciar para toda a malha": "Anunciar a toda la malla", "Link do meu contato": "Enlace de mi contacto", "Contadores do rádio": "Contadores de la radio", "Adicionar contatos novos automaticamente": "Agregar contactos nuevos automáticamente", "Status": "Estado", "Vizinhos": "Vecinos", "Comando…": "Comando…", "Redescobrir caminho": "Redescubrir ruta", "Zerar caminho": "Reiniciar ruta", "Remover contato": "Quitar contacto", "Últimas respostas": "Últimas respuestas", "Posição": "Posición", "Nome": "Nombre", "Prefixo": "Prefijo", "Nós": "Nodos", "Quando": "Cuándo", "Antes": "Antes", "Depois": "Después", "Tipo": "Tipo", "Último anúncio": "Último anuncio", "Carregando MeshCore…": "Cargando MeshCore…", "Rádio desconectado: mostrando os dados guardados.": "Radio desconectada: mostrando los datos guardados."}}))for(const [k,v] of Object.entries(extra))if(!(k in I18N[lang]))I18N[lang][k]=v;
 const LANGS=['pt','en','es'];
 let uiLang=LANGS.includes(document.documentElement.lang)?document.documentElement.lang:'pt';
 const i18nText=new WeakMap(),i18nAttrs=new WeakMap(),I18N_ATTRS=['placeholder','title','aria-label'];
@@ -807,7 +830,7 @@ async function setView(next,updateUrl=true){
  if(next==='map'){initMap();setTimeout(()=>map?.invalidateSize(),60);}
  if(next==='stats'){syncStatFilters();fetchStats(false);}
  if(next==='messages')renderChat();
- if(next==='automations'){loadAutomation();loadMsgAuto();}
+ if(next==='automations'){loadAutomation();loadMeshcoreAutomation();loadMsgAuto();}
 }
 document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 const initialView=location.pathname.startsWith('/configuracoes')?'settings':
@@ -1278,9 +1301,9 @@ function pulseNewPackets(current){
 }
 
 function sourceMapNodes(){
- if(!mapSourceFilter)return nodes;
+ if(!mapSourceFilter)return nodes.filter(protocolAllowed);
  const ids=new Set(nodeSources.filter(x=>String(x.source_id)===String(mapSourceFilter) && Number(x.observed)===1).map(x=>Number(x.node_num)));
- return nodes.filter(n=>ids.has(n.node_num));
+ return nodes.filter(n=>ids.has(n.node_num)&&protocolAllowed(n));
 }
 function zoomToNewestTraceroute(){
  const last=Math.max(0,...links.map(x=>Number(x.last_seen_ms)||0));
@@ -1413,9 +1436,9 @@ function nodeRoleSvg(role,statusColor){
  '<circle cx="17" cy="17" r="15" fill="#142533" stroke="'+statusColor+'" stroke-width="2.5"/>'+
  '<g transform="translate(5 5)" fill="none" stroke="#f0f5f8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+meta[2]+'</g></svg>';
 }
-function nodeRoleIcon(n){
+function nodeRoleIcon(n,ring=false){
  const meta=nodeRoleMeta(n.role),recent=Number(n.last_seen_ms)>0&&Date.now()-Number(n.last_seen_ms)<7200000;
- return L.divIcon({className:'mesh-role-marker',html:nodeRoleSvg(n.role,recent?'#2ecc71':'#e9a94d'),
+ return L.divIcon({className:'mesh-role-marker'+(ring?' mesh-proto-mc':''),html:nodeRoleSvg(n.role,recent?'#2ecc71':'#e9a94d'),
   iconSize:[34,34],iconAnchor:[17,17],tooltipAnchor:[0,-18]});
 }
 function renderNodeRoleLegend(){
@@ -1522,7 +1545,7 @@ function renderMap(){
    if(!allowed.has(n.node_num)||!validPos(n))continue;
    if($('mapIdentifiedOnly').checked&&!n.long_name&&!n.short_name)continue;
    const point=[n.latitude,n.longitude];
-   const marker=L.marker(point,{icon:nodeRoleIcon(n),keyboard:true,riseOnHover:true,opacity:presenceSilent(n)?0.4:1,
+   const marker=L.marker(point,{icon:nodeRoleIcon(n,isMeshcore(n)&&$('mapMeshcoreRing').checked),keyboard:true,riseOnHover:true,opacity:presenceSilent(n)?0.4:1,
      alt:(n.short_name||n.long_name||n.node_id)+' · '+nodeRoleMeta(n.role)[1]+(presenceSilent(n)?' · sem resposta':'')});
    marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id)+' · '+esc(nodeRoleMeta(n.role)[1]),{
      permanent:$('showNames').checked,direction:'top'});
@@ -1810,11 +1833,12 @@ function showNode(n){
  if(!n)return;
  nodeDetailSelected=n.node_num;
  $('nodeDetailTitle').textContent=(n.friendly_name||n.long_name||n.short_name||n.node_id)+' · '+n.node_id;
- $('nodeDetailBody').innerHTML=nodePopupHtml(n)+'<div class="nodeTimeline"><h4>Linha do tempo <span class="timelineRange">'+
+ $('nodeDetailBody').innerHTML=nodePopupHtml(n)+(isMeshcore(n)?'<div class="nodeMeshcore" id="mcNodeBox">Carregando MeshCore…</div>':'')+'<div class="nodeTimeline"><h4>Linha do tempo <span class="timelineRange">'+
    [[24,'24 h'],[168,'7 dias'],[720,'30 dias']].map(([h,l])=>'<button type="button" data-timeline="'+h+'">'+l+'</button>').join('')+'</span></h4><div id="nodeTimelineCharts" class="muted">Carregando…</div></div>';
  $('nodeDetailOverlay').classList.add('open');
  $('nodeDetailBody').querySelectorAll('[data-timeline]').forEach(b=>b.onclick=()=>loadNodeTimeline(n.node_num,Number(b.dataset.timeline)));
  loadNodeTimeline(n.node_num,24);
+ if(isMeshcore(n))renderMcNode(n);
  $('nodeDetailBody').querySelectorAll('[data-rf-query]').forEach(b=>b.onclick=()=>runNodeQuery(n.node_num,b.dataset.rfQuery));
  refreshNodeQueryStatus(n.node_num);
  $('nodeRename').onclick=async()=>{
@@ -2868,7 +2892,7 @@ updateMessageBytes();
 
 const statTabs=[['geral','Visão Geral'],['rede','Rede'],['rf','RF'],['ranking','Ranking'],
  ['routing','Routing'],['trafego','Tráfego'],['consultas','Consultas'],['chat','Chat'],
- ['energia','Energia'],['anomalias','Pontos de atenção'],['repetidores','Repetidores'],['topologia','Topologia']];
+ ['energia','Energia'],['anomalias','Pontos de atenção'],['repetidores','Repetidores'],['topologia','Topologia'],['meshcore','MeshCore']];
 let currentStatTab='geral',statData=null,lastStatsFetch=0,statsLoading=false;
 const fmtCount=v=>v==null?'Sem dados':Number(v).toLocaleString('pt-BR');
 const fmtMeasure=(v,u)=>v==null?'Não medido':Number(v).toFixed(1).replace('.',',')+' '+u;
@@ -2885,6 +2909,7 @@ const statBar=(rows)=>'<div style="display:grid;gap:6px">'+rows.slice(0,12).map(
 function renderStats(){
  $('statsTabs').innerHTML=statTabs.map(([key,label])=>'<button class="subtab '+(key===currentStatTab?'active':'')+'" data-tab="'+key+'">'+esc(label)+'</button>').join('');
  $('statsTabs').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>selectStatTab(b.dataset.tab));
+ if(currentStatTab==='meshcore'){loadMeshcoreTab();return;}
  if(['repetidores','topologia'].includes(currentStatTab)){
   $('statsContents').innerHTML='<div class="statsCard" id="insightBox">Carregando…</div>';loadInsightTab(currentStatTab);return;
  }
@@ -3896,6 +3921,186 @@ async function updateInsightLayers(){
  $('insightLegend').textContent=legend.join(' ');
 }
 for(const id of ['mapCoverage','mapRoutes','mapInsightHours'])$(id).addEventListener('change',updateInsightLayers);
+// #190: MeshCore — protocolo no mapa, caminhos dos contatos, painel do nó e aba de estatísticas.
+function isMeshcore(n){return String(n?.hw_model||'').startsWith('MeshCore');}
+const MC_RELAYS=['Repetidor','Room server'];
+let mcOverview=null,mcOverviewAt=0,mcPathLayer=null;
+async function meshcoreOverview(force=false){
+ if(!force&&mcOverview&&Date.now()-mcOverviewAt<15000)return mcOverview;
+ mcOverview=await api('/api/meshcore');mcOverviewAt=Date.now();return mcOverview;
+}
+const mcNum=n=>'0x'+Number(n).toString(16);
+async function mcAction(action,extra={}){
+ const r=await api('/api/meshcore/action',{action,...extra});mcOverviewAt=0;return r.data;
+}
+function mcValue(v){
+ if(v==null)return '—';
+ if(typeof v==='object')return Object.entries(v).map(([k,x])=>k+' '+(typeof x==='number'?Math.round(x*1000)/1000:x)).join(', ');
+ return typeof v==='number'?String(Math.round(v*1000)/1000).replace('.',','):String(v);
+}
+function mcSummary(kind,d){
+ d=d||{};
+ if(kind==='telemetry')return (d.lpp||[]).map(x=>x.type+(x.channel>1?' ('+x.channel+')':'')+': '+mcValue(x.value)).join(' · ')||'Sem leituras';
+ if(kind==='status'){
+  const out=[];if(d.bat)out.push('Bateria '+(d.bat/1000).toFixed(2).replace('.',',')+' V');
+  if(d.noise_floor!=null)out.push('Ruído '+d.noise_floor+' dBm');if(d.last_rssi!=null)out.push('RSSI '+d.last_rssi+' dBm');
+  if(d.last_snr!=null)out.push('SNR '+mcValue(d.last_snr)+' dB');if(d.uptime!=null)out.push('Ligado há '+Math.round(d.uptime/3600)+' h');
+  if(d.nb_recv!=null)out.push('RX '+d.nb_recv+' / TX '+(d.nb_sent??'—'));if(d.airtime!=null)out.push('Airtime '+d.airtime+' s');
+  if(d.recv_dups!=null||d.direct_dups!=null)out.push('Duplicados '+((d.recv_dups||0)+(d.direct_dups||0)));
+  if(d.tx_queue_len!=null)out.push('Fila TX '+d.tx_queue_len);
+  return out.join(' · ')||'Sem dados';
+ }
+ if(kind==='neighbours')return (d.neighbours||[]).map(n=>(n.node_num?idName(n.node_num):n.pubkey)+' SNR '+mcValue(n.snr)+' dB').join(' · ')||'Nenhum vizinho informado';
+ if(kind==='trace')return (d.path||[]).map((h,i)=>(h.hash?(h.node_num?idName(h.node_num):h.hash):'este rádio')+' '+mcValue(h.snr)+' dB').join(' → ');
+ return JSON.stringify(d).slice(0,200);
+}
+const MC_KIND={telemetry:'Telemetria',status:'Status',neighbours:'Vizinhos',trace:'Traceroute'};
+// Mapa: filtro por protocolo, anel nos nós MeshCore e caminhos dos contatos.
+function protocolAllowed(n){
+ const p=$('mapProtocol')?.value||'';
+ return !p||(p==='meshcore')===isMeshcore(n);
+}
+async function updateMeshcorePaths(){
+ if(!map)return;
+ mcPathLayer=mcPathLayer||L.layerGroup().addTo(map);mcPathLayer.clearLayers();
+ if(!$('mapMeshcorePaths').checked){$('mcPathLegend').textContent='';return;}
+ try{
+  const ov=await meshcoreOverview(true),byId=new Map(nodes.map(n=>[Number(n.node_num),n]));
+  if(!ov.source_id){$('mcPathLegend').textContent='Nenhum rádio MeshCore cadastrado.';return;}
+  const own=ov.self?.public_key?byId.get(parseInt(ov.self.public_key.slice(0,8),16)):null;
+  let drawn=0,partial=0;
+  for(const p of ov.paths||[]){
+   if(p.mode!=='routed'||p.latitude==null)continue;
+   const pts=[own&&validPos(own)?[own.latitude,own.longitude]:null,...p.hops.map(h=>h.latitude!=null?[h.latitude,h.longitude]:null),[p.latitude,p.longitude]];
+   const known=pts.filter(Boolean);if(known.length<2)continue;
+   const gap=pts.some(x=>!x);if(gap)partial++;drawn++;
+   L.polyline(known,{color:'#a06cff',weight:2.5,opacity:.75,dashArray:gap?'6 6':null})
+    .bindTooltip('Caminho MeshCore até '+esc(p.name)+': '+(p.hops.map(h=>h.name||(h.hash+(h.candidates>1?' (ambíguo)':' (?)'))).join(' → ')))
+    .addTo(mcPathLayer);
+  }
+  $('mcPathLegend').textContent='Caminhos MeshCore: '+drawn+' desenhado(s)'+(partial?', '+partial+' com salto sem posição ou prefixo ambíguo (tracejado)':'')+'.';
+ }catch(e){$('mcPathLegend').textContent='Caminhos MeshCore indisponíveis: '+e.message;}
+}
+$('mapProtocol').addEventListener('change',()=>renderMap());
+$('mapMeshcoreRing').addEventListener('change',()=>renderMap());
+$('mapMeshcorePaths').addEventListener('change',updateMeshcorePaths);
+// Painel do nó.
+async function renderMcNode(n){
+ const box=$('mcNodeBox');if(!box)return;
+ let ov;try{ov=await meshcoreOverview();}catch(e){box.textContent='MeshCore: '+e.message;return;}
+ const c=(ov.paths||[]).find(p=>Number(p.node_num)===Number(n.node_num));
+ if(!c){box.innerHTML='<h4>MeshCore</h4><p class="muted">Este nó não está nos contatos do rádio MeshCore conectado.</p>';return;}
+ const relay=MC_RELAYS.includes(c.type),mode={flood:'inundação (sem caminho fixo)',direct:'direto, sem repetidores',routed:'via '+c.hops.map(h=>h.name||h.hash).join(' → ')}[c.mode];
+ const btn=(a,l,title)=>'<button type="button" data-mc="'+a+'"'+(title?' title="'+esc(title)+'"':'')+'>'+l+'</button>';
+ box.innerHTML='<h4>MeshCore · '+esc(c.type)+'</h4><p class="muted">Caminho: '+esc(mode)+'</p><div class="actions">'+
+  btn('telemetry','Telemetria')+(relay?btn('status','Status')+btn('neighbours','Vizinhos')+btn('trace','Traceroute','Ida e volta pelos repetidores do caminho, com SNR de cada trecho')+btn('login','Login')+btn('cli','Comando…'):'')+
+  btn('discover','Redescobrir caminho')+btn('reset_path','Zerar caminho','Volta a usar inundação até aprender um caminho novo')+btn('remove','Remover contato')+
+  '</div><div id="mcNodeResult" class="muted" role="status"></div><div id="mcNodeHistory" class="muted"></div>';
+ const out=$('mcNodeResult'),hist=$('mcNodeHistory');
+ const history=async()=>{try{const r=(await api('/api/meshcore/results?limit=8&node='+mcNum(n.node_num))).data;
+  hist.innerHTML=r.length?'<h4>Últimas respostas</h4>'+r.map(x=>'<div><b>'+esc(MC_KIND[x.kind]||x.kind)+'</b> · '+fmtDate(x.timestamp_ms)+'<br>'+esc(mcSummary(x.kind,x.data))+'</div>').join(''):'';}catch(e){}};
+ history();
+ box.querySelectorAll('[data-mc]').forEach(b=>b.onclick=async()=>{
+  const a=b.dataset.mc,extra={node:mcNum(n.node_num)};
+  if(a==='remove'&&!confirm('Remover '+idName(n.node_num)+' dos contatos do rádio MeshCore?'))return;
+  if(a==='login'){const pw=prompt('Senha de convidado ou admin de '+idName(n.node_num)+' (vazio = sem senha):','');if(pw===null)return;extra.password=pw;extra.remember=!!pw&&confirm('Guardar a senha neste computador para as coletas automáticas?');}
+  if(a==='cli'){const cmd=prompt('Comando para '+idName(n.node_num)+' (ex.: ver, clock, get radio). Exige login de admin:','ver');if(!cmd)return;extra.command=cmd;}
+  box.querySelectorAll('[data-mc]').forEach(x=>x.disabled=true);out.textContent='Aguardando resposta pela malha (até 1 min)…';
+  try{
+   const d=await mcAction(a,extra);
+   out.textContent=a==='cli'?'Resposta: '+d.reply:a==='login'?'Login aceito.':MC_KIND[a]?mcSummary(a,d):a==='discover'?'Caminho atualizado.':a==='reset_path'?'Caminho zerado: o próximo envio usa inundação.':'Contato removido do rádio.';
+   history();if(['discover','reset_path'].includes(a)){mcOverviewAt=0;renderMcNode(n);}
+  }catch(e){out.textContent='Falhou: '+e.message;}
+  finally{box.querySelectorAll('[data-mc]').forEach(x=>x.disabled=false);}
+ });
+}
+// Aba Estatísticas → MeshCore.
+async function loadMeshcoreTab(){
+ const box=$('statsContents');box.innerHTML='<div class="statsCard">Carregando MeshCore…</div>';
+ let ov;try{ov=await meshcoreOverview(true);}catch(e){box.innerHTML='<div class="statsCard">MeshCore indisponível: '+esc(e.message)+'</div>';return;}
+ if(!ov.source_id){box.innerHTML=statsHead('MeshCore','<p class="muted">Nenhum rádio MeshCore cadastrado. Em Configurações → Conexões, escolha o protocolo MeshCore ao adicionar o rádio.</p>');return;}
+ const s=ov.self||{},occ=ov.occupancy||{},live=ov.connected;
+ const radio=statsHead('Rádio MeshCore','<p>'+esc(s.name||'—')+(s.radio_freq?' · '+mcValue(s.radio_freq)+' MHz · BW '+mcValue(s.radio_bw)+' kHz · SF'+s.radio_sf+' · CR'+(s.radio_cr||'—')+' · '+(s.tx_power??'—')+' dBm':'')+'</p>'+
+  '<p>Contatos: <b>'+occ.used+'</b>'+(occ.max?' de '+occ.max+' ('+occ.percent+'%)':'')+' · '+Object.entries(ov.by_type||{}).map(([k,v])=>k+' '+v).join(' · ')+'</p>'+
+  (occ.percent>=85?'<p class="warn">Lista de contatos quase cheia: remova contatos antigos abaixo para o rádio continuar aprendendo nós novos.</p>':'')+
+  (live?'<div class="actions"><label><input type="checkbox" id="mcAutoAdd2"'+(s.manual_add_contacts?'':' checked')+'> Adicionar contatos novos automaticamente</label>'+
+   '<button type="button" id="mcAdvertZero">Anunciar agora (vizinhos)</button><button type="button" id="mcAdvertFlood">Anunciar para toda a malha</button>'+
+   '<button type="button" id="mcShare">Link do meu contato</button><button type="button" id="mcStats">Contadores do rádio</button></div><div id="mcRadioOut" class="muted" role="status"></div>'
+   :'<p class="muted">Rádio desconectado: mostrando os dados guardados.</p>'));
+ const coll=statsHead('Colisões de prefixo ('+ov.hash_size+' byte'+(ov.hash_size>1?'s':'')+' por salto)',
+  '<p class="muted">Repetidores com o mesmo começo de chave ficam indistinguíveis nos caminhos e podem confundir rotas. Troque a chave de um deles ou use hash de caminho maior.</p>'+
+  statsTbl(['Prefixo','Bytes','Nós'],(ov.collisions||[]).map(g=>[g.prefix,g.bytes,g.members.map(m=>m.name+(m.own?' (este rádio)':'')+' · '+m.type).join(' / ')])));
+ const changes=statsHead('Mudanças de caminho',statsTbl(['Quando','Contato','Antes','Depois'],(ov.path_changes||[]).map(c=>[fmtDate(c.timestamp_ms),c.name||idName(c.node_num),
+  c.old_len<0?'inundação':c.old_len===0?'direto':c.old_path,c.new_len<0?'inundação':c.new_len===0?'direto':c.new_path])));
+ const stale=statsHead('Contatos sem anúncio há mais de '+ov.stale_days+' dias',
+  (live&&ov.stale.length?'<div class="actions"><button type="button" id="mcRemoveStale">Remover todos os '+ov.stale.length+' do rádio</button></div>':'')+
+  statsTbl(['Contato','Tipo','Último anúncio'],ov.stale.map(c=>[c.name,c.type,new Date(c.last_advert*1000).toLocaleDateString('pt-BR')])));
+ const chans=live?statsHead('Canais','<div id="mcChannels" class="muted">Carregando canais…</div>'+
+  '<form id="mcChannelForm" class="actions"><label>Posição <input id="mcChanIdx" type="number" min="0" max="39" value="1" style="width:70px"></label><label>Nome <input id="mcChanName" placeholder="#brasilia" maxlength="31"></label><button type="submit">Gravar canal</button></form>'+
+  '<p class="muted">Nomes começados por # são canais públicos por hashtag: a chave é derivada do nome, então quem usar o mesmo nome entra no mesmo canal.</p>'):'';
+ box.innerHTML='<div class="statGrid">'+radio+coll+changes+stale+chans+'</div>';
+ if(!live)return;
+ const out=$('mcRadioOut');
+ const run=async(fn,msg)=>{try{const r=await fn();out.textContent=typeof msg==='function'?msg(r):msg;}catch(e){out.textContent='Falhou: '+e.message;}};
+ $('mcAutoAdd2').onchange=e=>run(()=>mcAction('autoadd',{enabled:e.target.checked}),'Preferência gravada no rádio.');
+ $('mcAdvertZero').onclick=()=>run(()=>mcAction('advert',{flood:false}),'Anúncio enviado aos vizinhos diretos.');
+ $('mcAdvertFlood').onclick=()=>run(()=>mcAction('advert',{flood:true}),'Anúncio enviado para toda a malha.');
+ $('mcShare').onclick=()=>run(()=>mcAction('uri'),r=>{try{navigator.clipboard.writeText(r.uri);}catch(e){}return 'Link copiado: '+r.uri;});
+ $('mcStats').onclick=()=>run(()=>mcAction('stats'),r=>Object.entries(r).map(([k,v])=>k+': '+mcValue(v)).join(' | ')||'O firmware não informou contadores.');
+ const rs=$('mcRemoveStale');if(rs)rs.onclick=async()=>{
+  if(!confirm('Remover do rádio os '+ov.stale.length+' contatos sem anúncio há mais de '+ov.stale_days+' dias?'))return;
+  let ok=0;for(const c of ov.stale){try{await mcAction('remove',{node:mcNum(c.node_num)});ok++;}catch(e){}}
+  notify(ok+' contato(s) removido(s) do rádio.');loadMeshcoreTab();
+ };
+ const chanBox=$('mcChannels'),chanIdx=$('mcChanIdx');  // a aba pode ter sido redesenhada durante a espera
+ const loadChannels=async()=>{try{const r=await mcAction('channels');
+  chanBox.innerHTML=statsTbl(['Posição','Nome'],r.channels.filter(c=>!c.empty).map(c=>[c.index,c.name||'(sem nome)']));
+  const free=r.channels.find(c=>c.empty);if(free)chanIdx.value=free.index;}catch(e){chanBox.textContent='Canais: '+e.message;}};
+ loadChannels();
+ $('mcChannelForm').onsubmit=async e=>{e.preventDefault();
+  try{await mcAction('set_channel',{index:Number($('mcChanIdx').value),name:$('mcChanName').value});notify('Canal gravado no rádio MeshCore.');loadChannels();}
+  catch(err){notify('Canal: '+err.message,true);}};
+}
+// #188: coleta periódica MeshCore nas Automações.
+let mcTargets=[];
+async function loadMeshcoreAutomation(){
+ try{
+  const ov=await meshcoreOverview(true),a=ov.automation||{config:{targets:[]},with_password:[]},c=a.config;
+  $('mcAutoEnabled').checked=!!c.enabled;$('mcAutoMax').value=c.max_per_hour;$('mcAutoGap').value=c.min_gap_seconds;
+  mcTargets=c.targets.map(t=>({...t}));
+  const contacts=(ov.paths||[]).slice().sort((x,y)=>String(x.name).localeCompare(String(y.name)));
+  $('mcAutoNode').innerHTML=contacts.length?contacts.map(p=>'<option value="'+p.node_num+'">'+esc(p.name||idName(p.node_num))+' · '+esc(p.type)+'</option>').join(''):'<option value="">Nenhum contato MeshCore</option>';
+  renderMcTargets(a.with_password||[]);
+  $('mcAutoStatus').textContent=ov.connected?(a.last?.reason?'Última verificação: '+a.last.reason:''):'Nenhum rádio MeshCore conectado agora.';
+  const r=(await api('/api/meshcore/results?limit=15')).data;
+  $('mcAutoResults').innerHTML=r.length?r.map(x=>'<div>'+fmtDate(x.timestamp_ms)+' · <b>'+esc(idName(x.node_num))+'</b> · '+esc(MC_KIND[x.kind]||x.kind)+': '+esc(mcSummary(x.kind,x.data))+'</div>').join(''):'Nenhuma leitura ainda.';
+ }catch(e){$('mcAutoStatus').textContent='MeshCore: '+e.message;}
+}
+function renderMcTargets(withPassword=[]){
+ const rows=mcTargets.map((t,i)=>'<tr><td>'+esc(idName(t.node_num))+'</td><td>'+esc(MC_KIND[t.kind])+'</td><td>'+t.interval_minutes+' min</td><td>'+
+  (withPassword.includes(t.node_num)?'guardada':'—')+'</td><td>'+esc(t.last_error?'Falhou ('+t.failures+'x): '+t.last_error:t.last_ok_ms?'OK '+fmtDate(t.last_ok_ms):'Aguardando')+
+  (t.next_ms?' · próxima '+esc(fmtDate(t.next_ms)):'')+'</td><td><button type="button" data-mc-del="'+i+'">Remover</button></td></tr>').join('');
+ $('mcAutoTargets').innerHTML=mcTargets.length?'<div style="overflow-x:auto"><table class="reportTable"><thead><tr><th>Contato</th><th>Pedido</th><th>A cada</th><th>Senha</th><th>Situação</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="muted">Nenhum contato monitorado.</p>';
+ $('mcAutoTargets').querySelectorAll('[data-mc-del]').forEach(b=>b.onclick=()=>{mcTargets.splice(Number(b.dataset.mcDel),1);renderMcTargets(withPassword);});
+}
+$('mcAutoAdd').onclick=async()=>{
+ const num=Number($('mcAutoNode').value);if(!num)return;
+ const t={node_num:num,kind:$('mcAutoKind').value,interval_minutes:Math.max(15,Number($('mcAutoEvery').value)||60)};
+ mcTargets=mcTargets.filter(x=>!(x.node_num===t.node_num&&x.kind===t.kind));mcTargets.push(t);
+ if($('mcAutoPass').value){try{await api('/api/meshcore/automation',{node_num:num,password:$('mcAutoPass').value});$('mcAutoPass').value='';}catch(e){notify('Senha: '+e.message,true);}}
+ renderMcTargets();$('mcAutoStatus').textContent='Contato incluído. Clique em Salvar coleta MeshCore.';
+};
+$('mcAutoSave').onclick=async()=>{
+ try{await api('/api/meshcore/automation',{enabled:$('mcAutoEnabled').checked,max_per_hour:Number($('mcAutoMax').value||6),
+  min_gap_seconds:Number($('mcAutoGap').value||120),targets:mcTargets.map(t=>({node_num:t.node_num,kind:t.kind,interval_minutes:t.interval_minutes}))});
+  notify('Coleta MeshCore salva.');loadMeshcoreAutomation();}catch(e){notify('Coleta MeshCore: '+e.message,true);}
+};
+$('mcAutoRun').onclick=async()=>{
+ $('mcAutoStatus').textContent='Coletando (até 1 min)…';
+ try{const r=(await api('/api/meshcore/automation/run',{})).result;notify('Coleta MeshCore: '+r.reason);}catch(e){notify('Coleta MeshCore: '+e.message,true);}
+ loadMeshcoreAutomation();
+};
+
 // #171: perfil de terreno do enlace.
 async function openTerrainProfile(a,b){
  const dialog=document.createElement('dialog');dialog.className='messageContextDialog terrainDialog';
