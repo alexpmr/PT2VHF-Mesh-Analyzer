@@ -1,3 +1,10 @@
+## v0.6.46 — Implementado nesta entrega
+
+- #190 etapa 2 do MeshCore: colisões de prefixo, caminhos e mudanças de caminho, traceroute com SNR por trecho, vizinhos de repetidores, painel de repetidor (login, status, CLI), gestão de contatos e canais, anúncio, protocolo no mapa e presets MeshCore no planejamento.
+- #188: coleta periódica de telemetria/status MeshCore nas Automações, em bloco próprio.
+- Fora desta etapa: room servers (mensagens e histórico do servidor), configuração do rádio MeshCore (etapa 3).
+- Aceite físico pendente: repetidor MeshCore real (login, status, vizinhos, traceroute) e coleta periódica.
+
 ## v0.6.45 — Implementado nesta entrega
 
 - #185 etapa 1: conexão e recepção de rádios MeshCore Companion (USB, BLE, TCP), mensagens, tráfego e detecção automática.

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import time
 import urllib.request
 
@@ -34,6 +35,10 @@ PRESETS = {
     "SHORT_TURBO": (7, 500), "SHORT_FAST": (7, 250), "SHORT_SLOW": (8, 250),
     "MEDIUM_FAST": (9, 250), "MEDIUM_SLOW": (10, 250), "LONG_FAST": (11, 250),
     "LONG_MODERATE": (11, 125), "LONG_SLOW": (12, 125), "VERY_LONG_SLOW": (12, 62.5),
+    # MeshCore (#190): rádio configurado por SF e largura de banda; estes são os mais comuns.
+    "MESHCORE_SF7_BW62.5": (7, 62.5), "MESHCORE_SF8_BW62.5": (8, 62.5), "MESHCORE_SF9_BW62.5": (9, 62.5),
+    "MESHCORE_SF10_BW62.5": (10, 62.5), "MESHCORE_SF10_BW250": (10, 250), "MESHCORE_SF11_BW250": (11, 250),
+    "MESHCORE_SF12_BW125": (12, 125),
 }
 SNR_LIMIT = {7: -7.5, 8: -10.0, 9: -12.5, 10: -15.0, 11: -17.5, 12: -20.0}
 NOISE_FIGURE_DB = 6.0
@@ -49,8 +54,24 @@ VERDICTS = {"viable": "Viável", "marginal": "Marginal", "unviable": "Inviável"
 CARDINALS = ("N", "NNE", "NE", "ENE", "L", "ESE", "SE", "SSE", "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO")
 
 
+def preset_sf_bw(preset):
+    """(SF, BW kHz) de um preset; aceita qualquer combinação MESHCORE_SF<n>_BW<kHz>."""
+    name = str(preset or "").upper()
+    if name in PRESETS:
+        return PRESETS[name]
+    m = re.fullmatch(r"MESHCORE_SF(\d+)_BW([\d.]+)", name)
+    if m and int(m.group(1)) in SNR_LIMIT and 7.8 <= float(m.group(2)) <= 500:
+        return int(m.group(1)), float(m.group(2))
+    return None
+
+
+def meshcore_preset(sf, bw):
+    bw = float(bw)
+    return "MESHCORE_SF%d_BW%s" % (int(sf), ("%g" % bw))
+
+
 def sensitivity_dbm(preset):
-    sf, bw = PRESETS.get(str(preset).upper(), PRESETS["LONG_FAST"])
+    sf, bw = preset_sf_bw(preset) or PRESETS["LONG_FAST"]
     return round(-174 + 10 * math.log10(bw * 1000) + NOISE_FIGURE_DB + SNR_LIMIT[sf], 1)
 
 
@@ -436,7 +457,7 @@ def _number(params, key, default, lo, hi, label):
 def link_params(params):
     params = params or {}
     preset = str(params.get("preset") or "LONG_FAST").upper()
-    if preset not in PRESETS:
+    if preset_sf_bw(preset) is None:
         raise ValueError("Preset LoRa desconhecido")
     return {
         "height_a": _number(params, "height_a", 2, 0, 300, "Altura da antena A (m)"),
@@ -483,7 +504,7 @@ def link_analysis(elevations, a, b, params=None, observed=None):
     rx = eirp - fspl - diffraction + p["gain_b_dbi"] - p["cable_b_db"]
     sens = sensitivity_dbm(p["preset"])
     margin = rx - sens
-    sf, bw = PRESETS[p["preset"]]
+    sf, bw = preset_sf_bw(p["preset"])
     snr = rx - (-174 + 10 * math.log10(bw * 1000) + NOISE_FIGURE_DB)
     worst = None
     if worst_k is not None:
@@ -686,12 +707,30 @@ def delete_survey(db, survey_id):
     db._set_setting(SAVED_KEY, json.dumps(left))
 
 
+def _meshcore_defaults(out, info):
+    """Frequência, SF/BW e potência lidos do rádio MeshCore (self_info)."""
+    try:
+        sf, bw = int(info.get("radio_sf") or 0), float(info.get("radio_bw") or 0)
+        name = meshcore_preset(sf, bw)
+        if preset_sf_bw(name):
+            out.update(preset=name, from_radio=True, protocol="meshcore")
+        if info.get("radio_freq"):
+            out.update(freq_mhz=round(float(info["radio_freq"]), 3), from_radio=True)
+        if info.get("tx_power"):
+            out["tx_power_dbm"] = float(info["tx_power"])
+    except (TypeError, ValueError):
+        pass
+    return out
+
+
 def radio_defaults(sources):
     """Frequência, potência e preset do rádio ativo, quando disponíveis."""
     out = {"freq_mhz": 915.0, "tx_power_dbm": 22.0, "preset": "LONG_FAST", "region": None, "from_radio": False}
     try:
         sid = sources.active_radio()
         iface = sources._interfaces.get(sid) if sid is not None else None
+        if getattr(iface, "is_meshcore", False):
+            return _meshcore_defaults(out, getattr(iface, "self_info", {}) or {})
         lora = iface.localNode.localConfig.lora if iface is not None else None
     except Exception:
         lora = None

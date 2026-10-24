@@ -278,6 +278,8 @@ class SourceManager:
         self.node_deletion=NodeDeletion(self)
         from .message_receipts import MessageReceipts
         self.message_receipts=MessageReceipts(db)
+        from .meshcore_data import MeshCoreData
+        self.meshcore=MeshCoreData(db)
 
     def _set(self,id,state,error=""):
         with self._lock:
@@ -326,6 +328,26 @@ class SourceManager:
                         state["last_rx_ms"]=now_ms()
         except Exception as exc:
             self.db.log("Erro ao processar pacote do rádio: "+type(exc).__name__,"error",source_id)
+
+    def _on_meshcore_event(self,kind,data,interface):
+        with self._lock:
+            source_id=next((k for k,v in self._interfaces.items() if v is interface),None)
+        if source_id is None:source_id=getattr(interface,"source_id",None)
+        if source_id is None:return
+        try:self.meshcore.observe(source_id,kind,data)
+        except Exception as exc:
+            self.db.log("Erro ao guardar dado MeshCore: "+type(exc).__name__,"error",source_id)
+
+    def meshcore_interface(self,source_id=None):
+        """(fonte, interface) do rádio MeshCore conectado — o indicado ou o ativo."""
+        with self._lock:
+            items=[(k,v) for k,v in self._interfaces.items() if getattr(v,"is_meshcore",False)
+                   and self._states.get(k,{}).get("status")=="connected"]
+        if source_id:
+            items=[(k,v) for k,v in items if k==int(source_id)]
+        active=self.active_radio()
+        items.sort(key=lambda kv:kv[0]!=active)
+        return items[0] if items else (None,None)
 
     def _lost(self,interface=None,**kwargs):
         with self._lock:
@@ -727,7 +749,8 @@ class SourceManager:
                     if conf.get("protocol") == "meshcore":
                         # #185: rádio MeshCore Companion, apresentado como interface comum.
                         from .meshcore_driver import MeshCoreInterface
-                        iface=MeshCoreInterface(kind,conf,on_packet=self._on_packet,on_lost=self._lost,timeout=20)
+                        iface=MeshCoreInterface(kind,conf,on_packet=self._on_packet,on_lost=self._lost,timeout=20,
+                                                on_event=self._on_meshcore_event,source_id=id)
                     elif kind == "serial":
                         from meshtastic.serial_interface import SerialInterface
                         iface=SerialInterface(devPath=conf["port"],timeout=20)
