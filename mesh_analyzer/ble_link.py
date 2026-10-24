@@ -13,6 +13,7 @@ com a etapa em português. Enquanto isso, as varreduras Bluetooth do app esperam
 """
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from contextlib import contextmanager
@@ -70,8 +71,9 @@ def describe(exc):
 class LinkError(Exception):
     """Falha de conexão com a etapa, o motivo e se o rádio pede pareamento."""
 
-    def __init__(self, failures):
+    def __init__(self, failures, elapsed=None):
         self.failures = failures
+        self.elapsed = list(elapsed or [])
         stage, exc = failures[-1]
         self.stage = stage
         self.auth = any(needs_pairing(e) for _, e in failures)
@@ -81,6 +83,10 @@ class LinkError(Exception):
             message += " (%d s)" % CONNECT_TIMEOUT_S
         if tries > 1:
             message += "; %d tentativas" % tries
+        connect = [ms for (st, _), ms in zip(failures, self.elapsed) if st == "connect"]
+        if connect and max(connect) < 1500 and not isinstance(exc, TimeoutError):
+            # Falha em milissegundos: o Windows recusou sem tentar falar com o rádio (#191).
+            message += " — recusado pelo Windows em %d ms, sem chegar a falar com o rádio" % max(connect)
         super().__init__(message)
 
 
@@ -91,9 +97,10 @@ def connect_client(address, on_disconnect, attempts=ATTEMPTS, sleep=time.sleep, 
         from bleak import BleakScanner
     else:
         BleakScanner = bleak
-    failures = []
+    failures, elapsed = [], []
+    log = logging.getLogger(__name__)
     for attempt in range(attempts):
-        client, stage = None, "find"
+        client, stage, started = None, "find", time.monotonic()
         try:
             with BLEClient() as finder:
                 device = finder.async_await(BleakScanner.find_device_by_address(address, timeout=FIND_TIMEOUT_S))
@@ -105,12 +112,16 @@ def connect_client(address, on_disconnect, attempts=ATTEMPTS, sleep=time.sleep, 
                 # Segunda tentativa: serviços lidos do rádio, não do cache do Windows.
                 options["winrt"] = {"use_cached_services": False}
             client = BLEClient(device, **options)
+            started = time.monotonic()
             client.connect()
             stage = "access"
             client.read_gatt_char(FROMRADIO_UUID)
             return client
         except Exception as exc:
             failures.append((stage, exc))
+            elapsed.append(int((time.monotonic() - started) * 1000))
+            log.info("BLE %s: tentativa %d falhou em %s após %d ms: %s", address, attempt + 1, stage,
+                     elapsed[-1], str(exc) or type(exc).__name__)
             if client is not None:
                 try:
                     client.disconnect()
@@ -123,7 +134,7 @@ def connect_client(address, on_disconnect, attempts=ATTEMPTS, sleep=time.sleep, 
             if needs_pairing(exc) or attempt + 1 >= attempts:
                 break
             sleep(RETRY_PAUSE_S)
-    raise LinkError(failures)
+    raise LinkError(failures, elapsed)
 
 
 def meshtastic_interface(address, timeout=20):

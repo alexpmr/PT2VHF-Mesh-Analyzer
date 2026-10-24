@@ -1,3 +1,12 @@
+# v0.6.52 — Correções do primeiro diagnóstico real
+
+- #191: o primeiro diagnóstico (Windows 11 build 26300, Realtek Bluetooth 4.2 USB) mostra o pareamento sem PIN falhando em ~130 ms e a sessão GATT com `Unreachable` ~12 ms depois de "getting services", em todos os rádios: o Windows recusa sem transmitir.
+  - `ble_link.LinkError` guarda a duração das tentativas e, abaixo de 1,5 s, diz "recusado pelo Windows em N ms, sem chegar a falar com o rádio".
+  - Duração das tentativas e do pareamento vai para o log.
+- `/api/meshcore/results` sem `node` dava `TypeError` (`int(0, 0)`), quebrando "Últimas leituras" em Automações.
+- `diagnostics._versions()`: no app empacotado (sem metadados) usa a versão do módulo.
+- Testes: `tests/test_release_v0652.py`; `test_release_v0647` cobre a nova mensagem.
+
 # v0.6.51 — Diagnóstico para suporte (.zip)
 
 - #198: novo `diagnostics.py`.

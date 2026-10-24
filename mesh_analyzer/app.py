@@ -305,7 +305,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     query={k:v[0] for k,v in urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).items()}
                     sid,_=sources.meshcore_interface()
                     sid=int(query.get("source") or sid or 0)
-                    self._json({"success":True,"data":sources.meshcore.results(sid,int(query.get("node") or 0,0) or None,
+                    self._json({"success":True,"data":sources.meshcore.results(sid,int(query.get("node") or "0",0) or None,
                         query.get("kind") or None,min(200,int(query.get("limit") or 50)))})
                 elif path == "/api/msgauto":
                     if not msgauto:raise ValueError("Mensagens automáticas indisponíveis")
