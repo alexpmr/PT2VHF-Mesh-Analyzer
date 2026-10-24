@@ -1,3 +1,21 @@
+# v0.6.47 — Bluetooth mais tolerante e visualização por conexão
+
+- #191: novo `ble_link.py`. `MeshtasticBLE` substitui o `connect()` da `BLEInterface`:
+  - procura o rádio uma vez (`find_device_by_address`, 10 s) e conecta pelo `BLEDevice`, evitando a segunda varredura do bleak e a varredura de 5 s depois de conectar;
+  - prazo de 20 s para a sessão GATT e os serviços; segunda tentativa com `use_cached_services=False`;
+  - leitura de FROMRADIO para confirmar o acesso;
+  - erros por etapa em português; `auth` quando o rádio exige pareamento.
+  
+  Usado na verificação e na conexão das fontes BLE. `scan_ble` recusa varrer durante uma conexão.
+- #191: `DeviceWatcher.verify()` conecta primeiro sem parear. Na falha:
+  - rádio que exige pareamento → pareia sem PIN (ou pede PIN) e tenta de novo;
+  - pareamento do sistema sem PIN guardado → remove e tenta de novo;
+  - pareamento criado que não ajudou → é desfeito.
+  
+  `ble_pairing` ganha `is_paired()`/`unpair()` (WinRT e bluetoothctl) e fecha o `BluetoothLEDevice` após parear. Prazos de verificação BLE: 90 s (60 s na primeira abertura).
+- #189: seção "Mostrar dados de" no menu do rádio, com Todas as conexões, o rádio ativo e o MQTT. O filtro vale para mapa, nós, mensagens, tráfego e estatísticas, com o selo "Vendo …" e preferência local. `/api/packets` e `/api/messages` aceitam `?source=`.
+- Testes: `tests/test_release_v0647.py` e `scripts/test_ui_v0647.cjs`; testes da v0.6.43 ajustados para a nova ordem (conectar antes de parear).
+
 # v0.6.46 — MeshCore etapa 2 e coleta periódica
 
 - #190: `MeshCoreInterface` ganha operações síncronas (anúncio, zerar/redescobrir caminho, login, status, telemetria, vizinhos, CLI, traceroute, remover contato, autoadd, canais, link do contato, contadores) e avisa contatos, dados do rádio e resultados por `on_event`. Respostas de CLI (`txt_type` 1) vão para quem pediu, não para o chat. Traceroute usa o caminho de ida e volta (`saltos + alvo + saltos invertidos`) com tag própria; vizinhos (prefixo de 4 bytes) e traceroutes resolvidos viram pacotes NEIGHBORINFO/TRACEROUTE para a topologia.

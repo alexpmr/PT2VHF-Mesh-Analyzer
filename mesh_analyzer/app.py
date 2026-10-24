@@ -125,6 +125,12 @@ class ReleaseMonitor:
             if due:self.check(force=True)
 
 
+def view_source(path):
+    """#189: ?source=<id> escolhido no topo; vazio = todas as conexões."""
+    value=urllib.parse.parse_qs(urllib.parse.urlsplit(path).query).get("source",[""])[0]
+    return int(value) if value.isdigit() else None
+
+
 def radios_available(db, sources):
     """#152: BLE só é varrido quando há conexão BLE em espera para conferir."""
     active=sources.active_radio()
@@ -253,10 +259,11 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
                     source=query.get("source_id",[None])[0]
                     self._json({"success":True,"data":db.topology_diagnostics(source)})
-                elif path == "/api/packets":self._json({"success":True,"data":db.packet_rows()})
+                elif path == "/api/packets":
+                    self._json({"success":True,"data":db.packet_rows(source_id=view_source(self.path))})
                 elif path == "/api/messages":
                     sources.message_receipts.expire()
-                    self._json({"success":True,"data":db.message_rows()})
+                    self._json({"success":True,"data":db.message_rows(source_id=view_source(self.path))})
                 elif path == "/api/links":self._json({"success":True,"data":db.link_rows()})
                 elif path == "/api/communications":
                     self._json({"success":True,"data":db.communication_rows()})

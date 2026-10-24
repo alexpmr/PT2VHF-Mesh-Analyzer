@@ -59,12 +59,23 @@ def pair(address: str, pin: str | None = None, timeout: float = 40.0, platform: 
 
 async def _pair_windows(address: str, pin: str) -> dict:
     from winrt.windows.devices.bluetooth import BluetoothLEDevice
-    from winrt.windows.devices.enumeration import DevicePairingKinds, DevicePairingResultStatus
     if not ADDRESS_RE.fullmatch(address):
         raise ValueError("Endereço Bluetooth inválido")
     device = await BluetoothLEDevice.from_bluetooth_address_async(int(address.replace(":", ""), 16))
     if device is None:
         raise RuntimeError("Rádio Bluetooth não encontrado; aproxime-o do computador")
+    try:
+        return await _pair_device(device, pin)
+    finally:
+        # #191: solta o rádio na hora; o objeto aberto atrapalhava a conexão logo em seguida.
+        try:
+            device.close()
+        except Exception:
+            pass
+
+
+async def _pair_device(device, pin):
+    from winrt.windows.devices.enumeration import DevicePairingKinds, DevicePairingResultStatus
     info = device.device_information
     if info.pairing.is_paired:
         return {"ok": True, "status": "already_paired", "error": ""}
@@ -92,6 +103,65 @@ async def _pair_windows(address: str, pin: str) -> dict:
         return dict(PIN_REQUIRED)
     return {"ok": False, "status": "failed",
             "error": "Pareamento recusado (%s). Confira o PIN na tela do rádio." % getattr(result.status, "name", result.status)}
+
+
+def is_paired(address: str, platform: str | None = None) -> bool | None:
+    """#191: o sistema já tem este rádio pareado? None quando não dá para saber."""
+    platform = platform or sys.platform
+    try:
+        if not ADDRESS_RE.fullmatch(str(address or "")):
+            return None
+        if platform == "win32":
+            return asyncio.run(asyncio.wait_for(_windows_paired(address), 15))
+        if platform.startswith("linux"):
+            out = subprocess.run(["bluetoothctl", "info", address], capture_output=True, text=True, timeout=10).stdout
+            return bool(re.search(r"Paired:\s*yes", out))
+    except Exception:
+        return None
+    return None
+
+
+def unpair(address: str, platform: str | None = None) -> bool:
+    """#191: remove o pareamento do sistema (o rádio continua cadastrado no app)."""
+    platform = platform or sys.platform
+    try:
+        if not ADDRESS_RE.fullmatch(str(address or "")):
+            return False
+        if platform == "win32":
+            return asyncio.run(asyncio.wait_for(_windows_unpair(address), 20))
+        if platform.startswith("linux"):
+            out = subprocess.run(["bluetoothctl", "remove", address], capture_output=True, text=True, timeout=15).stdout
+            return bool(re.search(r"Device has been removed|not available", out))
+    except Exception:
+        return False
+    return False
+
+
+async def _windows_device(address):
+    from winrt.windows.devices.bluetooth import BluetoothLEDevice
+    return await BluetoothLEDevice.from_bluetooth_address_async(int(address.replace(":", ""), 16))
+
+
+async def _windows_paired(address):
+    device = await _windows_device(address)
+    if device is None:
+        return None
+    try:
+        return bool(device.device_information.pairing.is_paired)
+    finally:
+        device.close()
+
+
+async def _windows_unpair(address):
+    from winrt.windows.devices.enumeration import DeviceUnpairingResultStatus
+    device = await _windows_device(address)
+    if device is None:
+        return False
+    try:
+        result = await device.device_information.pairing.unpair_async()
+        return result.status in (DeviceUnpairingResultStatus.UNPAIRED, DeviceUnpairingResultStatus.ALREADY_UNPAIRED)
+    finally:
+        device.close()
 
 
 def _pair_linux(address: str, pin: str, timeout: float, command=("bluetoothctl",)) -> dict:

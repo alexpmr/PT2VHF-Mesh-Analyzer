@@ -8,7 +8,7 @@ class UIRegression(unittest.TestCase):
    self.assertNotIn(element,UI)
   self.assertIn('id="messageChannel"',UI)
   self.assertIn('id="trafficType"',UI)
-  self.assertIn("source:'all'",UI)
+  self.assertIn("source:viewSource||'all'",UI)  # #189: todas, salvo conexão escolhida no topo
  def test_ambiguous_transmitter_blocks_send(self):
   self.assertIn("if(choices.length>1)",UI)
   self.assertIn("const source=Number(choices[0].id)",UI)

@@ -1046,8 +1046,10 @@ class Database:
               VALUES(?,?,?,?,?,?,1) ON CONFLICT(source_id,a,b,quality) DO UPDATE SET
               last_seen_ms=MAX(last_seen_ms,excluded.last_seen_ms),observations=observations+1""",(source_id,a,b,quality,ts,ts))
 
-    def packet_rows(self,limit=300):
-        return self._rows("SELECT id,source_id,packet_id,timestamp_ms,from_node,to_node,port,channel,rx_snr,rx_rssi,hop_start,hop_limit,via_mqtt,encrypted,direction,text_preview FROM packets ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(min(int(limit),3000),))
+    def packet_rows(self,limit=300,source_id=None):
+        # #189: com uma conexão escolhida no topo, os últimos pacotes dela (não os de todas).
+        where,args=("WHERE source_id=? ",[int(source_id)]) if source_id else ("",[])
+        return self._rows("SELECT id,source_id,packet_id,timestamp_ms,from_node,to_node,port,channel,rx_snr,rx_rssi,hop_start,hop_limit,via_mqtt,encrypted,direction,text_preview FROM packets "+where+"ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(*args,min(int(limit),3000)))
 
     def search_messages(self, query="", node=None, days=None, limit=200):
         """#175: busca no histórico inteiro, sem diferenciar maiúsculas e acentos."""
@@ -1095,8 +1097,9 @@ class Database:
                            "ORDER BY timestamp_ms,id LIMIT ?", tuple(args + [m["timestamp_ms"], m["timestamp_ms"], m["id"], around]))
         return {"message": m, "messages": list(reversed(before)) + [m] + after}
 
-    def message_rows(self,limit=300):
-        return self._rows("SELECT * FROM messages ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(min(int(limit),3000),))
+    def message_rows(self,limit=300,source_id=None):
+        where,args=("WHERE source_id=? ",[int(source_id)]) if source_id else ("",[])
+        return self._rows("SELECT * FROM messages "+where+"ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(*args,min(int(limit),3000)))
 
     def link_rows(self):
         return self._rows("SELECT * FROM links ORDER BY last_seen_ms DESC LIMIT 20000")

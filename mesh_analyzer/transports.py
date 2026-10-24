@@ -758,8 +758,8 @@ class SourceManager:
                         from meshtastic.tcp_interface import TCPInterface
                         iface=TCPInterface(hostname=conf["host"],portNumber=int(conf.get("port") or 4403),timeout=20)
                     elif kind == "ble":
-                        from meshtastic.ble_interface import BLEInterface
-                        iface=BLEInterface(address=conf["address"],timeout=20)
+                        from .ble_link import meshtastic_interface
+                        iface=meshtastic_interface(conf["address"],timeout=20)  # #191
                     else:raise RuntimeError("Transporte desconhecido")
                     with self._lock:
                         occupied=any(k!=id and self._states.get(k,{}).get("status")=="connected"

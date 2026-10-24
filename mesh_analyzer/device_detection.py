@@ -16,6 +16,7 @@ import hashlib
 import ipaddress
 import logging
 import threading
+from types import SimpleNamespace
 import time
 
 from .database import now_ms
@@ -32,7 +33,7 @@ BLE_NEAR_RSSI = -70
 PROBE_TIMEOUT_S = 20
 # #156: prazo total da verificação, incluindo pareamento BLE; ao estourar, a
 # tentativa é abandonada com segurança em vez de prender a interface.
-PROBE_DEADLINE_S = {"serial": 40, "tcp": 30, "ble": 45}
+PROBE_DEADLINE_S = {"serial": 40, "tcp": 30, "ble": 90}
 TIMEOUT_HINT = {
     "serial": "O rádio não respondeu a tempo pela USB. Confira se outro programa está usando a porta.",
     "tcp": "O rádio não respondeu a tempo pelo Wi-Fi. Confira se ele está ligado e na mesma rede.",
@@ -40,7 +41,7 @@ TIMEOUT_HINT = {
            "pareamento do Windows (PIN na tela do rádio; 123456 se ele não tiver tela).",
 }
 # #162: na primeira abertura a busca não pode segurar o usuário por muito tempo.
-FIRST_RUN_DEADLINE_S = {"serial": 20, "tcp": 20, "ble": 25}
+FIRST_RUN_DEADLINE_S = {"serial": 20, "tcp": 20, "ble": 60}
 USB_POLL_S = 3
 BLE_POLL_S = 45
 
@@ -68,6 +69,11 @@ def usb_serial_ports():
 
 
 def scan_ble(timeout=5.0, near_only=False):
+    from .ble_link import busy
+    if busy():
+        # #191: varrer durante a conexão atrapalha o Windows; quem chamou tenta depois.
+        raise RuntimeError("Bluetooth ocupado com uma conexão em andamento")
+
     async def run():
         from bleak import BleakScanner
         found = await BleakScanner.discover(timeout=timeout, return_adv=True)
@@ -141,8 +147,8 @@ def open_interface(candidate, timeout=PROBE_TIMEOUT_S):
         from meshtastic.tcp_interface import TCPInterface
         return TCPInterface(hostname=conf["host"], portNumber=int(conf.get("port") or 4403), timeout=timeout)
     if kind == "ble":
-        from meshtastic.ble_interface import BLEInterface
-        return BLEInterface(address=conf["address"], timeout=timeout)
+        from .ble_link import meshtastic_interface
+        return meshtastic_interface(conf["address"], timeout=timeout)
     raise ValueError("Tipo de conexão desconhecido")
 
 
@@ -179,7 +185,10 @@ def _probe_meshtastic(candidate, opener):
                 "short_name": str(user.get("shortName") or "").strip()[:8]}
     except Exception as exc:
         text = str(exc) or type(exc).__name__
-        return {"ok": False, "error": text[:160]}
+        result = {"ok": False, "error": text[:200]}
+        if getattr(exc, "auth", False):
+            result["auth"] = True  # #191: o rádio exige pareamento
+        return result
     finally:
         if iface is not None:
             try:
@@ -280,17 +289,20 @@ class DeviceWatcher:
     prazo, fila Bluetooth e Cancelar.
     """
 
-    def __init__(self, db, sources, prober=probe, usb=usb_serial_ports, ble=scan_ble, pairer=None):
+    def __init__(self, db, sources, prober=probe, usb=usb_serial_ports, ble=scan_ble, pairer=None, pairing=None):
         self.db = db
         self.sources = sources
         self.registry = Registry(db, sources)
         self._probe = prober
-        # #164: pareamento sem PIN antes de verificar rádios Bluetooth. Só com o rádio de verdade
+        # #164/#191: pareamento sem PIN quando a conexão direta falha. Só com o rádio de verdade
         # (prober padrão); nos testes com prober simulado não há adaptador para parear.
         if pairer is None and prober is probe:
             from . import ble_pairing
             pairer = ble_pairing.pair
+            pairing = pairing or ble_pairing
         self._pair = pairer
+        # #191: consulta/remoção do pareamento do sistema (is_paired, unpair).
+        self._pairing = pairing or SimpleNamespace(is_paired=lambda a: None, unpair=lambda a: False)
         self._usb = usb
         self._ble = ble
         self._lock = threading.RLock()
@@ -355,34 +367,60 @@ class DeviceWatcher:
     def verify(self, candidate, token, cancel=None, on_wait=None, deadline=None, pair=True):
         """Verificação com prazo, cancelamento e fila Bluetooth.
 
-        Rádios Bluetooth são pareados antes, sem PIN (#164): quem não tem PIN definido
-        pareia e segue direto; quem pede PIN volta com needs_pin para o app pedir o código.
+        #191: rádios Bluetooth conectam primeiro sem parear, como no celular. Só se
+        a conexão falhar o app mexe no pareamento: pareia sem PIN o rádio que exige
+        (quem pede PIN volta com needs_pin) ou remove um pareamento do sistema que
+        esteja atrapalhando, e tenta mais uma vez. Pareamento criado aqui que não
+        resolveu é desfeito.
         """
         ble = candidate["kind"] == "ble"
         if ble and not self.enter_ble(token, cancel, on_wait):
             return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
         try:
-            paired = None
-            if ble and pair and self._pair is not None:
-                try:
-                    result = self._pair(candidate["address"], None)
-                except Exception as exc:
-                    result = {"ok": False, "status": "error", "error": str(exc)[:160]}
-                if result.get("status") == "pin_required":
-                    return {"ok": False, "needs_pin": True, "error": result.get("error") or "O rádio pede PIN"}
-                if cancel is not None and cancel.is_set():
-                    return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
-                paired = bool(result.get("ok"))
-                if not paired:
-                    LOG.info("Pareamento BLE sem PIN não concluído (%s); tentando conectar assim mesmo",
-                             result.get("error") or result.get("status"))
             info = bounded_probe(self._probe, candidate, cancel, deadline)
-            if ble and paired is not None:
-                info = {**info, "paired": paired}
-            return info
+            if not ble or not pair or self._pair is None or info.get("ok") or info.get("cancelled") \
+                    or (cancel is not None and cancel.is_set()):
+                return info
+            return self._ble_retry(candidate, info, cancel, deadline)
         finally:
             if ble:
                 self.leave_ble(token)
+
+    def _ble_retry(self, candidate, first, cancel, deadline):
+        ble_pairing = self._pairing
+        address = candidate["address"]
+        paired = ble_pairing.is_paired(address)
+        if paired and not first.get("auth") and not candidate.get("config", {}).get("pin"):
+            # Pareamento sem PIN guardado num rádio que não pediu: pode ser o que trava o Windows.
+            if not ble_pairing.unpair(address):
+                return {**first, "paired": True}
+            LOG.info("Pareamento BLE de %s removido para nova tentativa (#191)", address)
+            again = bounded_probe(self._probe, candidate, cancel, deadline)
+            if again.get("ok") or again.get("cancelled"):
+                return {**again, "paired": False}
+            return {**again, "paired": False,
+                    "error": again.get("error", "") + " · pareamento antigo removido; também falhou sem ele"}
+        if paired:
+            return {**first, "paired": True}
+        try:
+            result = self._pair(address, None)
+        except Exception as exc:
+            result = {"ok": False, "status": "error", "error": str(exc)[:160]}
+        if result.get("status") == "pin_required":
+            return {"ok": False, "needs_pin": True, "error": result.get("error") or "O rádio pede PIN"}
+        if cancel is not None and cancel.is_set():
+            return {"ok": False, "cancelled": True, "error": "Cancelado pelo usuário"}
+        if not result.get("ok"):
+            note = result.get("error") or result.get("status") or "sem resposta"
+            return {**first, "paired": False, "error": first.get("error", "") + " · pareamento sem PIN: " + note}
+        again = bounded_probe(self._probe, candidate, cancel, deadline)
+        if again.get("ok") or again.get("cancelled"):
+            return {**again, "paired": True}
+        if not first.get("auth") and result.get("status") == "paired":
+            ble_pairing.unpair(address)  # não ajudou: deixa o Windows como estava
+        # "paired" True: o pareamento sem PIN funcionou, então a falha não é de PIN.
+        return {**again, "paired": True,
+                "error": again.get("error", "") + " · pareado sem PIN e tentado de novo, também sem resposta"}
 
     def notices(self):
         with self._lock:
