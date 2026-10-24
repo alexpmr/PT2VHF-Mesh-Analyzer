@@ -142,7 +142,9 @@ def adapter_info(platform: str | None = None) -> dict | None:
     platform = platform or sys.platform
     try:
         if platform == "win32":
-            return asyncio.run(asyncio.wait_for(_windows_adapter(), 10))
+            info = asyncio.run(asyncio.wait_for(_windows_adapter(), 10))
+            info["model"] = _windows_adapter_model()
+            return info
         if platform.startswith("linux"):
             out = subprocess.run(["bluetoothctl", "show"], capture_output=True, text=True, timeout=8).stdout
             name = re.search(r"Name:\s*(.+)", out)
@@ -151,6 +153,19 @@ def adapter_info(platform: str | None = None) -> dict | None:
     except Exception as exc:
         return {"present": None, "error": (str(exc) or type(exc).__name__)[:120]}
     return None
+
+
+def _windows_adapter_model(runner=subprocess.run):
+    """Modelo do rádio Bluetooth (ex.: "Intel(R) Wireless Bluetooth(R)"), pelo Gerenciador de
+    Dispositivos. O nome devolvido pelo WinRT é o nome Bluetooth do computador, não o modelo."""
+    script = ("Get-PnpDevice -Class Bluetooth -PresentOnly | Where-Object { $_.InstanceId -match '^(USB|PCI|ACPI)\\\\' } | "
+              "ForEach-Object { $_.FriendlyName + ' | ' + $_.Status + ' | ' + $_.InstanceId }")
+    try:
+        out = runner(["powershell", "-NoProfile", "-NonInteractive", "-Command", script], capture_output=True,
+                     text=True, timeout=20, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
+    except Exception:
+        return ""
+    return "; ".join(line.strip() for line in str(out or "").splitlines() if line.strip())[:300]
 
 
 async def _windows_adapter():

@@ -1,3 +1,8 @@
+## v0.6.50 — Implementado nesta entrega
+
+- #191: parear antes de conectar (de novo), sem remover pareamentos; nome do rádio no resultado; modelo do adaptador Bluetooth.
+- Roadmap registrado: #198 (diagnóstico .zip em Configurações).
+
 ## v0.6.49 — Implementado nesta entrega
 
 - #189/#194: com uma conexão escolhida, barra, contadores e luzes TX/RX mostram só ela.

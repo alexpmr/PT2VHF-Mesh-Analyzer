@@ -51,7 +51,7 @@ const path=require('path');
   // Resultado do "Adicionar automaticamente" com rádio BLE sem resposta: botão de PIN.
   await page.evaluate(()=>{setView('settings');showSettings('sources');renderAutoAdd({running:false,errors:[],results:[
     {kind:'ble',address:'44:1B:F6:70:9C:25',name:'Meshtastic_9c25',outcome:'no_response',detail:'Bluetooth: falhou ao abrir a conexão — o Windows não alcançou o rádio (Unreachable); 2 tentativas'},
-    {kind:'serial',address:'COM5',name:'COM5',outcome:'configured',detail:'Já configurado'}],ble_adapter:{present:true,name:'Intel(R) Wireless Bluetooth(R)',le:true,central:true}});});
+    {kind:'serial',address:'COM5',name:'COM5',outcome:'configured',detail:'Já configurado'}],ble_adapter:{present:true,name:'DESKTOP - Superior',model:'Intel(R) Wireless Bluetooth(R) | OK | USB',le:true,central:true}});});
   out.buttons=await page.evaluate(()=>document.querySelectorAll('[data-autoadd-pin]').length);
   out.hint=await page.evaluate(()=>$('autoAddResult').innerText.includes('123456'));
   await page.click('[data-autoadd-pin]');
@@ -65,7 +65,8 @@ const path=require('path');
   assert.deepEqual(out.back,{text:'PT2VHF-4 - Móvel',view:null});
   assert.equal(out.buttons,1);assert(out.hint);
   assert(out.pinNote.includes('Pareamento recusado'));
-  assert(out.diagnosis.includes('Intel(R) Wireless Bluetooth(R)')&&out.diagnosis.includes('client.meshtastic.org'));
+  assert(out.diagnosis.includes('Intel(R) Wireless Bluetooth(R)')&&out.diagnosis.includes('DESKTOP - Superior')&&out.diagnosis.includes('client.meshtastic.org'));
+  assert(out.diagnosis.includes('Meshtastic_9c25 (44:1B:F6:70:9C:25)'),'v0.6.50: name next to the address');
   assert.deepEqual(pins,[{address:'44:1B:F6:70:9C:25',pin:'123456',name:'Meshtastic_9c25'}]);
   assert.deepEqual(errors,[]);console.log('Chromium UI v0.6.48 OK',JSON.stringify(out.mqtt));
  }finally{
