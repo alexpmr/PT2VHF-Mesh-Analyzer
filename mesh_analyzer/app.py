@@ -451,6 +451,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                 elif path == "/api/devices/pair":
                     if not watcher:raise ValueError("Detecção automática indisponível")
                     self._json(watcher.pair(str(payload.get("id","")),str(payload.get("pin",""))))
+                elif path == "/api/devices/pair-address":
+                    if not watcher:raise ValueError("Detecção automática indisponível")
+                    self._json(watcher.pair_address(payload.get("address"),str(payload.get("pin","")),payload.get("name","")))
                 elif path == "/api/devices/cancel":
                     if not watcher:raise ValueError("Detecção automática indisponível")
                     self._json(watcher.cancel(str(payload.get("id",""))))

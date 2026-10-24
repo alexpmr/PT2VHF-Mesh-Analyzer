@@ -1,3 +1,8 @@
+## v0.6.48 — Implementado nesta entrega
+
+- #194: barra superior mostra a conexão escolhida em "Mostrar dados de".
+- #191: "Informar PIN…" nos rádios Bluetooth sem resposta do "Adicionar automaticamente". Diagnóstico em andamento (teste com o cliente web oficial e modo de pareamento dos rádios).
+
 ## v0.6.47 — Implementado nesta entrega
 
 - #191: conexão Bluetooth mais tolerante no Windows; conectar antes de parear; erros por etapa. Aceite físico pendente com os rádios do relato (sem PIN, que conectam no celular).
