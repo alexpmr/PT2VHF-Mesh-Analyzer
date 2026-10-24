@@ -156,6 +156,8 @@ def connect_client(address, on_disconnect, attempts=ATTEMPTS, sleep=time.sleep, 
         BleakScanner = bleak
     if prewarm is None and sys.platform == "win32":
         prewarm = windows_prewarm
+    elif prewarm is False:      # desligado explicitamente (testes)
+        prewarm = None
     failures, elapsed, note = [], [], ""
     log = logging.getLogger(__name__)
     for attempt in range(attempts):

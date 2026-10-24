@@ -58,10 +58,16 @@ class Prewarm(unittest.TestCase):
         self.assertIs(client, created[0])
 
     def test_only_windows_uses_it_by_default(self):
-        created = []
-        with patch.object(mble, "BLEClient", fake_client_class(["ok"], created)), \
-             patch.object(ble_link, "windows_prewarm", side_effect=AssertionError("não deve rodar fora do Windows")):
-            ble_link.connect_client(ADDR, lambda c: None, sleep=lambda s: None, bleak=Scanner())
+        for platform, expected in (("linux", 0), ("darwin", 0), ("win32", 1)):
+            created, calls = [], []
+
+            def fake(address, helper):
+                calls.append(address)
+                return Held(), True
+            with patch.object(mble, "BLEClient", fake_client_class(["ok"], created)), \
+                 patch.object(ble_link, "windows_prewarm", fake), patch.object(ble_link.sys, "platform", platform):
+                ble_link.connect_client(ADDR, lambda c: None, sleep=lambda s: None, bleak=Scanner())
+            self.assertEqual(len(calls), expected, platform)
 
 
 if __name__ == "__main__":
