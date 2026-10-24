@@ -155,10 +155,10 @@ class Verify(unittest.TestCase):
         self.assertTrue(self.watcher([self.OK]).verify(dict(CAND), "t")["ok"])
         self.assertEqual(self.calls, ["probe"])
 
-    def test_stale_pairing_is_removed_and_connection_retried(self):
-        info = self.watcher([self.FAIL, self.OK], paired=True).verify(dict(CAND), "t")
-        self.assertTrue(info["ok"])
-        self.assertEqual(self.calls, ["probe", "unpair", "probe"])
+    def test_existing_pairing_is_kept(self):
+        # v0.6.49: remover o pareamento do sistema não ajudou em campo; agora ele fica.
+        info = self.watcher([self.FAIL], paired=True).verify(dict(CAND), "t")
+        self.assertEqual((info["ok"], info["paired"], self.calls), (False, True, ["probe"]))
 
     def test_pairing_kept_when_radio_has_a_saved_pin(self):
         cand = {**CAND, "config": {"address": ADDR, "pin": "123456"}}

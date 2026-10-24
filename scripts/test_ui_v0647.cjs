@@ -23,7 +23,7 @@ const path=require('path');
   const json=(r,body)=>r.fulfill({contentType:'application/json',body:JSON.stringify(body)});
   await page.route('**/api/devices/autoadd',r=>json(r,{success:true,data:{first_run:false,running:false,phase:'done',results:[],added:[]}}));
   // Um rádio USB conectado (26) e um MQTT conectado (28), como no relato.
-  await page.route('**/api/state',async r=>{
+  await page.route(/\/api\/state(\?.*)?$/,async r=>{
    // No fim do teste o servidor é encerrado com a página ainda atualizando: sem isso, o
    // fetch recusado vira exceção não tratada e derruba o Node (falha só na teardown).
    let real;try{real=await (await r.fetch()).json();}catch(e){return r.abort().catch(()=>{});}
@@ -53,7 +53,7 @@ const path=require('path');
   out.all=await page.evaluate(()=>({nodes:nodes.length,map:mapSourceFilter,stats:statsFilters().source,stored:localStorage.getItem('mesh.viewSource')}));
   if(process.env.MESH_DEBUG)console.log(JSON.stringify(out,null,1));
   assert.deepEqual(out.menu,['Todas as conexões','PT2VHF-4 - Móvel USB','Platorm MQTT']);
-  assert.deepEqual(out.mqtt.nodes,[2,3]);assert(out.mqtt.chip.includes('Todas as conexões'));  // v0.6.48: o nome vai na barra (#194)
+  assert.deepEqual(out.mqtt.nodes,[2,3]);assert.equal(out.mqtt.chip.trim(),'✕');  // v0.6.49: o nome vai na barra (#194); o selo só volta a todas
   assert.equal(out.mqtt.map,'28');assert.equal(out.mqtt.stats,'28');assert.equal(out.mqtt.stored,'28');
   assert(out.requested,'packets/messages filtered on the server');
   assert.deepEqual(out.all,{nodes:3,map:'',stats:'all',stored:null});

@@ -23,7 +23,7 @@ const path=require('path');
   if(process.env.MESH_LEAFLET_PATH)await page.route('**/leaflet.js',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(process.env.MESH_LEAFLET_PATH,'utf8')}));
   const json=(r,body)=>r.fulfill({contentType:'application/json',body:JSON.stringify(body)});
   await page.route('**/api/devices/autoadd',r=>json(r,{success:true,data:{first_run:false,running:false,phase:'done',results:[],added:[]}}));
-  await page.route('**/api/state',async r=>{
+  await page.route(/\/api\/state(\?.*)?$/,async r=>{
    // No fim do teste o servidor é encerrado com a página ainda atualizando: sem isso, o
    // fetch recusado vira exceção não tratada e derruba o Node (falha só na teardown).
    let real;try{real=await (await r.fetch()).json();}catch(e){return r.abort().catch(()=>{});}
@@ -32,6 +32,9 @@ const path=require('path');
    real.connections={'26':{status:'connected',tx_capable:true,local_node_num:1},'28':{status:'connected'}};
    return json(r,real);
   });
+  const stateUrls=[];page.on('request',q=>{if(q.url().includes('/api/state'))stateUrls.push(new URL(q.url()).search);});
+  await page.route('**/api/devices/detected',r=>json(r,{success:true,data:pins.length?[{id:'n1',address:'44:1B:F6:70:9C:25',kind:'ble',type:'detected',
+    job:{phase:'failed',error:'Pareamento recusado (FAILED). Confira o PIN na tela do rádio.',needs_pin:true}}]:[]}));
   await page.route('**/api/devices/pair-address',r=>{pins.push(JSON.parse(r.request().postData()));return json(r,{success:true,job:{phase:'pairing'}});});
   await page.goto('http://127.0.0.1:8811/mapa');
   await page.waitForFunction(()=>typeof setViewSource==='function'&&state.sources.length===2);
@@ -41,23 +44,28 @@ const path=require('path');
   await page.evaluate(()=>setViewSource('28'));
   await page.waitForFunction(()=>$('radioConnectionText').innerText.includes('Platorm'));
   out.mqtt=await page.evaluate(()=>{const chip=$('viewSourceChip'),r=chip.getBoundingClientRect(),p=$('radioConnectionStatus').getBoundingClientRect();
-   return {text:$('radioConnectionText').innerText,view:$('radioConnectionStatus').dataset.view,chipVisible:!chip.hidden&&r.width>0&&r.left>=p.right-1&&Math.abs(r.top-p.top)<30};});
+   return {text:$('radioConnectionText').innerText,view:$('radioConnectionStatus').dataset.view,chipVisible:!chip.hidden&&chip.textContent==='✕'&&r.width>0&&r.left>=p.right-1&&Math.abs(r.top-p.top)<30};});
   await page.click('#viewSourceChip');
   await page.waitForFunction(()=>!$('radioConnectionText').innerText.includes('Platorm'));
   out.back=await page.evaluate(()=>({text:$('radioConnectionText').innerText,view:$('radioConnectionStatus').dataset.view||null}));
   // Resultado do "Adicionar automaticamente" com rádio BLE sem resposta: botão de PIN.
   await page.evaluate(()=>{setView('settings');showSettings('sources');renderAutoAdd({running:false,errors:[],results:[
-    {kind:'ble',address:'44:1B:F6:70:9C:25',name:'Meshtastic_9c25',outcome:'no_response',detail:'Bluetooth: falhou ao abrir a conexão'},
-    {kind:'serial',address:'COM5',name:'COM5',outcome:'configured',detail:'Já configurado'}]});});
+    {kind:'ble',address:'44:1B:F6:70:9C:25',name:'Meshtastic_9c25',outcome:'no_response',detail:'Bluetooth: falhou ao abrir a conexão — o Windows não alcançou o rádio (Unreachable); 2 tentativas'},
+    {kind:'serial',address:'COM5',name:'COM5',outcome:'configured',detail:'Já configurado'}],ble_adapter:{present:true,name:'Intel(R) Wireless Bluetooth(R)',le:true,central:true}});});
   out.buttons=await page.evaluate(()=>document.querySelectorAll('[data-autoadd-pin]').length);
   out.hint=await page.evaluate(()=>$('autoAddResult').innerText.includes('123456'));
   await page.click('[data-autoadd-pin]');
-  await page.waitForFunction(()=>document.querySelector('[data-autoadd-pin]').disabled);
+  await page.waitForFunction(()=>document.querySelector('[data-autoadd-pin]').textContent.includes('outro PIN'));
+  out.pinNote=await page.evaluate(()=>document.querySelector('.pinJob').textContent);
+  out.diagnosis=await page.evaluate(()=>$('autoAddResult').innerText);
   if(process.env.MESH_DEBUG)console.log(JSON.stringify({out,pins},null,1));
   assert.equal(out.radio,'PT2VHF-4 - Móvel');
-  assert.equal(out.mqtt.text,'Platorm · MQTT (TX: PT2VHF-4 - Móvel)');assert.equal(out.mqtt.view,'other');assert(out.mqtt.chipVisible,'chip next to the pill');
+  assert.equal(out.mqtt.text,'Platorm · MQTT');   // v0.6.49: só a conexão escolhida
+  assert(stateUrls.includes('?source=28'),'counters of the chosen connection');assert.equal(out.mqtt.view,'other');assert(out.mqtt.chipVisible,'chip next to the pill');
   assert.deepEqual(out.back,{text:'PT2VHF-4 - Móvel',view:null});
   assert.equal(out.buttons,1);assert(out.hint);
+  assert(out.pinNote.includes('Pareamento recusado'));
+  assert(out.diagnosis.includes('Intel(R) Wireless Bluetooth(R)')&&out.diagnosis.includes('client.meshtastic.org'));
   assert.deepEqual(pins,[{address:'44:1B:F6:70:9C:25',pin:'123456',name:'Meshtastic_9c25'}]);
   assert.deepEqual(errors,[]);console.log('Chromium UI v0.6.48 OK',JSON.stringify(out.mqtt));
  }finally{

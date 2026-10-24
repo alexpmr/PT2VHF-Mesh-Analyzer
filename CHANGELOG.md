@@ -1,3 +1,16 @@
+# v0.6.49 — Uma conexão de cada vez e diagnóstico Bluetooth
+
+- #189/#194:
+  - a barra superior mostra só a conexão escolhida, sem o rádio TX entre parênteses (ele vai para o título); o selo vira só "✕";
+  - `/api/state?source=` devolve contadores da conexão (`Database.stats(source_id)`, com nós por `node_sources` observados);
+  - as luzes TX/RX seguem a conexão escolhida.
+- #191:
+  - o "Informar PIN…" acompanha o aviso do rádio e mostra o resultado na própria linha;
+  - `AutoAdd` informa o adaptador Bluetooth (`ble_pairing.adapter_info()`: WinRT `BluetoothAdapter`, ou `bluetoothctl show` no Linux) quando algum rádio BLE falha;
+  - quando todos falham com `Unreachable`, a tela orienta o teste no cliente web oficial;
+  - `verify()` deixa de remover pareamentos que já existiam no sistema; só desfaz o pareamento que ele mesmo criou.
+- Testes: `tests/test_release_v0649.py`; `test_ui_v0647`/`v0648` atualizados (rota de `/api/state` com consulta, barra só com a conexão, progresso do PIN e diagnóstico).
+
 # v0.6.48 — Barra superior com a conexão vista e PIN no "Adicionar automaticamente"
 
 - #194: `updateRadioConnectionIndicator()` mostra a conexão escolhida em "Mostrar dados de" (nome · tipo, com o rádio TX entre parênteses) e `data-view="other"` com cor violeta. O selo vira o botão "✕ Todas as conexões", com `order:3`; antes ele ia para o início do cabeçalho flex, fora da vista.
