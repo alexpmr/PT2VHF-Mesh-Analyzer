@@ -1,3 +1,9 @@
+## v0.6.45 — Implementado nesta entrega
+
+- #185 etapa 1: conexão e recepção de rádios MeshCore Companion (USB, BLE, TCP), mensagens, tráfego e detecção automática.
+- Aceite físico pendente: rádio MeshCore Companion real por USB, Bluetooth (com PIN) e Wi-Fi.
+- Próximas etapas: (2) traceroute/caminhos dos repetidores na topologia, consultas remotas (status/telemetria/vizinhos de repetidores com login), alertas e relatório; (3) configuração do rádio MeshCore e presets do MeshCore nas ferramentas de planejamento.
+
 ## v0.6.43 — Implementado nesta entrega
 
 - #164: pareamento sem PIN e inclusão automática de rádios Bluetooth sem PIN definido. Aceite físico pendente no Windows (rádio sem PIN e rádio com PIN).

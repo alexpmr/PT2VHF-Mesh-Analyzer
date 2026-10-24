@@ -58,7 +58,7 @@ jobs:
         run: |
           npm install --prefix "$env:RUNNER_TEMP/mesh-ui-deps" playwright@1.58.2
           $env:NODE_PATH = "$env:RUNNER_TEMP/mesh-ui-deps/node_modules"
-          foreach ($name in 'test_ui_v0634','test_ui_v0636','test_ui_v0637','test_ui_v0638','test_ui_v0639','test_ui_v0640','test_ui_v0641') {
+          foreach ($name in 'test_ui_v0634','test_ui_v0636','test_ui_v0637','test_ui_v0638','test_ui_v0639','test_ui_v0640','test_ui_v0641','test_ui_v0645') {
             $out = node "scripts/$name.cjs" 2>&1 | Out-String
             $code = $LASTEXITCODE
             Write-Host $out

@@ -382,7 +382,7 @@ class SourceManager:
         sid=int(source_id)
         with self._lock:
             iface=self._interfaces.get(sid)
-        if iface is None:return 0
+        if iface is None or getattr(iface,"is_meshcore",False):return 0
         entries=getattr(iface,"nodesByNum",None)
         if not isinstance(entries,dict):return 0
         radio={};known=set()
@@ -472,6 +472,8 @@ class SourceManager:
             result.update(radio=active,status="sync_off");return result
         with self._lock:
             iface=self._interfaces.get(active)
+        if getattr(iface,"is_meshcore",False):
+            result.update(radio=active,status="meshcore");return result
         entries=getattr(iface,"nodesByNum",None) if iface else None
         if isinstance(entries,dict) and not any(number((n or {}).get("num",k))==num for k,n in entries.items() if isinstance(n,dict)):
             result.update(radio=active,status="unknown_node");return result
@@ -502,6 +504,8 @@ class SourceManager:
             status=self._states.get(sid,{}).get("status")
         if iface is None or status!="connected":
             raise RuntimeError("Rádio desconectado; nenhuma alteração foi enviada")
+        if getattr(iface,"is_meshcore",False):
+            raise ValueError("Favoritos no rádio MeshCore ainda não são suportados; o favorito fica salvo no app")
         local=getattr(iface,"localNode",None)
         method=getattr(local,"setFavorite" if is_favorite else "removeFavorite",None)
         if not callable(method):
@@ -720,7 +724,11 @@ class SourceManager:
                     if self._stop.is_set():break
                 else:
                     self._ensure_pubsub()
-                    if kind == "serial":
+                    if conf.get("protocol") == "meshcore":
+                        # #185: rádio MeshCore Companion, apresentado como interface comum.
+                        from .meshcore_driver import MeshCoreInterface
+                        iface=MeshCoreInterface(kind,conf,on_packet=self._on_packet,on_lost=self._lost,timeout=20)
+                    elif kind == "serial":
                         from meshtastic.serial_interface import SerialInterface
                         iface=SerialInterface(devPath=conf["port"],timeout=20)
                     elif kind == "tcp":
@@ -905,6 +913,8 @@ class SourceManager:
             interface = self._interfaces.get(source_id)
             if interface is None:
                 raise ValueError("Fonte não conectada")
+            if getattr(interface, "is_meshcore", False):
+                raise ValueError("A configuração de rádios MeshCore chega numa próxima versão (#185, etapa 3)")
             return read_device(getattr(interface, "localNode", None),
                                getattr(interface, "metadata", None))
 

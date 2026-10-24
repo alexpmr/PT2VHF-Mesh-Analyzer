@@ -323,9 +323,11 @@ class Database:
         if not isinstance(update, dict):
             raise ValueError("Configuração inválida")
         # node_num: Node ID lido do rádio ao cadastrar (#149/#151), evita duplicatas.
-        allowed = {"serial": {"port", "baudrate", "node_num", "favorite_sync"},
-                   "tcp": {"host", "port", "node_num", "favorite_sync"},
-                   "ble": {"address", "node_num", "favorite_sync"}, "mqtt": {"host", "port", "topic", "username", "password", "tls"}}[kind]
+        # protocol (#185): "meshtastic" (padrão) ou "meshcore" para rádios MeshCore Companion.
+        allowed = {"serial": {"port", "baudrate", "node_num", "favorite_sync", "protocol"},
+                   "tcp": {"host", "port", "node_num", "favorite_sync", "protocol"},
+                   "ble": {"address", "node_num", "favorite_sync", "protocol", "pin"},
+                   "mqtt": {"host", "port", "topic", "username", "password", "tls"}}[kind]
         config = {k: v for k, v in config.items() if k in allowed} if existing and existing["kind"] == kind else {}
         for key, value in update.items():
             if key not in allowed:
@@ -333,12 +335,22 @@ class Database:
             if key == "password" and value == "********":
                 continue
             config[key] = value
+        if kind != "mqtt":
+            protocol = str(config.get("protocol") or "meshtastic").lower().strip()
+            if protocol not in ("meshtastic", "meshcore"):
+                raise ValueError("Protocolo deve ser Meshtastic ou MeshCore")
+            config["protocol"] = protocol
+            if kind == "ble" and config.get("pin") not in (None, ""):
+                pin = str(config["pin"]).strip()
+                if not pin.isdigit() or not 4 <= len(pin) <= 8:
+                    raise ValueError("PIN Bluetooth: 4 a 8 dígitos")
+                config["pin"] = pin
         if kind == "serial" and not str(config.get("port") or "").strip():
             raise ValueError("Informe a porta COM/serial")
         if kind == "tcp":
             if not str(config.get("host") or "").strip():
                 raise ValueError("Informe o IP ou hostname")
-            port = int(config.get("port") or 4403)
+            port = int(config.get("port") or (5000 if config.get("protocol") == "meshcore" else 4403))
             if not 1 <= port <= 65535: raise ValueError("Porta inválida")
             config["port"] = port
         if kind == "ble" and not str(config.get("address") or "").strip():

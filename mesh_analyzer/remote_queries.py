@@ -34,6 +34,8 @@ class NodeQueries:
             return {"ready": False, "reason": "MQTT somente recepção"}
         if iface is None:
             return {"ready": False, "reason": "Rádio desconectado"}
+        if getattr(iface, "is_meshcore", False):
+            return {"ready": False, "reason": "Consultas remotas em rádios MeshCore chegam numa próxima versão"}
         if not callable(getattr(iface, "sendData", None)):
             return {"ready": False, "reason": "SDK sem API sendData"}
         return {"ready": True, "supported": ["nodeinfo", "position", "telemetry"] +

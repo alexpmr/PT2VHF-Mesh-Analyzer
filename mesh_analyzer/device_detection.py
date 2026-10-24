@@ -24,13 +24,15 @@ LOG = logging.getLogger(__name__)
 
 # Serviço GATT Meshtastic: identifica o rádio sem depender do nome anunciado.
 MESHTASTIC_BLE_SERVICE = "6ba1b218-15a8-461f-9fa8-5dcae273eafd"
+# #185: rádios MeshCore Companion anunciam o nome "MeshCore-…" e o serviço UART da Nordic.
+MESHCORE_BLE_SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
 # Sinal mínimo para o aviso em segundo plano: rádios de vizinhos ao alcance
 # do Bluetooth não devem gerar avisos; o rádio do usuário fica perto do PC.
 BLE_NEAR_RSSI = -70
 PROBE_TIMEOUT_S = 20
 # #156: prazo total da verificação, incluindo pareamento BLE; ao estourar, a
 # tentativa é abandonada com segurança em vez de prender a interface.
-PROBE_DEADLINE_S = {"serial": 30, "tcp": 30, "ble": 45}
+PROBE_DEADLINE_S = {"serial": 40, "tcp": 30, "ble": 45}
 TIMEOUT_HINT = {
     "serial": "O rádio não respondeu a tempo pela USB. Confira se outro programa está usando a porta.",
     "tcp": "O rádio não respondeu a tempo pelo Wi-Fi. Confira se ele está ligado e na mesma rede.",
@@ -73,14 +75,17 @@ def scan_ble(timeout=5.0, near_only=False):
         for device, adv in found.values():
             uuids = {str(u).lower() for u in (getattr(adv, "service_uuids", None) or [])}
             name = str(getattr(adv, "local_name", None) or device.name or "")
-            if MESHTASTIC_BLE_SERVICE not in uuids and "meshtastic" not in name.casefold():
+            meshcore = name.casefold().startswith("meshcore")
+            if MESHTASTIC_BLE_SERVICE not in uuids and "meshtastic" not in name.casefold() and not meshcore:
                 continue
             rssi = getattr(adv, "rssi", None)
             if near_only and (rssi is None or rssi < BLE_NEAR_RSSI):
                 continue
+            config = {"address": str(device.address)}
+            if meshcore:
+                config["protocol"] = "meshcore"
             items.append({"kind": "ble", "address": str(device.address),
-                          "name": (name or "Bluetooth LE")[:90], "rssi": rssi,
-                          "config": {"address": str(device.address)}})
+                          "name": (name or "Bluetooth LE")[:90], "rssi": rssi, "config": config})
         return items
     return asyncio.run(run())
 
@@ -141,8 +146,25 @@ def open_interface(candidate, timeout=PROBE_TIMEOUT_S):
     raise ValueError("Tipo de conexão desconhecido")
 
 
-def probe(candidate, opener=open_interface):
-    """Handshake Meshtastic: confirma o rádio e lê nome e Node ID, sem TX RF."""
+def probe(candidate, opener=open_interface, meshcore_prober=None):
+    """Confirma o rádio (Meshtastic ou MeshCore) e lê nome e Node ID, sem TX RF.
+
+    #185: candidatos marcados como MeshCore usam o protocolo Companion; na USB, sem
+    saber o firmware, tenta MeshCore primeiro (responde em segundos) e depois Meshtastic.
+    """
+    protocol = candidate.get("config", {}).get("protocol")
+    if protocol == "meshcore" or (candidate["kind"] == "serial" and protocol is None):
+        if meshcore_prober is None:
+            from .meshcore_driver import probe_meshcore as meshcore_prober
+        found = meshcore_prober(candidate)
+        if found.get("ok") or protocol == "meshcore":
+            if found.get("ok"):
+                candidate["config"]["protocol"] = "meshcore"
+            return found
+    return _probe_meshtastic(candidate, opener)
+
+
+def _probe_meshtastic(candidate, opener):
     iface = None
     try:
         iface = opener(candidate)
@@ -238,9 +260,12 @@ class Registry:
             raise LookupError("Rádio já configurado")
         config = dict(candidate["config"])
         config["node_num"] = info["node_num"]
+        if info.get("protocol"):
+            config["protocol"] = info["protocol"]
         kinds = {"serial": "USB", "tcp": "Wi-Fi", "ble": "BLE"}
         name = info.get("long_name") or info.get("short_name") or candidate["name"]
-        name = (name + " " + kinds[candidate["kind"]])[:72]
+        label = ("MeshCore " if config.get("protocol") == "meshcore" else "") + kinds[candidate["kind"]]
+        name = (name + " " + label)[:72]
         source = self.db.upsert_source({"name": name, "kind": candidate["kind"],
                                         "config": config, "enabled": True})
         self.sources.connect(source["id"])
