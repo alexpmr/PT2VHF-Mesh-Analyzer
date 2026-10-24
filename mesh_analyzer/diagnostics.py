@@ -109,12 +109,19 @@ def _versions():
         out["app"] = __version__
     except Exception:
         pass
-    from importlib import metadata
-    for package in ("meshtastic", "bleak", "meshcore", "winrt-runtime", "pywebview", "paho-mqtt", "pyserial"):
+    from importlib import import_module, metadata
+    modules = {"meshtastic": "meshtastic", "bleak": "bleak", "meshcore": "meshcore", "winrt-runtime": "winrt",
+               "pywebview": "webview", "paho-mqtt": "paho.mqtt", "pyserial": "serial"}
+    for package, module in modules.items():
         try:
             out[package] = metadata.version(package)
         except Exception:
-            out[package] = None
+            # No app empacotado (PyInstaller) os metadados não vão junto: usa o módulo.
+            try:
+                mod = import_module(module)
+                out[package] = str(getattr(mod, "__version__", None) or getattr(mod, "VERSION", None) or "presente")
+            except Exception:
+                out[package] = None
     return out
 
 

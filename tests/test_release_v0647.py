@@ -89,7 +89,11 @@ class Link(unittest.TestCase):
 
     def test_errors_in_portuguese_with_stage(self):
         _, error, *_ = self.run_connect(["timeout", "unreachable"])
-        self.assertEqual(str(error), "Bluetooth: falhou ao abrir a conexão — o Windows não alcançou o rádio (Unreachable); 2 tentativas")
+        # v0.6.52: falha em milissegundos ganha a explicação de recusa imediata do Windows.
+        self.assertEqual(str(error), "Bluetooth: falhou ao abrir a conexão — o Windows não alcançou o rádio (Unreachable); 2 tentativas"
+                                     " — recusado pelo Windows em %d ms, sem chegar a falar com o rádio" % max(error.elapsed))
+        slow = ble_link.LinkError([("connect", RuntimeError("Unreachable"))], [7000])
+        self.assertNotIn("recusado pelo Windows", str(slow))
         _, error, *_ = self.run_connect(["timeout"], attempts=1)
         self.assertEqual(str(error), "Bluetooth: falhou ao abrir a conexão — tempo esgotado (20 s)")
         _, error, *_ = self.run_connect([], found=False, attempts=1)

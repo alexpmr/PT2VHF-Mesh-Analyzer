@@ -380,10 +380,13 @@ class DeviceWatcher:
             if ble and pair and self._pair is not None:
                 paired = bool(self._pairing.is_paired(candidate["address"]))
                 if not paired:
+                    started = time.monotonic()
                     try:
                         result = self._pair(candidate["address"], None)
                     except Exception as exc:
                         result = {"ok": False, "status": "error", "error": str(exc)[:160]}
+                    LOG.info("Pareamento BLE sem PIN de %s: %s em %d ms", candidate["address"],
+                             result.get("status"), int((time.monotonic() - started) * 1000))
                     if result.get("status") == "pin_required":
                         return {"ok": False, "needs_pin": True, "error": result.get("error") or "O rádio pede PIN"}
                     if cancel is not None and cancel.is_set():
