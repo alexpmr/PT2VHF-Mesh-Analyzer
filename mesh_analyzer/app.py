@@ -334,6 +334,21 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     from .backup import last_restore, pending_restore
                     self._json({"success":True,"pending":pending_restore(profile_dir()),
                                 "last":last_restore(profile_dir()),"container":in_container()})
+                elif path == "/api/diagnostics/status":
+                    from .diagnostics import RING
+                    self._json({"success":True,**RING.status()})
+                elif path == "/api/diagnostics/download":
+                    from .diagnostics import diagnostic_file
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    file=diagnostic_file(profile_dir(),query.get("file",[""])[0])
+                    body=file.read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type","application/zip")
+                    self.send_header("Content-Disposition","attachment; filename="+file.name)
+                    self.send_header("X-Content-Type-Options","nosniff")
+                    self.send_header("Cache-Control","no-store")
+                    self.send_header("Content-Length",str(len(body)))
+                    self.end_headers();self.wfile.write(body)
                 elif path == "/api/backup/download":
                     from .backup import backup_file
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
@@ -501,6 +516,16 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json({"success":True,"reply":msgauto.save_reply(payload)})
                 elif path == "/api/msgauto/reply/delete":
                     self._json(msgauto.delete_reply(payload["id"]))
+                elif path == "/api/diagnostics/build":
+                    # #198: diagnóstico para suporte, gerado e guardado só neste computador.
+                    from . import diagnostics
+                    body=diagnostics.build(db,sources,watcher,autoadd,automation,msgauto,alerts,
+                                           scan=payload.get("scan") is not False)
+                    saved=diagnostics.save(profile_dir(),body)
+                    self._json({"success":True,"file":saved.name,"bytes":len(body),"path":str(saved)})
+                elif path == "/api/diagnostics/verbose":
+                    from .diagnostics import RING
+                    self._json({"success":True,**RING.verbose(int(payload.get("minutes") or 10))})
                 elif path == "/api/survey/link":
                     self._json({"success":True,"data":survey_link(payload)})
                 elif path == "/api/meshcore/action":
@@ -654,6 +679,8 @@ def run(host="127.0.0.1", port=8789, launch_browser=None, database=None,
     alerts=AlertCenter(db,drivers)
     from .msgauto import MessageAutomation
     msgauto=MessageAutomation(db,drivers)
+    from .diagnostics import RING
+    RING.install()  # #198: últimas linhas de log para o diagnóstico
     from .meshcore_data import MeshCoreAutomation
     drivers.meshcore_auto=MeshCoreAutomation(db,drivers)
     server=None

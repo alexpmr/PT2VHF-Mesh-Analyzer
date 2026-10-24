@@ -1,3 +1,8 @@
+## v0.6.51 — Implementado nesta entrega
+
+- #198: diagnóstico para suporte (.zip) em Configurações → Diagnóstico, com log detalhado de Bluetooth.
+- #191: aguardando diagnóstico do PC do relato (adaptador Realtek Bluetooth 4.2 USB; Windows recusa até o pareamento).
+
 ## v0.6.50 — Implementado nesta entrega
 
 - #191: parear antes de conectar (de novo), sem remover pareamentos; nome do rádio no resultado; modelo do adaptador Bluetooth.

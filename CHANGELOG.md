@@ -1,3 +1,14 @@
+# v0.6.51 — Diagnóstico para suporte (.zip)
+
+- #198: novo `diagnostics.py`.
+  - `build()` monta o .zip em memória com `resumo.txt`, `conexoes.json`, `bluetooth.json` (adaptador, varredura de 5 s com `is_paired`, "Adicionar automaticamente", avisos), `usb.json`, `configuracao.json`, `banco.json`, `eventos.txt` (7 dias) e `log.txt`.
+  - `clean()` mascara campos de segredo (senha, PIN, PSK, chaves, tokens, credenciais) em qualquer nível. Mensagens e posições não entram.
+  - `RingLog` guarda as últimas 8000 linhas de log em memória; `verbose(min)` põe bleak/meshtastic/mesh_analyzer/meshcore em DEBUG por alguns minutos.
+  - Os arquivos ficam em `diagnostics/` no perfil (mantém os 5 últimos).
+- API: `POST /api/diagnostics/build`, `GET /api/diagnostics/download`, `POST /api/diagnostics/verbose`, `GET /api/diagnostics/status`. A janela desktop ganha `save_diagnostic()`, com o diálogo nativo de salvar, como o backup.
+- UI: aba Configurações → Diagnóstico (última) e atalho no resultado do "Adicionar automaticamente" quando o Bluetooth falha.
+- Testes: `tests/test_release_v0651.py`, `scripts/test_ui_v0651.cjs`; a lista de métodos expostos pela janela inclui `save_diagnostic`.
+
 # v0.6.50 — Bluetooth: parear antes de conectar, nome do rádio e modelo do adaptador
 
 - #191: `DeviceWatcher.verify()` volta a parear sem PIN antes de conectar quando o rádio não está pareado (`is_paired()`), e nunca remove nem desfaz pareamento. Evidência de campo: na v0.6.46, 5 de 7 rádios parearam e falharam só por tempo (`TimeoutError`, já tratado pelo `ble_link` da v0.6.47); da v0.6.47 em diante, conectar antes fazia o Windows recusar o pareamento (`FAILED`) e devolver `Unreachable`.
