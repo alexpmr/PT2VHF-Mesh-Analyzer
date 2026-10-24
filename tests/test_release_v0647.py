@@ -68,7 +68,8 @@ class Link(unittest.TestCase):
         scanner = Scanner(found)
         with patch.object(mble, "BLEClient", fake_client_class(list(behaviours), created)):
             try:
-                client = ble_link.connect_client(ADDR, lambda c: None, attempts=attempts, sleep=sleeps.append, bleak=scanner)
+                client = ble_link.connect_client(ADDR, lambda c: None, attempts=attempts, sleep=sleeps.append, bleak=scanner,
+                                                 prewarm=False)  # sessão do Windows: testada na v0.6.53
                 error = None
             except ble_link.LinkError as exc:
                 client, error = None, exc

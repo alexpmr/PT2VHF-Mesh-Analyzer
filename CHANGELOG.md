@@ -1,3 +1,12 @@
+# v0.6.53 — Bluetooth no Windows: sessão ativa antes de ler os serviços
+
+- #191: o usuário conseguiu conectar pelo client.meshtastic.org (Web Bluetooth) no mesmo PC em que o app recebia `Unreachable` em ~12 ms. O Chromium abre o `GattSession` com `MaintainConnection` e espera `SessionStatus.Active` antes de `GetGattServicesAsync`; o bleak pede os serviços logo de saída.
+  - `ble_link.windows_prewarm()` abre o `BluetoothLEDevice` + `GattSession` (`maintain_connection=True`) e espera ficar ativa (até 20 s) antes do `BleakClient.connect()`.
+  - A sessão é mantida durante a conexão do bleak e liberada depois, no sucesso ou na falha.
+  - Se não ficar ativa, a mensagem diz isso.
+  - Só no Windows; erros nessa etapa não impedem a tentativa normal.
+- Testes: `tests/test_release_v0653.py`.
+
 # v0.6.52 — Correções do primeiro diagnóstico real
 
 - #191: o primeiro diagnóstico (Windows 11 build 26300, Realtek Bluetooth 4.2 USB) mostra o pareamento sem PIN falhando em ~130 ms e a sessão GATT com `Unreachable` ~12 ms depois de "getting services", em todos os rádios: o Windows recusa sem transmitir.
