@@ -34,6 +34,8 @@ class NodeDeletion:
             state = self.manager._states.get(source_id, {})
             if iface is None or state.get('status') != 'connected':
                 raise ValueError('Rádio desconectado; banco preservado')
+            if getattr(iface, 'is_meshcore', False):
+                raise ValueError('Apagar nós no rádio MeshCore ainda não é suportado; use o app do MeshCore')
             if any(self.own_number(v) == target for v in self.manager._interfaces.values()):
                 raise ValueError('Não é permitido apagar o próprio rádio')
         own = self.own_number(iface)

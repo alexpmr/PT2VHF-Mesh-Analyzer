@@ -1,2 +1,2 @@
-"""PT2VHF Mesh Analyzer, v0.6.44."""
-__version__ = "0.6.44"
+"""PT2VHF Mesh Analyzer, v0.6.45."""
+__version__ = "0.6.45"

@@ -1,3 +1,13 @@
+# v0.6.45 — MeshCore, etapa 1: conexão e recepção
+
+- #185: novo `mesh_analyzer/meshcore_driver.py` com a biblioteca oficial `meshcore` (MIT). `MeshCoreInterface` roda o cliente assíncrono numa thread própria e se apresenta ao `SourceManager` como interface comum (myInfo, localNode, nodesByNum, sendText, close), convertendo eventos em pacotes do formato já tratado pelo `PacketIngestor`: SELF_INFO e contatos → nós (nome, papel por tipo de anúncio: Companion/Repetidor/Room server/Sensor, posição); NEW_CONTACT/ADVERTISEMENT → NODEINFO e POSITION; CONTACT_MSG_RECV e CHANNEL_MSG_RECV → mensagens (remetente de canal resolvido pelo nome ou nó derivado do nome); RX_LOG_DATA → tráfego `MESHCORE_<tipo>` com SNR/RSSI e saltos (enlace RF direto quando ouvido sem saltos); envio por chave pública (privado) ou canal, ACK do MeshCore → "entregue". Número do nó = 4 primeiros bytes da chave pública.
+- Conexões: campo `protocol` (meshtastic|meshcore) em USB, TCP e BLE, PIN opcional no BLE, porta TCP padrão 5000 para MeshCore; selo "MeshCore" no cartão da conexão.
+- Detecção automática: na USB tenta MeshCore e depois Meshtastic (prazo de verificação 40 s); no Bluetooth reconhece rádios "MeshCore-…"; cadastro com o protocolo e o rótulo "MeshCore".
+- Consultas remotas, favoritos no rádio, apagar nós e configuração recusam com mensagem clara em rádios MeshCore (etapas 2 e 3).
+- Nova dependência: `meshcore>=2.3,<3`.
+
+Validação: testes Python com um rádio MeshCore simulado sobre os tipos de evento reais da biblioteca (nós, papéis, posições, anúncios, mensagens diretas e de canal, tráfego e enlace direto, envio e ACK, validação da configuração, detecção na USB e no Bluetooth) e regressão Chromium v0.6.34–v0.6.45; biblioteca real contra porta inexistente e servidor TCP mudo (falha em ~2 s com mensagem clara). Não testado aqui: rádio MeshCore físico.
+
 # v0.6.44 — Ajuste na análise de enlace
 
 - #179: com a linha de visada bloqueada, "Fresnel livre" mostrava porcentagens negativas (ex.: −234%). Passa a mostrar "0% (sem visada)" e quantos metros o terreno fica acima da linha, na tela e no PDF.
