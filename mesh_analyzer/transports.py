@@ -450,6 +450,11 @@ class SourceManager:
         favorites_on_radio=sum(1 for v in radio.values() if v)
         limited=False
         sent=0
+        sent_once=getattr(iface,"_pt2vhf_favorites_sent",None)
+        if sent_once is None:
+            sent_once=set()
+            try:iface._pt2vhf_favorites_sent=sent_once
+            except Exception:pass
         recent=self.db._rows("SELECT node_num,desired,requested_ms FROM favorite_requests WHERE source_id=?",(sid,))
         recent={(int(r["node_num"]),bool(r["desired"])):int(r["requested_ms"]) for r in recent}
         for num,want in todo:
@@ -457,6 +462,9 @@ class SourceManager:
             if want and favorites_on_radio>=FAVORITE_SAFE_LIMIT:
                 limited=True;continue
             if now_ms()-recent.get((num,want),0)<60000:continue  # aguardando o NodeDB confirmar
+            # A cópia do NodeDB na biblioteca só se atualiza ao reconectar: cada mudança vai uma
+            # vez por conexão (antes era reenviada a cada minuto, sem fim — diagnóstico #198).
+            if (num,want) in sent_once:continue
             method=getattr(local,"setFavorite" if want else "removeFavorite",None)
             if not callable(method):break
             try:
@@ -465,6 +473,7 @@ class SourceManager:
                 self.db.log("Favorito não enviado ao rádio: "+type(exc).__name__,"warning",sid)
                 break
             self.db.request_node_favorite(sid,num,want)
+            sent_once.add((num,want))
             favorites_on_radio+=1 if want else -1
             sent+=1
             if sent<max_commands and self._stop.wait(FAVORITE_COMMAND_GAP_S):break

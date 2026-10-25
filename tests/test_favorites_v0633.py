@@ -91,3 +91,32 @@ class FavoriteRadioTests(unittest.TestCase):
             self.assertIn(marker,HTML)
         self.assertIn("ev.stopPropagation()",HTML)
         self.assertIn("aguardando confirmação do rádio",HTML)
+
+
+class FavoriteResendLoop(FavoriteRadioTests):
+    """v0.6.56: a mesma mudança vai uma vez por conexão (antes repetia a cada minuto)."""
+
+    def test_unconfirmed_removal_is_not_resent_on_the_same_connection(self):
+        import mesh_analyzer.transports as tr
+        self.iface.nodesByNum[42]["isFavorite"]=True
+        self.sources.sync_favorites_from_radio(1)
+        self.db.set_app_favorite(42,False,"app")
+        clock=[tr.now_ms()]
+        original=tr.now_ms
+        tr.now_ms=lambda:clock[0]
+        try:
+            for minute in range(5):
+                clock[0]+=61000
+                self.sources.sync_favorites_from_radio(1)   # NodeDB da biblioteca segue dizendo favorito
+        finally:
+            tr.now_ms=original
+        self.assertEqual(self.local.calls.count(("remove",42)),1)
+        # Nova conexão (nova interface): tenta de novo uma vez.
+        self.iface=SimpleNamespace(localNode=self.local,nodesByNum={42:{"num":42,"isFavorite":True}})
+        self.sources._interfaces[1]=self.iface
+        tr.now_ms=lambda:clock[0]+61000
+        try:
+            self.sources.sync_favorites_from_radio(1)
+        finally:
+            tr.now_ms=original
+        self.assertEqual(self.local.calls.count(("remove",42)),2)

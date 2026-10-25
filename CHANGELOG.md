@@ -1,3 +1,8 @@
+# v0.6.56 — Favoritos sem reenvio contínuo
+
+- `_push_favorites()`: a cópia do NodeDB na biblioteca Meshtastic não muda com o comando admin; com o intervalo de 60 s, o app reenviava `removeFavorite`/`setFavorite` a cada minuto para os mesmos nós (visto no diagnóstico #198: ~17 vezes cada um de 10 nós em 3 minutos). Agora cada (nó, estado) vai uma vez por conexão (conjunto guardado na interface) e é tentado de novo só ao reconectar.
+- Testes: `FavoriteResendLoop` em `tests/test_favorites_v0633.py`.
+
 # v0.6.55 — Apelido para nós
 
 - #206: o "Nome amigável local" (`friendly_name`, só no banco do app) passa a se chamar **Apelido**.
