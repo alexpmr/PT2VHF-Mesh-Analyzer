@@ -1,3 +1,12 @@
+# v0.6.55 — Apelido para nós
+
+- #206: o "Nome amigável local" (`friendly_name`, só no banco do app) passa a se chamar **Apelido**.
+  - `editNickname()` é compartilhado pelo menu de contexto ("Dar/Editar apelido") e pelo botão "Apelido…" do painel do nó.
+  - Nova coluna "Apelido" na lista de nós, adicionada uma vez também para quem já tinha colunas salvas.
+  - O título do painel mostra "Apelido (nome real)". Textos em EN/ES.
+- Teste de UI da v0.6.37: espera o texto "Trocando para…" em vez de dormir 50 ms (falhou no runner do Windows da main na v0.6.54).
+- Testes: `scripts/test_ui_v0655.cjs`.
+
 # v0.6.54 — Cores por tipo de conexão
 
 - A barra do rádio ganha `data-kind` (serial, ble, tcp, mqtt) com cores próprias: USB verde, Bluetooth azul, Wi-Fi laranja, MQTT violeta. Há variantes do tema claro e cores nos pontos do menu do rádio e de "Mostrar dados de". A cor violeta passa a valer só para MQTT (antes era para qualquer conexão vista que não fosse o rádio ativo).
