@@ -1,3 +1,8 @@
+# v0.6.54 — Cores por tipo de conexão
+
+- A barra do rádio ganha `data-kind` (serial, ble, tcp, mqtt) com cores próprias: USB verde, Bluetooth azul, Wi-Fi laranja, MQTT violeta. Há variantes do tema claro e cores nos pontos do menu do rádio e de "Mostrar dados de". A cor violeta passa a valer só para MQTT (antes era para qualquer conexão vista que não fosse o rádio ativo).
+- Testes: `scripts/test_ui_v0654.cjs`, que confere as cores calculadas no Chromium.
+
 # v0.6.53 — Bluetooth no Windows: sessão ativa antes de ler os serviços
 
 - #191: o usuário conseguiu conectar pelo client.meshtastic.org (Web Bluetooth) no mesmo PC em que o app recebia `Unreachable` em ~12 ms. O Chromium abre o `GattSession` com `MaintainConnection` e espera `SessionStatus.Active` antes de `GetGattServicesAsync`; o bleak pede os serviços logo de saída.
