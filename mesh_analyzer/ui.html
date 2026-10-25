@@ -45,7 +45,16 @@ button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}button:hover
  border:1px solid #8a4e58;background:#44212c;color:#ffd1d8;font-size:12px;font-weight:650;
  white-space:nowrap;max-width:min(260px,60vw);cursor:default}
 #radioConnectionStatus[data-status="connected"]{border-color:#238d58;background:#163b2d;color:#aff2cb}
-#radioConnectionStatus[data-view="other"]{border-color:#a06cff!important;background:#2a2140!important;color:#e9ddff!important}
+#radioConnectionStatus[data-status="connected"][data-kind="ble"]{border-color:#3b82f6;background:#152a4a;color:#c3dbff}
+#radioConnectionStatus[data-status="connected"][data-kind="ble"] .radioDot{background:#60a5fa!important;box-shadow:0 0 0 2px #60a5fa44!important}
+#radioConnectionStatus[data-status="connected"][data-kind="tcp"]{border-color:#e08a2e;background:#3b2712;color:#ffd9ab}
+#radioConnectionStatus[data-status="connected"][data-kind="tcp"] .radioDot{background:#f59e0b!important;box-shadow:0 0 0 2px #f59e0b44!important}
+#radioConnectionStatus[data-kind="mqtt"]{border-color:#a06cff!important;background:#2a2140!important;color:#e9ddff!important}
+#radioConnectionStatus[data-status="connected"][data-kind="mqtt"] .radioDot{background:#b48cff!important;box-shadow:0 0 0 2px #b48cff44!important}
+.radioMenu [data-kind="serial"].active .radioItemDot,.radioMenu [data-kind="serial"][aria-checked="true"] .radioItemDot{background:#51d887;border-color:#51d887}
+.radioMenu [data-kind="ble"].active .radioItemDot,.radioMenu [data-kind="ble"][aria-checked="true"] .radioItemDot{background:#60a5fa;border-color:#60a5fa}
+.radioMenu [data-kind="tcp"].active .radioItemDot,.radioMenu [data-kind="tcp"][aria-checked="true"] .radioItemDot{background:#f59e0b;border-color:#f59e0b}
+.radioMenu [data-kind="mqtt"].active .radioItemDot,.radioMenu [data-kind="mqtt"][aria-checked="true"] .radioItemDot{background:#b48cff;border-color:#b48cff}
 #radioConnectionStatus[data-status="checking"]{border-color:#637787;background:#243340;color:#d9e2ea}
 #radioConnectionStatus .radioDot{height:9px;width:9px;border-radius:50%;background:#f26f7d;
  box-shadow:0 0 0 2px #f26f7d33;flex-shrink:0}
@@ -298,6 +307,9 @@ html[data-theme="light"] .brand-tagline{color:#226c3e}
 html[data-theme="light"] .brand-vhf{color:#107c38}
 html[data-theme="light"] .sourceCard p{color:var(--muted)}
 html[data-theme="light"] #radioConnectionStatus[data-status="connected"]{background:#d9f2e1!important;color:#086535!important}
+html[data-theme="light"] #radioConnectionStatus[data-status="connected"][data-kind="ble"]{background:#dbe8ff!important;color:#123f8c!important;border-color:#3b82f6!important}
+html[data-theme="light"] #radioConnectionStatus[data-status="connected"][data-kind="tcp"]{background:#ffe9cf!important;color:#7a3e00!important;border-color:#e08a2e!important}
+html[data-theme="light"] #radioConnectionStatus[data-kind="mqtt"]{background:#ece2ff!important;color:#4a2590!important;border-color:#a06cff!important}
 .mesh-role-marker{background:transparent!important;border:0!important;line-height:0}
 .mesh-role-marker svg{display:block;filter:drop-shadow(0 2px 3px #0008)}
 .nodeMeshcore{margin:12px 0;padding:10px;border:1px solid #a06cff66;border-radius:8px}.nodeMeshcore .actions{flex-wrap:wrap}
@@ -388,7 +400,7 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.53</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.54</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
 <button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
@@ -635,7 +647,7 @@ try {
 <div class="field"><label for="alertMailTo">Enviar para</label><input id="alertMailTo"></div>
 <div class="actions span2"><button type="submit" class="primary">Salvar alertas</button><button type="button" id="alertTestTg">Testar Telegram</button><button type="button" id="alertTestMail">Testar e-mail</button><span id="alertFormStatus" class="muted" role="status"></span></div>
 </form><p class="muted">Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.</p></div></section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.53</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><section class="settingsPanel" id="settingsDiagnostics"><div class="card"><h3>Diagnóstico para suporte</h3>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.54</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><section class="settingsPanel" id="settingsDiagnostics"><div class="card"><h3>Diagnóstico para suporte</h3>
 <p class="muted">Gera um arquivo .zip para enviar ao suporte quando algo não funciona. Ele é gerado na hora, fica só neste computador e você decide para quem mandar.</p>
 <p><b>O que vai no arquivo:</b> versões do aplicativo, do sistema e das bibliotecas; conexões cadastradas e o estado de cada uma; Bluetooth (modelo do adaptador, rádios vistos com sinal, pareamento no sistema e as últimas tentativas); portas USB; eventos dos últimos 7 dias e o log desta execução; configurações; números do banco de dados.</p>
 <p><b>O que não vai:</b> texto de mensagens, posições dos nós, senhas, PIN, chaves de canal e credenciais MQTT.</p>
@@ -658,7 +670,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.53.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.54.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Nome amigável local">Renomear</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -3752,6 +3764,9 @@ function updateRadioConnectionIndicator(){
   pill.dataset.status=live?'connected':'disconnected';
   pill.dataset.view=seen.kind==='mqtt'||!(yes&&String(seen.id)===String(connected[0].id))?'other':'radio';
  }else delete pill.dataset.view;
+ // Cor por tipo de conexão: USB verde, Bluetooth azul, Wi-Fi laranja, MQTT violeta.
+ const shown=seen||(yes?connected[0]:null);
+ if(shown)pill.dataset.kind=shown.kind;else delete pill.dataset.kind;
  const lines=sources.length?sources.map(s=>{
   const c=state.connections?.[String(s.id)]||{};
   const status=!s.enabled?'Desativado':c.status==='connected'?'Conectado':
@@ -3823,9 +3838,9 @@ function setViewSource(id,reload=true){
 function viewMenuHtml(){
  const conns=(state.sources||[]).filter(s=>s.enabled&&state.connections?.[String(s.id)]?.status==='connected');
  if(!conns.length&&!viewSource)return '';
- const item=(id,label,kind)=>{const on=String(id)===String(viewSource);
-  return '<button type="button" role="menuitemradio" aria-checked="'+on+'" class="'+(on?'active':'')+'" data-view-source="'+id+'"><span class="radioItemDot" aria-hidden="true"></span>'+esc(label)+(kind?'<small>'+esc(kind)+'</small>':'')+'</button>';};
- return '<hr><h4>Mostrar dados de</h4>'+item('','Todas as conexões','')+conns.map(s=>item(s.id,s.name,viewKindLabel(s))).join('');
+ const item=(id,label,kind,raw)=>{const on=String(id)===String(viewSource);
+  return '<button type="button" role="menuitemradio" aria-checked="'+on+'" class="'+(on?'active':'')+'" data-view-source="'+id+'"'+(raw?' data-kind="'+esc(raw)+'"':'')+'><span class="radioItemDot" aria-hidden="true"></span>'+esc(label)+(kind?'<small>'+esc(kind)+'</small>':'')+'</button>';};
+ return '<hr><h4>Mostrar dados de</h4>'+item('','Todas as conexões','')+conns.map(s=>item(s.id,s.name,viewKindLabel(s),s.kind)).join('');
 }
 let radioMenuOpen=false,radioSwitchPoll=null;
 function radioKindLabel(kind){return {serial:'USB',tcp:'Wi-Fi',ble:'Bluetooth'}[kind]||kind;}
@@ -3836,7 +3851,7 @@ function placeRadioMenu(){
 }
 function renderRadioMenu(list,loading){
  const menu=$('radioMenu');
- const items=list.map(r=>'<button type="button" role="menuitemradio" aria-checked="'+(r.active?'true':'false')+'" class="'+(r.active?'active':'')+'" data-radio="'+r.id+'"'+(r.active?' disabled':'')+'>'+
+ const items=list.map(r=>'<button type="button" role="menuitemradio" aria-checked="'+(r.active?'true':'false')+'" class="'+(r.active?'active':'')+'" data-radio="'+r.id+'" data-kind="'+esc(r.kind)+'"'+(r.active?' disabled':'')+'>'+
    '<span class="radioItemDot" aria-hidden="true"></span>'+esc(r.name)+'<small>'+esc(radioKindLabel(r.kind))+(r.active?' · ativo':' · usar este')+'</small></button>').join('');
  const others=list.filter(r=>!r.active).length;
  menu.innerHTML='<h4>Rádio ativo</h4>'+(items||'<p class="muted">Nenhum rádio conectado.</p>')+
