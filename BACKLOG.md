@@ -1,3 +1,7 @@
+## v0.6.57 — Implementado nesta entrega
+
+- #210: contador de downloads por tipo de build nas tabelas do README.
+
 ## v0.6.51 — Implementado nesta entrega
 
 - #198: diagnóstico para suporte (.zip) em Configurações → Diagnóstico, com log detalhado de Bluetooth.
