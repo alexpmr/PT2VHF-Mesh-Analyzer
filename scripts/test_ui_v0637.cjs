@@ -52,7 +52,9 @@ const path=require('path');
    out.focusInMenu=$('radioMenu').contains(document.activeElement);
    document.body.click();out.closedOutside=$('radioMenu').hidden;
    $('radioConnectionStatus').click();await sleep(150);
-   $('radioMenu').querySelector('[data-radio="2"]').click();await sleep(50);
+   $('radioMenu').querySelector('[data-radio="2"]').click();
+   // O texto "Trocando para…" só aparece depois da resposta do servidor (lenta no runner do Windows).
+   for(let i=0;i<60&&!$('radioConnectionText').textContent.includes('Trocando');i++)await sleep(50);
    out.switching=$('radioConnectionText').textContent;
    out.closedAfterChoice=$('radioMenu').hidden;
    // #149 aviso
