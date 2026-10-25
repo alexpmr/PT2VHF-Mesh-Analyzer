@@ -13,3 +13,4 @@ dist/
 *.egg-info/
 branding/mesh-analyzer.ico
 branding/mesh-analyzer.png
+.badges/

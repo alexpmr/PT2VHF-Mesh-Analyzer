@@ -347,6 +347,12 @@ jobs:
           else
             gh release create "$tag" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "PT2VHF Mesh Analyzer v$version" --notes-file CHANGELOG.md
           fi
+      - name: Guardar contador de downloads antes de apagar releases antigas (#210)
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash scripts/download_stats.sh
+
       - name: Manter somente a release atual e seus downloads
         env:
           GH_TOKEN: ${{ github.token }}

@@ -1,3 +1,10 @@
+# v0.6.57 — Contador de downloads por tipo de build
+
+- #210: `scripts/download_stats.py` soma o `download_count` dos arquivos de todas as releases por tipo de build e grava selos (endpoint do shields.io) em `downloads/*.json` no ramo `badges`. Como `retain_latest_release.py` apaga as releases antigas, o histórico fica em `downloads/state.json` (maior contagem vista por versão/arquivo), então o total nunca diminui.
+- Workflow `download-stats.yml` (a cada hora e manual) e um passo no `publish-release` que atualiza o contador antes de apagar as releases antigas (`scripts/download_stats.sh`).
+- README: coluna "Downloads" nas tabelas e selos de total, Windows, macOS e Linux.
+- Testes: `tests/test_release_v0657.py`.
+
 # v0.6.56 — Favoritos sem reenvio contínuo
 
 - `_push_favorites()`: a cópia do NodeDB na biblioteca Meshtastic não muda com o comando admin; com o intervalo de 60 s, o app reenviava `removeFavorite`/`setFavorite` a cada minuto para os mesmos nós (visto no diagnóstico #198: ~17 vezes cada um de 10 nós em 3 minutos). Agora cada (nó, estado) vai uma vez por conexão (conjunto guardado na interface) e é tentado de novo só ao reconectar.
