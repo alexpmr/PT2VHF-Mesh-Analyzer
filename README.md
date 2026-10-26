@@ -1,36 +1,16 @@
-# PT2VHF Mesh Analyzer — v0.6.57
+# PT2VHF Mesh Analyzer — v0.6.58
 
-**Projeto independente de MeshMonitor, por Alex, PT2VHF.** Aplicativo para **Windows 10 versão 1809+ / Windows 11 (x64)**, **Linux (x64)** e **macOS (Apple Silicon e Intel)**, com SQLite próprio, integração nativa Meshtastic (USB, BLE, TCP e MQTT) e análises locais.
+**Projeto independente do MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 10/11, Linux e macOS, com banco SQLite próprio e conexões Meshtastic por USB/Serial, Bluetooth LE, TCP/Wi-Fi e MQTT.
 
-## Downloads
+## Downloads oficiais
 
-![Total](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Ftotal.json) ![Windows](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Fwindows.json) ![macOS](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Fmacos.json) ![Linux](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Flinux.json)
+A partir da versão **0.6.58**, o catálogo de versões, os instaladores e as atualizações dentro do aplicativo usam **exclusivamente o domínio oficial**:
 
-Contagem acumulada de todas as versões, por tipo de build (atualizada a cada hora).
+**[www.PT2VHF.com/mesh](https://www.pt2vhf.com/mesh)**
 
-**Versão mais recente (publicada após aprovação do pipeline): [v0.6.57](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/tag/v0.6.57)**
+As versões ficam disponíveis nessa página somente depois da publicação dos arquivos e da validação de integridade. Os contadores de downloads são acumulativos, por plataforma e tipo de instalador, e independentes da versão.
 
-### Windows 10 / Windows 11 (64 bits)
-
-| Download | Nome do arquivo | Link | Downloads |
-|---|---|---|---|
-| **Setup Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.57-Setup-Win10-Win11-x64.exe` | [Baixar instalador](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.57/PT2VHF-Mesh-Analyzer-v0.6.57-Setup-Win10-Win11-x64.exe) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Fwindows-setup.json) |
-| **Portable Windows 10/11** | `PT2VHF-Mesh-Analyzer-v0.6.57-Portable-Win10-Win11-x64.exe` | [Baixar Portable](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.57/PT2VHF-Mesh-Analyzer-v0.6.57-Portable-Win10-Win11-x64.exe) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Fwindows-portable-exe.json) |
-| **Portable ZIP** | `PT2VHF-Mesh-Analyzer-v0.6.57-Portable-Win10-Win11-x64.zip` | [Baixar ZIP](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.57/PT2VHF-Mesh-Analyzer-v0.6.57-Portable-Win10-Win11-x64.zip) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Fwindows-portable-zip.json) |
-
-### macOS
-
-| Download | Nome do arquivo | Link | Downloads |
-|---|---|---|---|
-| **macOS Apple Silicon (M1/M2/M3/M4)** | `PT2VHF-Mesh-Analyzer-v0.6.57-macOS-arm64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.57/PT2VHF-Mesh-Analyzer-v0.6.57-macOS-arm64.dmg) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Fmacos-arm64.json) |
-| **macOS Intel** | `PT2VHF-Mesh-Analyzer-v0.6.57-macOS-x64.dmg` | [Baixar DMG](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.57/PT2VHF-Mesh-Analyzer-v0.6.57-macOS-x64.dmg) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Fmacos-x64.json) |
-
-### Linux
-
-| Download | Nome do arquivo | Link | Downloads |
-|---|---|---|---|
-| **Ubuntu / Linux Mint (.deb)** | `PT2VHF-Mesh-Analyzer-v0.6.57-amd64.deb` | [Baixar .deb](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.57/PT2VHF-Mesh-Analyzer-v0.6.57-amd64.deb) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Flinux-deb.json) |
-| **Linux x64 (outras distribuições)** | `PT2VHF-Mesh-Analyzer-v0.6.57-Linux-x64.tar.gz` | [Baixar TAR.GZ](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.57/PT2VHF-Mesh-Analyzer-v0.6.57-Linux-x64.tar.gz) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Falexpmr%2FPT2VHF-Mesh-Analyzer%2Fbadges%2Fdownloads%2Flinux-tar.json) |
+O repositório GitHub mantém o código-fonte, testes e automações de compilação. Links de GitHub Releases não são usados pelo atualizador OTA. Os checksums são usados internamente pelo cliente para validar downloads e não precisam ser expostos como arquivos separados ao usuário.
 
 ### Container (servidor, NAS e Raspberry Pi)
 
@@ -43,19 +23,6 @@ docker run -d --name pt2vhf-mesh-analyzer --restart unless-stopped \
 ```
 
 Abra `http://localhost:8789` no próprio servidor. Rádio USB em servidor Linux: acrescente `--device /dev/ttyUSB0 --group-add dialout`. Exemplo completo em [`container/docker-compose.yml`](container/docker-compose.yml). Wi-Fi/TCP e MQTT funcionam sem restrição; Bluetooth e acesso por outros computadores da rede ainda não são suportados no container (acesso remoto por túnel SSH: `ssh -L 8789:127.0.0.1:8789 usuario@servidor`). Para atualizar: `docker pull ghcr.io/alexpmr/pt2vhf-mesh-analyzer:latest` e recrie o container; o volume `/data` preserva banco e configurações.
-
-| Verificação | Arquivo | Link |
-|---|---|---|
-| **SHA256 (todas as plataformas)** | `SHA256SUMS.txt` | [Conferir hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/v0.6.57/SHA256SUMS.txt) |
-
-**Links automáticos (última versão):**
-[Setup Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Setup-Win10-Win11-x64.exe) ·
-[Portable Windows 10/11](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Portable-Win10-Win11-x64.exe) ·
-[macOS Apple Silicon](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-macOS-arm64.dmg) ·
-[macOS Intel](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-macOS-x64.dmg) ·
-[Ubuntu/Mint .deb](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-amd64.deb) ·
-[Linux x64](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/PT2VHF-Mesh-Analyzer-Linux-x64.tar.gz) ·
-[Hashes](https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest/download/SHA256SUMS.txt).
 
 **Requisitos Windows:** Windows 10 **1809/Build 17763 ou superior** ou Windows 11, **64 bits**; **Microsoft Edge WebView2 Runtime** instalado (o Setup não faz download automático desse runtime); recursos locais Bluetooth/serial dependem do driver e das permissões do sistema. O instalador é por usuário, sem elevação obrigatória. Os pacotes de atualização com nomes antigos `Win11-x64` permanecem na v0.6.57 exclusivamente para que versões anteriores consigam atualizar; apontam para o mesmo executável compatível Windows 10/11. O Windows pode apresentar SmartScreen, pois o executável ainda não tem assinatura digital.
 

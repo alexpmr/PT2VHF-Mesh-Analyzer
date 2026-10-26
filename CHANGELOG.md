@@ -1,3 +1,10 @@
+# v0.6.58 — Downloads e OTA pelo site oficial PT2VHF
+
+- Atualizador do Windows consulta somente `https://www.pt2vhf.com/update.php?product=mesh` e baixa pacotes hospedados no site oficial, validando tamanho e SHA-256 descritos na API, sem depender de releases do GitHub.
+- Popup de abertura em português, inglês ou espanhol, respeitando o idioma configurado, com link clicável para `www.PT2VHF.com/mesh`.
+- Contador cumulativo por instalador, usando a API de downloads do site; instaladores e contadores são publicados separadamente do código-fonte.
+- O site exibe as variantes de build pendentes até que os binários reais estejam presentes na hospedagem.
+
 # v0.6.57 — Contador de downloads por tipo de build
 
 - #210: `scripts/download_stats.py` soma o `download_count` dos arquivos de todas as releases por tipo de build e grava selos (endpoint do shields.io) em `downloads/*.json` no ramo `badges`. Como `retain_latest_release.py` apaga as releases antigas, o histórico fica em `downloads/state.json` (maior contagem vista por versão/arquivo), então o total nunca diminui.

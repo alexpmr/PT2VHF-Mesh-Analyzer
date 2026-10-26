@@ -64,6 +64,20 @@ class UpdateTests(unittest.TestCase):
             self.assertIsNone(manager.notice()["notice"])
             self.assertEqual(manager.dismiss(),{"success":True})
 
+    def test_official_site_disallows_external_and_version_mismatch(self):
+        from mesh_analyzer.updater import OFFICIAL_API, RELEASE_BASE
+        self.assertEqual(OFFICIAL_API,"https://www.pt2vhf.com/update.php?product=mesh")
+        self.assertTrue(RELEASE_BASE.startswith("https://www.pt2vhf.com/downloads/"))
+        filename=release_assets("0.6.58")["setup"]
+        good=RELEASE_BASE+filename
+        self.assertEqual(approved_asset_url(good,"0.6.58",filename),good)
+        for bad in ("https://github.com/example/"+filename,
+                    "http://www.pt2vhf.com/downloads/mesh-analyzer/"+filename,
+                    RELEASE_BASE+filename.replace("0.6.58","0.6.57")):
+            with self.assertRaises(ValueError):
+                approved_asset_url(bad,"0.6.58",filename)
+
 
 if __name__=="__main__":
     unittest.main()
+
