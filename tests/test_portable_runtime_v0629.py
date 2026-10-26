@@ -31,18 +31,22 @@ class RuntimeTests(unittest.TestCase):
         archive=io.BytesIO()
         with zipfile.ZipFile(archive,'w') as z:z.writestr('PT2VHF-Mesh-Analyzer.exe',b'verified-package')
         package=archive.getvalue();name=release_assets(__version__)['portable']
-        sums=(hashlib.sha256(package).hexdigest()+'  '+name).encode()
+        expected_sha=hashlib.sha256(package).hexdigest()
         class Response(io.BytesIO):
             @property
             def headers(self):return {'Content-Length':str(len(self.getvalue()))}
         class Monitor:
-            _result={'notes':'test'}
+            _result={"notes":"test","assets":[{
+                "name":name,
+                "url":"https://www.pt2vhf.com/downloads/mesh-analyzer/"+name,
+                "sha256":expected_sha,"size":len(package),
+                "counterKey":"win-portable-x64"}]}
         with tempfile.TemporaryDirectory(prefix='custom profile ') as d:
             manager=UpdateManager(d,Monitor(),executable=Path(d)/'versioned.exe')
             manager.health_url='http://127.0.0.1:32145/health'
             manager.restart_arguments=['--data-dir',d,'--port','32145']
             def fetch(request,**kwargs):
-                return Response(sums if request.full_url.endswith('SHA256SUMS.txt') else package)
+                return Response(package)
             with patch('urllib.request.urlopen',side_effect=fetch):manager._download(__version__,'portable',name)
             self.assertEqual(manager.status()['phase'],'verified',manager.status())
             plan=json.loads(Path(manager._plan[1]).read_text())

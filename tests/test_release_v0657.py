@@ -48,11 +48,11 @@ class Totals(unittest.TestCase):
 
 
 class Readme(unittest.TestCase):
-    def test_tables_show_badges_for_every_build(self):
+    def test_official_download_page_replaces_github_badges(self):
         text = (Path(__file__).resolve().parents[1] / "README.md").read_text(encoding="utf-8")
-        for key in ("windows-setup", "windows-portable-exe", "windows-portable-zip", "macos-arm64", "macos-x64",
-                    "linux-deb", "linux-tar", "total", "windows", "macos", "linux"):
-            self.assertIn("badges%2Fdownloads%2F" + key + ".json", text)
+        self.assertIn("https://www.pt2vhf.com/mesh", text)
+        self.assertIn("contadores", text.lower())
+        self.assertNotIn("https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/download/", text)
 
 
 if __name__ == "__main__":
