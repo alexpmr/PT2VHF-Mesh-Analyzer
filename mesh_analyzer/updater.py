@@ -1,7 +1,7 @@
 """Verified, opt-in Windows update staging and detached replacement.
 
 No updater ever replaces an executable while its Python/Windows process is alive.
-Only the application's fixed GitHub release assets are accepted.
+Only HTTPS assets on the official PT2VHF site are accepted.
 """
 from __future__ import annotations
 
@@ -18,8 +18,10 @@ import time
 import urllib.request
 import zipfile
 
-OWNER = "alexpmr/PT2VHF-Mesh-Analyzer"
-RELEASE_BASE = "https://github.com/" + OWNER + "/releases/download/"
+OFFICIAL_SITE = "https://www.pt2vhf.com"
+OFFICIAL_API = OFFICIAL_SITE + "/update.php?product=mesh"
+RELEASE_BASE = OFFICIAL_SITE + "/downloads/mesh-analyzer/"
+COUNTER_API = OFFICIAL_SITE + "/download.php"
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 CHECKSUM_RE = re.compile(r"^([A-Fa-f0-9]{64})\s+\*?([A-Za-z0-9_.-]+)$")
 MAX_SIZE = 100 * 1024 * 1024
@@ -246,7 +248,7 @@ def deployment_mode(executable=None):
 
 
 def approved_asset_url(url, version, name):
-    expected = RELEASE_BASE + "v" + version + "/" + name
+    expected = RELEASE_BASE + name
     if url != expected:
         raise ValueError("Endereço do pacote não corresponde à release oficial")
     return url
@@ -369,15 +371,32 @@ class UpdateManager:
         try:
             folder=self.profile/"updates"/("v"+version)
             folder.mkdir(parents=True,exist_ok=True)
-            doc_url=RELEASE_BASE+"v"+version+"/SHA256SUMS.txt"
-            req=urllib.request.Request(doc_url,headers={"User-Agent":"PT2VHF-Mesh-Analyzer-updater"})
-            with urllib.request.urlopen(req,timeout=12) as resp:
-                sums=resp.read(60000).decode("ascii")
-            expected=parse_checksums(sums,filename)
+            assets=self.monitor._result.get("assets",[]) if self.monitor._result else []
+            matches=[a for a in assets if a.get("name")==filename]
+            if len(matches)!=1:raise ValueError("Pacote oficial ausente do catálogo verificado")
+            asset=matches[0]
+            url=approved_asset_url(asset.get("url"),version,filename)
+            expected=asset.get("sha256")
+            if not isinstance(expected,str) or not re.fullmatch(r"[0-9a-f]{64}",expected):
+                raise ValueError("SHA-256 ausente ou inválido no catálogo")
             package=folder/filename
             def report(n,total):
                 with self._lock:self._received=n;self._size=total
-            stream_verified(RELEASE_BASE+"v"+version+"/"+filename,package,expected,report=report,cancelled=self._cancel)
+            stream_verified(url,package,expected,report=report,cancelled=self._cancel)
+            # Estatística acumulativa no próprio site, sem comprometer a instalação
+            # caso a API de contagem esteja temporariamente indisponível.
+            try:
+                import urllib.parse
+                key=asset.get("counterKey") or asset.get("category")
+                if isinstance(key,str) and key:
+                    body=urllib.parse.urlencode({"action":"count","product":"mesh","category":key}).encode("ascii")
+                    req=urllib.request.Request(COUNTER_API,data=body,headers={
+                        "Content-Type":"application/x-www-form-urlencoded",
+                        "User-Agent":"PT2VHF-Mesh-Analyzer-updater"})
+                    with urllib.request.urlopen(req,timeout=4) as response:
+                        response.read(64)
+            except Exception:
+                pass
             candidate=None
             if mode=="portable":
                 candidate=folder/"candidate.exe"

@@ -16,9 +16,9 @@ class UpdateTests(unittest.TestCase):
         items=release_assets("0.5.0")
         self.assertEqual(items["setup"],"PT2VHF-Mesh-Analyzer-v0.5.0-Setup-Win10-Win11-x64.exe")
         self.assertEqual(items["portable"],"PT2VHF-Mesh-Analyzer-v0.5.0-Portable-Win10-Win11-x64.zip")
-        good=RELEASE_BASE+"v0.5.0/"+items["setup"]
+        good=RELEASE_BASE+items["setup"]
         self.assertEqual(approved_asset_url(good,"0.5.0",items["setup"]),good)
-        for bad in [good.replace("alexpmr","attacker"),
+        for bad in [good.replace("www.pt2vhf.com","evil.example"),
                     good.replace("v0.5.0","v0.4.0"),
                     good.replace("-Setup-","-Portable-")]:
             with self.assertRaises(ValueError):

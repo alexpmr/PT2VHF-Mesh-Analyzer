@@ -6,6 +6,7 @@ import html
 import json
 import logging
 import os
+import re
 import secrets
 import signal
 import sys
@@ -28,31 +29,55 @@ _UPDATE_LOCK = threading.Lock()
 
 
 def latest_release(force=False):
-    """Bounded, cached request to the project's public GitHub Releases endpoint."""
+    """Consultar somente a API HTTPS do site oficial (nunca GitHub)."""
     with _UPDATE_LOCK:
         if not force and _UPDATE_CACHE["data"] is not None and time.monotonic()-_UPDATE_CACHE["at"] < 300:
             return _UPDATE_CACHE["data"]
+        from .updater import OFFICIAL_API, OFFICIAL_SITE, approved_asset_url, release_assets
         request = urllib.request.Request(
-            "https://api.github.com/repos/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest",
-            headers={"User-Agent": "PT2VHF-Mesh-Analyzer/"+__version__,
-                     "Accept": "application/vnd.github+json"})
-        with urllib.request.urlopen(request, timeout=6) as response:
+            OFFICIAL_API, headers={"User-Agent":"PT2VHF-Mesh-Analyzer/"+__version__,
+                                   "Accept":"application/json"})
+        with urllib.request.urlopen(request, timeout=9) as response:
+            if response.geturl() != OFFICIAL_API:
+                raise ValueError("Redirecionamento não autorizado na API oficial")
             info = json.load(response)
-        tag = str(info.get("tag_name") or "").removeprefix("v")
-        if not tag or not all(x.isdigit() for x in tag.split(".")):
-            raise ValueError("Release remota sem versão válida")
-        current = tuple(int(x) for x in __version__.split("."))
-        remote = tuple(int(x) for x in tag.split("."))
-        data = {"success": True, "current": __version__, "latest": tag,
-                "available": remote > current,
-                "release_url": "https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest",
-                "notes": str(info.get("body") or "")[:1800],
-                "assets": [{"name":str(a.get("name") or ""),
-                            "url":str(a.get("browser_download_url") or "")}
-                           for a in info.get("assets", []) if a.get("name")]}
-        _UPDATE_CACHE.update(at=time.monotonic(), data=data)
+        if not isinstance(info,dict) or info.get("schema") != 1 or \
+                info.get("source") != OFFICIAL_SITE or info.get("product") != "mesh":
+            raise ValueError("Resposta inválida da API oficial PT2VHF")
+        current=tuple(int(x) for x in __version__.split("."))
+        state=info.get("status")
+        assets=[]
+        tag=str(info.get("version") or "")
+        if state == "available":
+            if not re.fullmatch(r"\d+\.\d+\.\d+",tag):
+                raise ValueError("Versão oficial inválida")
+            names=set(release_assets(tag).values())
+            if not isinstance(info.get("files"),list):
+                raise ValueError("Lista de pacotes inválida")
+            for item in info["files"]:
+                if not isinstance(item,dict) or item.get("name") not in names:
+                    continue
+                name=item["name"]
+                url=approved_asset_url(item.get("url"),tag,name)
+                sha=item.get("sha256")
+                size=item.get("size")
+                if not isinstance(sha,str) or not re.fullmatch(r"[0-9a-f]{64}",sha) \
+                        or not isinstance(size,int) or size<=0:
+                    raise ValueError("Tamanho ou SHA-256 inválido no catálogo")
+                assets.append({"name":name,"url":url,"sha256":sha,"size":size,
+                               "category":item.get("category"),"counterKey":item.get("counterKey")})
+        elif state == "unpublished":
+            tag=__version__
+        else:
+            raise ValueError("Estado desconhecido do catálogo oficial")
+        remote=tuple(int(x) for x in tag.split("."))
+        data={"success":True,"current":__version__,"latest":tag,
+              "available":remote>current and bool(assets),
+              "release_url":"https://www.pt2vhf.com/mesh",
+              "notes":str(info.get("notes") or "")[:1800],
+              "assets":assets}
+        _UPDATE_CACHE.update(at=time.monotonic(),data=data)
         return data
-
 
 
 def in_container():
@@ -107,7 +132,7 @@ class ReleaseMonitor:
                 "latest":self._result.get("latest") if self._result else None,
                 "available":self._result.get("available") if self._result else None,
                 "release_url":self._result.get("release_url") if self._result else
-                    "https://github.com/alexpmr/PT2VHF-Mesh-Analyzer/releases/latest",
+                    "https://www.pt2vhf.com/mesh",
                 "notes":self._result.get("notes","") if self._result else "",
                 "checked_at":self._at or None,
                 "next_check":self._at+minutes*60 if self._at else None,
