@@ -37,7 +37,8 @@ const path=require('path');
     job:{phase:'failed',error:'Pareamento recusado (FAILED). Confira o PIN na tela do rádio.',needs_pin:true}}]:[]}));
   await page.route('**/api/devices/pair-address',r=>{pins.push(JSON.parse(r.request().postData()));return json(r,{success:true,job:{phase:'pairing'}});});
   await page.goto('http://127.0.0.1:8811/mapa');
-  await page.waitForFunction(()=>typeof setViewSource==='function'&&state.sources.length===2);
+  // O primeiro /api/state real pode demorar no runner do Windows (banco recém-criado).
+  await page.waitForFunction(()=>typeof setViewSource==='function'&&state.sources.length===2,null,{timeout:120000});
   await page.evaluate(()=>{firstRunDialogChecked=true;dismissFirstRunDialog();localStorage.removeItem('mesh.viewSource');});
   const out={};
   out.radio=await page.evaluate(()=>$('radioConnectionText').innerText);
