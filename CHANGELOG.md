@@ -1,3 +1,9 @@
+# v0.6.59 — Detecção USB não aciona PTT de rádios com CAT; MeshCore na USB
+
+- `usb_serial_ports()` (detecção automática e "Adicionar automaticamente") só abre portas de chips de placas Meshtastic/MeshCore (`BOARD_USB_IDS`: Espressif 303A, Adafruit 239A, Seeed 2886, Nordic 1915, RP2040 2E8A, CP2102 10C4:EA60, CH9102/CH343) e descarta nomes de rádios/CAT (`RADIO_LABELS`). O CH340 comum (1A86:7523) fica de fora. Relato de PU2MUS: ao iniciar, rádios com CAT entraram em PTT (pyserial, meshtastic e meshcore ligam DTR/RTS ao abrir a porta no Windows; a sonda MeshCore ainda inverte o DTR sem resposta). No diagnóstico, COM3/COM4 eram CH340 de rádios.
+- `SourceManager._open_serial()`: conexão USB marcada como Meshtastic que não responde é testada como MeshCore; se responder, o cadastro passa para `protocol: meshcore` (Heltec Wireless Paper na COM6, `MeshInterfaceError` em toda troca de rádio).
+- Testes: `tests/test_release_v0659.py`.
+
 # v0.6.58 — Downloads e OTA pelo site oficial PT2VHF
 
 - Atualizador do Windows consulta somente `https://www.pt2vhf.com/update.php?product=mesh` e baixa pacotes hospedados no site oficial, validando tamanho e SHA-256 descritos na API, sem depender de releases do GitHub.

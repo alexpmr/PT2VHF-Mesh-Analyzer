@@ -611,6 +611,28 @@ class SourceManager:
         self.db.log("Troca de rádio ativo para "+src["name"],source_id=id)
         return {"state":"switching","source_id":id,"previous":previous}
 
+    def _open_serial(self,id,src,conf):
+        """Meshtastic pela USB; se não responder, testa MeshCore e corrige o cadastro (v0.6.58).
+
+        O formulário de conexão vem com "Meshtastic" marcado: uma placa com firmware
+        MeshCore (ex.: Heltec Wireless Paper) cadastrada assim nunca conectava.
+        """
+        from meshtastic.serial_interface import SerialInterface
+        try:
+            return SerialInterface(devPath=conf["port"],timeout=20)
+        except Exception as exc:
+            if self._stop.is_set():raise
+            from .meshcore_driver import MeshCoreInterface
+            try:
+                iface=MeshCoreInterface("serial",conf,on_packet=self._on_packet,on_lost=self._lost,timeout=20,
+                                        on_event=self._on_meshcore_event,source_id=id)
+            except Exception:
+                raise exc
+            self.db.upsert_source({"id":id,"config":{"protocol":"meshcore"}})
+            self.db.log("O rádio em "+str(conf["port"])+" respondeu como MeshCore, não Meshtastic; "
+                        "conexão ajustada para MeshCore",source_id=id)
+            return iface
+
     def _watch_switch(self,target,previous):
         deadline=time.monotonic()+HANDOVER_TIMEOUT_S
         error=""
@@ -761,8 +783,7 @@ class SourceManager:
                         iface=MeshCoreInterface(kind,conf,on_packet=self._on_packet,on_lost=self._lost,timeout=20,
                                                 on_event=self._on_meshcore_event,source_id=id)
                     elif kind == "serial":
-                        from meshtastic.serial_interface import SerialInterface
-                        iface=SerialInterface(devPath=conf["port"],timeout=20)
+                        iface=self._open_serial(id,src,conf)
                     elif kind == "tcp":
                         from meshtastic.tcp_interface import TCPInterface
                         iface=TCPInterface(hostname=conf["host"],portNumber=int(conf.get("port") or 4403),timeout=20)
