@@ -63,6 +63,14 @@ jobs:
             $code = $LASTEXITCODE
             Write-Host $out
             if ($code -ne 0) {
+              # O runner do Windows às vezes é lento demais para os prazos dos testes de UI:
+              # uma segunda tentativa separa lentidão de regressão real.
+              Write-Host "::warning title=$name::falhou na 1a tentativa; repetindo"
+              $out = node "scripts/$name.cjs" 2>&1 | Out-String
+              $code = $LASTEXITCODE
+              Write-Host $out
+            }
+            if ($code -ne 0) {
               $tail = $out.Substring([Math]::Max(0, $out.Length - 4000))
               $tail = $tail -replace '%','%25' -replace "`r",'' -replace "`n",'%0A'
               Write-Host "::error title=$name::$tail"

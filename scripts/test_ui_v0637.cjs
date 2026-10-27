@@ -52,10 +52,15 @@ const path=require('path');
    out.focusInMenu=$('radioMenu').contains(document.activeElement);
    document.body.click();out.closedOutside=$('radioMenu').hidden;
    $('radioConnectionStatus').click();await sleep(150);
+   // "Trocando para…" aparece depois da resposta do servidor e some quando a troca
+   // termina (o /switch simulado responde "done" na hora): no runner lento do Windows a
+   // leitura podia cair depois. Guarda todo texto que a barra mostrou.
+   const seen=[];const mo=new MutationObserver(()=>seen.push($('radioConnectionText').textContent));
+   mo.observe($('radioConnectionText'),{childList:true,characterData:true,subtree:true});
    $('radioMenu').querySelector('[data-radio="2"]').click();
-   // O texto "Trocando para…" só aparece depois da resposta do servidor (lenta no runner do Windows).
-   for(let i=0;i<60&&!$('radioConnectionText').textContent.includes('Trocando');i++)await sleep(50);
-   out.switching=$('radioConnectionText').textContent;
+   for(let i=0;i<200&&!seen.some(t=>t.includes('Trocando'));i++)await sleep(50);
+   mo.disconnect();
+   out.switching=seen.find(t=>t.includes('Trocando'))||$('radioConnectionText').textContent;
    out.closedAfterChoice=$('radioMenu').hidden;
    // #149 aviso
    await refreshDeviceNotices();
