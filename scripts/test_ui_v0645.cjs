@@ -46,8 +46,10 @@ const path=require('path');
    $('sourceProtocol').value='meshcore';$('sourceProtocol').dispatchEvent(new Event('change'));
    $('sourceHost').value='192.168.1.50';$('sourceEnabled').checked=false;
    $('sourceForm').requestSubmit();
-   for(let i=0;i<40&&!(state.sources||[]).length;i++)await new Promise(r=>setTimeout(r,100));
-   const s=state.sources[0];renderSources();
+   // Salvar e recarregar o estado leva mais de 4 s no runner do Windows às vezes.
+   const saved=()=>(state.sources||[]).find(x=>x.name==='MeshCore Casa');
+   for(let i=0;i<300&&!saved();i++)await new Promise(r=>setTimeout(r,100));
+   const s=saved();renderSources();
    editSource(s.id);
    return {config:s.config,badge:$('sourceCards').innerText.includes('MeshCore'),editProtocol:$('sourceProtocol').value,editPort:$('sourceTcpPort').value};
   });
