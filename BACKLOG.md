@@ -1,3 +1,8 @@
+## v0.6.58 — Implementado nesta entrega
+
+- Detecção USB não abre portas de rádios com CAT (PTT acionado ao iniciar, relato de PU2MUS).
+- Pendente: Heltec Wireless Paper na COM6 não detectado — aguardando diagnóstico .zip.
+
 ## v0.6.51 — Implementado nesta entrega
 
 - #198: diagnóstico para suporte (.zip) em Configurações → Diagnóstico, com log detalhado de Bluetooth.

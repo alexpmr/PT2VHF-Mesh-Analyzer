@@ -1,3 +1,9 @@
+# v0.6.58 — Detecção USB não aciona PTT de rádios com CAT
+
+- `usb_serial_ports()` (detecção automática e "Adicionar automaticamente") passa a abrir só portas de chips de placas Meshtastic/MeshCore (`BOARD_USB_IDS`: Espressif 303A, Adafruit 239A, Seeed 2886, Nordic 1915, RP2040 2E8A, CP2102 10C4:EA60, CH340/CH9102/CH343) e descarta nomes de rádios/CAT (`RADIO_LABELS`). Relato de PU2MUS: ao iniciar, vários rádios ligados por CAT entraram em PTT — pyserial, meshtastic e meshcore ligam DTR/RTS ao abrir a porta no Windows, e a sonda MeshCore ainda inverte o DTR quando não há resposta.
+- Portas ignoradas aparecem no log do diagnóstico com VID/PID.
+- Testes: `tests/test_release_v0658.py`.
+
 # v0.6.56 — Favoritos sem reenvio contínuo
 
 - `_push_favorites()`: a cópia do NodeDB na biblioteca Meshtastic não muda com o comando admin; com o intervalo de 60 s, o app reenviava `removeFavorite`/`setFavorite` a cada minuto para os mesmos nós (visto no diagnóstico #198: ~17 vezes cada um de 10 nós em 3 minutos). Agora cada (nó, estado) vai uma vez por conexão (conjunto guardado na interface) e é tentado de novo só ao reconectar.

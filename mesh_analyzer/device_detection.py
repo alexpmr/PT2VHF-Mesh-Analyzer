@@ -15,6 +15,7 @@ import asyncio
 import hashlib
 import ipaddress
 import logging
+import re
 import threading
 from types import SimpleNamespace
 import time
@@ -50,17 +51,53 @@ def device_key(kind, address):
     return str(kind) + ":" + str(address).strip().lower()
 
 
-def usb_serial_ports():
-    """Portas seriais com VID USB: placas Meshtastic são sempre USB.
+# v0.6.58: a detecção automática só abre portas de chips usados nas placas
+# Meshtastic/MeshCore. Abrir uma porta liga DTR/RTS (pyserial, meshtastic e meshcore
+# fazem isso no Windows) e interfaces CAT de rádios usam DTR/RTS como PTT: o app
+# saía transmitindo em todos os rádios ligados por USB. Portas fora da lista
+# continuam podendo ser cadastradas à mão em Configurações → Conexões.
+BOARD_USB_IDS = {
+    0x303A: None,              # Espressif (ESP32-S3/C3/C6 USB nativo: Heltec V3/Wireless Paper, T-Beam S3…)
+    0x239A: None,              # Adafruit nRF52 (RAK4631, T-Echo, bootloader UF2)
+    0x2886: None,              # Seeed (XIAO, Wio Tracker, SenseCAP)
+    0x1915: None,              # Nordic nRF52840
+    0x2E8A: None,              # Raspberry Pi RP2040 (Pico, RAK11310)
+    0x10C4: {0xEA60},          # Silicon Labs CP2102/CP2104 (Heltec V2, T-Beam, Station G1…)
+    0x1A86: {0x7523, 0x55D4, 0x55D3},  # WCH CH340 / CH9102 / CH343
+}
+# Nomes de interfaces de rádios e cabos CAT (mesmo chip das placas, ex.: CP2102 do Icom IC-7300).
+RADIO_LABELS = re.compile(r"icom|yaesu|kenwood|elecraft|xiegu|flexradio|\b(ic|ft|ts|id|tm|th)-?\d{3,4}|"
+                          r"enhanced com port|standard com port|\bcat\b|ci-v|\bcivs?\b|audio codec", re.I)
 
-    Portas sem VID (COM1 da placa-mãe, "serial sobre Bluetooth" do Windows)
-    ficam de fora: abri-las pode travar ou não é um rádio.
+
+def board_port(port):
+    """True se a porta é de um chip usado em placas Meshtastic/MeshCore e não parece um rádio."""
+    vid, pid = getattr(port, "vid", None), getattr(port, "pid", None)
+    if vid not in BOARD_USB_IDS:
+        return False
+    pids = BOARD_USB_IDS[vid]
+    if pids is not None and pid not in pids:
+        return False
+    label = " ".join(str(getattr(port, a, "") or "") for a in ("description", "product", "manufacturer", "interface")).casefold()
+    return not RADIO_LABELS.search(label)
+
+
+def usb_serial_ports():
+    """Portas USB que podem ser placas Meshtastic/MeshCore (ver BOARD_USB_IDS).
+
+    Portas sem VID (COM1 da placa-mãe, "serial sobre Bluetooth" do Windows), de
+    conversores FTDI/Prolific e de rádios com CAT ficam de fora: abri-las pode
+    travar, acionar o PTT ou não é um rádio Mesh.
     """
     from serial.tools import list_ports
     result = []
     for port in list_ports.comports():
         device = str(getattr(port, "device", "") or "")
         if not device or getattr(port, "vid", None) is None:
+            continue
+        if not board_port(port):
+            logging.getLogger(__name__).info("Detecção USB: %s ignorada (VID %04X PID %04X, %s)", device,
+                                             port.vid, port.pid or 0, getattr(port, "description", ""))
             continue
         result.append({"kind": "serial", "address": device,
                        "name": str(getattr(port, "description", "") or device)[:90],
