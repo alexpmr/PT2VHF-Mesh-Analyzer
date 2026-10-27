@@ -1,6 +1,7 @@
 # v0.6.58 — Detecção USB não aciona PTT de rádios com CAT
 
-- `usb_serial_ports()` (detecção automática e "Adicionar automaticamente") passa a abrir só portas de chips de placas Meshtastic/MeshCore (`BOARD_USB_IDS`: Espressif 303A, Adafruit 239A, Seeed 2886, Nordic 1915, RP2040 2E8A, CP2102 10C4:EA60, CH340/CH9102/CH343) e descarta nomes de rádios/CAT (`RADIO_LABELS`). Relato de PU2MUS: ao iniciar, vários rádios ligados por CAT entraram em PTT — pyserial, meshtastic e meshcore ligam DTR/RTS ao abrir a porta no Windows, e a sonda MeshCore ainda inverte o DTR quando não há resposta.
+- `usb_serial_ports()` (detecção automática e "Adicionar automaticamente") passa a abrir só portas de chips de placas Meshtastic/MeshCore (`BOARD_USB_IDS`: Espressif 303A, Adafruit 239A, Seeed 2886, Nordic 1915, RP2040 2E8A, CP2102 10C4:EA60, CH9102/CH343; o CH340 1A86:7523 fica de fora, era o chip das COM3/COM4 de rádios no diagnóstico) e descarta nomes de rádios/CAT (`RADIO_LABELS`). Relato de PU2MUS: ao iniciar, vários rádios ligados por CAT entraram em PTT — pyserial, meshtastic e meshcore ligam DTR/RTS ao abrir a porta no Windows, e a sonda MeshCore ainda inverte o DTR quando não há resposta.
+- `SourceManager._open_serial()`: conexão USB marcada como Meshtastic que não responde é testada como MeshCore; se responder, o cadastro passa para `protocol: meshcore` e o evento é registrado (Heltec Wireless Paper do PU2MUS na COM6: `MeshInterfaceError` em toda troca de rádio).
 - Portas ignoradas aparecem no log do diagnóstico com VID/PID.
 - Testes: `tests/test_release_v0658.py`.
 

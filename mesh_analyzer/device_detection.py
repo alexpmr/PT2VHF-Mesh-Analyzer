@@ -63,7 +63,9 @@ BOARD_USB_IDS = {
     0x1915: None,              # Nordic nRF52840
     0x2E8A: None,              # Raspberry Pi RP2040 (Pico, RAK11310)
     0x10C4: {0xEA60},          # Silicon Labs CP2102/CP2104 (Heltec V2, T-Beam, Station G1…)
-    0x1A86: {0x7523, 0x55D4, 0x55D3},  # WCH CH340 / CH9102 / CH343
+    # WCH CH9102/CH343. O CH340 comum (1A86:7523) fica de fora: é o chip dos cabos
+    # CAT/programação baratos (relato PU2MUS: COM3/COM4 de rádios), raro em placas Mesh.
+    0x1A86: {0x55D4, 0x55D3},
 }
 # Nomes de interfaces de rádios e cabos CAT (mesmo chip das placas, ex.: CP2102 do Icom IC-7300).
 RADIO_LABELS = re.compile(r"icom|yaesu|kenwood|elecraft|xiegu|flexradio|\b(ic|ft|ts|id|tm|th)-?\d{3,4}|"
