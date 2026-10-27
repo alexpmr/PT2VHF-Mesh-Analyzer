@@ -38,6 +38,15 @@ const path=require('path');
     {running:false,phase:'done',errors:[],results:[{kind:'serial',address:'COM5',name:'x',outcome:'added',detail:'VHF3 USB'},
       {kind:'tcp',address:'192.168.0.20',name:'y',outcome:'configured',detail:'Já configurado'},
       {kind:'serial',address:'COM9',name:'z',outcome:'no_response',detail:'Timed out'}]}}));
+  // As atualizações periódicas de /api/state traziam as conexões reais (nenhuma) e, no
+  // runner lento do Windows, apagavam no meio do teste as duas conexões simuladas abaixo:
+  // "Trocando para" ficava sem o nome do rádio.
+  await page.route(/\/api\/state(\?.*)?$/,async r=>{
+   let real;try{real=await (await r.fetch()).json();}catch(e){return r.abort().catch(()=>{});}
+   real.sources=[{id:1,name:'Base USB',kind:'serial',enabled:true},{id:2,name:'Base Wi-Fi',kind:'tcp',enabled:true}];
+   real.connections={'1':{status:'connected'},'2':{status:'standby'}};
+   return json(r,real);
+  });
   await page.goto('http://127.0.0.1:8802/mapa');
   await page.waitForFunction(()=>typeof openRadioMenu==='function'&&map!==null);
   const result=await page.evaluate(async()=>{
