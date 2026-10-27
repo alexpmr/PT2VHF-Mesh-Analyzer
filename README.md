@@ -1,4 +1,4 @@
-# PT2VHF Mesh Analyzer — v0.6.58
+# PT2VHF Mesh Analyzer — v0.6.59
 
 **Projeto independente do MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 10/11, Linux e macOS, com banco SQLite próprio e conexões Meshtastic por USB/Serial, Bluetooth LE, TCP/Wi-Fi e MQTT.
 
@@ -31,6 +31,11 @@ Abra `http://localhost:8789` no próprio servidor. Rádio USB em servidor Linux:
 **Requisitos Linux:** distribuição 64 bits com glibc 2.35+ (Ubuntu 22.04, Linux Mint 21, Debian 12, Fedora 36 ou mais novos) e um navegador. **Ubuntu / Linux Mint:** dê dois cliques no `.deb` ou use `sudo apt install ./PT2VHF-Mesh-Analyzer-v0.6.56-amd64.deb`; o atalho aparece no menu e o comando `pt2vhf-mesh-analyzer` fica disponível. Remover o pacote preserva seus dados. **Outras distribuições:** extraia o `.tar.gz` e execute `./PT2VHF-Mesh-Analyzer` (a interface abre no navegador padrão) ou `./instalar.sh` para criar o atalho no menu de aplicativos. Para rádio USB, o usuário deve pertencer ao grupo `dialout`.
 
 **Atualização:** no Windows, a atualização é feita pelo próprio aplicativo. No macOS e no Linux, o aplicativo avisa quando houver versão nova e o botão abre a página da release para baixar o pacote (no `.deb`, instale o novo por cima). No container, atualize a imagem.
+
+### Novidades da v0.6.59
+
+- **Correção importante, rádios com CAT:** ao procurar rádios Mesh pela USB, o app abria todas as portas seriais, e abrir a porta liga os sinais DTR/RTS, que muitos rádios e interfaces CAT usam como PTT: rádios ligados ao PC entravam em transmissão. Agora a detecção automática só abre portas de chips usados em placas Meshtastic/MeshCore (Espressif, CP2102, CH9102/CH343, nRF52, RP2040) e ignora cabos CAT e de programação genéricos (CH340, FTDI, Prolific, CP2105) e portas que se identificam como rádio. Uma porta fora da lista ainda pode ser cadastrada à mão em Configurações → Conexões.
+- **Correção, placas MeshCore na USB:** uma placa com firmware MeshCore (ex.: Heltec Wireless Paper) cadastrada como Meshtastic nunca conectava. Agora, se não responder como Meshtastic, o app testa MeshCore e corrige a conexão sozinho.
 
 ### Novidades da v0.6.57
 
