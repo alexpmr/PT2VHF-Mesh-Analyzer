@@ -14,6 +14,14 @@
   - Backlog (28/10/2026): mover também da aba Ver a opção "Relevo com corte"
     (`#mapTerrain`) para Ferramentas.
 
+- **Backlog (28/10/2026): controle do "Relevo com corte" mais compacto** (`#terrainSlider`).
+  - Referência: `docs/backlog/relevo-corte-controle.png` (hoje a coluna é larga, os dois
+    sliders verticais ficam afastados e o de corte não usa a altura toda).
+  - Controles mais próximos, em coluna mais fina, ocupando menos espaço do mapa.
+  - Slider de corte (`#terrainCut`) de cima a baixo, ocupando a altura disponível.
+  - Novo ajuste da cor do sombreamento do relevo cortado, junto a Máx. (m) e Opacidade,
+    salvo com as demais preferências do mapa.
+
 ## v0.6.60 — Implementado nesta entrega
 
 - Aviso do site oficial sempre ao abrir (sem "não mostrar novamente"); o aviso de versão nova abre em sequência, logo depois que ele é fechado.
