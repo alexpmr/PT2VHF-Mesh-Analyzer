@@ -26,6 +26,28 @@
   - O mantenedor não viu utilidade: tirar a opção, a camada e o que só ela usa
     (preferência salva, traduções, textos de ajuda e testes), sem afetar o "Relevo com corte".
 
+- **Backlog (28/10/2026): Ferramentas → Análise de cobertura** (mapa de onde o sinal chegaria).
+  - Referências em `docs/backlog/cobertura/` (painel "Site Parameters" de outra ferramenta).
+  - Origem: ponto marcado no mapa (pino arrastável para ajuste fino) **ou** um nó conhecido
+    da lista (posição e, quando houver, altura/potência/frequência do próprio nó).
+  - Parâmetros, em seções recolhíveis e em português:
+    - **Transmissor:** nome, latitude/longitude, dispositivo (preenche potência e ganho
+      típicos; "Personalizado" para manual), potência (W), frequência (MHz), altura acima do
+      solo (m), ganho da antena (dBi); botões "Marcar no mapa" e "Centralizar"; "Raio de
+      busca (km)" + "Ir para o ponto mais alto".
+    - **Receptor:** sensibilidade (dBm; −130 = preset LongFast), altura (m), ganho (dBi),
+      perda no cabo (dB).
+    - **Ambiente:** clima de rádio, polarização, altura de obstáculos/vegetação (m),
+      constante dielétrica e condutividade do solo, refratividade atmosférica (N).
+    - **Simulação:** % de locais e % de tempo (confiabilidade), alcance máximo (km) e
+      opção de relevo em alta resolução (30 m, mais lento e com alcance limitado).
+    - **Exibição:** mapa de calor ou contornos, mínimo/máximo em dBm, escala de cores,
+      transparência e legenda; mudanças aplicadas na hora sobre a cobertura já calculada.
+  - Resultado claro no mapa: áreas onde o sinal chega acima da sensibilidade e até onde
+    vai; reaproveitar o relevo já usado em "Analisar enlace" / "Melhor ponto".
+  - Na implementação: escolher o modelo de propagação (ex.: Longley-Rice/ITM, que usa
+    exatamente esses parâmetros) e a fonte de relevo, e calcular sem travar a interface.
+
 ## v0.6.60 — Implementado nesta entrega
 
 - Aviso do site oficial sempre ao abrir (sem "não mostrar novamente"); o aviso de versão nova abre em sequência, logo depois que ele é fechado.
