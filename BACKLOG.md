@@ -17,10 +17,15 @@
     Meshtastic/MeshCore; manter "Personalizado / manual" e "Rádio conectado".
   - Quando o rádio conectado informar o hardware, sugerir a marca/modelo correspondente.
 
-- **Backlog (28/10/2026): "Raio de busca (km)" com padrão de 50 km** (Análise de cobertura →
-  Transmissor, ao lado de "Ir para o ponto mais alto"; hoje o padrão é 1 km).
-  - O limite atual de `coverage.highest_point()` é 20 km: subir para pelo menos 50 km, usando
-    relevo de menor resolução nos raios grandes para a busca continuar rápida.
+- **Backlog (28/10/2026): raio da cobertura claro e maior (padrão 50 km, até 100 km).**
+  - Relato com captura: o mantenedor pôs 100 em "Raio de busca (km)" e a cobertura saiu com
+    ~20 km. Esse campo é só da busca do ponto mais alto; o raio da cobertura é o "Alcance
+    máximo (km)", escondido na seção Simulação (padrão 20, máximo 70).
+  - Colocar o **raio da cobertura** em destaque na seção Transmissor, logo acima de
+    "Calcular cobertura", com padrão de **50 km** e máximo de **100 km** (relevo de menor
+    resolução nos raios grandes para o cálculo continuar rápido; alta resolução segue até 40 km).
+  - Renomear o outro campo para "Buscar ponto mais alto num raio de (km)" e validar o limite
+    dele (hoje até 20 km) com mensagem clara, em vez de aceitar 100 sem efeito.
 
 ## v0.6.61 — Implementado nesta entrega
 
