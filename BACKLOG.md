@@ -1,3 +1,7 @@
+## v0.6.60 — Implementado nesta entrega
+
+- Aviso do site oficial sempre ao abrir (sem "não mostrar novamente"); o aviso de versão nova abre em sequência, logo depois que ele é fechado.
+
 ## v0.6.57 — Implementado nesta entrega
 
 - #210: contador de downloads por tipo de build nas tabelas do README.
