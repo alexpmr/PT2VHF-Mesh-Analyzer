@@ -54,6 +54,14 @@
   - Na implementação: escolher o modelo de propagação (ex.: Longley-Rice/ITM, que usa
     exatamente esses parâmetros) e a fonte de relevo, e calcular sem travar a interface.
 
+- **Backlog (28/10/2026): aba Automações com cada automação recolhida** (`#viewAutomations`).
+  - Hoje todos os recursos aparecem abertos juntos. Passar a listar as automações
+    recolhidas (nome e, de preferência, estado ligado/desligado e resumo curto).
+  - Ao escolher uma automação, abrir todas as opções dela, com botões **Salvar** e
+    **Cancelar** (Cancelar descarta as alterações e recolhe).
+  - Manter o aviso atual de alterações não salvas ao sair da aba
+    (`automationLeaveChoice()`) e ao trocar de automação.
+
 ## v0.6.60 — Implementado nesta entrega
 
 - Aviso do site oficial sempre ao abrir (sem "não mostrar novamente"); o aviso de versão nova abre em sequência, logo depois que ele é fechado.
