@@ -48,7 +48,7 @@ runpy.run_path('launch.py',run_name='__main__')
   const px=async(lat,lon)=>{const p=await page.evaluate(([a,b])=>{const q=map.latLngToContainerPoint([a,b]);return [q.x,q.y];},[lat,lon]);return [box.x+p[0],box.y+p[1]];};
   const out={};
   // #179: menu Ver → enlace; dois cliques no mapa; perfil, veredito e PDF.
-  await page.click('#mapVisibilityBtn');await page.click('#mapToolLink');
+  await page.click('#mapToolsBtn');await page.click('#mapToolLink');   // v0.6.61: menu Ferramentas
   await page.waitForSelector('#linkHint');
   let [x,y]=await px(-15.80,-47.96);await page.mouse.click(x,y);
   [x,y]=await px(-15.80,-47.84);await page.mouse.click(x,y);
@@ -69,7 +69,7 @@ runpy.run_path('launch.py',run_name='__main__')
   await page.evaluate(()=>document.activeElement.blur());await page.keyboard.press('Escape');
   out.closed=await page.evaluate(()=>mapTool===null&&$('mapToolPanel').hidden&&toolLayer.getLayers().length===0);
   // #180: polígono clicado no mapa, Ctrl+Z, fechar no primeiro vértice.
-  await page.click('#mapVisibilityBtn');await page.click('#mapToolSurvey');
+  await page.click('#mapToolsBtn');await page.click('#mapToolSurvey');
   await page.waitForSelector('#surveyHint');
   const corners=[[-15.75,-47.95],[-15.75,-47.85],[-15.85,-47.85],[-15.85,-47.95]];
   for(const c of corners){[x,y]=await px(...c);await page.mouse.click(x,y);}

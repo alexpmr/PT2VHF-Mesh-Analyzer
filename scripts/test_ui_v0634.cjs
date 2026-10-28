@@ -55,7 +55,8 @@ const path=require('path');
   assert.equal(result.whiteSpace,'pre-wrap');assert.deepEqual(result.themes,['pre-wrap','pre-wrap','pre-wrap']);assert.equal(result.saveColor,'rgb(243, 207, 72)');assert(result.text.includes('Linha 1\nLinha 2\n\nFim <script>'));
   assert.equal(result.time,'há 4 minutos');assert(result.fullTime);assert(result.oldTime.includes('2020'));
   assert.equal(result.filteredLinks,1);assert.equal(result.noLinks,0);assert.equal(result.allLinks,2);
-  assert(result.collapsed);assert.equal(result.connected,'Detected Radio');assert.equal(result.disconnected,'desconectado');
+  assert(result.collapsed);// v0.6.61: tipo da conexão entre parênteses; desconectado mostra o rádio em vermelho.
+  assert.equal(result.connected,'Detected Radio (WIFI)');assert.equal(result.disconnected,'Detected Radio (WIFI)');
   assert(result.saveEnabled&&result.leavePrompt&&result.stayed&&result.discarded);
   assert.deepEqual(errors,[]);console.log('Chromium UI regression OK',JSON.stringify(result));
  }finally{if(browser)await browser.close();server.kill();}

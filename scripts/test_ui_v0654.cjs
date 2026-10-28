@@ -39,10 +39,9 @@ const path=require('path');
    return r;
   });
   if(process.env.MESH_DEBUG)console.log(JSON.stringify(out,null,1));
-  assert.equal(out.serial.border,'rgb(35, 141, 88)');
-  assert.equal(out.ble.border,'rgb(59, 130, 246)');assert.equal(out.ble.dot,'rgb(96, 165, 250)');
-  assert.equal(out.tcp.border,'rgb(224, 138, 46)');assert.equal(out.tcp.dot,'rgb(245, 158, 11)');
-  assert.equal(out.mqtt.kind,'mqtt');assert.equal(out.mqtt.border,'rgb(160, 108, 255)');
+  // v0.6.61: a cor indica só o estado (verde conectado), qualquer que seja o tipo.
+  for(const kind of ['serial','ble','tcp']){assert.equal(out[kind].border,'rgb(35, 141, 88)',kind);assert.equal(out[kind].dot,'rgb(81, 216, 135)',kind);}
+  assert.equal(out.mqtt.kind,'mqtt');assert.equal(out.mqtt.border,'rgb(35, 141, 88)');
   assert.deepEqual(errors,[]);console.log('Chromium UI v0.6.54 OK',JSON.stringify(out));
  }finally{
   if(browser)await browser.close();

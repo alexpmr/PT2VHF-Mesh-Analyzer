@@ -253,9 +253,10 @@ html[data-theme] .deviceNotice button.primary:not(.active):not(.danger),html[dat
 .coveragePin span{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#59e97e;border:2px solid #fff;box-shadow:0 2px 6px #0008;font-size:16px}
 .coverageOverlay{image-rendering:pixelated}
 #viewAutomations .autoItem{padding:0;overflow:hidden;flex-shrink:0;width:100%;max-width:1020px!important;box-sizing:border-box}
+#viewAutomations .autoItemHeading{margin:0;font-size:inherit}
 #viewAutomations .autoItemHead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;text-align:left;padding:13px 16px;border:0;border-radius:0;background:transparent!important;font-size:15px;font-weight:700}
 #viewAutomations .autoItemHead:hover{background:#ffffff0d!important}
-#viewAutomations .autoItemChevron{transition:transform .15s;display:inline-block}#viewAutomations .autoItem.open .autoItemChevron{transform:rotate(90deg)}
+#viewAutomations .autoItemHead::before{content:'▸';display:inline-block;transition:transform .15s}#viewAutomations .autoItem.open .autoItemHead::before{transform:rotate(90deg)}
 #viewAutomations .autoItemState{font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid #8a4e58;color:#ffd1d8;background:#44212c}
 #viewAutomations .autoItemState.on{border-color:#238d58;color:#aff2cb;background:#163b2d}
 #viewAutomations .autoItemSummary{font-size:12px;font-weight:400;flex-basis:100%;padding-left:24px}
@@ -5158,7 +5159,7 @@ async function resolveAutomationChanges(){
  const choice=await automationLeaveChoice();
  if(choice==='continue'){if(openAutomation!==item.key){AUTOMATION_ITEMS.forEach(x=>setAutomationOpen(x.key,x===item));}return false;}
  if(choice==='save')return await item.save();
- await item.cancel();refreshAutomationHeads();return true;
+ item.cancel().then(refreshAutomationHeads);return true;
 }
 async function toggleAutomation(key){
  const opening=openAutomation!==key;
@@ -5172,11 +5173,12 @@ function setupAutomationItems(){
   const card=$(item.card),h3=card.querySelector('h3');
   card.classList.add('autoItem');card.dataset.autoItem=item.key;
   const head=document.createElement('button');head.type='button';head.className='autoItemHead';head.setAttribute('aria-expanded','false');
-  head.innerHTML='<span class="autoItemChevron" aria-hidden="true">▸</span><span class="autoItemTitle"></span><span class="autoItemState"></span><span class="autoItemSummary muted"></span>';
+  head.innerHTML='<span class="autoItemTitle"></span><span class="autoItemState"></span><span class="autoItemSummary muted"></span>';
   head.querySelector('.autoItemTitle').textContent=h3.textContent;
   const body=document.createElement('div');body.className='autoItemBody';body.hidden=true;
   while(h3.nextSibling)body.appendChild(h3.nextSibling);
-  h3.replaceWith(head);card.appendChild(body);
+  // Título continua sendo um h3, com o botão de abrir/fechar dentro (padrão de sanfona).
+  h3.textContent='';h3.className='autoItemHeading';h3.appendChild(head);card.appendChild(body);
   const foot=document.createElement('div');foot.className='autoItemFoot actions';
   foot.innerHTML='<button type="button" class="primary" data-auto-save>Salvar</button><button type="button" data-auto-cancel>Cancelar</button>';
   body.appendChild(foot);

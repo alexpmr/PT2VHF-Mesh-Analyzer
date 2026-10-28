@@ -60,10 +60,10 @@ const path=require('path');
   out.pinNote=await page.evaluate(()=>document.querySelector('.pinJob').textContent);
   out.diagnosis=await page.evaluate(()=>$('autoAddResult').innerText);
   if(process.env.MESH_DEBUG)console.log(JSON.stringify({out,pins},null,1));
-  assert.equal(out.radio,'PT2VHF-4 - Móvel');
-  assert.equal(out.mqtt.text,'Platorm · MQTT');   // v0.6.49: só a conexão escolhida
+  assert.equal(out.radio,'PT2VHF-4 - Móvel (USB)');   // v0.6.61: tipo entre parênteses
+  assert.equal(out.mqtt.text,'Platorm (MQTT)');   // v0.6.49: só a conexão escolhida
   assert(stateUrls.includes('?source=28'),'counters of the chosen connection');assert.equal(out.mqtt.view,'other');assert(out.mqtt.chipVisible,'chip next to the pill');
-  assert.deepEqual(out.back,{text:'PT2VHF-4 - Móvel',view:null});
+  assert.deepEqual(out.back,{text:'PT2VHF-4 - Móvel (USB)',view:null});
   assert.equal(out.buttons,1);assert(out.hint);
   assert(out.pinNote.includes('Pareamento recusado'));
   assert(out.diagnosis.includes('Intel(R) Wireless Bluetooth(R)')&&out.diagnosis.includes('DESKTOP - Superior')&&out.diagnosis.includes('client.meshtastic.org'));
