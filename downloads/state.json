@@ -120,17 +120,17 @@
   "v0.6.61/PT2VHF-Mesh-Analyzer-amd64.deb": 0,
   "v0.6.61/PT2VHF-Mesh-Analyzer-macOS-arm64.dmg": 0,
   "v0.6.61/PT2VHF-Mesh-Analyzer-macOS-x64.dmg": 0,
-  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Linux-x64.tar.gz": 0,
+  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Linux-x64.tar.gz": 1,
   "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Portable-Win10-Win11-x64.exe": 0,
-  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Portable-Win10-Win11-x64.zip": 0,
+  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Portable-Win10-Win11-x64.zip": 1,
   "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Portable-Win11-x64.exe": 0,
   "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Portable-Win11-x64.zip": 0,
-  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Setup-Win10-Win11-x64.exe": 0,
+  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Setup-Win10-Win11-x64.exe": 1,
   "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-Setup-Win11-x64.exe": 0,
-  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-amd64.deb": 0,
-  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-macOS-arm64.dmg": 0,
-  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-macOS-x64.dmg": 0,
+  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-amd64.deb": 1,
+  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-macOS-arm64.dmg": 1,
+  "v0.6.61/PT2VHF-Mesh-Analyzer-v0.6.61-macOS-x64.dmg": 1,
   "v0.6.61/PT2VHF-Mesh-Analyzer.exe": 0,
-  "v0.6.61/SHA256SUMS.txt": 0
+  "v0.6.61/SHA256SUMS.txt": 1
  }
 }
