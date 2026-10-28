@@ -7,6 +7,16 @@
     Relatório (PDF) e Diagnóstico (.zip).
   - As ferramentas de mapa continuam abrindo o mapa automaticamente ao serem escolhidas.
 
+- **Backlog (28/10/2026): mais rádios no campo "Dispositivo", escolhidos por marca e modelo.**
+  - Onde: Ferramentas → Análise de cobertura → Transmissor → Dispositivo (hoje uma lista curta:
+    Heltec V3, T-Beam, T-Echo, RAK4631, Station G2). Aplicar também à Análise de enlace.
+  - Escolher primeiro a **marca** e depois o **modelo** daquela marca; o modelo preenche potência
+    máxima, ganho da antena de fábrica e, se houver, perda/observações típicas.
+  - Marcas a cobrir (levantar os modelos de cada uma na implementação): Heltec, LilyGO, RAKwireless,
+    Seeed Studio, B&Q Consulting (Station G2), Elecrow, Nordic/Adafruit e outras com firmware
+    Meshtastic/MeshCore; manter "Personalizado / manual" e "Rádio conectado".
+  - Quando o rádio conectado informar o hardware, sugerir a marca/modelo correspondente.
+
 ## v0.6.61 — Implementado nesta entrega
 
 - Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
