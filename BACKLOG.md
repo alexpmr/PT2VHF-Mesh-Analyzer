@@ -35,6 +35,18 @@
   - Destacar esses nós no mapa (ex.: contorno vermelho) e permitir clicar para abrir a Análise de
     enlace entre o transmissor e o nó, para ver o obstáculo.
 
+- **Backlog (28/10/2026): ordem de preferência das conexões de rádio: USB → BLE → WIFI.**
+  - Relato com captura: o PT2VHF-4 - Móvel está cadastrado por USB (ID 34) e por Wi-Fi/TCP
+    (ID 33), ligado na USB, e o app ativou o Wi-Fi; a USB ficou em standby.
+  - Hoje (`transports.py`): o rádio preferido salvo (`preferred_radio`, #152) tenta primeiro; sem
+    ele, a USB só tem prioridade nos primeiros 30 s (`STARTUP_PREFERENCE_S`, #155) e depois vence
+    quem conectar primeiro. BLE e Wi-Fi não têm ordem entre si.
+  - Ao escolher o rádio ativo automaticamente: USB, depois BLE, depois Wi-Fi (MQTT nunca é rádio).
+    Quando o mesmo nó (mesmo `local_node_num`) estiver disponível por mais de um meio, usar o de
+    maior preferência e, se um meio melhor aparecer depois (ex.: cabo USB ligado com o Wi-Fi
+    ativo), trocar sozinho para ele, sem perder dados.
+  - Escolha manual no menu do indicador continua valendo enquanto aquele meio estiver disponível.
+
 ## v0.6.61 — Implementado nesta entrega
 
 - Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
