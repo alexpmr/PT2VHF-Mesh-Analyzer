@@ -45,6 +45,12 @@
       transparência e legenda; mudanças aplicadas na hora sobre a cobertura já calculada.
   - Resultado claro no mapa: áreas onde o sinal chega acima da sensibilidade e até onde
     vai; reaproveitar o relevo já usado em "Analisar enlace" / "Melhor ponto".
+    Exemplo enviado pelo mantenedor (região de Luziânia/Valparaíso, pino verde no
+    transmissor): mapa de calor recortado pelo relevo, só onde há sinal (amarelo forte perto
+    do pino, roxo nas bordas, manchas isoladas nos morros distantes), sobre o mapa base sem
+    cobrir o resto; legenda "SINAL · Mapa de calor" de −130 a −80 dBm no canto, escala
+    de 5 km, e botões laterais de informações, camadas, enlace, exportar e localizar.
+    Prever exportar o resultado (imagem/KMZ).
   - Na implementação: escolher o modelo de propagação (ex.: Longley-Rice/ITM, que usa
     exatamente esses parâmetros) e a fonte de relevo, e calcular sem travar a interface.
 
