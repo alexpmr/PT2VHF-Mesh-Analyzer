@@ -1,6 +1,11 @@
 ## Pendentes (próxima versão)
 
-(nenhum)
+- **Backlog (28/10/2026): Ferramentas no menu superior**, entre **Automações** e **Configurações**.
+  - Hoje o botão "Ferramentas ▾" fica na barra do mapa, ao lado de "Ver" (referência:
+    `docs/backlog/ferramentas-menu-superior.png`). Passar para a navegação principal (`#nav`),
+    com o mesmo conteúdo: Planejamento de RF (cobertura, enlace, melhor ponto), Relevo com corte,
+    Relatório (PDF) e Diagnóstico (.zip).
+  - As ferramentas de mapa continuam abrindo o mapa automaticamente ao serem escolhidas.
 
 ## v0.6.61 — Implementado nesta entrega
 
