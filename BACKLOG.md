@@ -1,3 +1,11 @@
+## Pendentes (próxima versão)
+
+- **Roadmap (28/10/2026): indicador da conexão escolhida no topo** (botão "PT2VHF-4 - Móvel").
+  - Luz sempre **verde** quando a conexão estiver conectada e **vermelha** quando desconectada
+    (hoje aparece laranja/âmbar mesmo conectada).
+  - Acrescentar entre parênteses o tipo de conexão: USB, BLE, WIFI ou MQTT.
+    Ex.: `PT2VHF-4 - Móvel (USB)`.
+
 ## v0.6.60 — Implementado nesta entrega
 
 - Aviso do site oficial sempre ao abrir (sem "não mostrar novamente"); o aviso de versão nova abre em sequência, logo depois que ele é fechado.
