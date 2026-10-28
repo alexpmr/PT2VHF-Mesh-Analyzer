@@ -78,6 +78,20 @@
     quem ainda não mudou essa opção; quem desligou explicitamente continua desligado.
   - O papel e os demais detalhes continuam no tooltip ao passar o mouse e no painel do nó.
 
+- **Backlog (28/10/2026): Estatísticas → Saúde dos repetidores: disponibilidade errada.**
+  - Relato com captura (`docs/backlog/saude-repetidores.png`): PT2VHF-7-RPT 7,9%, Meshtastic 98aa 9,1% e PT2VHF-5 - RPT 16%, todos
+    ouvidos há menos de 1 h e que não saíram do ar; Presença "sem resposta" nos três.
+  - Causa provável (`insights.repeaters()`): disponibilidade = horas com pacote *originado* pelo
+    nó ÷ todas as horas do período desde o primeiro contato. As horas em que o próprio app estava
+    fechado ou sem rádio contam como "fora do ar" (7,9% de 7 dias ≈ 13 h, perto do tempo em que o
+    app ficou ouvindo).
+  - Corrigir: dividir só pelas horas em que o app estava recebendo (horas com qualquer pacote ou
+    conexão ativa); contar também como "ouvido" quando o nó aparece retransmitindo (relay/next hop),
+    em rotas de traceroute ou em NeighborInfo; mostrar "sem dados" em vez de % quando o app
+    quase não ouviu no período.
+  - Conferir por que a Presença marca "sem resposta" em repetidores que estão no ar (ping de
+    presença x papel ROUTER, que pode não responder a NodeInfo).
+
 ## v0.6.61 — Implementado nesta entrega
 
 - Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
