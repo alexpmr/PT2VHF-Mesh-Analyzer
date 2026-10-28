@@ -17,6 +17,11 @@
     Meshtastic/MeshCore; manter "Personalizado / manual" e "Rádio conectado".
   - Quando o rádio conectado informar o hardware, sugerir a marca/modelo correspondente.
 
+- **Backlog (28/10/2026): "Raio de busca (km)" com padrão de 50 km** (Análise de cobertura →
+  Transmissor, ao lado de "Ir para o ponto mais alto"; hoje o padrão é 1 km).
+  - O limite atual de `coverage.highest_point()` é 20 km: subir para pelo menos 50 km, usando
+    relevo de menor resolução nos raios grandes para a busca continuar rápida.
+
 ## v0.6.61 — Implementado nesta entrega
 
 - Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
