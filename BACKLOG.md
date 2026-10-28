@@ -11,6 +11,8 @@
     (`#mapToolLink`) e "Melhor ponto para instalar nó" (`#mapToolSurvey`).
   - Levar também para Ferramentas os demais recursos que façam mais sentido lá
     (levantar na implementação, por exemplo diagnóstico, consultas e exportações/relatórios).
+  - Backlog (28/10/2026): mover também da aba Ver a opção "Relevo com corte"
+    (`#mapTerrain`) para Ferramentas.
 
 ## v0.6.60 — Implementado nesta entrega
 
