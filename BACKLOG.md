@@ -56,6 +56,18 @@
   - Padronizar os três PDFs (cabeçalho PT2VHF Mesh Analyzer, versão, data, imagem do mapa e
     tabela de parâmetros) e incluir o Relevo com corte, quando ligado, na imagem do mapa.
 
+- **Backlog (28/10/2026): Tráfego mostrando o payload por padrão.**
+  - Relato com captura: no detalhe de um pacote de Telemetria aparece "Conteúdo: —". Hoje
+    "Conteúdo" usa só `text_preview`, que é preenchido apenas em mensagens de texto; o pacote
+    decodificado já fica guardado em `packets.raw_json` (`decoded`).
+  - No painel de detalhes, mostrar sempre o payload decodificado, legível por tipo:
+    telemetria (bateria, tensão, utilização do canal/TX, sensores), posição (lat/lon, altitude,
+    satélites), NodeInfo (nomes, hardware, papel), roteamento/traceroute (rota, SNR por salto),
+    texto; e um "Ver JSON completo" recolhível com o conteúdo bruto.
+  - Na tabela, coluna "Conteúdo" visível por padrão com um resumo curto do payload
+    (ex.: "🔋 87% · 4,12 V · canal 12%").
+  - Pacotes criptografados continuam com "[conteúdo indisponível]".
+
 ## v0.6.61 — Implementado nesta entrega
 
 - Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
