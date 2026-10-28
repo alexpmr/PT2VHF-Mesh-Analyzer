@@ -28,8 +28,7 @@ class OfficialSiteNotice(unittest.TestCase):
 
     def test_version(self):
         from mesh_analyzer import __version__
-        self.assertEqual(__version__,"0.6.60")
-        self.assertEqual((ROOT/"VERSION").read_text().strip(),"0.6.60")
+        self.assertEqual((ROOT/"VERSION").read_text().strip(),__version__)
 
 
 if __name__=="__main__":

@@ -58,7 +58,7 @@ class DisplayRegression(unittest.TestCase):
     def test_unified_ver_panel_single_layer_controls(self):
         for token in ('id="mapVisibilityPanel"','id="showMapNodes"','id="showMapLinks"',
                       'id="showMapWaypoints"','id="mapRadar"','id="mapRadarOpacity"',
-                      'id="mapHillshade"','id="mapTerrain"'):
+                      'id="mapTerrain"'):
             self.assertEqual(HTML.count(token),1,token)
         for removed in ('id="mapLayersPanel"','id="layersBtn"','id="closeLayers"',"$('layersBtn')"):
             self.assertNotIn(removed,HTML)

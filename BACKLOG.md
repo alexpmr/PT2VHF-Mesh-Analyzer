@@ -1,5 +1,19 @@
 ## Pendentes (próxima versão)
 
+(nenhum)
+
+## v0.6.61 — Implementado nesta entrega
+
+- Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
+- Menu Ferramentas: Análise de cobertura, Analisar enlace, Melhor ponto, Relevo com corte, Relatório (PDF) e Diagnóstico (.zip).
+- Relevo com corte compacto (coluna fina, slider de cima a baixo) e cor do sombreamento; Relevo sombreado removido.
+- Análise de cobertura a partir de ponto no mapa ou nó conhecido, com transmissor, receptor, ambiente, simulação e exibição.
+  Não incluídos por não serem usados pelo modelo: polarização, constante dielétrica e condutividade do solo.
+  Exportar o resultado (imagem/KMZ) fica para uma próxima versão.
+- Automações recolhidas, com Salvar/Cancelar ao abrir.
+
+<details><summary>Pedidos originais (28/10/2026)</summary>
+
 - **Roadmap (28/10/2026): indicador da conexão escolhida no topo** (botão "PT2VHF-4 - Móvel").
   - Luz sempre **verde** quando a conexão estiver conectada e **vermelha** quando desconectada
     (hoje aparece laranja/âmbar mesmo conectada).
@@ -61,6 +75,8 @@
     **Cancelar** (Cancelar descarta as alterações e recolhe).
   - Manter o aviso atual de alterações não salvas ao sair da aba
     (`automationLeaveChoice()`) e ao trocar de automação.
+
+</details>
 
 ## v0.6.60 — Implementado nesta entrega
 

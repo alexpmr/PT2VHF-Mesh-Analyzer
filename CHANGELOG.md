@@ -1,3 +1,12 @@
+# v0.6.61 — Menu Ferramentas, análise de cobertura e automações recolhidas
+
+- Menu **Ferramentas** no mapa (`#mapToolsBtn`/`#mapToolsPanel`): Análise de cobertura, Analisar enlace, Melhor ponto, Relevo com corte, Relatório da malha (PDF) e Diagnóstico para suporte. Saíram da aba Ver.
+- **Análise de cobertura** (`mesh_analyzer/coverage.py`, `/api/survey/coverage` e `/api/survey/highest`): radiais a partir do transmissor sobre os tiles Terrarium (baixados em paralelo e guardados em disco), perda em espaço livre, difração em dois gumes (horizontes do transmissor e do receptor, Epstein-Peterson) na Terra efetiva com k da refratividade, altura de obstáculos e margem por % de locais e % do tempo conforme o clima de rádio. A grade em dBm volta para a interface, que aplica mapa de calor ou contornos, escala, faixa e transparência sem recalcular.
+- Indicador da conexão: verde/vermelho só pelo estado e tipo entre parênteses (`connectionTypeLabel()`: USB, BLE, WIFI, MQTT); removidas as cores por tipo.
+- Relevo com corte: coluna de 68 px, slider de corte ocupando a altura e cor do sombreamento (`#terrainColor`, salva nas preferências do mapa). Relevo sombreado removido; a preferência antiga `mapHillshade` é descartada ao salvar.
+- Automações recolhidas (`setupAutomationItems()`): Meshtastic, MeshCore e Mensagens automáticas viram itens fechados com estado e resumo; ao abrir, Salvar/Cancelar no rodapé; alterações não salvas são resolvidas ao trocar de item ou de aba.
+- Testes: `tests/test_release_v0661.py`.
+
 # v0.6.60 — Aviso do site oficial sem atrapalhar o aviso de versão nova
 
 - O aviso "Downloads no site oficial" (www.pt2vhf.com) continua aparecendo sempre, a cada abertura, sem opção de "não mostrar novamente".

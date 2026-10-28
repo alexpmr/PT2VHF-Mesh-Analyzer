@@ -50,7 +50,7 @@ const api=async(path,args)=>{calls.push(args.node_num);if(args.node_num===12)thr
 
     def test_radar_deactivation_invalidates_inflight_update(self):
         start=HTML.index("function applyRadarOpacity(){")
-        end=HTML.index("function updateHillshade(){",start)
+        end=HTML.index("function terrainRgb(){",start)
         code=r"""
 const els={mapRadar:{checked:false},mapRadarOpacity:{value:'65'},
  mapRadarOpacityValue:{textContent:''},radarStatus:{textContent:''}};

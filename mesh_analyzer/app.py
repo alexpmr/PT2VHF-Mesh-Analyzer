@@ -178,6 +178,13 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
             from .survey import Elevations
             elevation_cache.append(Elevations(db,cache_dir=profile_dir()/"terrain-tiles"))
         return elevation_cache[0]
+    terrain_tiles=[]
+    def coverage_tiles():
+        # Análise de cobertura: os mesmos tiles de relevo (e o mesmo cache em disco) do survey.
+        if not terrain_tiles:
+            from .survey import TerrainTiles
+            terrain_tiles.append(TerrainTiles(profile_dir()/"terrain-tiles"))
+        return terrain_tiles[0]
     def own_nodes():
         own={int(s["local_node_num"]) for s in sources.snapshot().values() if s.get("local_node_num")}
         own|={int(s["config"]["node_num"]) for s in db.sources(public=False) if s["config"].get("node_num")}
@@ -351,6 +358,7 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     radio=survey.radio_defaults(sources)
                     presets=list(survey.PRESETS)+([radio["preset"]] if radio["preset"] not in survey.PRESETS else [])
                     self._json({"success":True,"radio":radio,"presets":presets,
+                                "sensitivity":{p:survey.sensitivity_dbm(p) for p in presets},
                                 "saved":survey.saved_surveys(db)})
                 elif path == "/api/messages/context":
                     query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
@@ -566,6 +574,14 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     auto=getattr(sources,"meshcore_auto",None)
                     if not auto:raise ValueError("Coleta MeshCore indisponível")
                     self._json({"success":True,"result":auto.tick()})
+                elif path == "/api/survey/coverage":
+                    from . import coverage
+                    self._json({"success":True,"data":coverage.coverage(coverage_tiles(),payload.get("center"),
+                        payload.get("params") or {})})
+                elif path == "/api/survey/highest":
+                    from . import coverage
+                    self._json({"success":True,"data":coverage.highest_point(coverage_tiles(),payload.get("center"),
+                        payload.get("radius_km"))})
                 elif path == "/api/survey/best":
                     from . import survey
                     self._json({"success":True,"data":survey.best_points(elevations(),payload.get("polygon"),

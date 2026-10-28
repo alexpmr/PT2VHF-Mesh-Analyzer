@@ -421,7 +421,9 @@ class Database:
             "soundDensity","soundMinInterval","soundMaxVoices","soundRouting","soundMessages",
             "soundAlerts","soundStereo","mapAnimateNodes","mapHighlightSource","mapHighlightRelay",
             "mapPulseSeconds","mapAnimationSpeed","mapType","mapRadar","mapRadarOpacity",
-            "mapHillshade","mapTerrain","terrainCut","terrainMax","terrainOpacity"}
+            "mapTerrain","terrainCut","terrainMax","terrainOpacity","terrainColor"}
+        # v0.6.61: o Relevo sombreado foi removido; a preferência antiga é descartada.
+        options={k:v for k,v in options.items() if k!="mapHillshade"}
         if set(options)-allowed:raise ValueError("Opção de mapa desconhecida")
         if len(json.dumps(options))>12000:raise ValueError("Preferências excedem o limite")
         for k,v in options.items():
@@ -442,7 +444,7 @@ class Database:
                 except (TypeError,ValueError):raise ValueError("Número inválido em "+name)
                 if not low<=num<=high:raise ValueError("Fora do intervalo em "+name)
         import re
-        for color in ("mapRfColor","mapInternetColor"):
+        for color in ("mapRfColor","mapInternetColor","terrainColor"):
             if color in options and not re.fullmatch(r"#[0-9a-fA-F]{6}",str(options[color])):
                 raise ValueError("Cor inválida: "+color)
         merged=self.ui_preferences()

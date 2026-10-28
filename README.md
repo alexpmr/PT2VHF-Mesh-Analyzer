@@ -1,4 +1,4 @@
-# PT2VHF Mesh Analyzer — v0.6.60
+# PT2VHF Mesh Analyzer — v0.6.61
 
 **Projeto independente do MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 10/11, Linux e macOS, com banco SQLite próprio e conexões Meshtastic por USB/Serial, Bluetooth LE, TCP/Wi-Fi e MQTT.
 
@@ -31,6 +31,19 @@ Abra `http://localhost:8789` no próprio servidor. Rádio USB em servidor Linux:
 **Requisitos Linux:** distribuição 64 bits com glibc 2.35+ (Ubuntu 22.04, Linux Mint 21, Debian 12, Fedora 36 ou mais novos) e um navegador. **Ubuntu / Linux Mint:** dê dois cliques no `.deb` ou use `sudo apt install ./PT2VHF-Mesh-Analyzer-v0.6.56-amd64.deb`; o atalho aparece no menu e o comando `pt2vhf-mesh-analyzer` fica disponível. Remover o pacote preserva seus dados. **Outras distribuições:** extraia o `.tar.gz` e execute `./PT2VHF-Mesh-Analyzer` (a interface abre no navegador padrão) ou `./instalar.sh` para criar o atalho no menu de aplicativos. Para rádio USB, o usuário deve pertencer ao grupo `dialout`.
 
 **Atualização:** no Windows, a atualização é feita pelo próprio aplicativo. No macOS e no Linux, o aplicativo avisa quando houver versão nova e o botão abre a página da release para baixar o pacote (no `.deb`, instale o novo por cima). No container, atualize a imagem.
+
+### Novidades da v0.6.61
+
+- **Menu Ferramentas no mapa:** ao lado de **Ver**, reúne a Análise de cobertura, a Análise de enlace entre 2 pontos, o Melhor ponto para instalar nó, o Relevo com corte, o Relatório da malha (PDF) e o Diagnóstico para suporte (.zip).
+- **Análise de cobertura (novo):** em **Ferramentas → Análise de cobertura**, marque um ponto no mapa (o pino pode ser arrastado) ou escolha um nó conhecido e veja onde o sinal chegaria.
+  - Transmissor: dispositivo (preenche potência e ganho típicos), potência, frequência, altura e ganho da antena, e "Ir para o ponto mais alto" dentro de um raio.
+  - Receptor: preset LoRa (preenche a sensibilidade), altura, ganho e perda no cabo.
+  - Ambiente e simulação: clima de rádio, altura de obstáculos, refratividade, % de locais e % do tempo, alcance de até 70 km e relevo em alta resolução (~38 m, até 40 km).
+  - Exibição: mapa de calor ou contornos de 10 dB, faixa em dBm, quatro escalas de cores e transparência, aplicadas na hora; legenda no mapa e lista dos nós conhecidos dentro da cobertura, com o sinal estimado.
+  - O cálculo usa o mesmo relevo da análise de enlace, com difração nos horizontes do transmissor e do receptor de cada trajeto; áreas já calculadas funcionam sem internet.
+- **Indicador da conexão no topo:** verde quando conectado, vermelho quando desconectado, com o tipo entre parênteses, por exemplo `PT2VHF-4 - Móvel (USB)` (USB, BLE, WIFI ou MQTT).
+- **Relevo com corte** mais compacto: coluna fina na lateral, slider de corte de cima a baixo e ajuste da **cor** do sombreamento. O **Relevo sombreado** foi removido.
+- **Automações recolhidas:** cada automação aparece fechada, com o estado (Ativada/Desativada) e um resumo; ao abrir uma, aparecem as opções dela com **Salvar** e **Cancelar**. Alterações não salvas são confirmadas ao trocar de automação ou de aba.
 
 ### Novidades da v0.6.60
 
@@ -146,14 +159,14 @@ Abra `http://localhost:8789` no próprio servidor. Rádio USB em servidor Linux:
 
 ### Novidades da v0.6.41
 
-- **Análise de enlace entre 2 pontos (#179):** no mapa, **Ver → Planejamento → Analisar enlace entre 2 pontos**. Clique em dois pontos quaisquer (ou em nós, ou digite as coordenadas) e veja:
+- **Análise de enlace entre 2 pontos (#179):** no mapa, **Ferramentas → Analisar enlace entre 2 pontos** (até a v0.6.60: Ver → Planejamento). Clique em dois pontos quaisquer (ou em nós, ou digite as coordenadas) e veja:
   - distância, azimutes e altitude do terreno nas pontas;
   - perfil de altimetria com a curvatura da Terra, a linha de visada e a 1ª zona de Fresnel;
   - perda em espaço livre, perda por obstrução, sinal estimado no receptor e margem sobre a sensibilidade do preset LoRa;
   - veredito **Viável / Marginal / Inviável** com o motivo, o pior obstáculo marcado no mapa e a altura de antena que libera a zona de Fresnel.
 
   Altura das antenas, frequência, potência, ganhos, perdas de cabo e preset são editáveis; frequência, potência e preset vêm do rádio conectado. Os pontos podem ser arrastados. Quando uma das pontas é o seu rádio, mostra também o SNR/RSSI já recebidos do outro nó. Exporta em PDF. O botão do popup de um enlace do mapa abre a mesma análise.
-- **Melhor ponto para instalar nó (#180):** **Ver → Planejamento → Melhor ponto para instalar nó**. Desenhe a área clicando no mapa (Ctrl+Z desfaz; feche no primeiro vértice, com duplo clique ou em Concluir). A ferramenta encontra os topos de morros diferentes dentro da área e os numera **do mais alto para o mais baixo**, no mapa e na tabela ao lado (altitude, desnível, distância, direção e coordenadas). Vértices editáveis, ponto de referência opcional (nó ou ponto do mapa), enlace de cada ponto até a referência ou um nó, surveys salvos, **CSV** e **PDF do survey** com mapa de relevo, tabela e perfis de enlace.
+- **Melhor ponto para instalar nó (#180):** **Ferramentas → Melhor ponto para instalar nó** (até a v0.6.60: Ver → Planejamento). Desenhe a área clicando no mapa (Ctrl+Z desfaz; feche no primeiro vértice, com duplo clique ou em Concluir). A ferramenta encontra os topos de morros diferentes dentro da área e os numera **do mais alto para o mais baixo**, no mapa e na tabela ao lado (altitude, desnível, distância, direção e coordenadas). Vértices editáveis, ponto de referência opcional (nó ou ponto do mapa), enlace de cada ponto até a referência ou um nó, surveys salvos, **CSV** e **PDF do survey** com mapa de relevo, tabela e perfis de enlace.
 
 As elevações vêm do Open-Meteo e ficam guardadas no app: pontos já analisados funcionam sem internet.
 
