@@ -27,6 +27,14 @@
   - Renomear o outro campo para "Buscar ponto mais alto num raio de (km)" e validar o limite
     dele (hoje até 20 km) com mensagem clara, em vez de aceitar 100 sem efeito.
 
+- **Backlog (28/10/2026): Análise de cobertura → listar também os nós sem cobertura.**
+  - Hoje o resultado mostra só "Nós conhecidos dentro da cobertura (N)", com o sinal estimado.
+  - Acrescentar "Nós conhecidos sem cobertura (N)": os nós com posição dentro do raio calculado
+    cujo sinal estimado ficou abaixo da sensibilidade, com o valor estimado (ou "sem sinal") e
+    quanto falta em dB; e, à parte, os que ficaram fora do raio calculado, com a distância.
+  - Destacar esses nós no mapa (ex.: contorno vermelho) e permitir clicar para abrir a Análise de
+    enlace entre o transmissor e o nó, para ver o obstáculo.
+
 ## v0.6.61 — Implementado nesta entrega
 
 - Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
