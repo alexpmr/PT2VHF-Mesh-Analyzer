@@ -47,6 +47,15 @@
     ativo), trocar sozinho para ele, sem perder dados.
   - Escolha manual no menu do indicador continua valendo enquanto aquele meio estiver disponível.
 
+- **Backlog (28/10/2026): PDF para documentação em todas as ferramentas de mapa.**
+  - Já existem: "Exportar PDF" na Análise de enlace e no Melhor ponto (`survey_pdf.py`).
+  - Falta na **Análise de cobertura**: botão "Baixar PDF" com a imagem do mapa de cobertura
+    (mapa base + cobertura + legenda + transmissor + nós), data/hora, nome do transmissor,
+    coordenadas, todos os parâmetros (transmissor, receptor, ambiente, simulação), o resultado
+    (área, alcance, margem) e as listas de nós com e sem cobertura.
+  - Padronizar os três PDFs (cabeçalho PT2VHF Mesh Analyzer, versão, data, imagem do mapa e
+    tabela de parâmetros) e incluir o Relevo com corte, quando ligado, na imagem do mapa.
+
 ## v0.6.61 — Implementado nesta entrega
 
 - Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
