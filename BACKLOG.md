@@ -68,6 +68,16 @@
     (ex.: "🔋 87% · 4,12 V · canal 12%").
   - Pacotes criptografados continuam com "[conteúdo indisponível]".
 
+- **Backlog (28/10/2026): nomes curtos no mapa, neste formato e ligados por padrão.**
+  - Referência: `docs/backlog/mapa-nome-curto.png` (etiqueta escura e compacta, "VHF7", logo acima
+    do ícone do nó).
+  - A etiqueta mostra só o nome curto, exatamente como está no nó (sem " · papel"); sem nome
+    curto, usar o nome longo e depois o ID. Hoje o texto é `short_name · papel`
+    (`marker.bindTooltip(...nodeRoleMeta(n.role)[1])`).
+  - "Mostrar nomes curtos" (`#showNames` / `#mapShowNamesSetting`) ligado por padrão, também para
+    quem ainda não mudou essa opção; quem desligou explicitamente continua desligado.
+  - O papel e os demais detalhes continuam no tooltip ao passar o mouse e no painel do nó.
+
 ## v0.6.61 — Implementado nesta entrega
 
 - Indicador da conexão no topo: verde conectado, vermelho desconectado, tipo entre parênteses (USB, BLE, WIFI, MQTT).
