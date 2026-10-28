@@ -22,6 +22,10 @@
   - Novo ajuste da cor do sombreamento do relevo cortado, junto a Máx. (m) e Opacidade,
     salvo com as demais preferências do mapa.
 
+- **Backlog (28/10/2026): remover o recurso "Relevo sombreado"** (`#mapHillshade`, aba Ver).
+  - O mantenedor não viu utilidade: tirar a opção, a camada e o que só ela usa
+    (preferência salva, traduções, textos de ajuda e testes), sem afetar o "Relevo com corte".
+
 ## v0.6.60 — Implementado nesta entrega
 
 - Aviso do site oficial sempre ao abrir (sem "não mostrar novamente"); o aviso de versão nova abre em sequência, logo depois que ele é fechado.
