@@ -108,7 +108,7 @@ class CoverageModel(unittest.TestCase):
         self.assertAlmostEqual(best["lon"], hill[1], delta=0.0008)
         self.assertGreater(best["ground_m"], 1050)
         with self.assertRaises(ValueError):
-            C.highest_point(tiles, CENTER, 50)
+            C.highest_point(tiles, CENTER, 60)      # v0.6.62: limite de 50 km
 
 
 class CoverageInterface(unittest.TestCase):
@@ -132,8 +132,8 @@ class CoverageInterface(unittest.TestCase):
 
 class ToolsMenuAndTerrain(unittest.TestCase):
     def test_planning_and_terrain_moved_to_tools(self):
-        ver = HTML[HTML.index('<div id="mapVisibilityPanel"'):HTML.index('<div id="mapToolsPanel"')]
-        tools = HTML[HTML.index('<div id="mapToolsPanel"'):HTML.index("</section>", HTML.index('<div id="mapToolsPanel"'))]
+        ver = HTML[HTML.index('<div id="mapVisibilityPanel"'):HTML.index("</section>", HTML.index('<div id="mapVisibilityPanel"'))]
+        tools = HTML[HTML.index('<div id="mapToolsPanel"'):HTML.index('<section class="view active" id="viewMap">')]
         for token in ('id="mapToolLink"', 'id="mapToolSurvey"', 'id="mapTerrain"', 'id="mapToolCoverage"'):
             self.assertNotIn(token, ver)
             self.assertIn(token, tools)

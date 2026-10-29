@@ -330,9 +330,18 @@ class Insights(Base):
             self.pkt(100 + h, 20, now - h * 3600000 - 1000)
         raw = json.dumps({"from": 30, "to": 10, "decoded": {"portnum": "TRACEROUTE_APP", "route": [20]}})
         self.pkt(200, 30, now - 600000, port="TRACEROUTE_APP", raw=raw, to=10)
+        # v0.6.62: o divisor são as horas em que o app estava ouvindo. Só com os pacotes do
+        # próprio repetidor (e a rota), o app só ouviu nessas horas: 100%.
         r = insights.repeaters(self.db, 24, now)["repeaters"][0]
         self.assertEqual((r["name"], r["route_hops"]), ("Morro", 1))
-        self.assertAlmostEqual(r["availability"], 50.0, delta=10)
+        self.assertEqual(r["availability"], 100.0)
+        # Outro nó falando em todas as 10 horas: repetidor com sinal em 6 delas (5 pacotes + rota).
+        for h in range(10):
+            self.pkt(300 + h, 31, now - h * 3600000 - 2000)
+        r = insights.repeaters(self.db, 24, now)["repeaters"][0]
+        # 5 ou 6 horas com sinal (a rota pode cair na mesma hora cheia de um pacote) em 10 ou 11.
+        self.assertTrue(45 <= r["availability"] <= 61, r["availability"])
+        self.assertIn(r["listening_hours"], (10, 11))
 
     def test_routes_and_bottlenecks(self):
         from mesh_analyzer import insights

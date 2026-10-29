@@ -237,10 +237,11 @@ def _advanced_sections(db, params, heading, paragraph, table, usable):
     when = lambda ms: _dt.fromtimestamp(ms / 1000).strftime("%d/%m/%Y %H:%M") if ms else "—"
     rep = insights.repeaters(db, hours)["repeaters"]
     heading("10. Saúde dos repetidores")
-    paragraph("Nós com papel ROUTER, REPEATER, ROUTER_LATE ou ROUTER_CLIENT. Disponibilidade = horas do período "
-              "em que o nó foi ouvido. Em rotas = traceroutes do período que passaram por ele.")
+    paragraph("Nós com papel ROUTER, REPEATER, ROUTER_LATE ou ROUTER_CLIENT. Disponibilidade = horas em que o "
+              "repetidor deu sinal de vida (pacote dele, salto em rota ou vizinho em NeighborInfo) ÷ horas em que o "
+              "app estava ouvindo a malha. Em rotas = traceroutes do período que passaram por ele.")
     table([["Nó", "Papel", "Disponib.", "Última vez", "Bateria", "Canal", "Airtime", "Em rotas"]] +
-          [[r["name"], r["role"], number(r["availability"], "%"), when(r["last_seen_ms"]),
+          [[r["name"], r["role"], "sem dados" if r["availability"] is None else number(r["availability"], "%"), when(r["last_seen_ms"]),
             "EXT" if (r["battery"] or 0) > 100 else number(r["battery"], "%", 0),
             number(r["channel_util"], "%"), number(r["air_util"], "%"), r["route_hops"]] for r in rep[:40]],
           [usable * w for w in (.22, .12, .1, .16, .1, .1, .1, .1)])

@@ -45,6 +45,8 @@ TIMEOUT_HINT = {
 FIRST_RUN_DEADLINE_S = {"serial": 20, "tcp": 20, "ble": 60}
 USB_POLL_S = 3
 BLE_POLL_S = 45
+BETTER_RADIO_POLL_S = 10       # v0.6.62: checagem de meio melhor (USB → BLE → Wi-Fi)
+BETTER_RADIO_RETRY_S = 300     # depois de uma troca que falhou, espera antes de tentar de novo
 
 
 def device_key(kind, address):
@@ -515,11 +517,50 @@ class DeviceWatcher:
                     self._deferred.append(source_id)
             return False
         try:
-            self.sources.activate(source_id)
+            self.sources.activate(source_id, manual=False)
             return True
         except (ValueError, RuntimeError) as exc:
             LOG.warning("Prioridade USB não aplicada: %s", exc)
             return False
+
+    def _prefer_better(self):
+        """v0.6.62: com Wi-Fi ou BLE ativo, passa para USB (ou BLE) do mesmo rádio quando o
+        dispositivo estiver presente — conferido sem abrir a porta e sem transmitir."""
+        if not self._settings()["usb_priority"]:
+            return
+        now = time.monotonic()
+        if now < getattr(self, "_next_better", 0):
+            return
+        self._next_better = now + BETTER_RADIO_POLL_S
+        try:
+            from serial.tools import list_ports
+            ports = {str(p.device) for p in list_ports.comports()}
+        except Exception:
+            ports = set()
+        seen, at = getattr(self, "_ble_present", (set(), 0))
+        fresh_ble = seen if now - at < BLE_POLL_S * 2 else set()
+
+        def present(src):
+            conf = src.get("config") or {}
+            if src["kind"] == "serial":
+                return str(conf.get("port") or "") in ports
+            if src["kind"] == "ble":
+                return str(conf.get("address") or "").lower() in fresh_ble
+            return False
+        better = self.sources.better_radio(present)
+        if not better or self._radio_busy():
+            return
+        tried = getattr(self, "_better_tried", {})
+        if now - tried.get(better["id"], -1e9) < BETTER_RADIO_RETRY_S:
+            return
+        tried[better["id"]] = now
+        self._better_tried = tried
+        try:
+            self.sources.activate(better["id"], manual=False)
+            self.db.log("Conexão preferida disponível: trocando para " + better["name"] + " (" +
+                        {"serial": "USB", "ble": "BLE"}.get(better["kind"], better["kind"]) + ")", source_id=better["id"])
+        except (ValueError, RuntimeError) as exc:
+            LOG.warning("Troca para conexão preferida não aplicada: %s", exc)
 
     def _run_deferred(self):
         with self._lock:
@@ -588,6 +629,7 @@ class DeviceWatcher:
         except Exception as exc:
             LOG.debug("Varredura BLE indisponível: %s", exc)
             return
+        self._ble_present = ({str(d["address"]).lower() for d in found}, time.monotonic())
         self._drop_missing("ble", {device_key("ble", d["address"]) for d in found})
         auto = self._settings()["device_autoconnect"].get("ble")
         for candidate in found:
@@ -656,6 +698,7 @@ class DeviceWatcher:
             try:
                 self._check_usb()
                 self._run_deferred()
+                self._prefer_better()
             except Exception as exc:
                 LOG.debug("Enumeração USB falhou: %s", exc)
             if time.monotonic() >= next_ble:
@@ -818,7 +861,7 @@ class DeviceWatcher:
         previous = notice.get("previous_id")
         if notice.get("switched") and previous and (self.db.source(previous) or {}).get("enabled"):
             try:
-                self.sources.activate(previous)
+                self.sources.activate(previous, manual=False)
             except (ValueError, RuntimeError):
                 pass
         with self._lock:

@@ -1,5 +1,24 @@
 ## Pendentes (próxima versão)
 
+(nenhum)
+
+## v0.6.62 — Implementado nesta entrega
+
+- Ferramentas no menu superior, entre Automações e Configurações.
+- Rádios por marca e modelo na Análise de cobertura e na Análise de enlace, com sugestão pelo hardware.
+- Raio da cobertura em destaque (padrão 50 km, até 100 km); busca do ponto mais alto até 50 km, com validação.
+- Nós sem cobertura: lista, contorno vermelho no mapa e clique para a análise de enlace; nós fora do raio à parte.
+- PDF da Análise de cobertura; versão do app no cabeçalho dos PDFs. O mapa do PDF é esquemático (cobertura,
+  transmissor e nós, sem o mapa base e sem o Relevo com corte), como os PDFs de enlace e melhor ponto.
+- Preferência USB → BLE → Wi-Fi, com troca automática para o meio melhor do mesmo rádio.
+- Tráfego com o conteúdo decodificado por padrão (coluna "Conteúdo", detalhe por tipo e JSON completo).
+- Nomes curtos no mapa, só o nome, ligados por padrão.
+- Disponibilidade dos repetidores sobre as horas em que o app ouviu, com rotas e vizinhos; "sem dados";
+  presença "ouvido depois do ping".
+- Extra: filtro de defeitos dos tiles de relevo (altitudes impossíveis), que distorciam cobertura e melhor ponto.
+
+<details><summary>Pedidos originais (28/10/2026)</summary>
+
 - **Backlog (28/10/2026): Ferramentas no menu superior**, entre **Automações** e **Configurações**.
   - Hoje o botão "Ferramentas ▾" fica na barra do mapa, ao lado de "Ver" (referência:
     `docs/backlog/ferramentas-menu-superior.png`). Passar para a navegação principal (`#nav`),
@@ -91,6 +110,8 @@
     quase não ouviu no período.
   - Conferir por que a Presença marca "sem resposta" em repetidores que estão no ar (ping de
     presença x papel ROUTER, que pode não responder a NodeInfo).
+
+</details>
 
 ## v0.6.61 — Implementado nesta entrega
 

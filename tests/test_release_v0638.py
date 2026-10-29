@@ -143,7 +143,7 @@ class UsbPriority(Base):
         self.assertEqual((notice["type"], notice["switched"], notice["previous_id"]), ("auto_added", True, wifi))
         usb = next(s for s in self.db.sources() if s["kind"] == "serial")
         self.assertTrue(usb["enabled"])
-        self.sources.activate.assert_called_once_with(usb["id"])
+        self.sources.activate.assert_called_once_with(usb["id"], manual=False)
 
     def test_usb_switch_waits_for_pending_query(self):
         self.wifi_active()
@@ -170,7 +170,7 @@ class UsbPriority(Base):
         ports = []
         w = self.watcher(ports); w._check_usb()
         ports.append(self.port("COM3")); w._check_usb()
-        self.sources.activate.assert_called_once_with(usb)
+        self.sources.activate.assert_called_once_with(usb, manual=False)
         self.assertEqual(w.notices(), [])
 
     def test_priority_off_keeps_current_radio(self):
@@ -191,7 +191,7 @@ class UsbPriority(Base):
         w.undo(n["id"])
         self.assertEqual([s["kind"] for s in self.db.sources()], ["tcp"])
         self.assertIn("serial:com11", self.db.ignored_devices())
-        self.sources.activate.assert_called_once_with(wifi)
+        self.sources.activate.assert_called_once_with(wifi, manual=False)
         ports.clear(); w._check_usb(); ports.append(self.port("COM11")); w._check_usb()
         self.assertEqual(len(self.db.sources()), 1)
 

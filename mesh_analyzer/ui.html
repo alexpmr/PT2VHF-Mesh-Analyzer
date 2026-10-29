@@ -232,6 +232,7 @@ html[data-theme] .deviceNotice button.primary:not(.active):not(.danger),html[dat
 @media(prefers-reduced-motion:reduce){.activityLed .bulb{transition:none}}
 #mapToolsPanel{position:fixed;z-index:6500;min-width:260px;max-width:min(330px,96vw);max-height:calc(100vh - 16px);overflow-y:auto;background:#192631;border:1px solid #556d7c;padding:10px;border-radius:9px;box-shadow:0 15px 33px #000b;color:var(--ink)}
 #mapToolsPanel[hidden]{display:none!important}
+.navbtn.navTools[aria-expanded="true"]{border-color:var(--accent)}
 #mapToolsPanel .verTool{display:block;width:100%;text-align:left;margin:4px 0}
 #mapToolsPanel .verHead{margin-bottom:6px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 #mapToolsPanel label{display:flex;gap:9px;align-items:center;padding:6px 3px;cursor:pointer}
@@ -252,6 +253,9 @@ html[data-theme] .deviceNotice button.primary:not(.active):not(.danger),html[dat
 #coverageLegend .coverageLegendHead{display:flex;justify-content:space-between;gap:8px}
 .coveragePin span{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#59e97e;border:2px solid #fff;box-shadow:0 2px 6px #0008;font-size:16px}
 .coverageOverlay{image-rendering:pixelated}
+#mapToolPanel .coverageRadius{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px;padding:8px;border:1px solid var(--accent);border-radius:8px}
+#mapToolPanel .coverageRadius input{width:80px}
+#mapToolPanel .linkButton{background:none!important;border:0;padding:0;color:var(--blue);text-decoration:underline;cursor:pointer;font:inherit}
 #viewAutomations .autoItem{padding:0;overflow:hidden;flex-shrink:0;width:100%;max-width:1020px!important;box-sizing:border-box}
 #viewAutomations .autoItemHeading{margin:0;font-size:inherit}
 #viewAutomations .autoItemHead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;text-align:left;padding:13px 16px;border:0;border-radius:0;background:transparent!important;font-size:15px;font-weight:700}
@@ -263,6 +267,12 @@ html[data-theme] .deviceNotice button.primary:not(.active):not(.danger),html[dat
 #viewAutomations .autoItemBody{padding:0 16px 14px;border-top:1px solid var(--line)}
 #viewAutomations .autoItemFoot [data-auto-save]{background:var(--accent)!important;color:#15191c!important;border-color:#ffe34d;font-weight:700}
 #viewAutomations .autoItemFoot{position:sticky;bottom:0;background:var(--card);padding:10px 0 0;margin-top:12px;border-top:1px solid var(--line)}
+.trafficSummary{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+#trafficPayload h4{margin:12px 0 6px}#trafficPayload .payloadFields{display:grid;grid-template-columns:max-content 1fr;gap:3px 10px;margin:0;font-size:12px}
+#trafficPayload dt{color:var(--muted)}#trafficPayload dd{margin:0;overflow-wrap:anywhere}
+#trafficPayload .payloadJson pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;max-height:40vh;overflow:auto}
+.leaflet-tooltip.nodeShortLabel{background:#1c2733e6;color:#f2f6f9;border:1px solid #5d7386;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:700;box-shadow:0 1px 4px #0008;white-space:nowrap}
+.leaflet-tooltip.nodeShortLabel::before{display:none}
 #mapToolPanel .toolParams{margin:6px 0}#mapToolPanel .small{font-size:11px}#mapToolPanel .actions{margin:8px 0;flex-wrap:wrap}
 .profileSvg{width:100%;height:auto;background:#0f1a2433;border-radius:6px;margin:6px 0}
 .toolTable{width:100%;border-collapse:collapse;font-size:11px}.toolTable th,.toolTable td{padding:4px 5px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.toolTable th{color:var(--muted);font-weight:600}
@@ -432,20 +442,32 @@ try {
 </head>
 <body>
 <div id="app">
-<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.61</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
+<header><div class="brand"><img class="logo" src="__PT2VHF_MESH_LOGO__" alt="Logo PT2VHF Mesh Analyzer" width="58" height="58"><div><h1>PT2<span class="brand-vhf">VHF</span> Mesh Analyzer <span class="brand-version">v0.6.62</span></h1><small>por Alex, PT2VHF · Cliente Meshtastic independente</small><span class="brand-tagline">Explore · Analise · Conecte</span></div></div>
 <nav id="nav" aria-label="Navegação principal">
-<button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
+<button class="navbtn active" data-view="map">Mapa</button><button class="navbtn" data-view="messages">Mensagens</button><button class="navbtn" data-view="nodes">Nós</button><button class="navbtn" data-view="traffic">Tráfego</button><button class="navbtn" data-view="stats">Estatísticas</button><button class="navbtn" data-view="automations">Automações</button><button type="button" class="navbtn navTools" id="mapToolsBtn" aria-controls="mapToolsPanel" aria-haspopup="true" aria-expanded="false">Ferramentas ▾</button><button class="navbtn" data-view="settings">Configurações</button><button class="navbtn" data-view="help">Ajuda</button><button class="navbtn" data-view="about">Sobre</button>
 </nav><div class="activityGroup" aria-label="Atividade de rádio em tempo real">
 <div class="activityLed tx" id="txLed" title="TX aceito pela interface, não comprovação de RF"><span>TX</span><span class="bulb" aria-hidden="true"></span></div>
 <div class="activityLed rx" id="rxLed" title="RX recebido por USB/BLE/TCP ou MQTT; não implica RF direto"><span>RX</span><span class="bulb" aria-hidden="true"></span></div></div><div id="radioConnectionStatus" role="status" aria-live="polite" aria-label="Conectividade Meshtastic" data-status="checking" title="Consultando conexões de rádio"><span class="radioDot" aria-hidden="true"></span><span id="radioConnectionText">Verificando rádio...</span></div><button type="button" id="alertBell" class="alertBell" aria-haspopup="true" aria-expanded="false" title="Alertas da malha">🔔<span id="alertCount" hidden></span></button><div id="alertPanel" class="alertPanel" role="dialog" aria-label="Alertas da malha" hidden></div><button type="button" id="topUpdate" class="waiting" title="Clique para verificar atualização">v0.6.8 · verificando...</button></header>
 
+<!-- Ferramentas: painel fora das abas, aberto pelo menu superior (v0.6.62). -->
+<div id="mapToolsPanel" role="group" aria-label="Ferramentas do mapa" hidden>
+<div class="verHead"><strong>FERRAMENTAS</strong></div>
+<div class="verSection">PLANEJAMENTO DE RF</div>
+<button type="button" id="mapToolCoverage" class="verTool">📡 Análise de cobertura</button>
+<button type="button" id="mapToolLink" class="verTool">📏 Analisar enlace entre 2 pontos</button>
+<button type="button" id="mapToolSurvey" class="verTool">⛰ Melhor ponto para instalar nó</button>
+<div class="verSection">RELEVO</div>
+<label><input id="mapTerrain" type="checkbox"> Relevo com corte</label>
+<div class="verSection">RELATÓRIOS E SUPORTE</div>
+<button type="button" id="mapToolReport" class="verTool">📄 Relatório da malha (PDF)</button>
+<button type="button" id="mapToolDiagnostics" class="verTool">🩺 Diagnóstico para suporte (.zip)</button>
+</div>
 <section class="view active" id="viewMap">
 <div id="playback">
 <div id="summary"><div class="metric"><b id="summaryNodes">0</b> nós</div><div class="metric"><b id="summaryPackets">0</b> pacotes</div><div class="metric"><b id="summaryMessages">0</b> mensagens</div><div class="metric"><b id="summaryLinks">0</b> relações observadas</div></div>
 
 
 <button type="button" id="mapVisibilityBtn" aria-controls="mapVisibilityPanel" aria-expanded="false">Ver ▾</button>
-<button type="button" id="mapToolsBtn" aria-controls="mapToolsPanel" aria-expanded="false">Ferramentas ▾</button>
 <div class="mapActions"><div class="mapSearchBox"><label for="mapSearchInput">⌕</label><input id="mapSearchInput" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nó no mapa por nome curto, longo ou ID" autocomplete="off"><button id="mapSearchClear" title="Limpar pesquisa" aria-label="Limpar pesquisa">×</button><span class="mapSearchCount" id="mapSearchCount">Todos</span><div id="mapSearchMatches" class="mapSearchMatches" hidden></div></div>
 <button id="mapFit">Enquadrar</button><button id="mapRefresh">Atualizar</button></div>
 </div>
@@ -466,7 +488,7 @@ try {
 <label><input id="showMapWaypoints" type="checkbox" checked> Waypoints <small id="mapWaypointsCount">0</small></label>
 <label><input id="showMapAnimate" type="checkbox" checked> Animar tráfego</label>
 <div class="verSection">CAMADAS E SOBREPOSIÇÕES</div>
-<label><input id="showNames" type="checkbox"> Mostrar nomes curtos</label>
+<label><input id="showNames" type="checkbox" checked> Mostrar nomes curtos</label>
 <label><input id="mapRadar" type="checkbox"> Radar meteorológico</label>
 <label class="radarOpacityControl" for="mapRadarOpacity">Opacidade do radar <input id="mapRadarOpacity" type="range" min="10" max="100" value="65" aria-label="Opacidade do radar"><output id="mapRadarOpacityValue" for="mapRadarOpacity">65%</output></label>
 <div id="radarStatus" role="status">Aguardando radar...</div>
@@ -480,18 +502,6 @@ try {
 <label><input id="mapMeshcoreRing" type="checkbox" checked> Destacar nós MeshCore (anel violeta)</label>
 <label><input id="mapMeshcorePaths" type="checkbox"> Caminhos dos contatos MeshCore</label>
 <div id="mcPathLegend" class="muted" role="status"></div>
-</div>
-<div id="mapToolsPanel" role="group" aria-label="Ferramentas do mapa" hidden>
-<div class="verHead"><strong>FERRAMENTAS</strong></div>
-<div class="verSection">PLANEJAMENTO DE RF</div>
-<button type="button" id="mapToolCoverage" class="verTool">📡 Análise de cobertura</button>
-<button type="button" id="mapToolLink" class="verTool">📏 Analisar enlace entre 2 pontos</button>
-<button type="button" id="mapToolSurvey" class="verTool">⛰ Melhor ponto para instalar nó</button>
-<div class="verSection">RELEVO</div>
-<label><input id="mapTerrain" type="checkbox"> Relevo com corte</label>
-<div class="verSection">RELATÓRIOS E SUPORTE</div>
-<button type="button" id="mapToolReport" class="verTool">📄 Relatório da malha (PDF)</button>
-<button type="button" id="mapToolDiagnostics" class="verTool">🩺 Diagnóstico para suporte (.zip)</button>
 </div>
 </section>
 <section class="view" id="viewNodes"><div class="toolbar" id="nodesToolbar">
@@ -508,8 +518,8 @@ try {
 <input id="trafficFilter" placeholder="nó, ID, tipo..." aria-label="Pesquisar tráfego">
 <button id="trafficPause">Pausar</button><button id="trafficReload">Atualizar</button><button id="trafficExport">Baixar CSV (visível)</button><span id="trafficCounter" class="muted"></span></div>
 <div class="trafficLayout"><div class="tableWrap"><table class="dataTable">
-<thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
-<aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></aside>
+<thead><tr><th>Hora</th><th>RX</th><th>Origem</th><th>Destino</th><th>Tipo</th><th>Conteúdo</th><th>SNR</th><th>RSSI</th><th>Hops</th><th>Via</th></tr></thead><tbody id="packetRows"></tbody></table></div>
+<aside id="trafficDetails"><button id="trafficClose">Fechar ×</button><h3 id="trafficTitle">Detalhes do pacote</h3><pre id="trafficInfo" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><div id="trafficPayload"></div></aside>
 </div></section>
 <section class="view" id="viewMessages"><div class="toolbar"><h2>Mensagens</h2><span class="muted">Privadas e canais · sem dependência do MM</span><div class="spacer"></div><div class="messageSearchBox"><input id="messageSearch" type="search" placeholder="Buscar no histórico…" aria-label="Buscar texto em todas as mensagens salvas" autocomplete="off"><select id="messageSearchDays" aria-label="Período da busca"><option value="7">7 dias</option><option value="30">30 dias</option><option value="365">1 ano</option><option value="" selected>Todo o histórico</option></select><div id="messageSearchResults" class="messageSearchResults" role="listbox" hidden></div></div><button type="button" id="channelManage" title="Ver e editar os canais do rádio">Canais…</button><label>Canal: <select id="messageChannel"><option value="0">Primário (0)</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option></select></label></div><div id="messageLayout"><div class="contactsPanel"><div class="messageNodeSearchBar">
 <input id="messageNodeSearch" type="search" placeholder="Pesquisar nó..." aria-label="Pesquisar nós para mensagem privada" autocomplete="off">
@@ -608,7 +618,7 @@ try {
 <div class="field src ble"><label for="sourceAddress">Identificador Bluetooth / endereço BLE</label><input id="sourceAddress" placeholder="Endereço ou UUID do rádio"></div>
 <div class="field src ble meshcorePin"><label for="sourceBlePin">PIN Bluetooth do MeshCore (opcional)</label><input id="sourceBlePin" inputmode="numeric" maxlength="8" placeholder="123456" autocomplete="off"></div>
 <div class="field src mqtt"><label for="mqttTopic">Tópico MQTT</label><input id="mqttTopic" value="msh/+/2/e/#"></div><div class="field src mqtt"><label for="mqttUsername">Usuário MQTT</label><input id="mqttUsername" autocomplete="off"></div><div class="field src mqtt"><label for="mqttPassword">Senha MQTT</label><input id="mqttPassword" type="password" autocomplete="new-password" placeholder="Em edição: deixe vazio para manter"></div><div class="field src mqtt"><label><input id="mqttTls" type="checkbox"> TLS</label></div>
-<div class="field span2"><label class="sourceAutoLabel">Conectar automaticamente ao iniciar <input id="sourceEnabled" type="checkbox" checked></label></div><div class="field span2 src serial tcp ble"><label class="sourceAutoLabel">Sincronizar favoritos com este rádio <input id="sourceFavoriteSync" type="checkbox" checked></label></div></div><div class="actions" style="margin-top:13px"><button type="submit" id="sourceSaveButton">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form><div class="card"><h3>Descoberta de rádios e conexões</h3><p class="muted">Busca candidatos USB/Serial, anúncios Bluetooth LE e serviços mDNS na rede local. A descoberta não conecta nem transmite; confirme e salve o dispositivo selecionado.</p><div class="actions"><button type="button" id="scanDevices">Detectar automaticamente</button><span id="scanStatus" class="muted">Pronto para procurar</span></div><div id="scanResults"></div><fieldset class="autodetectPrefs"><legend>Avisar quando um rádio novo for detectado</legend><label><input type="checkbox" data-autodetect="serial" checked> USB (ao plugar)</label><label><input type="checkbox" data-autodetect="tcp" checked> Wi-Fi (rede local)</label><label><input type="checkbox" data-autodetect="ble" checked> Bluetooth LE (próximo ao computador)</label></fieldset><fieldset class="autodetectPrefs"><legend>Adicionar e conectar sem perguntar</legend><label><input type="checkbox" data-autoconnect="serial" checked> USB</label><label><input type="checkbox" data-autoconnect="tcp"> Wi-Fi</label><label><input type="checkbox" data-autoconnect="ble"> Bluetooth LE</label><label><input type="checkbox" id="usbPriority" checked> Dar prioridade ao rádio USB</label></fieldset></div></div></section>
+<div class="field span2"><label class="sourceAutoLabel">Conectar automaticamente ao iniciar <input id="sourceEnabled" type="checkbox" checked></label></div><div class="field span2 src serial tcp ble"><label class="sourceAutoLabel">Sincronizar favoritos com este rádio <input id="sourceFavoriteSync" type="checkbox" checked></label></div></div><div class="actions" style="margin-top:13px"><button type="submit" id="sourceSaveButton">Salvar conexão</button><button type="button" id="sourceCancel">Nova conexão / Cancelar edição</button><button type="button" id="refreshPorts">Detectar portas USB</button></div></form><div class="card"><h3>Descoberta de rádios e conexões</h3><p class="muted">Busca candidatos USB/Serial, anúncios Bluetooth LE e serviços mDNS na rede local. A descoberta não conecta nem transmite; confirme e salve o dispositivo selecionado.</p><div class="actions"><button type="button" id="scanDevices">Detectar automaticamente</button><span id="scanStatus" class="muted">Pronto para procurar</span></div><div id="scanResults"></div><fieldset class="autodetectPrefs"><legend>Avisar quando um rádio novo for detectado</legend><label><input type="checkbox" data-autodetect="serial" checked> USB (ao plugar)</label><label><input type="checkbox" data-autodetect="tcp" checked> Wi-Fi (rede local)</label><label><input type="checkbox" data-autodetect="ble" checked> Bluetooth LE (próximo ao computador)</label></fieldset><fieldset class="autodetectPrefs"><legend>Adicionar e conectar sem perguntar</legend><label><input type="checkbox" data-autoconnect="serial" checked> USB</label><label><input type="checkbox" data-autoconnect="tcp"> Wi-Fi</label><label><input type="checkbox" data-autoconnect="ble"> Bluetooth LE</label><label title="Quando o mesmo rádio está cadastrado por mais de um meio, usa USB, depois Bluetooth e por último Wi-Fi, e troca sozinho quando um meio melhor fica disponível. A escolha manual no indicador continua valendo enquanto aquela conexão estiver ativa."><input type="checkbox" id="usbPriority" checked> Preferir USB, depois Bluetooth, depois Wi-Fi</label></fieldset></div></div></section>
 <section class="settingsPanel" id="settingsLora">
   <div class="card"><h3>Configuração do rádio Meshtastic</h3>
     <p class="muted">Leia os parâmetros reais do dispositivo conectado por USB/Serial, TCP/IP ou BLE. MQTT é apenas uma conexão de dados e não pode configurar rádios. A gravação pode reiniciar o nó e interromper a conexão.</p>
@@ -628,7 +638,7 @@ try {
 </section>
 <section class="settingsPanel" id="settingsRetention"><div class="card"><h3>Retenção individual dos dados</h3><p class="muted">Configuração persistente do banco SQLite. <b>"Nunca" é o padrão</b>: nada é apagado automaticamente. Um prazo remove registros anteriores à idade definida; a limpeza executa a cada hora ou pelo botão abaixo.</p><form id="retentionForm"><div class="formGrid" id="retentionFields"></div><div class="actions" style="margin-top:15px"><button type="submit">Salvar retenções</button><button type="button" class="danger" id="retentionCleanup">Executar limpeza agora</button></div></form></div></section>
 <section class="settingsPanel" id="settingsMap">
-<div class="card"><h3>Mapa e topologia</h3><div class="mapConfigGrid"><div class="field"><label for="mapWindow">Janela de observação</label><select id="mapWindow"><option value="all">Todos</option><option value="1h">1 h</option><option value="12h">12 h</option><option value="24h">24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option></select></div><div class="field"><label for="mapMinObservations">Mínimo de observações</label><input id="mapMinObservations" type="number" min="1" max="99999" value="1"></div><div class="field"><label for="mapType">Mapa-base</label><select id="mapType"><option value="osm">OSM / Ruas</option><option value="topo">Topográfico</option><option value="satellite">Satélite</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div><div class="field"><label for="mapBrightness">Brilho (%)</label><input id="mapBrightness" type="range" min="20" max="150" value="100"></div><div class="field"><label for="mapTerrainMaxSetting">Máximo do slider de relevo (m)</label><input id="mapTerrainMaxSetting" type="number" min="100" max="9000" value="3000"></div><div class="field"><label for="mapRfColor">Cor dos trechos RF</label><input id="mapRfColor" type="color" value="#ffff00"></div><div class="field"><label for="mapRfWidth">Espessura dos trechos RF (px)</label><input id="mapRfWidth" type="range" min="1" max="12" value="2"></div><div class="field"><label for="mapInternetColor">Cor MQTT / não RF</label><input id="mapInternetColor" type="color" value="#ff3322"></div><div class="field"><label for="mapInternetWidth">Espessura MQTT / não RF (px)</label><input id="mapInternetWidth" type="range" min="1" max="12" value="3"></div><div class="field"><label for="mapShowLinksSetting">Mostrar linhas</label><input id="mapShowLinksSetting" type="checkbox" checked></div><div class="field"><label for="mapShowNodesSetting">Mostrar nós</label><input id="mapShowNodesSetting" type="checkbox" checked></div><div class="field"><label for="mapShowWaypointsSetting">Mostrar waypoints</label><input id="mapShowWaypointsSetting" type="checkbox" checked></div><div class="field"><label for="mapHeatmap">Mapa de calor</label><input id="mapHeatmap" type="checkbox"></div><div class="field"><label for="mapShowNamesSetting">Mostrar nomes curtos</label><input id="mapShowNamesSetting" type="checkbox"></div><div class="field"><label for="mapIdentifiedOnly">Mostrar somente identificados</label><input id="mapIdentifiedOnly" type="checkbox"></div><div class="field"><label for="mapAutoZoom">Auto Zoom durante traceroutes</label><input id="mapAutoZoom" type="checkbox"></div></div><div class="actions"><button id="mapRestoreColors">Restaurar cores e espessuras</button><p class="muted">Relações recebidas por rádio usam linha contínua; o popup diferencia RF direto comprovado, rota e fluxo com caminho desconhecido. MQTT/Internet permanece pontilhado.</p></div></div>
+<div class="card"><h3>Mapa e topologia</h3><div class="mapConfigGrid"><div class="field"><label for="mapWindow">Janela de observação</label><select id="mapWindow"><option value="all">Todos</option><option value="1h">1 h</option><option value="12h">12 h</option><option value="24h">24 h</option><option value="7d">7 dias</option><option value="30d">30 dias</option></select></div><div class="field"><label for="mapMinObservations">Mínimo de observações</label><input id="mapMinObservations" type="number" min="1" max="99999" value="1"></div><div class="field"><label for="mapType">Mapa-base</label><select id="mapType"><option value="osm">OSM / Ruas</option><option value="topo">Topográfico</option><option value="satellite">Satélite</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div><div class="field"><label for="mapBrightness">Brilho (%)</label><input id="mapBrightness" type="range" min="20" max="150" value="100"></div><div class="field"><label for="mapTerrainMaxSetting">Máximo do slider de relevo (m)</label><input id="mapTerrainMaxSetting" type="number" min="100" max="9000" value="3000"></div><div class="field"><label for="mapRfColor">Cor dos trechos RF</label><input id="mapRfColor" type="color" value="#ffff00"></div><div class="field"><label for="mapRfWidth">Espessura dos trechos RF (px)</label><input id="mapRfWidth" type="range" min="1" max="12" value="2"></div><div class="field"><label for="mapInternetColor">Cor MQTT / não RF</label><input id="mapInternetColor" type="color" value="#ff3322"></div><div class="field"><label for="mapInternetWidth">Espessura MQTT / não RF (px)</label><input id="mapInternetWidth" type="range" min="1" max="12" value="3"></div><div class="field"><label for="mapShowLinksSetting">Mostrar linhas</label><input id="mapShowLinksSetting" type="checkbox" checked></div><div class="field"><label for="mapShowNodesSetting">Mostrar nós</label><input id="mapShowNodesSetting" type="checkbox" checked></div><div class="field"><label for="mapShowWaypointsSetting">Mostrar waypoints</label><input id="mapShowWaypointsSetting" type="checkbox" checked></div><div class="field"><label for="mapHeatmap">Mapa de calor</label><input id="mapHeatmap" type="checkbox"></div><div class="field"><label for="mapShowNamesSetting">Mostrar nomes curtos</label><input id="mapShowNamesSetting" type="checkbox" checked></div><div class="field"><label for="mapIdentifiedOnly">Mostrar somente identificados</label><input id="mapIdentifiedOnly" type="checkbox"></div><div class="field"><label for="mapAutoZoom">Auto Zoom durante traceroutes</label><input id="mapAutoZoom" type="checkbox"></div></div><div class="actions"><button id="mapRestoreColors">Restaurar cores e espessuras</button><p class="muted">Relações recebidas por rádio usam linha contínua; o popup diferencia RF direto comprovado, rota e fluxo com caminho desconhecido. MQTT/Internet permanece pontilhado.</p></div></div>
 <div class="card"><h3>Temas sonoros</h3><p class="muted">Sons sintetizados localmente para eventos reais; não inventar retransmissões nem ACKs.</p><div class="mapConfigGrid"><div class="field"><label for="soundEnabled">Ativar sonificação da malha</label><input id="soundEnabled" type="checkbox"></div><div class="field"><label for="soundTheme">Tema</label><select id="soundTheme"><option value="arcade">Fliperama anos 70</option><option value="soft">Discreto</option></select></div><div class="field"><label for="soundVolume">Volume (%)</label><input id="soundVolume" type="range" min="0" max="100" value="40"></div><div class="field"><label for="soundDensity">Densidade sonora</label><select id="soundDensity"><option value="low">Baixa</option><option value="normal" selected>Normal</option><option value="high">Alta</option></select></div><div class="field"><label for="soundMinInterval">Intervalo mínimo (ms)</label><input id="soundMinInterval" type="range" min="40" max="1000" step="20" value="120"></div><div class="field"><label for="soundMaxVoices">Máximo simultâneo</label><input id="soundMaxVoices" type="number" min="1" max="12" value="4"></div><div class="field"><label for="soundRouting">Sons de roteamento e traceroute</label><input id="soundRouting" type="checkbox" checked></div><div class="field"><label for="soundMessages">Sons de mensagens</label><input id="soundMessages" type="checkbox" checked></div><div class="field"><label for="soundAlerts">Sons de alertas e falhas</label><input id="soundAlerts" type="checkbox" checked></div><div class="field"><label for="soundStereo">Estéreo espacial</label><input id="soundStereo" type="checkbox"></div></div><button id="soundTest">Testar tema</button></div>
 <div class="card"><h3>Atividade em tempo real no mapa</h3><div class="mapConfigGrid"><div class="field"><label for="mapAnimateNodes">Animar atividade dos nós</label><input id="mapAnimateNodes" type="checkbox" checked></div><div class="field"><label for="mapHighlightSource">Realçar origem/resposta</label><input id="mapHighlightSource" type="checkbox" checked></div><div class="field"><label for="mapHighlightRelay">Realçar retransmissor observado</label><input id="mapHighlightRelay" type="checkbox" checked></div><div class="field"><label for="mapPulseSeconds">Duração do realce</label><select id="mapPulseSeconds"><option value="1">1 s</option><option value="2" selected>2 s</option><option value="3">3 s</option><option value="5">5 s</option></select></div><div class="field"><label for="mapAnimationSpeed">Velocidade da animação</label><select id="mapAnimationSpeed"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></div></div><p class="muted">A duração e a velocidade da animação são configuradas aqui, não no menu principal.</p></div>
 </section>
@@ -688,7 +698,7 @@ try {
 <div class="field"><label for="alertMailTo">Enviar para</label><input id="alertMailTo"></div>
 <div class="actions span2"><button type="submit" class="primary">Salvar alertas</button><button type="button" id="alertTestTg">Testar Telegram</button><button type="button" id="alertTestMail">Testar e-mail</button><span id="alertFormStatus" class="muted" role="status"></span></div>
 </form><p class="muted">Token e senha ficam no banco local do aplicativo e nunca são mostrados de volta na tela.</p></div></section>
-<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.61</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><section class="settingsPanel" id="settingsDiagnostics"><div class="card"><h3>Diagnóstico para suporte</h3>
+<section class="settingsPanel" id="settingsGeneral"><div class="card"><h3>Configuração e segurança</h3><p><b>PT2VHF Mesh Analyzer v0.6.62</b> — Windows 10/11.</p><p>Banco de dados e configuração: <code>%LOCALAPPDATA%\PT2VHF-Mesh-Analyzer\mesh-analyzer.sqlite3</code>.</p><p>A interface web local escuta apenas em <code>127.0.0.1:8789</code>. Alterações exigem token CSRF local. O MQTT recebe envelopes Meshtastic binários e mensagens criptografadas só podem ser interpretadas com as chaves apropriadas.</p><p>O catálogo e a interface foram recriados de maneira independente, visualmente próximos do Traffic Analyzer. Relatórios completos, radar, mapas adicionais, ranking RF avançado, PDF e automações não estão concluídos na primeira versão.</p></div></section><section class="settingsPanel" id="settingsDiagnostics"><div class="card"><h3>Diagnóstico para suporte</h3>
 <p class="muted">Gera um arquivo .zip para enviar ao suporte quando algo não funciona. Ele é gerado na hora, fica só neste computador e você decide para quem mandar.</p>
 <p><b>O que vai no arquivo:</b> versões do aplicativo, do sistema e das bibliotecas; conexões cadastradas e o estado de cada uma; Bluetooth (modelo do adaptador, rádios vistos com sinal, pareamento no sistema e as últimas tentativas); portas USB; eventos dos últimos 7 dias e o log desta execução; configurações; números do banco de dados.</p>
 <p><b>O que não vai:</b> texto de mensagens, posições dos nós, senhas, PIN, chaves de canal e credenciais MQTT.</p>
@@ -711,7 +721,7 @@ try {
 <div class="card"><h3>PT2VHF Mesh Analyzer</h3><p>por Alex, PT2VHF · Cliente Meshtastic independente.</p>
 <p>Veja também a seção <b>Ajuda</b> para as instruções de uso do aplicativo.</p></div>
 </div></section>
-<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.61.</p></div></div></section>
+<section class="view" id="viewHelp"><div class="panels"><div class="card"><h3>PT2VHF Mesh Analyzer — Ajuda rápida</h3><p>1. Abra <b>Configurações → Conexões</b> e cadastre o rádio ligado por COM, IP ou Bluetooth.</p><p>2. Habilite a conexão. Quando ativa, o tráfego recebido é registrado no SQLite.</p><p>3. Use <b>Mensagens</b> para conversar no canal ou com um nó específico. O ACK do rádio não equivale à confirmação de leitura.</p><p>4. Ajuste <b>Configurações → Retenções</b> para definir por quanto tempo o histórico permanece salvo.</p><p>5. Uma fonte MQTT pode registrar envelopes capturados; ela não retransmite para RF e pode receber payload criptografado ilegível sem chave.</p><p><b>Observação:</b> Mapa-base OSM/topográfico/satélite requer internet; os dados RF e a análise local continuam independentes.</p><p>por Alex, PT2VHF — v0.6.62.</p></div></div></section>
 </div>
 <div class="nodeDetailOverlay" id="nodeDetailOverlay" role="dialog" aria-modal="true" aria-label="Informações do nó"><div class="nodeDetail" id="nodeDetailWindow"><div class="nodeDetailHeader" id="nodeDetailHeader"><strong id="nodeDetailTitle">Detalhes do nó</strong><button id="nodeRename" type="button" title="Apelido pessoal: fica só neste app e não muda o nome do rádio">Apelido…</button><button id="nodeDetailExpand">Expandir</button><button id="nodeDetailReset">Reposicionar</button><button id="nodeDetailClose">Fechar</button></div><div id="nodeDetailBody" class="nodeDetailBody"></div></div></div>
 <div id="messageNoConnectionDialog" role="dialog" aria-modal="true"
@@ -825,6 +835,8 @@ $('firstRunDialog').addEventListener('keydown',event=>{
 for(const [lang,extra] of Object.entries({"en": {"MESHCORE": "MESHCORE", "Protocolo": "Protocol", "Só Meshtastic": "Meshtastic only", "Só MeshCore": "MeshCore only", "Destacar nós MeshCore (anel violeta)": "Highlight MeshCore nodes (violet ring)", "Caminhos dos contatos MeshCore": "MeshCore contact paths", "Meshtastic — completar e atualizar informações dos nós": "Meshtastic — complete and refresh node information", "MeshCore — telemetria e status periódicos": "MeshCore — periodic telemetry and status", "Mensagens automáticas (Meshtastic e MeshCore)": "Automatic messages (Meshtastic and MeshCore)", "Coleta MeshCore ativada (realiza transmissões RF)": "MeshCore collection enabled (performs RF transmissions)", "Máximo de pedidos por hora": "Maximum requests per hour", "Intervalo mínimo entre pedidos (segundos)": "Minimum interval between requests (seconds)", "Contatos monitorados": "Monitored contacts", "Contato": "Contact", "Pedido": "Request", "Telemetria": "Telemetry", "Status do repetidor": "Repeater status", "A cada (minutos, mín. 15)": "Every (minutes, min. 15)", "Senha (opcional)": "Password (optional)", "Adicionar contato": "Add contact", "Salvar coleta MeshCore": "Save MeshCore collection", "Coletar agora": "Collect now", "Últimas leituras": "Latest readings", "Nenhum contato monitorado.": "No monitored contacts.", "Nenhuma leitura ainda.": "No readings yet.", "Rádio MeshCore": "MeshCore radio", "Mudanças de caminho": "Path changes", "Canais": "Channels", "Gravar canal": "Save channel", "Anunciar agora (vizinhos)": "Advertise now (neighbours)", "Anunciar para toda a malha": "Advertise to the whole mesh", "Link do meu contato": "My contact link", "Contadores do rádio": "Radio counters", "Adicionar contatos novos automaticamente": "Add new contacts automatically", "Status": "Status", "Vizinhos": "Neighbours", "Traceroute": "Traceroute", "Login": "Login", "Comando…": "Command…", "Redescobrir caminho": "Rediscover path", "Zerar caminho": "Reset path", "Remover contato": "Remove contact", "Últimas respostas": "Latest replies", "Posição": "Slot", "Nome": "Name", "Prefixo": "Prefix", "Bytes": "Bytes", "Nós": "Nodes", "Quando": "When", "Antes": "Before", "Depois": "After", "Tipo": "Type", "Último anúncio": "Last advert", "Carregando MeshCore…": "Loading MeshCore…", "Rádio desconectado: mostrando os dados guardados.": "Radio disconnected: showing stored data.", "Mostrar dados de": "Show data from", "Todas as conexões": "All connections", "Vendo": "Viewing", "Informar PIN…": "Enter PIN…", "Pareando…": "Pairing…", "Apelido": "Nickname", "Apelido…": "Nickname…", "Dar apelido": "Set nickname", "Editar apelido": "Edit nickname", "Apelido (só neste app)": "Nickname (this app only)", "Diagnóstico": "Diagnostics", "Diagnóstico para suporte": "Support diagnostics", "Baixar diagnóstico (.zip)": "Download diagnostics (.zip)", "Baixar diagnóstico para o suporte (.zip)": "Download diagnostics for support (.zip)", "Conectando…": "Connecting…", "Tentar outro PIN…": "Try another PIN…", "Adicionado ✓": "Added ✓"}, "es": {"Protocolo": "Protocolo", "Só Meshtastic": "Solo Meshtastic", "Só MeshCore": "Solo MeshCore", "Destacar nós MeshCore (anel violeta)": "Resaltar nodos MeshCore (anillo violeta)", "Caminhos dos contatos MeshCore": "Rutas de los contactos MeshCore", "Meshtastic — completar e atualizar informações dos nós": "Meshtastic — completar y actualizar información de los nodos", "MeshCore — telemetria e status periódicos": "MeshCore — telemetría y estado periódicos", "Mensagens automáticas (Meshtastic e MeshCore)": "Mensajes automáticos (Meshtastic y MeshCore)", "Coleta MeshCore ativada (realiza transmissões RF)": "Recolección MeshCore activada (realiza transmisiones RF)", "Máximo de pedidos por hora": "Máximo de solicitudes por hora", "Intervalo mínimo entre pedidos (segundos)": "Intervalo mínimo entre solicitudes (segundos)", "Contatos monitorados": "Contactos monitoreados", "Contato": "Contacto", "Pedido": "Solicitud", "Telemetria": "Telemetría", "Status do repetidor": "Estado del repetidor", "A cada (minutos, mín. 15)": "Cada (minutos, mín. 15)", "Senha (opcional)": "Contraseña (opcional)", "Adicionar contato": "Agregar contacto", "Salvar coleta MeshCore": "Guardar recolección MeshCore", "Coletar agora": "Recolectar ahora", "Últimas leituras": "Últimas lecturas", "Nenhum contato monitorado.": "Ningún contacto monitoreado.", "Nenhuma leitura ainda.": "Aún no hay lecturas.", "Rádio MeshCore": "Radio MeshCore", "Mudanças de caminho": "Cambios de ruta", "Canais": "Canales", "Gravar canal": "Guardar canal", "Anunciar agora (vizinhos)": "Anunciar ahora (vecinos)", "Anunciar para toda a malha": "Anunciar a toda la malla", "Link do meu contato": "Enlace de mi contacto", "Contadores do rádio": "Contadores de la radio", "Adicionar contatos novos automaticamente": "Agregar contactos nuevos automáticamente", "Status": "Estado", "Vizinhos": "Vecinos", "Comando…": "Comando…", "Redescobrir caminho": "Redescubrir ruta", "Zerar caminho": "Reiniciar ruta", "Remover contato": "Quitar contacto", "Últimas respostas": "Últimas respuestas", "Posição": "Posición", "Nome": "Nombre", "Prefixo": "Prefijo", "Nós": "Nodos", "Quando": "Cuándo", "Antes": "Antes", "Depois": "Después", "Tipo": "Tipo", "Último anúncio": "Último anuncio", "Carregando MeshCore…": "Cargando MeshCore…", "Rádio desconectado: mostrando os dados guardados.": "Radio desconectada: mostrando los datos guardados.", "Mostrar dados de": "Mostrar datos de", "Todas as conexões": "Todas las conexiones", "Vendo": "Viendo", "Informar PIN…": "Ingresar PIN…", "Pareando…": "Emparejando…", "Apelido": "Apodo", "Apelido…": "Apodo…", "Dar apelido": "Poner apodo", "Editar apelido": "Editar apodo", "Apelido (só neste app)": "Apodo (solo en esta app)", "Diagnóstico": "Diagnóstico", "Diagnóstico para suporte": "Diagnóstico para soporte", "Baixar diagnóstico (.zip)": "Descargar diagnóstico (.zip)", "Baixar diagnóstico para o suporte (.zip)": "Descargar diagnóstico para soporte (.zip)", "Conectando…": "Conectando…", "Tentar outro PIN…": "Probar otro PIN…", "Adicionado ✓": "Agregado ✓"}}))for(const [k,v] of Object.entries(extra))if(!(k in I18N[lang]))I18N[lang][k]=v;
 // v0.6.61: Ferramentas, análise de cobertura, relevo com corte e automações recolhidas.
 for(const [lang,extra] of Object.entries({"en": {"Ferramentas ▾": "Tools ▾", "FERRAMENTAS": "TOOLS", "PLANEJAMENTO DE RF": "RF PLANNING", "📡 Análise de cobertura": "📡 Coverage analysis", "RELEVO": "TERRAIN", "RELATÓRIOS E SUPORTE": "REPORTS AND SUPPORT", "📄 Relatório da malha (PDF)": "📄 Mesh report (PDF)", "🩺 Diagnóstico para suporte (.zip)": "🩺 Support diagnostics (.zip)", "Corte": "Cutoff", "Máx. (m)": "Max. (m)", "Opacidade": "Opacity", "Cor": "Color", "Análise de cobertura": "Coverage analysis", "Transmissor": "Transmitter", "O rádio cuja cobertura é simulada.": "The radio whose coverage is simulated.", "Nome": "Name", "Nó conhecido": "Known node", "— ponto no mapa —": "— point on map —", "Latitude, longitude": "Latitude, longitude", "Dispositivo": "Device", "Personalizado / manual": "Custom / manual", "Rádio conectado": "Connected radio", "Potência em watts": "Power in watts", "O dispositivo preenche potência e ganho típicos; ajuste para a sua antena e região.": "The device fills typical power and gain; adjust for your antenna and region.", "Potência (dBm)": "Power (dBm)", "Frequência (MHz)": "Frequency (MHz)", "Altura acima do solo (m)": "Height above ground (m)", "Ganho da antena (dBi)": "Antenna gain (dBi)", "Marcar no mapa": "Place on map", "Centralizar": "Center", "Raio de busca (km)": "Search radius (km)", "Ir para o ponto mais alto": "Snap to highest point", "Dica: arraste o pino verde para ajustar, ou digite as coordenadas.": "Tip: drag the green pin to fine-tune, or type the coordinates.", "Receptor": "Receiver", "Os nós que devem ouvir este transmissor. A sensibilidade vem do preset LoRa.": "The nodes that should hear this transmitter. Sensitivity comes from the LoRa preset.", "Preset LoRa": "LoRa preset", "Sensibilidade (dBm)": "Sensitivity (dBm)", "Perda no cabo (dB)": "Cable loss (dB)", "Ambiente": "Environment", "Premissas de terreno e atmosfera; os valores padrão servem para a maioria dos casos.": "Terrain and atmosphere assumptions; the defaults suit most cases.", "Clima de rádio": "Radio climate", "Altura de obstáculos (m)": "Clutter height (m)", "Refratividade (N)": "Refractivity (N)", "Equatorial": "Equatorial", "Continental subtropical": "Continental subtropical", "Marítimo subtropical": "Maritime subtropical", "Desértico": "Desert", "Continental temperado": "Continental temperate", "Marítimo temperado (terra)": "Maritime temperate (land)", "Marítimo temperado (mar)": "Maritime temperate (sea)", "Simulação": "Simulation", "Confiabilidade estatística e alcance máximo. Alcances maiores demoram mais.": "Statistical confidence and maximum range. Longer ranges take longer.", "% de locais": "% of locations", "% do tempo": "% of time", "Alcance máximo (km)": "Maximum range (km)", " Relevo em alta resolução (~38 m): mais detalhe, mais lento, até 40 km": " High-resolution terrain (~38 m): more detail, slower, up to 40 km", "Exibição": "Display", "As mudanças valem na hora para a cobertura já calculada.": "Changes apply instantly to the computed coverage.", "Mapa de calor": "Heatmap", "Contornos": "Contours", "Mínimo (dBm)": "Minimum (dBm)", "Máximo (dBm)": "Maximum (dBm)", "Escala de cores": "Color scale", "Transparência (%)": "Transparency (%)", "Arco-íris": "Rainbow", "Vermelho → verde": "Red → green", "Calcular cobertura": "Compute coverage", "Limpar": "Clear", "Resultado": "Result", "SINAL": "SIGNAL", "Contornos (10 dB)": "Contours (10 dB)", "Calculando…": "Computing…", "Clique no mapa (ou num nó) para posicionar o transmissor.": "Click the map (or a node) to place the transmitter.", "Ajuste os parâmetros e clique em Calcular cobertura.": "Adjust the parameters and click Compute coverage.", "Calculando a cobertura… áreas novas baixam o relevo e podem levar alguns segundos.": "Computing coverage… new areas download terrain and may take a few seconds.", "Nenhum nó conhecido com posição dentro da área coberta.": "No known node with a position inside the covered area.", "Escolha uma automação para ver e alterar as opções dela.": "Choose an automation to see and change its options.", "Ativada": "On", "Desativada": "Off", "Alterações descartadas.": "Changes discarded."}, "es": {"Ferramentas ▾": "Herramientas ▾", "FERRAMENTAS": "HERRAMIENTAS", "PLANEJAMENTO DE RF": "PLANIFICACIÓN RF", "📡 Análise de cobertura": "📡 Análisis de cobertura", "RELEVO": "RELIEVE", "RELATÓRIOS E SUPORTE": "INFORMES Y SOPORTE", "📄 Relatório da malha (PDF)": "📄 Informe de la malla (PDF)", "🩺 Diagnóstico para suporte (.zip)": "🩺 Diagnóstico para soporte (.zip)", "Corte": "Corte", "Máx. (m)": "Máx. (m)", "Opacidade": "Opacidad", "Cor": "Color", "Análise de cobertura": "Análisis de cobertura", "Transmissor": "Transmisor", "O rádio cuja cobertura é simulada.": "La radio cuya cobertura se simula.", "Nome": "Nombre", "Nó conhecido": "Nodo conocido", "— ponto no mapa —": "— punto en el mapa —", "Latitude, longitude": "Latitud, longitud", "Dispositivo": "Dispositivo", "Personalizado / manual": "Personalizado / manual", "Rádio conectado": "Radio conectada", "Potência em watts": "Potencia en vatios", "O dispositivo preenche potência e ganho típicos; ajuste para a sua antena e região.": "El dispositivo completa potencia y ganancia típicas; ajuste a su antena y región.", "Potência (dBm)": "Potencia (dBm)", "Frequência (MHz)": "Frecuencia (MHz)", "Altura acima do solo (m)": "Altura sobre el suelo (m)", "Ganho da antena (dBi)": "Ganancia de la antena (dBi)", "Marcar no mapa": "Marcar en el mapa", "Centralizar": "Centrar", "Raio de busca (km)": "Radio de búsqueda (km)", "Ir para o ponto mais alto": "Ir al punto más alto", "Dica: arraste o pino verde para ajustar, ou digite as coordenadas.": "Consejo: arrastre el pin verde para ajustar o escriba las coordenadas.", "Receptor": "Receptor", "Os nós que devem ouvir este transmissor. A sensibilidade vem do preset LoRa.": "Los nodos que deben oír este transmisor. La sensibilidad viene del preset LoRa.", "Preset LoRa": "Preset LoRa", "Sensibilidade (dBm)": "Sensibilidad (dBm)", "Perda no cabo (dB)": "Pérdida en el cable (dB)", "Ambiente": "Entorno", "Premissas de terreno e atmosfera; os valores padrão servem para a maioria dos casos.": "Supuestos de terreno y atmósfera; los valores por defecto sirven para la mayoría de los casos.", "Clima de rádio": "Clima de radio", "Altura de obstáculos (m)": "Altura de obstáculos (m)", "Refratividade (N)": "Refractividad (N)", "Equatorial": "Ecuatorial", "Continental subtropical": "Continental subtropical", "Marítimo subtropical": "Marítimo subtropical", "Desértico": "Desértico", "Continental temperado": "Continental templado", "Marítimo temperado (terra)": "Marítimo templado (tierra)", "Marítimo temperado (mar)": "Marítimo templado (mar)", "Simulação": "Simulación", "Confiabilidade estatística e alcance máximo. Alcances maiores demoram mais.": "Confiabilidad estadística y alcance máximo. Alcances mayores tardan más.", "% de locais": "% de lugares", "% do tempo": "% del tiempo", "Alcance máximo (km)": "Alcance máximo (km)", " Relevo em alta resolução (~38 m): mais detalhe, mais lento, até 40 km": " Relieve en alta resolución (~38 m): más detalle, más lento, hasta 40 km", "Exibição": "Visualización", "As mudanças valem na hora para a cobertura já calculada.": "Los cambios se aplican al instante a la cobertura calculada.", "Mapa de calor": "Mapa de calor", "Contornos": "Contornos", "Mínimo (dBm)": "Mínimo (dBm)", "Máximo (dBm)": "Máximo (dBm)", "Escala de cores": "Escala de colores", "Transparência (%)": "Transparencia (%)", "Arco-íris": "Arcoíris", "Vermelho → verde": "Rojo → verde", "Calcular cobertura": "Calcular cobertura", "Limpar": "Limpiar", "Resultado": "Resultado", "SINAL": "SEÑAL", "Contornos (10 dB)": "Contornos (10 dB)", "Calculando…": "Calculando…", "Clique no mapa (ou num nó) para posicionar o transmissor.": "Haga clic en el mapa (o en un nodo) para ubicar el transmisor.", "Ajuste os parâmetros e clique em Calcular cobertura.": "Ajuste los parámetros y haga clic en Calcular cobertura.", "Calculando a cobertura… áreas novas baixam o relevo e podem levar alguns segundos.": "Calculando la cobertura… las áreas nuevas descargan el relieve y pueden tardar unos segundos.", "Nenhum nó conhecido com posição dentro da área coberta.": "Ningún nodo conocido con posición dentro del área cubierta.", "Escolha uma automação para ver e alterar as opções dela.": "Elija una automatización para ver y cambiar sus opciones.", "Ativada": "Activada", "Desativada": "Desactivada", "Alterações descartadas.": "Cambios descartados."}}))for(const [k,v] of Object.entries(extra))if(!(k in I18N[lang]))I18N[lang][k]=v;
+// v0.6.62: marca/modelo, raio da cobertura, nós sem cobertura, Tráfego e preferência de conexão.
+for(const [lang,extra] of Object.entries({"en": {"Marca": "Brand", "Modelo": "Model", "Rádio do ponto A": "Radio at point A", "Rádio do ponto B": "Radio at point B", "Raio da cobertura (km)": "Coverage radius (km)", "Baixar PDF": "Download PDF", "Buscar ponto mais alto num raio de (km)": "Search highest point within (km)", "Ir para o ponto mais alto": "Snap to highest point", "← Voltar à cobertura": "← Back to coverage", "Conteúdo": "Content", "Ver JSON completo": "Show full JSON", "Sem campos decodificados.": "No decoded fields.", "Preferir USB, depois Bluetooth, depois Wi-Fi": "Prefer USB, then Bluetooth, then Wi-Fi", "sem dados": "no data", "ouvido depois do ping": "heard after the ping", "até 100 km (40 km em alta resolução); raios maiores demoram mais": "up to 100 km (40 km in high resolution); larger radii take longer", "Confiabilidade estatística do resultado.": "Statistical confidence of the result.", "Contorno vermelho no mapa. Clique num nó para abrir a análise de enlace.": "Red outline on the map. Click a node to open the link analysis.", "[criptografado]": "[encrypted]", "Personalizado / manual": "Custom / manual"}, "es": {"Marca": "Marca", "Modelo": "Modelo", "Rádio do ponto A": "Radio del punto A", "Rádio do ponto B": "Radio del punto B", "Raio da cobertura (km)": "Radio de cobertura (km)", "Baixar PDF": "Descargar PDF", "Buscar ponto mais alto num raio de (km)": "Buscar el punto más alto en un radio de (km)", "Ir para o ponto mais alto": "Ir al punto más alto", "← Voltar à cobertura": "← Volver a la cobertura", "Conteúdo": "Contenido", "Ver JSON completo": "Ver JSON completo", "Sem campos decodificados.": "Sin campos decodificados.", "Preferir USB, depois Bluetooth, depois Wi-Fi": "Preferir USB, luego Bluetooth, luego Wi-Fi", "sem dados": "sin datos", "ouvido depois do ping": "oído después del ping", "até 100 km (40 km em alta resolução); raios maiores demoram mais": "hasta 100 km (40 km en alta resolución); radios mayores tardan más", "Confiabilidade estatística do resultado.": "Confiabilidad estadística del resultado.", "Contorno vermelho no mapa. Clique num nó para abrir a análise de enlace.": "Contorno rojo en el mapa. Haga clic en un nodo para abrir el análisis de enlace.", "[criptografado]": "[cifrado]", "Personalizado / manual": "Personalizado / manual"}}))for(const [k,v] of Object.entries(extra))if(!(k in I18N[lang]))I18N[lang][k]=v;
 const LANGS=['pt','en','es'];
 let uiLang=LANGS.includes(document.documentElement.lang)?document.documentElement.lang:'pt';
 const i18nText=new WeakMap(),i18nAttrs=new WeakMap(),I18N_ATTRS=['placeholder','title','aria-label'];
@@ -935,7 +947,8 @@ async function setView(next,updateUrl=true){
  if(next==='messages')renderChat();
  if(next==='automations')Promise.allSettled([loadAutomation(),loadMeshcoreAutomation(),loadMsgAuto()]).then(refreshAutomationHeads);
 }
-document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+// Ferramentas (v0.6.62) fica no menu superior, mas abre um painel em vez de trocar de aba.
+document.querySelectorAll('.navbtn[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 const initialView=location.pathname.startsWith('/configuracoes')?'settings':
  (location.pathname.startsWith('/estatisticas/')?'stats':
  Object.fromEntries([['/mapa','map'],['/nos','nodes'],['/trafego','traffic'],['/mensagens','messages'],['/estatisticas','stats'],['/automacoes','automations'],['/configuracoes','settings'],['/ajuda','help'],['/sobre','about']])[location.pathname]||'map');
@@ -1074,6 +1087,9 @@ async function loadSavedMapPreferences(){
    $('showMapWaypoints').checked=$('mapShowWaypointsSetting').checked;
    $('showMapAnimate').checked=$('mapAnimateNodes').checked;
    $('showNames').checked=$('mapShowNamesSetting').checked;
+   // v0.6.62: nomes curtos passam a vir ligados; perfis antigos recebem o novo padrão uma vez.
+   try{if(!localStorage.getItem('mesh.shortNamesDefault.v0662')){localStorage.setItem('mesh.shortNamesDefault.v0662','1');
+    if(!$('showNames').checked){$('showNames').checked=$('mapShowNamesSetting').checked=true;persistVisibleMapPreferences();}}}catch(e){}
    $('terrainCut').max=$('terrainMax').value;
   }
   if(map){setTiles();renderMap();}
@@ -1648,8 +1664,11 @@ function renderMap(){
    const point=[n.latitude,n.longitude];
    const marker=L.marker(point,{icon:nodeRoleIcon(n,isMeshcore(n)&&$('mapMeshcoreRing').checked),keyboard:true,riseOnHover:true,opacity:presenceSilent(n)?0.4:1,
      alt:(n.short_name||n.long_name||n.node_id)+' · '+nodeRoleMeta(n.role)[1]+(presenceSilent(n)?' · sem resposta':'')});
-   marker.bindTooltip(esc(n.short_name||n.long_name||n.node_id)+' · '+esc(nodeRoleMeta(n.role)[1]),{
-     permanent:$('showNames').checked,direction:'top'});
+   // v0.6.62: nome curto fixo acima do ícone, só o nome como está no nó; o papel continua no
+   // tooltip quando os nomes estão desligados, no texto alternativo e no painel do nó.
+   const shortLabel=n.short_name||n.long_name||n.node_id;
+   if($('showNames').checked)marker.bindTooltip(esc(shortLabel),{permanent:true,direction:'top',offset:[0,-4],className:'nodeShortLabel'});
+   else marker.bindTooltip(esc(shortLabel)+' · '+esc(nodeRoleMeta(n.role)[1]),{direction:'top'});
    marker.on('click',()=>{if(mapToolNodeClick(n))return;showNode(n);});
    marker.on('contextmenu',e=>{L.DomEvent.stop(e);openNodeContext(n.node_num,e.originalEvent.clientX,e.originalEvent.clientY);});
    marker.addTo(nodeLayer);coords.push(point);
@@ -2026,6 +2045,8 @@ function toggleToolsPanel(open){
  if(open){placeToolsPanel();$('mapToolCoverage').focus();}
 }
 $('mapToolsBtn').onclick=()=>{toggleVisibilityPanel(false);toggleToolsPanel($('mapToolsPanel').hidden);};
+// O Relevo com corte é uma camada do mapa: ligá-lo de outra aba leva ao mapa.
+$('mapTerrain').addEventListener('change',()=>{if($('mapTerrain').checked&&view!=='map')setView('map');});
 $('mapToolReport').onclick=()=>{toggleToolsPanel(false);setView('stats');$('statsPDF').click();};
 $('mapToolDiagnostics').onclick=()=>{toggleToolsPanel(false);setView('settings');showSettings('diagnostics');};
 document.addEventListener('pointerdown',ev=>{
@@ -2466,7 +2487,7 @@ let pausedTraffic=false, selectedPacketId=null,trafficFilterSignature='';
 function filteredTraffic(){
  const query=norm($('trafficFilter').value),typ=$('trafficType').value;
  return packets.filter(p=>(!typ||p.port===typ)&&
- norm([p.port,trafficName(p.port),idName(p.from_node),idName(p.to_node),p.packet_id,p.text_preview].join(' ')).includes(query));
+ norm([p.port,trafficName(p.port),idName(p.from_node),idName(p.to_node),p.packet_id,p.text_preview,p.summary].join(' ')).includes(query));
 }
 function renderPackets(){
  if(pausedTraffic)return;
@@ -2477,8 +2498,8 @@ function renderPackets(){
  $('trafficCounter').textContent=list.length+' exibidos · '+(state.counts?.packets||0)+' no banco';
  $('packetRows').innerHTML=list.map(p=>{
  const hops=p.hop_start!=null&&p.hop_limit!=null&&Number(p.hop_start)>=Number(p.hop_limit)?p.hop_start-p.hop_limit:'—';
- return '<tr data-pid="'+p.id+'"><td>'+esc(new Date(p.timestamp_ms).toLocaleTimeString('pt-BR'))+'</td><td><span class="badge">RX</span></td><td>'+esc(idName(p.from_node))+'</td><td>'+esc(idName(p.to_node))+'</td><td><span class="badge">'+esc(trafficName(p.port))+'</span></td><td>'+esc(p.rx_snr??'—')+'</td><td>'+esc(p.rx_rssi??'—')+'</td><td>'+esc(hops)+'</td><td>'+esc(p.via_mqtt?'MQTT':p.direction==='tx'?'Rádio TX':'Rádio RX')+'</td></tr>';
- }).join('')||'<tr><td colspan="9">Nenhum pacote encontrado.</td></tr>';
+ return '<tr data-pid="'+p.id+'"><td>'+esc(new Date(p.timestamp_ms).toLocaleTimeString('pt-BR'))+'</td><td><span class="badge">RX</span></td><td>'+esc(idName(p.from_node))+'</td><td>'+esc(idName(p.to_node))+'</td><td><span class="badge">'+esc(trafficName(p.port))+'</span></td><td class="trafficSummary" title="'+esc(p.summary||'')+'">'+esc(p.encrypted?'[criptografado]':(p.summary||'—'))+'</td><td>'+esc(p.rx_snr??'—')+'</td><td>'+esc(p.rx_rssi??'—')+'</td><td>'+esc(hops)+'</td><td>'+esc(p.via_mqtt?'MQTT':p.direction==='tx'?'Rádio TX':'Rádio RX')+'</td></tr>';
+ }).join('')||'<tr><td colspan="10">Nenhum pacote encontrado.</td></tr>';
  $('packetRows').querySelectorAll('[data-pid]').forEach(row=>row.onclick=()=>{
   const p=packets.find(x=>String(x.id)===row.dataset.pid);if(!p)return;
   selectedPacketId=p.id;$('trafficDetails').classList.add('active');
@@ -2488,17 +2509,30 @@ function renderPackets(){
      HopStart:p.hop_start??'—',HopLimit:p.hop_limit??'—',
      Transporte:p.via_mqtt?'MQTT':p.direction==='tx'?'Rádio local TX':'Rádio local RX',PacketID:p.packet_id,
      Criptografia:p.encrypted?'Payload não decodificado':'Não indicada',
-     Tipo:trafficName(p.port)+' ('+(p.port||'desconhecido')+')',Conteúdo:p.encrypted?'[conteúdo indisponível]':(p.text_preview||'—')};
+     Tipo:trafficName(p.port)+' ('+(p.port||'desconhecido')+')'};
   $('trafficInfo').textContent=Object.entries(fields).map(([k,v])=>k+': '+v).join('\n');
+  showPacketPayload(p);
  });
+}
+// v0.6.62: conteúdo decodificado do pacote (legível por tipo) e o JSON completo.
+async function showPacketPayload(p){
+ const box=$('trafficPayload');
+ if(p.encrypted){box.innerHTML='<h4>Conteúdo</h4><p>[conteúdo indisponível]</p>';return;}
+ box.innerHTML='<h4>Conteúdo</h4><p class="muted">Carregando…</p>';
+ try{
+  const d=(await api('/api/packet?id='+encodeURIComponent(p.id))).data;
+  if(selectedPacketId!==p.id)return;
+  box.innerHTML='<h4>Conteúdo</h4>'+(d.fields.length?'<dl class="payloadFields">'+d.fields.map(f=>'<dt>'+esc(f.label)+'</dt><dd>'+esc(f.value)+'</dd>').join('')+'</dl>':'<p class="muted">Sem campos decodificados.</p>')+
+   '<details class="payloadJson"><summary>Ver JSON completo</summary><pre>'+esc(d.json)+'</pre></details>';
+ }catch(e){box.innerHTML='<h4>Conteúdo</h4><p class="bad">'+esc(e.message)+'</p>';}
 }
 $('trafficType').onchange=renderPackets;
 $('trafficFilter').oninput=renderPackets;$('trafficReload').onclick=()=>{pausedTraffic=false;$('trafficPause').textContent='Pausar';refreshAll();};
 $('trafficPause').onclick=()=>{pausedTraffic=!pausedTraffic;$('trafficPause').textContent=pausedTraffic?'Continuar':'Pausar';if(!pausedTraffic)renderPackets();};
 $('trafficClose').onclick=()=>{$('trafficDetails').classList.remove('active');selectedPacketId=null;};
 $('trafficExport').onclick=()=>{
- const rows=[['Data/hora','Direção','Origem','Destino','Tipo','Canal','SNR','RSSI','Via','Packet ID']];
- for(const p of filteredTraffic())rows.push([fmtDate(p.timestamp_ms),p.direction==='tx'?'TX':'RX',idName(p.from_node),idName(p.to_node),p.port,p.channel,p.rx_snr,p.rx_rssi,p.via_mqtt?'MQTT':p.direction==='tx'?'Rádio TX':'Rádio RX',p.packet_id]);
+ const rows=[['Data/hora','Direção','Origem','Destino','Tipo','Conteúdo','Canal','SNR','RSSI','Via','Packet ID']];
+ for(const p of filteredTraffic())rows.push([fmtDate(p.timestamp_ms),p.direction==='tx'?'TX':'RX',idName(p.from_node),idName(p.to_node),p.port,p.encrypted?'[criptografado]':(p.summary||''),p.channel,p.rx_snr,p.rx_rssi,p.via_mqtt?'MQTT':p.direction==='tx'?'Rádio TX':'Rádio RX',p.packet_id]);
  const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(';')).join('\r\n');
  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='PT2VHF-Trafego-Visivel.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
@@ -4082,12 +4116,12 @@ async function loadInsightTab(tab){
    const r=(await api('/api/insights/repeaters?hours='+insightHours())).data.repeaters;
    if(currentStatTab!==tab)return;
    const bar=v=>'<div class="availabilityBar" title="'+v+'%"><i style="width:'+v+'%;background:'+(v>=90?'#51d887':v>=60?'#f3cf48':'#e5484d')+'"></i></div>';
-   box.innerHTML='<h3>Saúde dos repetidores</h3><p class="muted">ROUTER, REPEATER, ROUTER_LATE e ROUTER_CLIENT. Disponibilidade = horas do período em que o nó foi ouvido.</p>'+
+   box.innerHTML='<h3>Saúde dos repetidores</h3><p class="muted">ROUTER, REPEATER, ROUTER_LATE e ROUTER_CLIENT. Disponibilidade = horas em que o repetidor deu sinal de vida (pacote dele, salto em rota ou vizinho em NeighborInfo) ÷ horas em que o app estava ouvindo a malha no período.</p>'+
     (r.length?'<div style="overflow-x:auto"><table class="reportTable"><thead><tr><th>Nó</th><th>Papel</th><th>Disponibilidade</th><th>Última vez ouvido</th><th>Bateria</th><th>Tensão</th><th>Canal</th><th>Airtime TX</th><th>Em rotas</th><th>Presença</th></tr></thead><tbody>'+
-     r.map(x=>'<tr data-insight-node="'+x.node+'"><td><button type="button" class="linkButton">'+esc(x.name)+'</button></td><td>'+esc(x.role)+'</td><td>'+bar(x.availability)+' '+x.availability+'%</td><td>'+
+     r.map(x=>'<tr data-insight-node="'+x.node+'"><td><button type="button" class="linkButton">'+esc(x.name)+'</button></td><td>'+esc(x.role)+'</td><td title="'+(x.availability==null?'O app ouviu a malha por menos de 2 h no período':x.heard_hours+' de '+x.listening_hours+' h ouvindo')+'">'+(x.availability==null?'sem dados':bar(x.availability)+' '+x.availability+'%')+'</td><td>'+
       esc(x.last_seen_ms?age(x.last_seen_ms):'—')+'</td><td>'+(x.battery==null?'—':x.battery>100?'EXT':x.battery+'%')+'</td><td>'+(x.voltage==null?'—':Number(x.voltage).toFixed(2)+' V')+
       '</td><td>'+(x.channel_util==null?'—':Number(x.channel_util).toFixed(1)+'%')+'</td><td>'+(x.air_util==null?'—':Number(x.air_util).toFixed(1)+'%')+'</td><td>'+x.route_hops+'</td><td>'+
-      esc({replied:'respondeu',timeout:'sem resposta',awaiting_reply:'checando'}[x.presence]||'—')+'</td></tr>').join('')+'</tbody></table></div>':
+      esc({replied:'respondeu',timeout:'sem resposta',awaiting_reply:'checando',heard_after:'ouvido depois do ping'}[x.presence]||'—')+'</td></tr>').join('')+'</tbody></table></div>':
      '<p class="muted">Nenhum nó com papel de repetidor conhecido.</p>');
   }else{
    const r=(await api('/api/insights/routes?hours='+insightHours())).data;
@@ -4494,7 +4528,7 @@ const LINK_FIELDS=[['height_a','Antena A acima do solo (m)',0,300,0.5],['height_
  ['cable_a_db','Perda de cabo A (dB)',0,30,0.1],['cable_b_db','Perda de cabo B (dB)',0,30,0.1]];
 async function openLinkTool(opts={}){
  const d=await loadSurveyDefaults();
- startMapTool('link',{a:null,b:null,nodeA:null,nodeB:null,result:null,
+ startMapTool('link',{a:null,b:null,nodeA:null,nodeB:null,result:null,fromCoverage:opts.fromCoverage||null,
   params:{height_a:2,height_b:2,freq_mhz:d.radio.freq_mhz,tx_power_dbm:d.radio.tx_power_dbm,gain_a_dbi:2,gain_b_dbi:2,cable_a_db:0.5,cable_b_db:0.5,preset:d.radio.preset,...(opts.params||{})}});
  renderLinkPanel();
  if(opts.a)setLinkEnd('a',opts.a,opts.nodeA,false);
@@ -4505,12 +4539,16 @@ function renderLinkPanel(){
  const t=mapTool,d=surveyDefaults,end=(k,label)=>'<div class="field"><label for="linkCoord'+k+'">Ponto '+label+'</label><div class="row">'+
   '<input id="linkCoord'+k+'" placeholder="lat, lon" value="'+(t[k]?fmtCoord(...t[k]):'')+'"><select id="linkNode'+k+'" aria-label="Usar um nó como ponto '+label+'">'+nodeOptions(t['node'+label],'— ou um nó —')+'</select></div></div>';
  $('mapToolBody').innerHTML='<p id="linkHint" class="toolHint"></p>'+end('a','A')+end('b','B')+
-  '<details class="toolParams"'+(t.result?'':' open')+'><summary>Antenas e rádio</summary><div class="toolGrid">'+
+  '<details class="toolParams"'+(t.result?'':' open')+'><summary>Antenas e rádio</summary>'+
+  '<p class="small"><b>Rádio do ponto A</b></p><div class="toolGrid">'+deviceSelectorHtml('linkDevA',t.deviceA||'custom',d.radio.from_radio)+'</div>'+
+  '<p class="small"><b>Rádio do ponto B</b></p><div class="toolGrid">'+deviceSelectorHtml('linkDevB',t.deviceB||'custom',d.radio.from_radio)+'</div>'+
+  '<div class="toolGrid">'+
   LINK_FIELDS.map(([k,label,min,max,step])=>'<label>'+esc(label)+'<input type="number" data-link-param="'+k+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+t.params[k]+'"></label>').join('')+
   '<label>Preset LoRa<select data-link-param="preset">'+d.presets.map(p=>'<option'+(p===t.params.preset?' selected':'')+'>'+esc(p)+'</option>').join('')+'</select></label></div>'+
   '<p class="muted small">'+(d.radio.from_radio?'Frequência, potência e preset lidos do rádio conectado'+(d.radio.region?' (região '+esc(d.radio.region)+')':'')+'.':'Sem rádio conectado: valores típicos (915 MHz, 22 dBm, LONG_FAST).')+'</p></details>'+
   '<div class="actions"><button type="button" class="primary" id="linkRun">Analisar</button><button type="button" id="linkPdf" disabled>Exportar PDF</button>'+
-  '<button type="button" id="linkCopy" disabled>Copiar coordenadas</button><button type="button" id="linkClear">Limpar</button></div><div id="linkResult" aria-live="polite"></div>';
+  '<button type="button" id="linkCopy" disabled>Copiar coordenadas</button><button type="button" id="linkClear">Limpar</button>'+
+  (t.fromCoverage?'<button type="button" id="linkBackCoverage">← Voltar à cobertura</button>':'')+'</div><div id="linkResult" aria-live="polite"></div>';
  const body=$('mapToolBody');
  ['a','b'].forEach(k=>{
   const K=k.toUpperCase();
@@ -4519,7 +4557,15 @@ function renderLinkPanel(){
  });
  body.querySelectorAll('[data-link-param]').forEach(el=>el.onchange=()=>{
   const k=el.dataset.linkParam;mapTool.params[k]=k==='preset'?el.value:Number(el.value);if(mapTool.a&&mapTool.b)scheduleLinkRun();});
+ // Marca/modelo: A transmite (potência + ganho A); B só define o ganho da antena B.
+ const applyLinkDevice=(end,id)=>{
+  const dev=radioModel(id);t['device'+end]=id;
+  if(id==='radio'){if(end==='A'){t.params.tx_power_dbm=d.radio.tx_power_dbm;}t.params.freq_mhz=d.radio.freq_mhz;}
+  else if(dev){if(end==='A'){t.params.tx_power_dbm=dev.dbm;t.params.gain_a_dbi=dev.gain;}else t.params.gain_b_dbi=dev.gain;}
+  renderLinkPanel();if(t.a&&t.b)scheduleLinkRun();};
+ bindDeviceSelector('linkDevA',id=>applyLinkDevice('A',id));bindDeviceSelector('linkDevB',id=>applyLinkDevice('B',id));
  $('linkRun').onclick=()=>scheduleLinkRun(0);
+ if($('linkBackCoverage'))$('linkBackCoverage').onclick=()=>restoreCoverage(t.fromCoverage);
  $('linkClear').onclick=()=>{toolLayer.clearLayers();Object.assign(mapTool,{a:null,b:null,nodeA:null,nodeB:null,result:null,markers:{},line:null,worstMarker:null});renderLinkPanel();};
  $('linkCopy').onclick=()=>copyText('A: '+fmtCoord(...mapTool.a)+' | B: '+fmtCoord(...mapTool.b));
  $('linkPdf').onclick=e=>fetchToolPdf({kind:'link',...linkPayload()},'PT2VHF_Enlace_'+new Date().toISOString().slice(0,10)+'.pdf',e.target);
@@ -4780,9 +4826,56 @@ $('mapToolSurvey').onclick=()=>openSurveyTool();
 // --- Ferramentas → Análise de cobertura ----------------------------------------
 // Origem: ponto marcado no mapa (pino arrastável) ou um nó conhecido. O servidor devolve
 // a grade em dBm; as cores, a faixa e a transparência são aplicadas aqui, na hora.
-const COVERAGE_DEVICES=[['custom','Personalizado / manual'],['radio','Rádio conectado'],
- ['heltec_v3','Heltec LoRa 32 V3',22,2],['tbeam','LilyGO T-Beam',22,2],['techo','LilyGO T-Echo',22,1],
- ['rak4631','RAK WisBlock 4631',22,2],['station_g2','Station G2',30,3]];
+// Rádios por marca e modelo: potência máxima típica (dBm) e ganho da antena de fábrica (dBi).
+// hw = nomes do HardwareModel do Meshtastic, para sugerir o modelo de um nó ou do rádio conectado.
+const RADIO_CATALOG=[
+ ['Heltec',[['heltec_v3','WiFi LoRa 32 V3',22,2,['HELTEC_V3']],['heltec_v4','WiFi LoRa 32 V4',28,2,['HELTEC_V4']],
+  ['heltec_tracker','Wireless Tracker',22,1,['HELTEC_WIRELESS_TRACKER','HELTEC_WIRELESS_TRACKER_V1_0']],
+  ['heltec_wsl_v3','Wireless Stick Lite V3',22,2,['HELTEC_WSL_V3']],['heltec_paper','Wireless Paper',22,1,['HELTEC_WIRELESS_PAPER','HELTEC_WIRELESS_PAPER_V1_0']],
+  ['heltec_t114','Mesh Node T114',22,1,['HELTEC_MESH_NODE_T114']],
+  ['heltec_vm','Vision Master (T190 / E213 / E290)',22,1,['HELTEC_VISION_MASTER_T190','HELTEC_VISION_MASTER_E213','HELTEC_VISION_MASTER_E290']],
+  ['heltec_capsule','Capsule Sensor V3',22,1,['HELTEC_CAPSULE_SENSOR_V3']]]],
+ ['LilyGO',[['tbeam','T-Beam',22,2,['TBEAM','TBEAM_V0P7']],['tbeam_supreme','T-Beam Supreme',22,2,['LILYGO_TBEAM_S3_CORE']],
+  ['techo','T-Echo',22,1,['T_ECHO']],['tdeck','T-Deck / T-Deck Plus',22,2,['T_DECK']],['t3s3','T3-S3',22,2,['TLORA_T3_S3']],
+  ['tlora_v21','LoRa32 V2.1 (SX1276)',20,2,['TLORA_V2_1_1P6','TLORA_V2_1_1P8','TLORA_V2']],['twatch_s3','T-Watch S3',22,0,['T_WATCH_S3']]]],
+ ['RAKwireless',[['rak4631','WisBlock RAK4631',22,2,['RAK4631']],['wismesh_pocket','WisMesh Pocket',22,1,[]],
+  ['wismesh_tap','WisMesh Tap',22,1,['WISMESH_TAP']],['rak11310','WisBlock RAK11310',22,2,['RAK11310']],
+  ['rak13302','WisBlock + RAK13302 (1 W)',30,3,[]]]],
+ ['Seeed Studio',[['t1000e','SenseCAP T1000-E',22,0,['TRACKER_T1000_E']],['wio_wm1110','Wio Tracker WM1110',22,1,['WIO_WM1110']],
+  ['wio_l1','Wio Tracker L1',22,2,['SEEED_WIO_TRACKER_L1']],['xiao_s3','XIAO ESP32S3 + Wio-SX1262',22,2,['SEEED_XIAO_S3']],
+  ['sensecap_indicator','SenseCAP Indicator',22,2,['SENSECAP_INDICATOR']]]],
+ ['B&Q Consulting',[['station_g2','Station G2',30,3,['STATION_G2']],['station_g1','Station G1',30,3,['STATION_G1']],
+  ['nano_g2','Nano G2 Ultra',22,2,['NANO_G2_ULTRA']]]],
+ ['Elecrow',[['thinknode_m1','ThinkNode M1',22,1,['THINKNODE_M1']],['thinknode_m2','ThinkNode M2',22,2,['THINKNODE_M2']],
+  ['crowpanel','CrowPanel Advance',22,2,['CROWPANEL']]]],
+ ['Nordic / Adafruit',[['promicro','nRF52 Pro-micro (DIY)',22,2,['NRF52_PROMICRO_DIY']],['feather_rfm95','Feather nRF52840 + RFM95',20,2,[]]]],
+ ['Outros',[['muzi_r1','Muzi Works R1 Neo',22,1,['MUZI_R1_NEO']],['ebyte_e22_30','Ebyte E22-900M30S (1 W, DIY)',30,3,[]]]]];
+const radioModel=id=>{for(const [brand,models] of RADIO_CATALOG)for(const m of models)if(m[0]===id)return {brand,id:m[0],label:m[1],dbm:m[2],gain:m[3],hw:m[4]};return null;};
+function radioModelForHw(hw){
+ const key=String(hw||'').toUpperCase();if(!key)return null;
+ for(const [brand,models] of RADIO_CATALOG)for(const m of models)if(m[4].includes(key))return radioModel(m[0]);
+ return null;
+}
+function connectedRadioHw(){
+ const src=activeRadioSource?.();const local=src?state.connections?.[String(src.id)]?.local_node_num:null;
+ return local!=null?nodes.find(n=>n.node_num===Number(local))?.hw_model||'':'';
+}
+// Seletor marca → modelo; "custom" = Personalizado, "radio" = Rádio conectado.
+function deviceSelectorHtml(prefix,device,fromRadio){
+ const cur=radioModel(device),brand=device==='radio'?'radio':cur?cur.brand:'custom';
+ const brands='<option value="custom"'+(brand==='custom'?' selected':'')+'>Personalizado / manual</option>'+
+  (fromRadio?'<option value="radio"'+(brand==='radio'?' selected':'')+'>Rádio conectado</option>':'')+
+  RADIO_CATALOG.map(([b])=>'<option value="'+esc(b)+'"'+(b===brand?' selected':'')+'>'+esc(b)+'</option>').join('');
+ const models=(RADIO_CATALOG.find(([b])=>b===brand)||[null,[]])[1];
+ return '<label>Marca<select id="'+prefix+'Brand">'+brands+'</select></label>'+
+  '<label>Modelo<select id="'+prefix+'Model"'+(models.length?'':' disabled')+'>'+(models.length?models.map(m=>'<option value="'+m[0]+'"'+(m[0]===device?' selected':'')+'>'+esc(m[1])+'</option>').join(''):'<option value="">—</option>')+'</select></label>';
+}
+function bindDeviceSelector(prefix,apply){
+ $(prefix+'Brand').onchange=e=>{const b=e.target.value;
+  if(b==='custom'||b==='radio')return apply(b);
+  apply((RADIO_CATALOG.find(([x])=>x===b)||[null,[[]]])[1][0][0]);};
+ $(prefix+'Model').onchange=e=>{if(e.target.value)apply(e.target.value);};
+}
 const COVERAGE_CLIMATES=[['equatorial','Equatorial'],['continental_subtropical','Continental subtropical'],
  ['maritime_subtropical','Marítimo subtropical'],['desert','Desértico'],['continental_temperate','Continental temperado'],
  ['maritime_temperate_land','Marítimo temperado (terra)'],['maritime_temperate_sea','Marítimo temperado (mar)']];
@@ -4797,7 +4890,7 @@ const COVERAGE_FIELDS={
  rx:[['rx_sensitivity_dbm','Sensibilidade (dBm)',-150,-50,1],['rx_height_m','Altura acima do solo (m)',0.5,100,0.5],
      ['rx_gain_dbi','Ganho da antena (dBi)',-10,30,0.5],['rx_cable_db','Perda no cabo (dB)',0,30,0.5]],
  env:[['clutter_m','Altura de obstáculos (m)',0,60,0.5],['refractivity_n','Refratividade (N)',250,400,1]],
- sim:[['location_pct','% de locais',50,99.9,1],['time_pct','% do tempo',50,99.9,1],['max_km','Alcance máximo (km)',1,70,1]]};
+ sim:[['location_pct','% de locais',50,99.9,1],['time_pct','% do tempo',50,99.9,1]]};
 function coverageColor(scale,f){
  const stops=(COVERAGE_SCALES[scale]||COVERAGE_SCALES.plasma)[1],x=Math.max(0,Math.min(1,f))*(stops.length-1);
  const i=Math.min(stops.length-2,Math.floor(x)),u=x-i,a=stops[i],b=stops[i+1];
@@ -4812,8 +4905,8 @@ async function openCoverageTool(opts={}){
  startMapTool('coverage',{tx:null,node:null,pickTx:true,result:null,overlay:null,marker:null,running:false,
   params:{name:'Transmissor',tx_power_dbm:d.radio.tx_power_dbm,freq_mhz:d.radio.freq_mhz,tx_height_m:4,tx_gain_dbi:2,
    preset:d.radio.preset,rx_sensitivity_dbm:sens,rx_height_m:1,rx_gain_dbi:2,rx_cable_db:2,
-   climate:'continental_subtropical',clutter_m:1,refractivity_n:301,location_pct:95,time_pct:95,max_km:20,hires:false},
-  display:{style:'heat',min:Math.round(sens),max:-80,scale:'plasma',transparency:50},device:d.radio.from_radio?'radio':'custom',searchKm:1});
+   climate:'continental_subtropical',clutter_m:1,refractivity_n:301,location_pct:95,time_pct:95,max_km:50,hires:false},
+  display:{style:'heat',min:Math.round(sens),max:-80,scale:'plasma',transparency:50},device:d.radio.from_radio?'radio':'custom',searchKm:1,deviceHint:radioModelForHw(connectedRadioHw())});
  renderCoveragePanel();
  if(opts.node)setCoverageTx([Number(opts.node.latitude),Number(opts.node.longitude)],opts.node.node_num);
 }
@@ -4831,13 +4924,12 @@ function renderCoveragePanel(){
    '<div class="toolGrid"><label>Nome<input id="coverageName" maxlength="60" value="'+esc(p.name)+'"></label>'+
    '<label>Nó conhecido<select id="coverageNode" aria-label="Usar um nó como transmissor">'+nodeOptions(t.node,'— ponto no mapa —')+'</select></label></div>'+
    '<div class="field"><label for="coverageCoord">Latitude, longitude</label><input id="coverageCoord" placeholder="-16.117513, -47.934822" value="'+(t.tx?fmtCoord(...t.tx):'')+'"></div>'+
-   '<div class="toolGrid"><label>Dispositivo<select id="coverageDevice">'+COVERAGE_DEVICES.filter(x=>x[0]!=='radio'||d.radio.from_radio)
-     .map(([k,l])=>'<option value="'+k+'"'+(k===t.device?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select></label>'+
-   '<label>Potência em watts<output id="coverageWatts">'+(watts<1?watts.toFixed(2):watts.toFixed(1)).replace('.',',')+' W</output></label></div>'+
-   '<p class="muted small">O dispositivo preenche potência e ganho típicos; ajuste para a sua antena e região.</p>'+
+   '<div class="toolGrid">'+deviceSelectorHtml('coverageDevice',t.device,d.radio.from_radio)+'</div>'+
+   (t.deviceHint&&t.device!==t.deviceHint.id?'<p class="muted small">Sugestão pelo hardware informado: <button type="button" id="coverageDeviceHint" class="linkButton">'+esc(t.deviceHint.brand+' '+t.deviceHint.label)+'</button></p>':'')+
+   '<p class="muted small">O modelo preenche potência e ganho típicos; ajuste para a sua antena e região. Potência: <output id="coverageWatts">'+(watts<1?watts.toFixed(2):watts.toFixed(1)).replace('.',',')+' W</output></p>'+
    grid(COVERAGE_FIELDS.tx,'data-cov')+
    '<div class="row"><button type="button" id="coveragePick" class="'+(t.pickTx?'primary':'')+'">Marcar no mapa</button><button type="button" id="coverageCenter"'+(t.tx?'':' disabled')+'>Centralizar</button></div>'+
-   '<div class="row"><label class="small">Raio de busca (km) <input type="number" id="coverageSearchKm" min="0.05" max="20" step="0.1" value="'+t.searchKm+'" style="width:70px;min-width:0"></label>'+
+   '<div class="row"><label class="small">Buscar ponto mais alto num raio de (km) <input type="number" id="coverageSearchKm" min="0.05" max="50" step="0.1" value="'+t.searchKm+'" style="width:70px;min-width:0"></label>'+
    '<button type="button" id="coverageHighest"'+(t.tx?'':' disabled')+'>Ir para o ponto mais alto</button></div>'+
    '<p class="muted small">Dica: arraste o pino verde para ajustar, ou digite as coordenadas.</p>')+
   section('Receptor','Os nós que devem ouvir este transmissor. A sensibilidade vem do preset LoRa.',
@@ -4846,9 +4938,9 @@ function renderCoveragePanel(){
   section('Ambiente','Premissas de terreno e atmosfera; os valores padrão servem para a maioria dos casos.',
    '<div class="toolGrid"><label>Clima de rádio<select id="coverageClimate">'+COVERAGE_CLIMATES.map(([k,l])=>'<option value="'+k+'"'+(k===p.climate?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select></label></div>'+
    grid(COVERAGE_FIELDS.env,'data-cov'),false)+
-  section('Simulação','Confiabilidade estatística e alcance máximo. Alcances maiores demoram mais.',
+  section('Simulação','Confiabilidade estatística do resultado.',
    grid(COVERAGE_FIELDS.sim,'data-cov')+
-   '<label class="small"><input type="checkbox" id="coverageHires"'+(p.hires?' checked':'')+'> Relevo em alta resolução (~38 m): mais detalhe, mais lento, até 40 km</label>',false)+
+   '<label class="small"><input type="checkbox" id="coverageHires"'+(p.hires?' checked':'')+'> Relevo em alta resolução (~38 m): mais detalhe, mais lento, raio até 40 km</label>',false)+
   section('Exibição','As mudanças valem na hora para a cobertura já calculada.',
    '<div class="row coverageStyle" role="radiogroup" aria-label="Estilo"><button type="button" data-cov-style="heat" class="'+(v.style==='heat'?'primary':'')+'" role="radio" aria-checked="'+(v.style==='heat')+'">Mapa de calor</button>'+
    '<button type="button" data-cov-style="contours" class="'+(v.style==='contours'?'primary':'')+'" role="radio" aria-checked="'+(v.style==='contours')+'">Contornos</button></div>'+
@@ -4858,27 +4950,40 @@ function renderCoveragePanel(){
    '<label>Transparência (%)<input type="number" data-cov-display="transparency" min="0" max="90" step="5" value="'+v.transparency+'"></label></div>'+
    '<div class="coverageBar" id="coverageBar" style="background:'+coverageGradientCss(v.scale)+'"></div>'+
    '<div class="coverageBarLabels"><span id="coverageBarMin">'+v.min+' dBm</span><span id="coverageBarMax">'+v.max+' dBm</span></div>')+
-  '<div class="actions"><button type="button" class="primary" id="coverageRun"'+(t.tx?'':' disabled')+'>Calcular cobertura</button><button type="button" id="coverageClear">Limpar</button></div>'+
+  '<div class="coverageRadius"><label for="coverageRadius"><b>Raio da cobertura (km)</b></label><input type="number" id="coverageRadius" min="1" max="100" step="1" value="'+p.max_km+'">'+
+  '<span class="muted small">até 100 km (40 km em alta resolução); raios maiores demoram mais</span></div>'+
+  '<div class="actions"><button type="button" class="primary" id="coverageRun"'+(t.tx?'':' disabled')+'>Calcular cobertura</button><button type="button" id="coveragePdf"'+(t.result?'':' disabled')+'>Baixar PDF</button><button type="button" id="coverageClear">Limpar</button></div>'+
   '<div id="coverageResult" aria-live="polite"></div>';
  const body=$('mapToolBody');
  $('coverageName').onchange=e=>{p.name=e.target.value.trim()||'Transmissor';updateCoverageMarker();};
  $('coverageNode').onchange=e=>{const n=nodes.find(x=>x.node_num===Number(e.target.value));if(n){setCoverageTx([Number(n.latitude),Number(n.longitude)],n.node_num);map.setView(mapTool.tx,Math.max(map.getZoom(),11));}};
  $('coverageCoord').onchange=e=>{const c=parseCoord(e.target.value);if(!c)return notify('Coordenadas no formato: -15.79, -47.88',true);setCoverageTx(c,null);};
- $('coverageDevice').onchange=e=>{
-  t.device=e.target.value;const dev=COVERAGE_DEVICES.find(x=>x[0]===t.device);
-  if(t.device==='radio'){p.tx_power_dbm=d.radio.tx_power_dbm;p.freq_mhz=d.radio.freq_mhz;}
-  else if(dev&&dev[2]!=null){p.tx_power_dbm=dev[2];p.tx_gain_dbi=dev[3];}
+ const applyDevice=id=>{
+  t.device=id;const dev=radioModel(id);
+  if(id==='radio'){p.tx_power_dbm=d.radio.tx_power_dbm;p.freq_mhz=d.radio.freq_mhz;}
+  else if(dev){p.tx_power_dbm=dev.dbm;p.tx_gain_dbi=dev.gain;}
   renderCoveragePanel();};
+ bindDeviceSelector('coverageDevice',applyDevice);
+ if($('coverageDeviceHint'))$('coverageDeviceHint').onclick=()=>applyDevice(t.deviceHint.id);
  body.querySelectorAll('[data-cov]').forEach(el=>el.onchange=()=>{
   const k=el.dataset.cov,n=Number(el.value);if(!Number.isFinite(n))return;p[k]=n;
-  if(k==='tx_power_dbm'||k==='tx_gain_dbi'){t.device='custom';$('coverageDevice').value='custom';}
+  if(k==='tx_power_dbm'||k==='tx_gain_dbi'){t.device='custom';$('coverageDeviceBrand').value='custom';$('coverageDeviceModel').innerHTML='<option value="">—</option>';$('coverageDeviceModel').disabled=true;}
   if(k==='tx_power_dbm'){const w=Math.pow(10,(n-30)/10);$('coverageWatts').textContent=(w<1?w.toFixed(2):w.toFixed(1)).replace('.',',')+' W';}});
  $('coveragePreset').onchange=e=>{p.preset=e.target.value;const s=d.sensitivity?.[p.preset];if(s!=null){p.rx_sensitivity_dbm=s;body.querySelector('[data-cov="rx_sensitivity_dbm"]').value=s;}};
  $('coverageClimate').onchange=e=>{p.climate=e.target.value;};
- $('coverageHires').onchange=e=>{p.hires=e.target.checked;if(p.hires&&p.max_km>40){p.max_km=40;body.querySelector('[data-cov="max_km"]').value=40;notify('Alta resolução: alcance limitado a 40 km.');}};
+ $('coverageHires').onchange=e=>{p.hires=e.target.checked;if(p.hires&&p.max_km>40){p.max_km=40;$('coverageRadius').value=40;notify('Alta resolução: raio limitado a 40 km.');}};
+ $('coverageRadius').onchange=e=>{
+  const n=Number(e.target.value),max=p.hires?40:100;
+  if(!Number.isFinite(n)||n<1||n>max){notify('Raio da cobertura: 1 a '+max+' km'+(p.hires?' com relevo em alta resolução':'')+'.',true);e.target.value=p.max_km;return;}
+  p.max_km=n;};
+ $('coveragePdf').onclick=e=>{const t2=mapTool;if(!t2?.result)return;
+  fetchToolPdf({kind:'coverage',center:t2.tx,params:t2.params,display:t2.display,node:t2.node,name:t2.params.name},'PT2VHF_Cobertura_'+new Date().toISOString().slice(0,10)+'.pdf',e.target);};
  $('coveragePick').onclick=()=>{t.pickTx=true;$('coveragePick').classList.add('primary');updateCoverageHint();};
  $('coverageCenter').onclick=()=>{if(t.tx)map.setView(t.tx,Math.max(map.getZoom(),12));};
- $('coverageSearchKm').onchange=e=>{t.searchKm=Number(e.target.value)||1;};
+ $('coverageSearchKm').onchange=e=>{
+  const n=Number(e.target.value);
+  if(!Number.isFinite(n)||n<0.05||n>50){notify('Buscar ponto mais alto: raio de 0,05 a 50 km. Para o tamanho da cobertura use "Raio da cobertura".',true);e.target.value=t.searchKm;return;}
+  t.searchKm=n;};
  $('coverageHighest').onclick=coverageSnapHighest;
  body.querySelectorAll('[data-cov-style]').forEach(b=>b.onclick=()=>{v.style=b.dataset.covStyle;
   body.querySelectorAll('[data-cov-style]').forEach(x=>{const on=x.dataset.covStyle===v.style;x.classList.toggle('primary',on);x.setAttribute('aria-checked',String(on));});drawCoverage();});
@@ -4887,7 +4992,7 @@ function renderCoveragePanel(){
   if(v.min>=v.max){notify('O mínimo deve ser menor que o máximo.',true);return;}
   $('coverageBar').style.background=coverageGradientCss(v.scale);$('coverageBarMin').textContent=v.min+' dBm';$('coverageBarMax').textContent=v.max+' dBm';drawCoverage();});
  $('coverageRun').onclick=runCoverage;
- $('coverageClear').onclick=()=>{clearCoverageOverlay();t.result=null;$('coverageResult').innerHTML='';};
+ $('coverageClear').onclick=()=>{clearCoverageOverlay();t.result=null;$('coverageResult').innerHTML='';$('coveragePdf').disabled=true;};
  updateCoverageHint();if(t.result)showCoverageResult(t.result);
 }
 function updateCoverageHint(){
@@ -4898,6 +5003,9 @@ function updateCoverageHint(){
 function setCoverageTx(c,nodeNum=null){
  const t=mapTool;if(!t||t.kind!=='coverage')return;
  t.tx=c;t.node=nodeNum;t.pickTx=false;
+ // Nó escolhido como transmissor: sugere a marca/modelo pelo hardware informado por ele.
+ if(nodeNum!=null){const hint=radioModelForHw(nodes.find(n=>n.node_num===nodeNum)?.hw_model);
+  if(hint&&hint.id!==t.deviceHint?.id){t.deviceHint=hint;if(t.device!==hint.id){renderCoveragePanel();}}}
  if(!t.marker){
   t.marker=L.marker(c,{draggable:true,icon:L.divIcon({className:'coveragePin',html:'<span>📡</span>',iconSize:[34,34],iconAnchor:[17,32]})}).addTo(toolLayer);
   t.marker.on('dragend',()=>{const ll=t.marker.getLatLng();setCoverageTx([ll.lat,ll.lng],null);});
@@ -4970,19 +5078,69 @@ function coverageAt(r,lat,lon){
  const x=Math.floor((lon-w)/(e-w)*r.size),y=Math.floor((nn-lat)/(nn-s)*r.size);
  const b=r.bytes[Math.min(r.size-1,y)*r.size+Math.min(r.size-1,x)];return b?b-200:null;
 }
+function coverageDistanceKm(a,b){
+ const R=6371,rad=Math.PI/180,dl=(b[0]-a[0])*rad,dg=(b[1]-a[1])*rad;
+ const h=Math.sin(dl/2)**2+Math.cos(a[0]*rad)*Math.cos(b[0]*rad)*Math.sin(dg/2)**2;
+ return 2*R*Math.asin(Math.sqrt(h));
+}
+// Nós com posição: com cobertura, sem cobertura (dentro do raio) e fora do raio calculado.
+function classifyCoverageNodes(r){
+ const p=r.params,c=[r.center.lat,r.center.lon],out={covered:[],uncovered:[],outside:[]};
+ for(const n of positionedNodes()){
+  if(n.node_num===mapTool.node)continue;
+  const pos=[Number(n.latitude),Number(n.longitude)],km=coverageDistanceKm(c,pos);
+  const item={n,pos,km,dbm:null};
+  if(km>p.max_km){out.outside.push(item);continue;}
+  item.dbm=coverageAt(r,pos[0],pos[1]);
+  (item.dbm!=null&&item.dbm>=p.rx_sensitivity_dbm?out.covered:out.uncovered).push(item);
+ }
+ out.covered.sort((a,b)=>b.dbm-a.dbm);out.uncovered.sort((a,b)=>(b.dbm??-999)-(a.dbm??-999));out.outside.sort((a,b)=>a.km-b.km);
+ return out;
+}
+function coverageLinkTo(item){
+ const t=mapTool,p=t.params;
+ const saved={tx:t.tx,node:t.node,params:{...p},display:{...t.display},device:t.device,searchKm:t.searchKm,result:t.result};
+ openLinkTool({a:t.tx,b:item.pos,nodeA:t.node,nodeB:item.n.node_num,fromCoverage:saved,
+  params:{height_a:p.tx_height_m,height_b:p.rx_height_m,freq_mhz:p.freq_mhz,tx_power_dbm:p.tx_power_dbm,
+   gain_a_dbi:p.tx_gain_dbi,gain_b_dbi:p.rx_gain_dbi,cable_a_db:0.5,cable_b_db:p.rx_cable_db,preset:p.preset}});
+}
+async function restoreCoverage(saved){
+ await openCoverageTool();
+ const t=mapTool;Object.assign(t,{params:saved.params,display:saved.display,device:saved.device,searchKm:saved.searchKm});
+ renderCoveragePanel();setCoverageTx(saved.tx,saved.node);
+ if(saved.result){t.result=saved.result;drawCoverage();showCoverageResult(saved.result);$('coveragePdf').disabled=false;}
+}
+function drawCoverageNodeMarks(groups){
+ const t=mapTool;if(t.nodeMarks)toolLayer.removeLayer(t.nodeMarks);
+ t.nodeMarks=L.layerGroup().addTo(toolLayer);
+ for(const item of groups.uncovered){
+  L.circleMarker(item.pos,{radius:13,color:'#ff4d4f',weight:3,fill:false,className:'coverageMiss'})
+   .bindTooltip(esc(idName(item.n.node_num))+': '+(item.dbm!=null?item.dbm+' dBm':'sem sinal')+' · clique para analisar o enlace')
+   .on('click',()=>coverageLinkTo(item)).addTo(t.nodeMarks);
+ }
+}
 function showCoverageResult(r){
  const p=r.params,num=x=>String(x).replace('.',',');
- const heard=positionedNodes().filter(n=>n.node_num!==mapTool.node).map(n=>({n,dbm:coverageAt(r,Number(n.latitude),Number(n.longitude))}))
-  .filter(x=>x.dbm!=null&&x.dbm>=p.rx_sensitivity_dbm).sort((a,b)=>b.dbm-a.dbm);
+ const g=classifyCoverageNodes(r);
+ const line=(x,extra)=>'<li><button type="button" class="linkButton" data-cov-link="'+x.n.node_num+'">'+esc(idName(x.n.node_num))+'</button>: '+extra+'</li>';
  $('coverageResult').innerHTML='<h4>Resultado</h4><ul class="small">'+
   '<li>Área com sinal acima de '+p.rx_sensitivity_dbm+' dBm: <b>'+num(r.covered_km2)+' km²</b></li>'+
-  '<li>Ponto mais distante com sinal: <b>'+num(r.farthest_km)+' km</b> (limite '+num(p.max_km)+' km)</li>'+
+  '<li>Ponto mais distante com sinal: <b>'+num(r.farthest_km)+' km</b> (raio '+num(p.max_km)+' km)</li>'+
   '<li>Terreno no transmissor: '+Math.round(r.center.ground_m)+' m · antena a '+num(p.tx_height_m)+' m</li>'+
   '<li>Margem de confiabilidade: '+num(r.fade_margin_db)+' dB · relevo de ~'+Math.round(r.terrain_m)+' m por pixel</li></ul>'+
-  (heard.length?'<details open><summary>Nós conhecidos dentro da cobertura ('+heard.length+')</summary><ul class="small">'+
-   heard.slice(0,30).map(x=>'<li>'+esc(idName(x.n.node_num))+': '+x.dbm+' dBm</li>').join('')+'</ul></details>':
+  (g.covered.length?'<details open><summary>Nós conhecidos dentro da cobertura ('+g.covered.length+')</summary><ul class="small">'+
+   g.covered.slice(0,60).map(x=>line(x,x.dbm+' dBm')).join('')+'</ul></details>':
    '<p class="muted small">Nenhum nó conhecido com posição dentro da área coberta.</p>')+
+  (g.uncovered.length?'<details open><summary>Nós conhecidos sem cobertura ('+g.uncovered.length+')</summary><ul class="small">'+
+   g.uncovered.slice(0,60).map(x=>line(x,(x.dbm!=null?x.dbm+' dBm · faltam '+num(Math.round((p.rx_sensitivity_dbm-x.dbm)*10)/10)+' dB':'sem sinal')+' · '+num(Math.round(x.km*10)/10)+' km')).join('')+
+   '</ul><p class="muted small">Contorno vermelho no mapa. Clique num nó para abrir a análise de enlace.</p></details>':'')+
+  (g.outside.length?'<details><summary>Fora do raio calculado ('+g.outside.length+')</summary><ul class="small">'+
+   g.outside.slice(0,60).map(x=>line(x,num(Math.round(x.km*10)/10)+' km')).join('')+'</ul></details>':'')+
   '<p class="muted small">'+esc(r.notes)+'</p>';
+ const all=[...g.covered,...g.uncovered,...g.outside];
+ $('coverageResult').querySelectorAll('[data-cov-link]').forEach(b=>b.onclick=()=>{const it=all.find(x=>x.n.node_num===Number(b.dataset.covLink));if(it)coverageLinkTo(it);});
+ drawCoverageNodeMarks(g);
+ if($('coveragePdf'))$('coveragePdf').disabled=false;
 }
 $('mapToolCoverage').onclick=()=>openCoverageTool();
 document.addEventListener('keydown',e=>{
@@ -5453,7 +5611,7 @@ document.querySelectorAll('[data-autoconnect]').forEach(box=>box.onchange=async(
  catch(e){box.checked=!box.checked;notify(e.message,true);}
 });
 $('usbPriority').onchange=async()=>{
- try{await api('/api/system/settings',{usb_priority:$('usbPriority').checked});notify('Prioridade USB '+($('usbPriority').checked?'ativada.':'desativada.'));}
+ try{await api('/api/system/settings',{usb_priority:$('usbPriority').checked});notify('Preferência USB → BLE → Wi-Fi '+($('usbPriority').checked?'ativada.':'desativada.'));}
  catch(e){$('usbPriority').checked=!$('usbPriority').checked;notify(e.message,true);}
 };
 async function refreshAll(){try{const results=await Promise.all([api('/api/state'+viewQuery()),api('/api/nodes'),api('/api/packets'+viewQuery()),api('/api/messages'+viewQuery()),api('/api/links'),api('/api/nodes/sources'),api('/api/waypoints'),api('/api/communications'),api('/api/nodes/hops')]);state=results[0];showFirstRunDialogOnce();updateRadioConnectionIndicator();syncAutodetectPrefs();

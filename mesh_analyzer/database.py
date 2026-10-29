@@ -545,8 +545,14 @@ class Database:
         value = self._setting("preferred_radio_source")
         return value if type(value) is int and value > 0 else None
 
-    def set_preferred_radio(self, source_id):
+    def set_preferred_radio(self, source_id, manual=True):
         self._set_setting("preferred_radio_source", int(source_id) if source_id else None)
+        # v0.6.62: escolha manual no seletor vale enquanto o meio estiver disponível; trocas
+        # automáticas (USB → BLE → Wi-Fi) não a substituem como "manual".
+        self._set_setting("preferred_radio_manual", bool(source_id) and bool(manual))
+
+    def preferred_radio_manual(self):
+        return self._setting("preferred_radio_manual", True) is True
 
     def ignored_devices(self):
         """#149: dispositivos dispensados com "Nunca para este dispositivo"."""
@@ -1051,7 +1057,21 @@ class Database:
     def packet_rows(self,limit=300,source_id=None):
         # #189: com uma conexão escolhida no topo, os últimos pacotes dela (não os de todas).
         where,args=("WHERE source_id=? ",[int(source_id)]) if source_id else ("",[])
-        return self._rows("SELECT id,source_id,packet_id,timestamp_ms,from_node,to_node,port,channel,rx_snr,rx_rssi,hop_start,hop_limit,via_mqtt,encrypted,direction,text_preview FROM packets "+where+"ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(*args,min(int(limit),3000)))
+        rows=self._rows("SELECT id,source_id,packet_id,timestamp_ms,from_node,to_node,port,channel,rx_snr,rx_rssi,hop_start,hop_limit,via_mqtt,encrypted,direction,text_preview,raw_json FROM packets "+where+"ORDER BY timestamp_ms DESC,id DESC LIMIT ?",(*args,min(int(limit),3000)))
+        # v0.6.62: resumo legível do conteúdo (coluna "Conteúdo" do Tráfego); o JSON fica no detalhe.
+        from .payload import describe
+        for r in rows:
+            raw=r.pop("raw_json",None)
+            r["summary"]="" if r.get("encrypted") else describe(r.get("port"),raw,r.get("text_preview") or "")[0]
+        return rows
+
+    def packet_detail(self,packet_id):
+        from .payload import packet_detail
+        rows=self._rows("SELECT id,port,encrypted,text_preview,raw_json FROM packets WHERE id=?",(int(packet_id),))
+        if not rows:raise LookupError("Pacote não encontrado")
+        r=rows[0]
+        if r["encrypted"]:return {"summary":"","fields":[{"label":"Conteúdo","value":"[conteúdo indisponível]"}],"json":r["raw_json"] or ""}
+        return packet_detail(r)
 
     def search_messages(self, query="", node=None, days=None, limit=200):
         """#175: busca no histórico inteiro, sem diferenciar maiúsculas e acentos."""

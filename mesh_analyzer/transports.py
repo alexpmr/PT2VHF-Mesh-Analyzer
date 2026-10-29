@@ -248,6 +248,12 @@ class PacketIngestor:
 # preferido tem prioridade sobre "o primeiro que conectar vence" (#139).
 HANDOVER_TIMEOUT_S=45
 STARTUP_PREFERENCE_S=30
+# v0.6.62: ordem de preferência dos meios de um rádio (menor = melhor). MQTT nunca é rádio.
+RADIO_RANK={"serial":0,"ble":1,"tcp":2}
+
+
+def radio_rank(src):
+    return RADIO_RANK.get((src or {}).get("kind"),9)
 # #157: favoritos ocupam o NodeDB do rádio e não são descartados por ele.
 FAVORITE_SAFE_LIMIT=50
 FAVORITE_COMMANDS_PER_SYNC=5
@@ -366,9 +372,9 @@ class SourceManager:
 
     def start(self):
         self._started_at=time.monotonic()
-        preferred=self.db.preferred_radio()
-        # O rádio preferido (#152) é o primeiro a tentar conectar.
-        for src in sorted(self.db.sources(public=False),key=lambda s:(s["id"]!=preferred,s["kind"]!="serial")):
+        preferred=self.db.preferred_radio() if self.db.preferred_radio_manual() else None
+        # O rádio escolhido à mão (#152) tenta primeiro; depois USB, BLE e Wi-Fi (v0.6.62).
+        for src in sorted(self.db.sources(public=False),key=lambda s:(s["id"]!=preferred,radio_rank(s),s["id"])):
             if src["enabled"]:self.connect(src["id"])
 
     def _update_device_name(self,source_id,iface):
@@ -560,15 +566,17 @@ class SourceManager:
             return handover["target"]!=id
         if time.monotonic()-self._started_at>=STARTUP_PREFERENCE_S:
             return False
-        preferred=self.db.preferred_radio()
+        preferred=self.db.preferred_radio() if self.db.preferred_radio_manual() else None
         src=self.db.source(preferred) if preferred else None
         if src and src["enabled"] and src["kind"]!="mqtt":
             return preferred!=id and self._states.get(preferred,{}).get("status")=="connecting"
-        # #155: sem rádio escolhido, a USB tem prioridade ao iniciar o app.
+        # #155 / v0.6.62: sem rádio escolhido à mão, ao iniciar o app um meio só conecta depois
+        # que os de maior preferência (USB, depois BLE, depois Wi-Fi) terminarem de tentar.
         mine=self.db.source(id) or {}
-        if mine.get("kind")=="serial" or not self.db.system_settings().get("usb_priority",True):
+        if not self.db.system_settings().get("usb_priority",True):
             return False
-        return any(s["kind"]=="serial" and s["enabled"] and s["id"]!=id and
+        rank=radio_rank(mine)
+        return any(s["kind"]!="mqtt" and s["enabled"] and s["id"]!=id and radio_rank(s)<rank and
                    self._states.get(s["id"],{}).get("status")=="connecting"
                    for s in self.db.sources(public=False))
 
@@ -582,15 +590,17 @@ class SourceManager:
     def switch_status(self):
         with self._lock:return dict(self._switch)
 
-    def activate(self,id):
-        """#152: torna ativa outra conexão de rádio, com retorno à anterior se falhar."""
+    def activate(self,id,manual=True):
+        """#152: torna ativa outra conexão de rádio, com retorno à anterior se falhar.
+
+        manual=False nas trocas automáticas (preferência USB → BLE → Wi-Fi)."""
         id=int(id)
         src=self.db.source(id)
         if not src:raise ValueError("Conexão não encontrada")
         if src["kind"]=="mqtt":raise ValueError("MQTT é somente recepção e não pode ser o rádio ativo")
         if not src["enabled"]:raise ValueError("Conexão desativada; ative-a em Configurações")
         previous=self.active_radio()
-        self.db.set_preferred_radio(id)
+        self.db.set_preferred_radio(id,manual)
         if previous==id:
             return {"state":"connected","source_id":id}
         with self._lock:
@@ -708,6 +718,29 @@ class SourceManager:
                 result.append({"id":s["id"],"name":s["name"],"kind":s["kind"],"active":s["id"]==active,
                                "status":states.get(s["id"],{}).get("status","disconnected")})
         return result
+
+    def better_radio(self,present):
+        """v0.6.62: conexão de maior preferência para o mesmo rádio do ativo, se houver.
+
+        `present(src)` diz se o dispositivo está disponível agora sem abri-lo. A escolha feita à
+        mão no seletor continua valendo enquanto aquela conexão estiver conectada."""
+        active=self.active_radio()
+        if active is None:return None
+        cur=self.db.source(active)
+        if not cur or radio_rank(cur)==0:return None
+        if self.db.preferred_radio()==active and self.db.preferred_radio_manual():return None
+        node=(cur.get("config") or {}).get("node_num")
+        if not node:return None
+        with self._lock:
+            states={k:dict(v) for k,v in self._states.items()}
+            if self._switch.get("phase")=="switching":return None
+        options=[s for s in self.db.sources(public=False)
+                 if s["enabled"] and s["kind"]!="mqtt" and s["id"]!=active and radio_rank(s)<radio_rank(cur)
+                 and (s.get("config") or {}).get("node_num")==node
+                 and states.get(s["id"],{}).get("status") in ("standby","disconnected",None)]
+        for s in sorted(options,key=radio_rank):
+            if present(s):return s
+        return None
 
     def connect(self,id):
         id=int(id)

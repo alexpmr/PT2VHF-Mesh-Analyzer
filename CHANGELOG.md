@@ -1,3 +1,14 @@
+# v0.6.62 — Ferramentas no topo, cobertura completa, conteúdo no Tráfego e preferência USB
+
+- Ferramentas no `#nav` (entre Automações e Configurações); `#mapToolsPanel` fora das abas; `.navbtn[data-view]` para não trocar de aba ao abrir o painel.
+- Cobertura: `max_km` padrão 50 e até 100 (`MAX_KM`), campo "Raio da cobertura" acima de Calcular; busca do ponto mais alto até 50 km (zoom menor nos raios grandes) com validação; catálogo `RADIO_CATALOG` por marca/modelo com `hw` do Meshtastic e sugestão pelo hardware (cobertura e enlace A/B); nós com/sem cobertura e fora do raio (`classifyCoverageNodes`, `coverage.classify_nodes`), contorno vermelho e clique para o enlace com "Voltar à cobertura"; PDF da cobertura (`survey_pdf.coverage_pdf`, grade desenhada em faixas, sem depender do Pillow); versão do app no cabeçalho dos PDFs.
+- Relevo: `survey.despike()` remove pixels/aglomerados com altitude impossível nos tiles Terrarium (mediana 5×5, limiar 250 m), aplicado no enlace, melhor ponto e cobertura.
+- Conexões: `RADIO_RANK` (USB 0, BLE 1, Wi-Fi 2) na ordem de início e na prioridade de abertura; `SourceManager.better_radio()` + `DeviceWatcher._prefer_better()` trocam para o meio melhor do mesmo nó quando presente (porta enumerada / BLE visto), sem abrir a porta; `activate(..., manual=False)` nas trocas automáticas e `preferred_radio_manual` para respeitar a escolha manual.
+- Tráfego: `mesh_analyzer/payload.py` (resumo e campos por tipo), `summary` em `/api/packets`, `/api/packet?id=` com campos e JSON; coluna "Conteúdo" e CSV.
+- Mapa: etiqueta `nodeShortLabel` só com o nome curto; "Mostrar nomes curtos" ligado por padrão (migração única por perfil).
+- Repetidores: disponibilidade = horas com sinal de vida (pacote, salto em traceroute, vizinho em NeighborInfo) ÷ horas em que o app ouviu; "sem dados" abaixo de 2 h; presença `heard_after`.
+- Testes: `tests/test_release_v0662.py`.
+
 # v0.6.61 — Menu Ferramentas, análise de cobertura e automações recolhidas
 
 - Menu **Ferramentas** no mapa (`#mapToolsBtn`/`#mapToolsPanel`): Análise de cobertura, Analisar enlace, Melhor ponto, Relevo com corte, Relatório da malha (PDF) e Diagnóstico para suporte. Saíram da aba Ver.

@@ -293,6 +293,9 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     self._json({"success":True,"data":db.topology_diagnostics(source)})
                 elif path == "/api/packets":
                     self._json({"success":True,"data":db.packet_rows(source_id=view_source(self.path))})
+                elif path == "/api/packet":
+                    query=urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                    self._json({"success":True,"data":db.packet_detail(int(query.get("id",["0"])[0]))})
                 elif path == "/api/messages":
                     sources.message_receipts.expire()
                     self._json({"success":True,"data":db.message_rows(source_id=view_source(self.path))})
@@ -599,6 +602,14 @@ def build_handler(db:Database, sources:SourceManager, csrf:str, doc:str, updates
                     if payload.get("kind")=="link":
                         body=survey_pdf.link_pdf(survey_link(payload),name)
                         return self._pdf(body,"PT2VHF-Analise-de-Enlace.pdf")
+                    if payload.get("kind")=="coverage":
+                        from . import coverage
+                        result=coverage.coverage(coverage_tiles(),payload.get("center"),payload.get("params") or {})
+                        node=payload.get("node")
+                        groups=coverage.classify_nodes(result,survey_pdf.known_nodes(db),
+                                                       int(node) if isinstance(node,int) else None)
+                        body=survey_pdf.coverage_pdf(result,payload.get("display"),name,*groups)
+                        return self._pdf(body,"PT2VHF-Analise-de-Cobertura.pdf")
                     result=survey.best_points(elevations(),payload.get("polygon"),payload.get("reference"),payload.get("count") or 10)
                     links=[]
                     for item in (payload.get("links") or [])[:20]:

@@ -1,4 +1,4 @@
-# PT2VHF Mesh Analyzer — v0.6.61
+# PT2VHF Mesh Analyzer — v0.6.62
 
 **Projeto independente do MeshMonitor, por Alex, PT2VHF.** Aplicativo Windows 10/11, Linux e macOS, com banco SQLite próprio e conexões Meshtastic por USB/Serial, Bluetooth LE, TCP/Wi-Fi e MQTT.
 
@@ -31,6 +31,20 @@ Abra `http://localhost:8789` no próprio servidor. Rádio USB em servidor Linux:
 **Requisitos Linux:** distribuição 64 bits com glibc 2.35+ (Ubuntu 22.04, Linux Mint 21, Debian 12, Fedora 36 ou mais novos) e um navegador. **Ubuntu / Linux Mint:** dê dois cliques no `.deb` ou use `sudo apt install ./PT2VHF-Mesh-Analyzer-v0.6.56-amd64.deb`; o atalho aparece no menu e o comando `pt2vhf-mesh-analyzer` fica disponível. Remover o pacote preserva seus dados. **Outras distribuições:** extraia o `.tar.gz` e execute `./PT2VHF-Mesh-Analyzer` (a interface abre no navegador padrão) ou `./instalar.sh` para criar o atalho no menu de aplicativos. Para rádio USB, o usuário deve pertencer ao grupo `dialout`.
 
 **Atualização:** no Windows, a atualização é feita pelo próprio aplicativo. No macOS e no Linux, o aplicativo avisa quando houver versão nova e o botão abre a página da release para baixar o pacote (no `.deb`, instale o novo por cima). No container, atualize a imagem.
+
+### Novidades da v0.6.62
+
+- **Ferramentas no menu superior**, entre Automações e Configurações; abre de qualquer aba e leva ao mapa quando a ferramenta precisa dele.
+- **Análise de cobertura:**
+  - **Raio da cobertura** em destaque, logo acima de Calcular: padrão de 50 km, até 100 km (40 km com relevo em alta resolução). O campo da busca do ponto mais alto passou a se chamar "Buscar ponto mais alto num raio de (km)", vai até 50 km e avisa quando o valor é inválido.
+  - **Rádios por marca e modelo** (Heltec, LilyGO, RAKwireless, Seeed Studio, B&Q, Elecrow, Nordic/Adafruit e outros), com potência e ganho típicos; sugere o modelo pelo hardware informado pelo nó ou pelo rádio conectado. Também na Análise de enlace (pontos A e B).
+  - **Nós sem cobertura:** lista com o sinal estimado e quantos dB faltam, contorno vermelho no mapa e clique para abrir a análise de enlace até o nó (com "Voltar à cobertura"); os nós fora do raio aparecem à parte, com a distância.
+  - **Baixar PDF** da cobertura para documentação: mapa da cobertura com transmissor e nós, parâmetros, resultado e as listas de nós com e sem cobertura. Os PDFs de enlace e melhor ponto trazem a versão do app no cabeçalho.
+- **Relevo corrigido:** os tiles de relevo trazem, em alguns lugares, pixels com altitude impossível (ex.: 3.418 m na margem do Lago Paranoá). Eles são filtrados ao carregar, o que corrige sombras falsas na cobertura e topos falsos no Melhor ponto.
+- **Conexões: USB, depois Bluetooth, depois Wi-Fi.** Quando o mesmo rádio está cadastrado por mais de um meio, o app usa o de maior preferência ao abrir e troca sozinho quando um meio melhor fica disponível (porta USB presente, Bluetooth visto), sem abrir a porta para conferir. A escolha manual no indicador continua valendo enquanto aquela conexão estiver ativa.
+- **Tráfego com o conteúdo dos pacotes:** nova coluna "Conteúdo" com um resumo (ex.: "🔋 87% · 4,12 V · canal 12,3%") e, no detalhe, os campos decodificados de telemetria, posição, NodeInfo, traceroute (rota e SNR por salto), roteamento e texto, mais "Ver JSON completo". O CSV inclui o conteúdo.
+- **Nomes curtos no mapa** ligados por padrão, numa etiqueta escura logo acima do ícone, só com o nome curto do nó.
+- **Saúde dos repetidores:** a disponibilidade passa a ser calculada só sobre as horas em que o app estava ouvindo a malha e conta também o repetidor aparecendo em rotas e como vizinho; com pouca escuta, mostra "sem dados". A presença mostra "ouvido depois do ping" quando o repetidor voltou a ser ouvido depois de um ping sem resposta.
 
 ### Novidades da v0.6.61
 

@@ -25,7 +25,7 @@ from array import array
 from concurrent.futures import ThreadPoolExecutor
 from statistics import NormalDist
 
-from .survey import EARTH_R, TILE_URL, TerrainTiles, _knife_edge_db, _number, _png_rgb, _point, _reason, sensitivity_dbm
+from .survey import EARTH_R, TILE_URL, TerrainTiles, _knife_edge_db, _number, _png_rgb, _point, _reason, despike, sensitivity_dbm
 
 # Clima de rádio (nomes do Longley-Rice) -> desvio padrão da variação no tempo (dB).
 CLIMATES = {
@@ -38,10 +38,12 @@ CLIMATES = {
     "maritime_temperate_sea": ("Marítimo temperado (mar)", 3.5),
 }
 LOCATION_SIGMA_DB = 8.0       # variação entre locais à mesma distância (terreno irregular)
-NORMAL_ZOOM_MAX_TILES = 49
+NORMAL_ZOOM_MAX_TILES = 64
 HIRES_ZOOM = 12
 HIRES_MAX_KM = 40.0
-MAX_KM = 70.0
+MAX_KM = 100.0
+DEFAULT_KM = 50.0
+SEARCH_MAX_KM = 50.0
 GRID_MAX = 640                # lado máximo da grade devolvida (pixels)
 NODATA = 0                    # byte sem dado; os demais valem dBm + 200
 
@@ -72,7 +74,7 @@ def coverage_params(params):
         "refractivity_n": _number(params, "refractivity_n", 301, 250, 400, "Refratividade (N)"),
         "location_pct": _number(params, "location_pct", 95, 50, 99.9, "% de locais"),
         "time_pct": _number(params, "time_pct", 95, 50, 99.9, "% do tempo"),
-        "max_km": _number(params, "max_km", 20, 1, MAX_KM, "Alcance máximo (km)"),
+        "max_km": _number(params, "max_km", DEFAULT_KM, 1, MAX_KM, "Raio da cobertura (km)"),
         "climate": climate,
         "preset": preset,
         "hires": bool(params.get("hires")),
@@ -146,6 +148,7 @@ class _Raster:
         grid = array("f")
         for r in rows:
             grid.extend((r[i] * 256 + r[i + 1] + r[i + 2] / 256) - 32768 for i in range(0, width * bpp, bpp))
+        despike(grid, width)
         return grid
 
     def _v(self, gx, gy):
@@ -316,10 +319,11 @@ def highest_point(tiles: TerrainTiles, center, radius_km):
         radius_km = float(radius_km)
     except (TypeError, ValueError):
         raise ValueError("Raio de busca inválido") from None
-    if not 0.05 <= radius_km <= 20:
-        raise ValueError("Raio de busca: 0,05 a 20 km")
+    if not 0.05 <= radius_km <= SEARCH_MAX_KM:
+        raise ValueError("Buscar ponto mais alto: raio de 0,05 a %d km" % SEARCH_MAX_KM)
     radius = radius_km * 1000
-    zoom = HIRES_ZOOM if radius_km <= 8 else HIRES_ZOOM - 1
+    # Raios grandes usam relevo mais grosso para a busca continuar rápida (~0,5 milhão de amostras).
+    zoom = HIRES_ZOOM if radius_km <= 8 else HIRES_ZOOM - 1 if radius_km <= 20 else HIRES_ZOOM - 2
     raster = _Raster(tiles, (lat, lon), radius, zoom)
     step = max(20.0, pixel_size_m(lat, zoom))
     n = int(radius / step)
@@ -335,3 +339,49 @@ def highest_point(tiles: TerrainTiles, center, radius_km):
                 best = (e, plat, plon)
     return {"lat": round(best[1], 6), "lon": round(best[2], 6), "ground_m": round(best[0], 1),
             "searched_km": radius_km}
+
+
+def value_at(result, lat, lon):
+    """Sinal estimado (dBm) da grade num ponto, ou None fora da grade / sem dado."""
+    (s, w), (n, e) = result["bounds"]
+    if not (s <= lat <= n and w <= lon <= e):
+        return None
+    size = result["size"]
+    grid = result.get("_bytes")
+    if grid is None:
+        grid = result["_bytes"] = base64.b64decode(result["grid"])
+    x = min(size - 1, int((lon - w) / (e - w) * size))
+    y = min(size - 1, int((n - lat) / (n - s) * size))
+    b = grid[y * size + x]
+    return b - 200 if b else None
+
+
+def classify_nodes(result, nodes, exclude=None):
+    """Separa os nós com posição em: com cobertura, sem cobertura (dentro do raio) e fora do raio."""
+    lat0, lon0 = result["center"]["lat"], result["center"]["lon"]
+    sens = result["params"]["rx_sensitivity_dbm"]
+    radius = result["params"]["max_km"] * 1000
+    covered, uncovered, outside = [], [], []
+    for n in nodes:
+        if exclude is not None and n.get("node_num") == exclude:
+            continue
+        lat, lon = n.get("lat"), n.get("lon")
+        if lat is None or lon is None:
+            continue
+        dist = math.hypot((lat - lat0) * 111320, (lon - lon0) * 111320 * math.cos(math.radians(lat0)))
+        item = {**n, "distance_km": round(dist / 1000, 1)}
+        if dist > radius:
+            outside.append(item)
+            continue
+        dbm = value_at(result, lat, lon)
+        item["dbm"] = dbm
+        if dbm is not None and dbm >= sens:
+            covered.append(item)
+        else:
+            item["missing_db"] = round(sens - dbm, 1) if dbm is not None else None
+            uncovered.append(item)
+    covered.sort(key=lambda x: -x["dbm"])
+    uncovered.sort(key=lambda x: (x["dbm"] is None, -(x["dbm"] or -999)))
+    outside.sort(key=lambda x: x["distance_km"])
+    return covered, uncovered, outside
+

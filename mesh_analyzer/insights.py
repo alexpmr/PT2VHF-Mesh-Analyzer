@@ -98,34 +98,81 @@ def routes(db, hours=24, now=None, limit=150):
                              "role": (names.get(n) or {}).get("role") or ""} for n, c in ranking]}
 
 
+LISTEN_MIN_HOURS = 2            # abaixo disso o app quase não ouviu: "sem dados"
+
+
+def _hour_set(rows):
+    return {int(r["h"]) for r in rows if r["h"] is not None}
+
+
+def _neighbor_hours(db, since):
+    """Horas em que cada nó apareceu como vizinho em NeighborInfo (evidência de que está no ar)."""
+    hours = {}
+    rows = db._rows("""SELECT timestamp_ms,raw_json FROM packets WHERE port IN ('NEIGHBORINFO_APP','71')
+                       AND timestamp_ms>=? AND raw_json<>'' ORDER BY timestamp_ms DESC LIMIT 3000""", (since,))
+    for r in rows:
+        try:
+            info = (json.loads(r["raw_json"]).get("decoded") or {})
+            info = info.get("neighborinfo") or info.get("neighborInfo") or {}
+        except (ValueError, TypeError, AttributeError):
+            continue
+        for n in info.get("neighbors") or []:
+            num = n.get("nodeId", n.get("node_id")) if isinstance(n, dict) else None
+            if isinstance(num, int):
+                hours.setdefault(num, set()).add(int(r["timestamp_ms"]) // 3600000)
+    return hours
+
+
 def repeaters(db, hours=24, now=None):
+    """Saúde dos ROUTER/REPEATER (#169).
+
+    Disponibilidade = horas em que o repetidor deu sinal de vida ÷ horas em que o próprio app
+    estava ouvindo a malha (v0.6.62). Antes o divisor era o período inteiro, e as horas com o
+    app fechado ou sem rádio contavam como repetidor fora do ar. Contam como sinal de vida:
+    pacote originado pelo nó, aparecer como salto numa rota de traceroute ou como vizinho em
+    NeighborInfo."""
     now = now or now_ms()
     hours = max(1, min(int(hours), 24 * 90))
     since = now - hours * 3600000
     marks = ",".join("?" * len(REPEATER_ROLES))
     nodes = db._rows("SELECT * FROM nodes WHERE role IN (" + marks + ")", REPEATER_ROLES)
-    counts, _ = _intermediates(db, since)
+    counts, found = _intermediates(db, since)
+    route_hours = {}
+    for route in found:
+        for n in route["intermediates"]:
+            route_hours.setdefault(n, set()).add(int(route["timestamp_ms"]) // 3600000)
+    neighbor_hours = _neighbor_hours(db, since)
+    listening = _hour_set(db._rows("SELECT DISTINCT timestamp_ms/3600000 AS h FROM packets WHERE timestamp_ms>=?", (since,)))
     out = []
     for n in nodes:
         num = n["node_num"]
         start = max(since, int(n["first_seen_ms"] or since))
-        total_hours = max(1, math.ceil((now - start) / 3600000))
-        heard_hours = db._rows("""SELECT COUNT(DISTINCT timestamp_ms/3600000) AS h FROM packets
-                                  WHERE from_node=? AND timestamp_ms>=?""", (num, start))[0]["h"]
+        first_hour = start // 3600000
+        listened = {h for h in listening if h >= first_hour}
+        heard = _hour_set(db._rows("SELECT DISTINCT timestamp_ms/3600000 AS h FROM packets WHERE from_node=? AND timestamp_ms>=?",
+                                   (num, start)))
+        heard |= {h for h in route_hours.get(num, ()) if h >= first_hour}
+        heard |= {h for h in neighbor_hours.get(num, ()) if h >= first_hour}
+        heard &= listened or heard
+        availability = round(100 * len(heard) / len(listened), 1) if len(listened) >= LISTEN_MIN_HOURS else None
         packets = db._rows("SELECT COUNT(*) AS c FROM packets WHERE from_node=? AND timestamp_ms>=?", (num, since))[0]["c"]
         sample = (db._rows("""SELECT battery,voltage,channel_util,air_util,timestamp_ms FROM rf_samples
                               WHERE node_num=? ORDER BY timestamp_ms DESC LIMIT 1""", (num,)) or [{}])[0]
-        ping = (db._rows("""SELECT state,attempts,last_reply_ms FROM auto_node_queries WHERE node_num=? AND kind='ping'
+        ping = (db._rows("""SELECT state,attempts,last_reply_ms,sent_ms FROM auto_node_queries WHERE node_num=? AND kind='ping'
                             ORDER BY sent_ms DESC LIMIT 1""", (num,)) or [{}])[0] if _has_table(db, "auto_node_queries") else {}
+        presence = ping.get("state")
+        # Ping sem resposta, mas o nó foi ouvido depois dele: está no ar (v0.6.62).
+        if presence in ("timeout", "error", "disconnected") and int(n["last_seen_ms"] or 0) > int(ping.get("sent_ms") or 0):
+            presence = "heard_after"
         out.append({"node": num, "name": n["long_name"] or n["short_name"] or n["node_id"], "role": n["role"],
-                    "availability": round(100 * min(heard_hours, total_hours) / total_hours, 1),
+                    "availability": availability, "heard_hours": len(heard), "listening_hours": len(listened),
                     "last_seen_ms": n["last_seen_ms"], "packets": packets,
                     "battery": sample.get("battery", n["battery"]), "voltage": sample.get("voltage", n["voltage"]),
                     "channel_util": sample.get("channel_util"), "air_util": sample.get("air_util"),
-                    "route_hops": counts.get(num, 0), "presence": ping.get("state"),
+                    "route_hops": counts.get(num, 0), "presence": presence,
                     "latitude": n["latitude"], "longitude": n["longitude"]})
-    out.sort(key=lambda r: (r["availability"], -(r["last_seen_ms"] or 0)))
-    return {"hours": hours, "repeaters": out}
+    out.sort(key=lambda r: (r["availability"] is None, r["availability"] or 0, -(r["last_seen_ms"] or 0)))
+    return {"hours": hours, "listening_hours": len(listening), "repeaters": out}
 
 
 def _has_table(db, name):
