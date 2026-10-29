@@ -1,6 +1,14 @@
 ## Pendentes (próxima versão)
 
-(nenhum)
+- **Backlog (29/10/2026, sugestões aprovadas):**
+  - Cobertura prevista × real: sobrepor na Análise de cobertura os nós realmente ouvidos (SNR/RSSI
+    diretos) e mostrar acertos/erros da previsão; usar para calibrar a altura de obstáculos.
+  - Melhor ponto avaliado pela cobertura: comparar os candidatos pela área coberta e pelo número de nós
+    conhecidos alcançados, não só pela altitude.
+  - Mapa base (ruas) nos PDFs de cobertura, enlace e melhor ponto (exige Pillow no app instalado).
+  - PDF da cobertura reaproveitando o último cálculo, sem recalcular.
+  - Testes de interface no Chrome também no job Linux do CI (hoje só no Windows, no fim do build).
+  - Fluxo por pull request na `main` (a regra existe e os envios diretos passam por cima dela).
 
 ## v0.6.62 — Implementado nesta entrega
 
